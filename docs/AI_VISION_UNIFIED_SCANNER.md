@@ -1,6 +1,6 @@
-# 🤖 AI Vision - Unified Scanner System
+# 🤖 AI Vision - Unified Scanner System + Event Planner Features
 
-**Status:** Planning Phase (Phase 6)  
+**Status:** Planning Phase (Phase 6 - Integrated)  
 **Priority:** HIGH - Core Feature  
 **Last Updated:** December 31, 2025  
 **Created By:** Brandon + GitHub Copilot
@@ -9,15 +9,29 @@
 
 ## 📋 Executive Summary
 
-Build a unified "Scan" button available on **Add Shift**, **Edit Shift**, and **Shift Details** screens. This button opens a bottom sheet menu with multiple scanning options:
+Build a unified "Scan" button available on **Add Shift/Party**, **Edit Shift/Party**, and **Details** screens. This button opens a bottom sheet menu with multiple scanning options, supporting **two distinct user workflows:**
 
-1. **BEO Scanner** (Event Details) - Multi-page event contracts
+### **Workflow 1: Servers & Bartenders**
+- Scan server checkouts at end of shift
+- Track sales, tips, earnings
+- Build deep checkout analytics
+- "Shifts" terminology
+
+### **Workflow 2: Event Planners & Coordinators** (NEW)
+- Scan BEOs (Banquet Event Orders)
+- Log event details, contacts, guests, staffing
+- Track commission income
+- Build event portfolio
+- "Parties" terminology (auto-renamed based on job type)
+
+**Scanning Options:**
+1. **BEO Scanner** (Event Details) - Multi-page event contracts, guest lists, floor plans
 2. **Server Checkout Scanner** (Financial Data) - Restaurant POS receipts
-3. **Business Card Scanner** (Contact Info) - Already built, just wire into menu
+3. **Business Card Scanner** (Contact Info) - Already built, wire into menu
 4. **Invoice Scanner** (Future) - For freelancers/contractors
 5. **Receipt Scanner** (Future) - For gig workers/1099 contractors
 
-**Vision:** Create the most comprehensive server tracking app by automatically capturing checkout data at the end of every shift, building a deep analytics database with zero manual effort.
+**Vision:** Create the most comprehensive work tracking app that adapts to different job types - servers track income via checkouts, event planners track events via BEOs - all in one intelligent system.
 
 ---
 
