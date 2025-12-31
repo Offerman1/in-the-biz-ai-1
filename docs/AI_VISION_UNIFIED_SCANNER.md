@@ -525,25 +525,64 @@ Settings → Analytics Preferences
 
 ## 📝 Data Storage
 
-### New Database Fields (Shifts Table)
+### New Database Table: server_checkouts
 
-**For Server Checkouts:**
 ```sql
-ALTER TABLE public.shifts ADD COLUMN (
-  checkout_image_url TEXT,           -- Receipt image
-  checkout_pos_system TEXT,           -- Toast/Square/Aloha/Micros/Other
-  checkout_confidence DECIMAL(3,2),   -- 0.00 to 1.00
-  checkout_scanned_at TIMESTAMPTZ,    -- When checkout was scanned
-  checkout_metadata JSONB              -- Raw extracted data for future use
+CREATE TABLE public.server_checkouts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  
+  -- Extracted Data from Receipt
+  checkout_date DATE NOT NULL,
+  checkout_time TIME,  -- If available on receipt, else NULL
+  
+  sales_amount DECIMAL(10, 2),
+  tax_amount DECIMAL(10, 2),
+  tips_amount DECIMAL(10, 2),
+  service_charge DECIMAL(10, 2),
+  total_amount DECIMAL(10, 2),
+  
+  -- Context Information
+  server_name TEXT,
+  table_number TEXT,
+  covers INT,
+  pos_system TEXT,  -- "Toast", "Square", "Aloha", "Clover", etc.
+  
+  -- AI Metadata
+  ai_confidence_scores JSONB,  -- { "tips": 0.45, "sales": 0.95, ... }
+  ai_notes TEXT,  -- "Handwritten tip, unclear" or system notes
+  overall_confidence DECIMAL(3, 2),  -- Average confidence (0.0-1.0)
+  
+  -- User Verification
+  user_verified BOOLEAN DEFAULT FALSE,
+  user_verified_at TIMESTAMPTZ,
+  user_adjustments JSONB,  -- What user changed: { "tips": "95.00", "server_name": "John" }
+  user_questions_answered JSONB,  -- Answers to verification questions
+  
+  -- Images (Multi-page Support)
+  image_urls TEXT[] NOT NULL,  -- Array of photo URLs
+  image_count INT,  -- Number of pages scanned
+  
+  -- Linking
+  linked_shift_id UUID REFERENCES shifts(id) ON DELETE SET NULL,  -- If user imported to shift
+  
+  -- Timestamps
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+CREATE INDEX idx_server_checkouts_user ON public.server_checkouts(user_id);
+CREATE INDEX idx_server_checkouts_date ON public.server_checkouts(checkout_date);
+CREATE INDEX idx_server_checkouts_verified ON public.server_checkouts(user_verified);
 ```
 
-**For BEOs:**
+### No Changes to Shifts Table (MVP)
+
+MVP keeps shifts table unchanged. In Phase 2 (v1.1), we can add:
+
 ```sql
 ALTER TABLE public.shifts ADD COLUMN (
-  beo_image_urls TEXT[],              -- Array of BEO photos (multi-page)
-  beo_scanned_at TIMESTAMPTZ,
-  beo_metadata JSONB                  -- Raw extracted BEO data
+  source_checkout_id UUID REFERENCES server_checkouts(id)  -- Track origin if imported
 );
 ```
 
