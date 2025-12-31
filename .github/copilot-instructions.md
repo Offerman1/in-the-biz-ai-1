@@ -614,17 +614,13 @@ To deploy to your custom domain `inthebiz.app`, you need to configure GitHub Pag
     *   Go to your repo Settings → Pages
     *   Check "Enforce HTTPS" (after GitHub Pages recognizes your domain)
 
-### Theme Updates (NEW - December 30, 2025):
+### Security Rules (NEW - December 31, 2025):
 
-Based on user feedback, the following dark themes have been updated to use more neutral backgrounds and sparingly apply accent colors for a more professional look:
-
-- **Midnight Blue:**
-  - **Before (Blue Overload):**
-    - Background: Almost black ✅ (good)
-    - Cards: Dark blue (bad - blue on blue)
-    - Text: Light blue (bad - blue text everywhere)
-    - Primary: Bright blue (accent color used correctly)
-  - **After (Professional Design):**
-    - **Background:** `#0D0D0D` - Almost black (neutral)
-    - **Cards:** `#1A1A1A` / `#2C2C2C` - Dark grays (neutral, not blue!)
-    - **Text:** White / Light gray / Muted
+- **NEVER commit `.env` files to Git.** These files contain sensitive API keys and credentials.
+- **ALWAYS add `.env` to your `.gitignore` file.** This prevents accidental commits.
+- **When creating new API keys, restrict their usage** to only the necessary services (e.g., Generative Language API for Gemini).
+- **Rotate API keys immediately** if they are compromised (e.g., accidentally committed to a public repository).
+- **Monitor API key usage** in the cloud console to detect suspicious activity.
+- **For web deployments, configure Docker Desktop to start automatically** to ensure the Supabase CLI and other tools function correctly.
+- **When using Docker on Windows, restart the terminal** after installing Docker Desktop to ensure the `docker` command is available in the path.
+- **On Windows
