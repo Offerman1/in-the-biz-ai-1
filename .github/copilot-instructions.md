@@ -421,7 +421,12 @@ This section defines the UI placement strategy for the AI Vision features.
 ### 3. Scan Actions
 
 -   **BEO (Event Details):** Extracts event details and auto-fills the shift form.
+    *   AI should prompt: "Scan another page?" or "Ready to import?"
+    *   Concatenate data from multi-page scans.
 -   **Server Checkout:** Extracts financial data and auto-fills the shift form.
+    *   Account for variable formats.
+    *   Start simple, extract what is consistently available, and improve over time.
+    *   Review modal lets user verify/edit extracted data.
 -   **Business Card:** Creates/adds to Event Contacts and attaches it to the current shift.
 -   **Invoice (Future):** Links to a separate freelancer workflow (not shift-based).
 -   **Receipt (Future):** Links to expense tracking for 1099 contractors.
