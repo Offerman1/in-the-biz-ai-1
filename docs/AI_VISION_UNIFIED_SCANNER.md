@@ -746,8 +746,431 @@ After Phase 6 completion:
 
 ## 👥 Team Notes
 
-**Brandon:** This checkout scanner is the killer feature - the differentiator that makes servers choose our app over every other income tracker.
+**Brandon:** This unified system needs to support TWO completely different workflows - servers tracking income via checkouts, and event planners tracking events via BEOs. Both matter equally.
 
-**Copilot:** Agreed. The unified scan button makes it discoverable. The fact that it works with multiple POS systems automatically makes it powerful. And building analytics on top of that data creates stickiness no competitor has.
+**Copilot:** The job type system is elegant - it auto-configures the feature set based on what they do. A server sees "Shifts" and checkout tracking. An event planner sees "Parties" and BEO scanning. Same code, different UX.
 
-**Next Steps:** Research the POS systems, then start building! 🚀
+**Next Steps:** Integrate BEO research into planning, research POS systems, then build everything together in Phase 6! 🚀
+
+---
+
+# 📋 BEO (Banquet Event Order) Fields Research
+
+**Purpose:** Comprehensive database of all possible BEO fields to ensure AI vision captures complete event details for event planners, coordinators, and catering managers.
+
+**Status:** Planning Phase  
+**Scope:** Catering, Weddings, Corporate Events, Banquets
+
+---
+
+## Overview
+
+BEOs are the master documents for event planning in the hospitality industry. Unlike server checkouts (which are financial summaries), BEOs contain extensive operational details that event planners must track:
+
+- Guest management (counts, dietary restrictions, seating)
+- Menu planning (courses, selections, plating)
+- Logistics (setup, breakdown, timing)
+- Decor & ambiance (linens, flowers, lighting, AV)
+- Staffing (servers, bartenders, coordinators)
+- Financial terms (pricing, deposits, payments)
+- Special requests and notes
+
+---
+
+## Complete BEO Fields Database
+
+### **1. EVENT IDENTIFICATION**
+
+| Field | Type | Maps To | Extractable |
+|-------|------|---------|-------------|
+| Event Name/Party Name | Text | Party Form | ✅ Yes |
+| Event Type | Dropdown | Event Details | ✅ Yes |
+| Event Date | Date | Party Date | ✅ Yes |
+| Event Time (Start) | Time | Manual Entry | ⚠️ Optional |
+| Event Time (End) | Time | Manual Entry | ⚠️ Optional |
+| Duration | Number | Auto-calculated | ⚠️ Optional |
+| Occasion Description | Text | Notes | ✅ Yes |
+| Expected Guest Count | Number | Guest Count | ✅ Yes |
+| Confirmed Guest Count | Number | Guest Count | ✅ Yes |
+
+### **2. PRIMARY CONTACT INFORMATION**
+
+| Field | Type | Maps To | Extractable |
+|-------|------|---------|-------------|
+| Primary Contact Name | Text | Contact Database | ✅ Yes |
+| Primary Contact Phone | Phone | Contact Database | ✅ Yes |
+| Primary Contact Email | Email | Contact Database | ✅ Yes |
+| Primary Contact Address | Text | Contact Database | ✅ Yes |
+| Alternate Contact Name | Text | Contact Database | ✅ Yes |
+| Alternate Contact Phone | Phone | Contact Database | ✅ Yes |
+| Contact Title/Role | Text | Notes | ✅ Yes |
+| Special Instructions | Text | Notes | ✅ Yes |
+
+### **3. VENUE & LOGISTICS**
+
+| Field | Type | Maps To | Extractable |
+|-------|------|---------|-------------|
+| Venue Name | Text | Event Details | ✅ Yes |
+| Venue Address | Text | Event Details | ✅ Yes |
+| Room/Space Name | Text | Notes | ✅ Yes |
+| Room Setup Style | Dropdown | Notes | ✅ Yes |
+| Parking Information | Text | Notes | ✅ Yes |
+| Loading Dock Time | Time | Notes | ✅ Yes |
+| Setup Start Time | Time | Notes | ✅ Yes |
+| Event Start Time | Time | Notes | ✅ Yes |
+| Breakdown Start Time | Time | Notes | ✅ Yes |
+| Final Departure Time | Time | Notes | ✅ Yes |
+| Special Venue Restrictions | Text | Notes | ✅ Yes |
+
+### **4. GUEST MANAGEMENT**
+
+| Field | Type | Maps To | Extractable |
+|-------|------|---------|-------------|
+| Total Guest Count | Number | Party Form | ✅ Yes |
+| VIP Guests | Number | Guest List | ✅ Yes |
+| Children Count | Number | Guest List | ✅ Yes |
+| Guest List | List | Guest List Section | ✅ Yes |
+| Dietary Restrictions | List | Guest List Section | ✅ Yes |
+| Seating Arrangement | Dropdown | Guest List Section | ✅ Yes |
+| Table Assignments | List | Guest List Section | ✅ Yes |
+| Accessibility Needs | Text | Notes | ✅ Yes |
+| Children's Menu | Boolean | Notes | ✅ Yes |
+
+### **5. MENU & BEVERAGE**
+
+| Field | Type | Maps To | Extractable |
+|-------|------|---------|-------------|
+| Number of Courses | Number | Notes | ✅ Yes |
+| Course Details (Appetizers, Soup, Entree, etc.) | Text | Notes | ✅ Yes |
+| Entree Selections | List | Guest List Section | ✅ Yes |
+| Special Items (Cake, Champagne) | Text | Notes | ✅ Yes |
+| Bar Package | Dropdown | Financial Section | ✅ Yes |
+| Alcohol Restrictions | Text | Notes | ✅ Yes |
+| Non-Alcoholic Options | Text | Notes | ✅ Yes |
+| Beverage Count Per Person | Number | Notes | ✅ Yes |
+| Water Service | Boolean | Notes | ✅ Yes |
+| Special Food Requests | Text | Notes | ✅ Yes |
+| Cake Details | Text | Notes | ✅ Yes |
+
+### **6. DECOR & AMBIANCE**
+
+| Field | Type | Maps To | Extractable |
+|-------|------|---------|-------------|
+| Linens - Colors | Text | Notes | ✅ Yes |
+| Linens - Material | Text | Notes | ✅ Yes |
+| Centerpieces - Type | Text | Notes | ✅ Yes |
+| Centerpieces - Flowers | Text | Notes | ✅ Yes |
+| Centerpieces - Height | Text | Notes | ✅ Yes |
+| Flower Delivery Time | Time | Notes | ✅ Yes |
+| Lighting | Text | Notes | ✅ Yes |
+| Chair Covers | Text | Notes | ✅ Yes |
+| Table Numbers | Boolean | Notes | ✅ Yes |
+| Entrance Decor | Text | Notes | ✅ Yes |
+
+### **7. AUDIO/VISUAL & TECHNOLOGY**
+
+| Field | Type | Maps To | Extractable |
+|-------|------|---------|-------------|
+| AV Requirements | Boolean | Notes | ✅ Yes |
+| Projector/Screen | Boolean | Notes | ✅ Yes |
+| Microphone | Boolean | Notes | ✅ Yes |
+| Music Source | Text | Notes | ✅ Yes |
+| Music Start Time | Time | Notes | ✅ Yes |
+| DJ/Band Name | Text | Contact Database | ✅ Yes |
+| DJ/Band Contact | Phone | Contact Database | ✅ Yes |
+| Special Music Instructions | Text | Notes | ✅ Yes |
+| Sound Check Time | Time | Notes | ✅ Yes |
+
+### **8. STAFFING & LOGISTICS**
+
+| Field | Type | Maps To | Extractable |
+|-------|------|---------|-------------|
+| Lead Coordinator | Text | Contact Database | ✅ Yes |
+| Servers Needed | Number | Staffing Section | ✅ Yes |
+| Bartenders Needed | Number | Staffing Section | ✅ Yes |
+| Kitchen Staff | Text | Staffing Section | ✅ Yes |
+| Event Day Supervisor | Text | Staffing Section | ✅ Yes |
+| Special Staffing Notes | Text | Notes | ✅ Yes |
+| Timeline for Staff | Text | Notes | ✅ Yes |
+
+### **9. FINANCIAL INFORMATION**
+
+| Field | Type | Maps To | Extractable |
+|-------|------|---------|-------------|
+| Total Package Price | Currency | Financial Section | ✅ Yes |
+| Price Per Person | Currency | Financial Section | ✅ Yes |
+| Base Cost | Currency | Financial Section | ✅ Yes |
+| Tax Amount | Currency | Financial Section | ✅ Yes |
+| Service Charge % | Percentage | Financial Section | ✅ Yes |
+| Service Charge Amount | Currency | Financial Section | ✅ Yes |
+| Total Estimated Sale | Currency | Financial Section | ✅ Yes |
+| Deposit Amount | Currency | Financial Section | ✅ Yes |
+| Balance Due | Currency | Financial Section | ✅ Yes |
+| Commission % | Percentage | Financial Section | ✅ Yes |
+| Commission Amount | Currency | Financial Section (Auto) | ✅ Yes |
+
+### **10. SPECIAL REQUESTS & VENDORS**
+
+| Field | Type | Maps To | Extractable |
+|-------|------|---------|-------------|
+| Ceremony Details | Text | Notes | ✅ Yes |
+| Reception Timeline | Text | Notes | ✅ Yes |
+| Client Provided Items | Text | Notes | ✅ Yes |
+| Florist Name | Text | Contact Database | ✅ Yes |
+| Florist Contact | Phone | Contact Database | ✅ Yes |
+| Photographer Name | Text | Contact Database | ✅ Yes |
+| Videographer Name | Text | Contact Database | ✅ Yes |
+| Guest Accommodations | Text | Notes | ✅ Yes |
+| Weather Contingency | Text | Notes | ✅ Yes |
+| Final Notes | Text | Notes | ✅ Yes |
+
+### **11. FLOOR PLAN & VISUAL DOCUMENTATION**
+
+| Field | Type | Maps To | Extractable |
+|-------|------|---------|-------------|
+| Floor Plan Image | Image | Floor Plan Gallery | ✅ Yes |
+| Table Diagram | Image | Floor Plan Gallery | ✅ Yes |
+| Setup Photos | Image | Floor Plan Gallery | ✅ Yes |
+| During-Event Photos | Image | Floor Plan Gallery | ✅ Yes |
+| Post-Event Photos | Image | Floor Plan Gallery | ✅ Yes |
+
+---
+
+## BEO Scanning → Verification Flow
+
+Same as Server Checkout, but adapted for event data:
+
+```
+VERIFICATION SCREEN
+
+PREVIEW CARD:
+┌─────────────────────────────────┐
+│ 🎉 BANQUET EVENT PREVIEW        │
+├─────────────────────────────────┤
+│  Event: Smith Wedding            │
+│  Date: 6/15/2026                 │
+│  Guests: 150                      │
+│  Venue: Grand Ballroom            │
+│                                  │
+│  Contact: Sarah Smith            │
+│  Phone: (555) 123-4567  ✅        │
+│                                  │
+│  Sales: $8,500                    │
+│  Commission: 15% ($1,275) ✅      │
+│                                  │
+│  ✓ High Confidence (8/10)         │
+└─────────────────────────────────┘
+
+QUESTIONS (If needed):
+☑ Event type is "Wedding" - correct?
+☑ 150 guests confirmed - correct?
+☐ Did I read the venue correctly as "Grand Ballroom"?
+
+NOTES SECTION:
+┌─────────────────────────────────┐
+│ BANQUET EVENT ORDER DETAILS     │
+│ ─────────────────────────────────│
+│ Setup: 2:00 PM                   │
+│ Breakdown: 10:00 PM              │
+│                                  │
+│ LINENS:                          │
+│ • Head Table: Ivory satin        │
+│ • Guest Tables: Blush satin      │
+│                                  │
+│ MENU:                            │
+│ • Filet Mignon - 65 servings     │
+│ • Herb Chicken - 60 servings     │
+│ • Vegetarian Pasta - 25 servings │
+│ • Wedding cake (client provided) │
+│                                  │
+│ STAFF CONTACTS:                  │
+│ • DJ: Spin Masters DJ - John     │
+│ • Florist: Petals & Stems - Mike │
+│                                  │
+│ SPECIAL NOTES:                   │
+│ • Grandma diabetic (Table 5)     │
+│ • 6 gluten-free meals            │
+│ • Ceremony slideshow during      │
+│   cocktail hour                  │
+└─────────────────────────────────┘
+```
+
+---
+
+## Job Type Configuration
+
+When user selects "Event Planner" job type:
+
+```
+AUTOMATICALLY ENABLED:
+✓ Party terminology (not Shift)
+✓ BEO Scanning button
+✓ Guest List section
+✓ Floor Plan gallery
+✓ Staffing Scheduler
+✓ Event Details form section
+✓ Commission Tracking
+✓ Contact Database (Event Contacts)
+
+FORM SECTIONS SHOWN:
+├─ Party Details (Date, Guests, Event Name)
+├─ Event Information (Type, Venue, Contact)
+├─ Financial (Sales, Commission, Deposit, Balance)
+├─ Guest List & Seating (Tab)
+├─ Floor Plan & Photos (Tab)
+├─ Staffing Assignments (Tab)
+├─ Contacts (Tab)
+└─ Additional Notes
+
+CAN CUSTOMIZE IN JOB EDIT:
+☑ BEO Scanning
+☑ Guest List
+☑ Floor Plan
+☑ Staffing
+☑ Commission
+☑ Contact Database
+☑ Event Details
+```
+
+**For Server/Bartender Jobs (default):**
+```
+AUTOMATICALLY ENABLED:
+✓ Shift terminology
+✓ Checkout Scanning
+✓ Checkout Analytics
+✓ Commission (optional)
+
+FORM SECTIONS:
+├─ Shift Details (Date, Time, Guests)
+├─ Financial (Sales, Tips, Commission)
+├─ Attachments (Photos, Files)
+├─ Notes
+└─ Contacts (optional)
+```
+
+---
+
+## Guest List Section (Event Planners)
+
+```
+GUEST LIST & DIETARY TRACKING
+
+┌──────────────────────────────────────────────┐
+│ Total Guests: 150                            │
+│ Confirmed: 142   Pending: 8   Declined: 0   │
+├──────────────────────────────────────────────┤
+│                                              │
+│ NAME            │ DINNER    │ DIETARY   │ TBL│
+│─────────────────────────────────────────────│
+│ Sarah Smith     │ Filet     │ None      │ 1 │
+│ John Smith      │ Filet     │ None      │ 1 │
+│ Michael Chen    │ Vegetarian│ Vegan     │ 2 │
+│ Maria Garcia    │ Filet     │ Shellfish │ 3 │
+│ [+ 146 more]    │           │           │   │
+│                 │           │           │   │
+│ [✓ Arrived] [×  Absent]                     │
+└──────────────────────────────────────────────┘
+
+FEATURES:
+- ✓ Check off guests as they arrive
+- ✓ Filter by dietary restrictions
+- ✓ Group by table for service
+- ✓ Meal selection tracking
+- ✓ Edit notes per guest
+```
+
+---
+
+## Floor Plan & Gallery (Event Planners)
+
+```
+FLOOR PLAN & VISUAL DOCUMENTATION
+
+Gallery Grid:
+┌──────────┬──────────┬──────────┐
+│Setup 2pm │Setup 4pm │Pre-Event │
+│ [Photo]  │ [Photo]  │ [Photo]  │
+└──────────┴──────────┴──────────┘
+
+┌──────────┬──────────┬──────────┐
+│Ceremony  │Cocktail  │Reception │
+│ [Photo]  │ [Photo]  │ [Photo]  │
+└──────────┴──────────┴──────────┘
+
+Attachments:
+□ Floor_Plan_Final.pdf
+□ Table_Diagram.png
+□ Seating_Chart.pdf
+
+FEATURES:
+- ✓ Multi-photo gallery
+- ✓ Photo captions/notes
+- ✓ PDF attachments
+- ✓ Organized by event phase
+```
+
+---
+
+## Notes Formatting (All Unstructured Data)
+
+When AI scans BEO, anything that doesn't fit a form field is formatted into readable notes:
+
+```
+═══════════════════════════════════════════════
+         BANQUET EVENT ORDER DETAILS
+═══════════════════════════════════════════════
+
+LOGISTICS & TIMING
+─────────────────────────────────────────────
+Setup Start: 2:00 PM | Guests: 150
+Event Start: 6:00 PM | Breakdown: 10:00 PM
+Venue: Grand Ballroom, Downtown Hotel
+Parking: Valet (validated)
+
+MENU & SERVICE
+─────────────────────────────────────────────
+Courses: 5 (Appetizers, Soup, Salad, Entree, Dessert)
+
+Appetizers: Shrimp cocktail, crudités, cheese board
+Soup/Salad: Mixed greens, Caesar, Butternut soup
+
+Entrees:
+  • Filet Mignon - 65 servings
+  • Herb-Brined Chicken - 60 servings  
+  • Vegetarian Pasta - 25 servings
+
+Dessert: Chocolate mousse, fruit, wedding cake (client)
+Champagne Toast: 150 flutes at 7:45pm
+
+Bar: Open (beer, wine, premium liquor)
+
+DECOR
+─────────────────────────────────────────────
+Linens: Ivory (head table), Blush (guest tables)
+Centerpieces: White roses, greenery (18" tall)
+Flower Delivery: 1:00 PM
+Lighting: Soft purple uplighting, string lights
+
+VENDORS & CONTACTS
+─────────────────────────────────────────────
+DJ: Spin Masters - John Williams (555) 234-5678
+Florist: Petals & Stems - Mike Chen (555) 111-2222
+Photographer: Golden Light - Sarah James (555) 333-4444
+
+SPECIAL REQUESTS
+─────────────────────────────────────────────
+• Grandmother diabetic (Table 5) - sugar-free dessert
+• 6 gluten-free meals
+• 4 vegetarian meals  
+• 8 children's meals
+• Ceremony slideshow during cocktail hour
+• Rehearsal dinner previous night, 6pm
+• Sunday brunch after (separate event)
+
+═══════════════════════════════════════════════
+```
+
+---
+
+**Status:** Comprehensive BEO Fields Database Complete  
+**Next Action:** Begin Phase 6 implementation with integrated BEO + Server Checkout + Job Type System
