@@ -14,6 +14,8 @@ if (!databaseUrl) {
   process.exit(1);
 }
 
+console.log('🔍 Database URL (masked):', databaseUrl.replace(/:[^@]+@/, ':****@'));
+
 const sqlFile = process.argv[2];
 if (!sqlFile) {
   console.error('Usage: node scripts/run-migration.mjs <file.sql>');
