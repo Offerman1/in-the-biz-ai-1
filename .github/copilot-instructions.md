@@ -596,6 +596,24 @@ git push origin gh-pages --force
 *   **Google Sign-In Issues:** Ensure the web client ID is correctly configured and that the implementation follows the latest `google_sign_in` package guidelines.
 *    **Large File Errors:** Make sure to exclude large files and folders like `node_modules` and `.dart_tool` from the repo.
 
+#### 9. Deploy to Custom Domain (NEW - December 31, 2025):
+
+To deploy to your custom domain `inthebiz.app`, you need to configure GitHub Pages to use that domain:
+
+1.  **Add a CNAME file** to your `gh-pages` branch:
+    *   Create a file named `CNAME` (no extension) in the `build/web` directory.
+    *   Put one line in it: `inthebiz.app`
+    *   Commit and push it
+
+2.  **Update your DNS records** at your domain registrar (Vercel Domains):
+    *   Go to your domain settings
+    *   Add these CNAME records:
+        *   `@` → `munzer221.github.io` (or use the A records GitHub provides if CNAME isn't supported)
+
+3.  **Enable HTTPS** in GitHub Pages:
+    *   Go to your repo Settings → Pages
+    *   Check "Enforce HTTPS" (after GitHub Pages recognizes your domain)
+
 ### Theme Updates (NEW - December 30, 2025):
 
 Based on user feedback, the following dark themes have been updated to use more neutral backgrounds and sparingly apply accent colors for a more professional look:
@@ -609,19 +627,4 @@ Based on user feedback, the following dark themes have been updated to use more 
   - **After (Professional Design):**
     - **Background:** `#0D0D0D` - Almost black (neutral)
     - **Cards:** `#1A1A1A` / `#2C2C2C` - Dark grays (neutral, not blue!)
-    - **Text:** White / Light gray / Muted gray (neutral)
-    - **Primary Accent:** `#3B82F6` - Modern blue (used for buttons, highlights, charts)
-    - **Secondary Accent:** `#06B6D4` - Cyan (used in gradients with blue)
-    - **Other Accents:** Red, yellow, orange, purple (for semantic colors)
-- **Purple Reign:** (To be updated similarly - neutral backgrounds, purple accents)
-- **Ocean Breeze:** (To be updated similarly - neutral backgrounds, teal/aqua accents)
-- **Forest Night:** (To be updated similarly - neutral backgrounds, green accents)
-- **PayPal Blue:** (To be updated similarly - neutral backgrounds, blue accents)
-
-### Security Alert - API Key Compromise (NEW - December 31, 2025):
-
-**CRITICAL: A Gemini API key was accidentally exposed**
-
-**What happened:**
-- The `.env` file (containing your API key) was accidentally included in the GitHub repository for the web deployment.
-- A Google Cloud Platform email alerted to the exposed Gemini API key (ending
+    - **Text:** White / Light gray / Muted
