@@ -433,3 +433,64 @@ The script (`scripts/run-migration.mjs`):
 ### On Windows:
 
 On Windows, configure Docker Desktop to start automatically to ensure the Supabase CLI and other tools function correctly. Restart the terminal after installing Docker Desktop to ensure the Supabase CLI and other tools function correctly.
+
+---
+
+## 🤖 AI VISION FEATURES - UI DESIGN (NEW - December 31, 2025)
+
+This section defines the UI placement strategy for the AI Vision features.
+
+**Core Principle:** A unified Scan button provides access to all AI-powered scanning functionalities.
+
+### 1. ✨ Unified Scan Button
+
+-   **Placement:** Header of Add Shift, Edit Shift, and Shift Details screens.
+    ```
+    │  ← Back    [Title]    [✨ Scan]  │
+    ```
+-   **Action:** Tapping the Scan button opens a bottom sheet menu.
+-   **Icon:** Use ✨ (sparkles) to suggest AI magic.
+
+### 2. Scan Options - Bottom Sheet Menu
+
+-   **Menu Items:**
+    ```
+    ┌──────────────────────────────────┐
+    │  What would you like to scan?    │
+    ├──────────────────────────────────┤
+    │  🧾 BEO (Event Details)          │
+    │  📊 Server Checkout              │
+    │  💼 Business Card (Contact)      │
+    │  📄 Invoice (Future)             │
+    │  🧾 Receipt (Future)             │
+    └──────────────────────────────────┘
+    ```
+
+### 3. Scan Actions
+
+-   **BEO (Event Details):** Extracts event details and auto-fills the shift form.
+-   **Server Checkout:** Extracts financial data and auto-fills the shift form.
+-   **Business Card:** Creates/adds to Event Contacts and attaches it to the current shift.
+-   **Invoice (Future):** Links to a separate freelancer workflow (not shift-based).
+-   **Receipt (Future):** Links to expense tracking for 1099 contractors.
+
+### 4. Implementation Details
+
+-   **BEO Scanner:**
+    *   AI should prompt: "Scan another page?" or "Ready to import?"
+    *   Concatenate data from multi-page scans.
+-   **Server Checkout Scanner:**
+    *   Account for variable formats.
+    *   Start simple, extract what is consistently available, and improve over time.
+    *   Review modal lets user verify/edit extracted data.
+-   **Receipt and Invoice:**
+    *   These features are for future development.
+    *   Build a separate "Invoice/Receipt Tracking" system for 1099 workers.
+
+### 5. Future Considerations
+
+-   **Discovery:**
+    *   How do we make users AWARE of these features?
+    *   Consider onboarding tooltips or dashboard badges.
+
+---
