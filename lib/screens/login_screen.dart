@@ -5,10 +5,13 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:crypto/crypto.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:google_sign_in_web/web_only.dart' as web;
 import '../services/auth_service.dart';
 import '../theme/app_theme.dart';
 import 'dashboard_screen.dart';
+
+// Conditional import for web
+import 'login_screen_web_stub.dart'
+    if (dart.library.html) 'package:google_sign_in_web/web_only.dart' as web;
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
