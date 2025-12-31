@@ -179,6 +179,7 @@ class JobTemplate {
     return JobTemplate(
       payStructure: PayStructure.hourly,
       showTips: true,
+      showSales: true,
       showEventName: true,
       showHostess: true,
       showGuestCount: true,
@@ -195,9 +196,12 @@ class JobTemplate {
       tracksOvertime: true,
       overtimeMultiplier: 1.5,
       showTips: false,
+      showMileage: true,
       showLocation: true,
       showClientName: true,
       showProjectName: true,
+      showMaterialsCost: true,
+      showEquipmentRental: true,
       showEventName: false,
       showHostess: false,
       showGuestCount: false,
@@ -209,9 +213,109 @@ class JobTemplate {
     return JobTemplate(
       payStructure: PayStructure.flatRate,
       showTips: false,
+      showCommission: false,
+      showMileage: false,
       showClientName: true,
       showProjectName: true,
       showLocation: false,
+      showEventName: false,
+      showHostess: false,
+      showGuestCount: false,
+    );
+  }
+
+  /// Pre-configured template for rideshare & delivery (Uber, Lyft, DoorDash)
+  factory JobTemplate.rideshareDelivery() {
+    return JobTemplate(
+      payStructure: PayStructure.hourly,
+      showTips: true,
+      showMileage: true,
+      showSales: true,
+      showLocation: true,
+      showEventName: false,
+      showHostess: false,
+      showGuestCount: false,
+    );
+  }
+
+  /// Pre-configured template for musicians, DJs, photographers, entertainers
+  factory JobTemplate.musicEntertainment() {
+    return JobTemplate(
+      payStructure: PayStructure.hourly,
+      showTips: true,
+      showSales: true,
+      showClientName: true,
+      showEventName: true,
+      showGigType: true,
+      showEquipmentRental: true,
+      showLocation: true,
+      showHostess: false,
+      showGuestCount: false,
+    );
+  }
+
+  /// Pre-configured template for artists and crafts workers
+  factory JobTemplate.artistCrafts() {
+    return JobTemplate(
+      payStructure: PayStructure.hourly,
+      showTips: true,
+      showSales: true,
+      showMaterialsCost: true,
+      showLocation: true,
+      showEventName: true,
+      showClientName: false,
+      showHostess: false,
+      showGuestCount: false,
+    );
+  }
+
+  /// Pre-configured template for salon & spa (hair, nails, massage, esthetician)
+  factory JobTemplate.salon() {
+    return JobTemplate(
+      payStructure: PayStructure.hourly,
+      showTips: true,
+      showCommission: true,
+      showSales: true,
+      showClientName: true,
+      showServiceType: true,
+      showProductSales: true,
+      showRepeatClientPercent: true,
+      showChairRental: true,
+      showEventName: false,
+      showHostess: false,
+      showGuestCount: false,
+    );
+  }
+
+  /// Pre-configured template for hospitality (hotels, events, catering)
+  factory JobTemplate.hospitality() {
+    return JobTemplate(
+      payStructure: PayStructure.hourly,
+      showTips: true,
+      showGuestCount: true,
+      showEventName: true,
+      showClientName: true,
+      showShiftType: true,
+      showServiceType: true,
+      showRoomType: true,
+      showQualityScore: true,
+      showLocation: true,
+      showHostess: false,
+    );
+  }
+
+  /// Pre-configured template for fitness (personal trainers, group classes)
+  factory JobTemplate.fitness() {
+    return JobTemplate(
+      payStructure: PayStructure.hourly,
+      showTips: false,
+      showCommission: true,
+      showSales: true,
+      showClientName: true,
+      showSessionType: true,
+      showClassSize: true,
+      showRetentionRate: true,
+      showCancellations: true,
       showEventName: false,
       showHostess: false,
       showGuestCount: false,
@@ -226,6 +330,9 @@ class JobTemplate {
       showMileage: true,
       showLocation: true,
       showClientName: true,
+      showShiftType: true,
+      showShiftDifferential: true,
+      showOnCallHours: true,
       showEventName: false,
       showHostess: false,
       showGuestCount: false,
@@ -251,6 +358,9 @@ class JobTemplate {
       payStructure: PayStructure.hourly,
       showTips: false,
       showCommission: true,
+      showSales: true,
+      showUpsells: true,
+      showReturns: true,
       showLocation: false,
       showEventName: false,
       showHostess: false,
