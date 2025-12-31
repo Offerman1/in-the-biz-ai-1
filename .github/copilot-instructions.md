@@ -320,39 +320,51 @@ class HeroCard extends StatelessWidget {
 ### Feature Locations - See `docs/MASTER_ROADMAP.md` and `docs/FEATURE_BACKLOG.md`:
 
 ### Shift Details Screen - File Attachments (NEW RULE - December 30, 2025):
+- **Feature Location:** See `docs/MASTER_ROADMAP.md` and `docs/FEATURE_BACKLOG.md`
 - **Status:** Feature spec documented in roadmap, not implemented yet
 
 ### Shift Details Screen - Date Display (NEW RULE - December 30, 2025):
+- **Feature Location:** See `docs/MASTER_ROADMAP.md`
 - **Status:** Feature spec documented in roadmap, not implemented yet
 
 ### Calendar Screen - Modal Shift Cards (NEW RULE - December 30, 2025):
+- **Feature Location:** See `docs/MASTER_ROADMAP.md`
 - **Status:** Feature spec documented in roadmap, not implemented yet
 
 ### Calendar Screen - Compact Drawer Summary Bar (NEW RULE - December 30, 2025):
+- **Feature Location:** See `docs/MASTER_ROADMAP.md`
 - **Status:** Feature spec documented in roadmap, not implemented yet
 
 ### Shift Details Screen - Inline Editing (NEW RULE - December 30, 2025):
+- **Feature Location:** See `docs/MASTER_ROADMAP.md`
 - **Status:** Feature spec documented in roadmap, not implemented yet
 
 ### Shift Details Screen - Reorganize Hero Card (NEW RULE - December 30, 2025):
+- **Feature Location:** See `docs/MASTER_ROADMAP.md`
 - **Status:** Feature spec documented in roadmap, not implemented yet
 
 ### Settings Screen - Section Reordering (NEW RULE - December 30, 2025):
+- **Feature Location:** See `docs/MASTER_ROADMAP.md`
 - **Status:** Feature spec documented in roadmap, not implemented yet
 
 ### App Icon Label (NEW RULE - December 30, 2025):
+- **Feature Location:** See `docs/MASTER_ROADMAP.md`
 - **Status:** Feature spec documented in roadmap, implementation guide in roadmap
 
 ### Import Screen - Padding (NEW RULE - December 30, 2025):
+- **Feature Location:** See `docs/MASTER_ROADMAP.md`
 - **Status:** Feature spec documented in roadmap, not implemented yet
 
 ### Import Screen - AI-Assisted Mapping (NEW RULE - December 30, 2025):
+- **Feature Location:** See `docs/FEATURE_BACKLOG.md` and `docs/MASTER_ROADMAP.md`
 - **Status:** Feature spec documented in roadmap, not implemented yet
 
 ### Import Screen - Job Selection (NEW RULE - December 30, 2025):
+- **Feature Location:** See `docs/FEATURE_BACKLOG.md` and `docs/MASTER_ROADMAP.md`
 - **Status:** Feature spec documented in roadmap, not implemented yet
 
 ### Calendar - Conflict Detection (NEW RULE - December 30, 2025):
+- **Feature Location:** See `docs/FEATURE_BACKLOG.md` and `docs/MASTER_ROADMAP.md`
 - **Status:** Database table exists, feature spec documented in roadmap, not implemented yet
 
 ### Web Deployment Instructions (NEW - December 31, 2025):
