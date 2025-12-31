@@ -623,4 +623,58 @@ To deploy to your custom domain `inthebiz.app`, you need to configure GitHub Pag
 - **Monitor API key usage** in the cloud console to detect suspicious activity.
 - **For web deployments, configure Docker Desktop to start automatically** to ensure the Supabase CLI and other tools function correctly.
 - **When using Docker on Windows, restart the terminal** after installing Docker Desktop to ensure the Supabase CLI and other tools function correctly.
-- **On Windows,
+
+---
+
+## 🗄️ SUPABASE DATABASE MIGRATIONS (NEW - December 31, 2025)
+
+**DO NOT use `supabase db push` or `supabase migration up`** - these require Docker and are unreliable on Windows.
+
+### How to Run SQL Migrations:
+
+**Use the Node.js Script (Only Method):**
+```powershell
+node scripts/run-migration.mjs <migration-file>.sql
+```
+
+**Example:**
+```powershell
+node scripts/run-migration.mjs supabase/migrations/20251231000000_create_chat_messages.sql
+```
+
+### Required Setup:
+
+1. **Script Location:** `scripts/run-migration.mjs` (already created)
+2. **SQL Files Location:** `supabase/migrations/` directory
+3. **Required Packages:** `pg` and `dotenv` (already installed via `npm install pg dotenv`)
+4. **Environment Variable:** `DATABASE_URL` in `.env` file
+
+**DATABASE_URL format:**
+```
+DATABASE_URL=postgresql://postgres:[PASSWORD]@db.[PROJECT-ID].supabase.co:5432/postgres
+```
+
+### How It Works:
+
+The script (`scripts/run-migration.mjs`):
+- Reads the SQL file from the migrations directory
+- Connects directly to PostgreSQL using the `pg` npm package
+- Executes the SQL in a transaction (BEGIN/COMMIT/ROLLBACK on error)
+- Shows helpful error messages if it fails
+
+### Getting the Database Password:
+
+1. Go to: **https://app.supabase.com/project/[PROJECT-ID]/settings/database**
+2. Click **"Reset Database Password"** (safe - only affects this project)
+3. Copy the new password
+4. Update `DATABASE_URL` in `.env` with the new password
+5. Run the migration
+
+### Creating New Migrations:
+
+1. Create a new SQL file in `supabase/migrations/`
+2. **Naming format:** `YYYYMMDDHHMMSS_description.sql` (e.g., `20251231235959_add_new_table.sql`)
+3. Write your SQL with proper error handling
+4. Run: `node scripts/run-migration.mjs supabase/migrations/[filename].sql`
+
+**On Windows,
