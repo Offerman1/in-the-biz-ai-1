@@ -138,6 +138,39 @@ class _AddJobScreenState extends State<AddJobScreen> {
       'Street Performer',
       '+ Add Custom Job Title',
     ],
+    'Rideshare & Delivery': [
+      'Uber Driver',
+      'Lyft Driver',
+      'DoorDash Driver',
+      'Uber Eats Driver',
+      'Grubhub Driver',
+      'Instacart Shopper',
+      'Amazon Flex Driver',
+      'Local Delivery Driver',
+      '+ Add Custom Job Title',
+    ],
+    'Music & Entertainment': [
+      'Musician',
+      'Band Member',
+      'DJ',
+      'Photographer',
+      'Photo Booth Operator',
+      'Event Performer',
+      'Sound Engineer',
+      'Live Streamer',
+      '+ Add Custom Job Title',
+    ],
+    'Artist & Crafts': [
+      'Painter/Artist',
+      'Sculptor',
+      'Jewelry Maker',
+      'Ceramicist',
+      'Street Performer',
+      'Craftsperson',
+      'Illustrator',
+      'Printmaker',
+      '+ Add Custom Job Title',
+    ],
     'Retail/Sales': [
       'Sales Associate',
       'Cashier',
@@ -263,8 +296,26 @@ class _AddJobScreenState extends State<AddJobScreen> {
       case 'Gig Worker':
         base = JobTemplate.gigWorker();
         break;
+      case 'Rideshare & Delivery':
+        base = JobTemplate.rideshareDelivery();
+        break;
+      case 'Music & Entertainment':
+        base = JobTemplate.musicEntertainment();
+        break;
+      case 'Artist & Crafts':
+        base = JobTemplate.artistCrafts();
+        break;
       case 'Retail/Sales':
         base = JobTemplate.retail();
+        break;
+      case 'Salon/Spa':
+        base = JobTemplate.salon();
+        break;
+      case 'Hospitality':
+        base = JobTemplate.hospitality();
+        break;
+      case 'Fitness':
+        base = JobTemplate.fitness();
         break;
       default:
         base = JobTemplate();
