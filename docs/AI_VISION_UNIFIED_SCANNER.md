@@ -406,40 +406,75 @@ Return as JSON with all extracted fields and confidence scores.
 
 ---
 
-## 📈 Analytics Dashboard (Future)
+## 📈 Checkout Analytics Dashboard (Stats Screen - New Tab)
 
-**After user has 10+ checkout scans, show:**
+### Location: Stats Screen → "Checkout Tracking" Tab
+
+**New tab on Stats screen, separate from "Overall Stats"**
 
 ```
-CHECKOUT ANALYTICS
-├─ This Shift
-│  ├─ Sales: $450
-│  ├─ Tips: $90 (20%)
-│  └─ Net after tipout: $78
+STATS SCREEN
+├─ TAB: Overall Stats (existing)
+│  └─ Shift-based analytics (unchanged)
 │
-├─ This Week
-│  ├─ Total Sales: $2,150
-│  ├─ Avg Sales/Shift: $537.50
-│  ├─ Total Tips: $412 (avg 19.2%)
-│  └─ Shifts Logged: 4/5
-│
-├─ This Month
-│  ├─ Total Sales: $9,200
-│  ├─ Avg Sales/Shift: $520
-│  ├─ Best Shift: $650 (Wednesday)
-│  ├─ Tip % Trend: ↑ 2% from last month
-│  └─ Shifts Logged: 18/24
-│
-├─ Trends
-│  ├─ Best Days: Friday (avg $580), Saturday (avg $560)
-│  ├─ Best Times: Dinner shifts tip 3% higher
-│  └─ Seasonal: December tips ↑ 12% vs baseline
-│
-└─ Insights
-   ├─ "Your Friday sales are 28% higher than other days"
-   ├─ "Tip percentage drops on rainy days (sample size: 3)"
-   └─ "You've earned $18,450 tracked via checkout scanner"
+└─ TAB: Checkout Tracking (NEW)
+   └─ Checkout-based analytics
 ```
+
+### Checkout Analytics Tab Content
+
+**Period Selector:** [Week] [Month] [Year] [Custom Range]
+
+**Key Metrics:**
+```
+CHECKOUT TRACKING (December 2025)
+
+├─ Checkouts Scanned: 47
+├─ Total Sales Tracked: $8,450
+├─ Average Sale/Checkout: $179.79
+├─ Checkouts Verified: 44 (93%)
+│
+├─ TIPS ANALYSIS
+│  ├─ Total Tips: $1,546.50
+│  ├─ Average Tip: $32.91
+│  ├─ Average Tip %: 18.3%
+│  ├─ Best Tip: 28% (Table 7, 4 covers)
+│  └─ Worst Tip: 8% (Large party, 20 people)
+│
+├─ BY RESTAURANT
+│  ├─ "The Steakhouse" - 12 checkouts, $2,856 sales, 19.2% tip %
+│  ├─ "Quick Bistro" - 18 checkouts, $1,710 sales, 17.8% tip %
+│  └─ "Farm to Table" - 17 checkouts, $3,884 sales, 18.5% tip %
+│
+├─ BY POS SYSTEM
+│  ├─ Toast: 28 checkouts (avg $198, 19% tip %)
+│  ├─ Square: 12 checkouts (avg $140, 16% tip %)
+│  ├─ Aloha: 7 checkouts (avg $205, 19% tip %)
+│  └─ Other: 0 checkouts
+│
+└─ CHARTS
+   ├─ Sales by Day of Week (bar chart)
+   ├─ Tip % Trend (line chart)
+   ├─ Checkouts by Restaurant (pie chart)
+   └─ POS System Distribution
+```
+
+### Future: Toggle to Include in Overall Analytics (v1.1+)
+
+When implemented (NOT in MVP):
+
+```
+Settings → Analytics Preferences
+├─ Include Checkout Data in Overall Stats
+│  [Toggle ON/OFF]
+│  "When ON, checkout sales trends appear in main dashboard"
+```
+
+**Important:** Keep separate because:
+- Checkout sales ≠ Your earnings
+- Checkout trends ≠ Shift income trends
+- Some users track ONLY checkouts (no shifts)
+- Prevents data confusion
 
 ---
 
