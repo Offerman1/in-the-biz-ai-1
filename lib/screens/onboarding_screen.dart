@@ -904,8 +904,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         return JobTemplate.healthcare();
       case 'Gig Worker':
         return JobTemplate.gigWorker();
+      case 'Rideshare & Delivery':
+        return JobTemplate.rideshareDelivery();
+      case 'Music & Entertainment':
+        return JobTemplate.musicEntertainment();
+      case 'Artist & Crafts':
+        return JobTemplate.artistCrafts();
       case 'Retail/Sales':
         return JobTemplate.retail();
+      case 'Salon/Spa':
+        return JobTemplate.salon();
+      case 'Hospitality':
+        return JobTemplate.hospitality();
+      case 'Fitness':
+        return JobTemplate.fitness();
       default:
         return JobTemplate();
     }
