@@ -46,14 +46,23 @@ class _LoginScreenState extends State<LoginScreen> {
           final googleAuth = await user.authentication;
 
           if (googleAuth.idToken != null) {
-            final response = await AuthService.signInWithIdToken(
-              idToken: googleAuth.idToken!,
-              accessToken: googleAuth.accessToken,
-            );
-            if (response != null && mounted) {
-              Navigator.of(context).pushReplacement(
-                MaterialPageRoute(builder: (_) => const DashboardScreen()),
+            try {
+              final response = await AuthService.signInWithIdToken(
+                idToken: googleAuth.idToken!,
               );
+              if (response != null && mounted) {
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(builder: (_) => const DashboardScreen()),
+                );
+              }
+            } catch (e) {
+              print('Supabase sign-in error: $e');
+              if (mounted) {
+                setState(() {
+                  _errorMessage = 'Sign-in failed: $e';
+                  _isLoading = false;
+                });
+              }
             }
           }
         }

@@ -74,12 +74,10 @@ class AuthService {
   /// Sign in with Google ID token (for web authentication events)
   static Future<AuthResponse?> signInWithIdToken({
     required String idToken,
-    String? accessToken,
   }) async {
     return await _supabase.auth.signInWithIdToken(
       provider: OAuthProvider.google,
       idToken: idToken,
-      accessToken: accessToken,
     );
   }
 
