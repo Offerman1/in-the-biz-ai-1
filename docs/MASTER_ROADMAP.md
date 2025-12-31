@@ -342,6 +342,116 @@ The AI assistant can now perform these actions:
 
 ---
 
+## 📋 Upcoming Features (Phase 6+ - Polish & Enhancement)
+
+These features were previously documented in copilot-instructions.md and are now tracked in the roadmap:
+
+### Shift Details Screen - File Attachments
+- **Description:** Enable users to attach multiple file types (PDFs, DOCs, Excel files, images) to shift records
+- **Use Case:** Store receipts, invoices, event contracts, BEO sheets as files (not just photos)
+- **Implementation:** Universal file picker using `file_picker` package
+- **UI:** Replace gallery button with attachment button; bottom sheet with "Pick File" or "Choose from Gallery"
+- **Status:** Not started
+- **Priority:** Medium
+
+### Shift Details Screen - Date Display
+- **Description:** Keep compact date badge INSIDE hero card; remove redundant long-form date display above
+- **Use Case:** Cleaner UI, avoid redundancy
+- **Implementation:** Minor UI refactor
+- **Status:** Not started
+- **Priority:** Low (Polish)
+
+### Calendar Screen - Modal Shift Cards
+- **Description:** Shift cards in calendar modal should match "Recent Shifts" dashboard cards
+- **Style:** Box shadow, ripple effect, consistent layout
+- **Layout:** Job Name + Amount | Event + Guest Count | Employer + Time Range
+- **Status:** Not started
+- **Priority:** Medium
+
+### Calendar Screen - Compact Drawer Summary Bar
+- **Description:** Replace large hero card with compact summary bar showing Income, Hours, Shift Count, and Add Button
+- **Use Case:** More shifts visible at once in modal
+- **Display:** Shows "Double" (2 shifts), "Triple" (3), "Quad" (4), or "5x"+ for 5+ shifts
+- **Status:** Not started
+- **Priority:** Medium
+
+### Shift Details Screen - Inline Editing
+- **Description:** Edit shift fields directly on Shift Details screen (like a word processor) without opening edit modal
+- **Features:**
+  - Tap field → becomes editable
+  - Text brightness increases while editing
+  - Pulsing "Save" icon appears when changes made
+  - Smart validation (time format, numeric values)
+  - Auto-save on blur (with manual save option)
+- **Time Format:** Intelligently parse shorthand (e.g., "2" → "2 PM" based on shift length)
+- **Status:** Not started
+- **Priority:** High
+
+### Shift Details Screen - Hero Card Reorganization
+- **Description:** Reorganize hero card layout to match Recent Shifts dashboard cards for consistency
+- **Changes:** Better padding, prevent text overflow, dynamic badge placement
+- **Status:** Not started
+- **Priority:** Medium (Polish)
+
+### Settings Screen - Section Reordering
+- **New Order:**
+  1. MY JOBS
+  2. EVENT CONTACTS ← Moved up
+  3. NOTIFICATIONS ← Moved up
+  4. APPEARANCE ← Moved up
+  5. DATA IMPORT
+  6. SCHEDULE SYNC ← Moved down
+  7. GOALS
+  8. TAX ESTIMATION
+  9. ACCOUNT
+- **Status:** Not started
+- **Priority:** Low (UX improvement)
+
+### App Icon Label
+- **Description:** Change app icon label from full name to "ITB" on both iOS and Android
+- **Android:** Modify `android:label` in AndroidManifest.xml
+- **iOS:** Modify `CFBundleDisplayName` in Info.plist
+- **Status:** Not started
+- **Priority:** Low (Branding)
+
+### Import Screen - Padding Adjustment
+- **Description:** Increase padding on Import Shift Preview screen so bottom buttons (Cancel, Import) are fully visible
+- **Status:** Not started
+- **Priority:** Low (UX fix)
+
+### Import Screen - AI-Assisted Mapping (Enhanced)
+- **Description:** Provide intelligent suggestions when mapping CSV columns to shift fields
+- **Features:**
+  - Ask user when AI uncertain (e.g., "Party" → Job Name or Event Name?)
+  - Auto-detect job names and suggest creating new job if needed
+  - Ask for help if >10 jobs detected
+  - Distinguish between Jobs (1-5) and Events (many per job)
+  - Show sample values for unmapped fields
+- **Status:** Not started
+- **Priority:** High (Improves import UX)
+
+### Import Screen - Job Pre-Selection
+- **Description:** Allow users to select a job BEFORE importing, so AI knows job context
+- **Use Case:** "Import all shifts for Restaurant XYZ" → AI maps to existing job
+- **Implementation:** Job selector at top of import screen
+- **Status:** Not started
+- **Priority:** Medium
+
+### Calendar - Conflict Detection
+- **Description:** Alert users when personal calendar events (doctor appointments, meetings) conflict with scheduled work shifts
+- **Features:**
+  - Detect time overlaps between work shifts and personal events
+  - Show same-day warnings (e.g., appointment at 2 PM, shift at 5 PM)
+  - All-day event conflicts (e.g., "Out of Town" vs. scheduled shift)
+- **Database:** `calendar_events` table exists; logic not implemented
+- **Settings:** Toggle in Notifications → "Schedule Conflict Alerts" (already UI ready)
+- **Alerts:** Push notifications, calendar visual indicators, dedicated conflicts screen
+- **Privacy:** Local-only processing, read-only, no data stored
+- **Status:** Partially done (DB table + UI exists, logic not implemented)
+- **Priority:** Medium
+
+---
+
 ## 💰 Monetization Model
 
 | Tier | Price | Features |
