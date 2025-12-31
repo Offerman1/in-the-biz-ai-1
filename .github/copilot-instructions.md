@@ -622,5 +622,5 @@ To deploy to your custom domain `inthebiz.app`, you need to configure GitHub Pag
 - **Rotate API keys immediately** if they are compromised (e.g., accidentally committed to a public repository).
 - **Monitor API key usage** in the cloud console to detect suspicious activity.
 - **For web deployments, configure Docker Desktop to start automatically** to ensure the Supabase CLI and other tools function correctly.
-- **When using Docker on Windows, restart the terminal** after installing Docker Desktop to ensure the `docker` command is available in the path.
-- **On Windows
+- **When using Docker on Windows, restart the terminal** after installing Docker Desktop to ensure the Supabase CLI and other tools function correctly.
+- **On Windows,
