@@ -514,3 +514,7 @@ The script (`scripts/run-migration.mjs`):
 2. **Naming format:** `YYYYMMDDHHMMSS_description.sql` (e.g., `20251231235959_add_new_table.sql`)
 3. Write your SQL with proper error handling
 4. Run: `node scripts/run-migration.mjs supabase/migrations/[filename].sql`
+
+### On Windows:
+
+On Windows, configure Docker Desktop to start automatically to ensure the Supabase CLI and other tools function correctly. Restart the terminal after installing Docker Desktop to ensure the Supabase CLI and other tools function correctly.
