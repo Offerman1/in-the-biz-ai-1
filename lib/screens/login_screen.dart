@@ -48,6 +48,7 @@ class _LoginScreenState extends State<LoginScreen> {
           if (googleAuth.idToken != null) {
             final response = await AuthService.signInWithIdToken(
               idToken: googleAuth.idToken!,
+              accessToken: googleAuth.accessToken,
             );
             if (response != null && mounted) {
               Navigator.of(context).pushReplacement(
