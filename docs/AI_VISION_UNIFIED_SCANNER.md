@@ -341,6 +341,93 @@ Analytics Dashboard shows deep insights
 
 ---
 
+## 🎯 Post-Scan Verification Flow
+
+### User Journey After Scanning
+
+```
+1. User scans checkout receipt(s)
+   ↓
+2. AI analyzes (possibly multi-page)
+   ↓
+3. VERIFICATION SCREEN APPEARS
+   ├─ Checkout Preview Card (top)
+   │  └─ Shows all extracted data with confidence badges
+   │
+   ├─ Questions Section (scrollable)
+   │  ├─ "X questions need your help"
+   │  ├─ 2-4 questions per view (responsive layout)
+   │  └─ Each question has input field + hint text
+   │
+   └─ Action Buttons
+      ├─ [Approve as-is] (skip unanswered questions)
+      ├─ [Answer Questions] (fill in blanks)
+      └─ [Discard]
+   ↓
+4. Data saved to server_checkouts table
+   ↓
+5. Optional: User can "Import to Shift" later
+```
+
+### Checkout Preview Card
+
+**Layout:**
+```
+┌─────────────────────────────────────┐
+│ 🧾 CHECKOUT PREVIEW                 │
+├─────────────────────────────────────┤
+│  Sales:        $450.00               │
+│  Tax:          $38.25                │
+│  Tips:         $95.00   ⚠️ Unclear   │
+│  Service Chg:  $0.00   ✅ Clear      │
+│  ───────────────────────────────────│
+│  TOTAL:        $583.25               │
+│                                      │
+│  Server: John Smith   Table: 8       │
+│  Date: 12/31/2025     Covers: 4      │
+│  POS: Toast                          │
+│                                      │
+│  ✓ High Confidence (5/8 fields)      │
+└─────────────────────────────────────┘
+```
+
+**Confidence Badges:**
+- ✅ Green: High confidence (>80%)
+- ⚠️ Yellow: Medium confidence (50-80%)
+- ❌ Red: Low/Failed (could not extract)
+
+### Question Card Examples
+
+**Simple Input Question:**
+```
+┌─────────────────────────────────────┐
+│ ❓ What was your tip amount?         │
+│    I found $95, but it was unclear   │
+│                                      │
+│ [_____________________]              │
+│  Hint: E.g., $100 or 95.50          │
+└─────────────────────────────────────┘
+```
+
+**Multiple Choice Question:**
+```
+┌─────────────────────────────────────┐
+│ ❓ Was service charge a house fee?   │
+│    Found: Service Charge $15         │
+│                                      │
+│ [ ] Yes, deduct from my tips         │
+│ [ ] No, it's part of my pay          │
+│ [ ] Not sure                         │
+└─────────────────────────────────────┘
+```
+
+**Questions Always Optional:**
+- Users CAN skip unanswered questions
+- No required fields (user choice)
+- Can edit verification data later if needed
+
+---
+
 ## 🤖 AI Implementation Strategy
 
 ### Gemini Vision Configuration
@@ -481,45 +568,69 @@ Settings → Analytics Preferences
 ## 🛠️ Implementation Roadmap
 
 ### Phase 6a: UI Foundation (Week 1)
-- [ ] Add Scan button to Add Shift header
-- [ ] Add Scan button to Edit Shift header
+- [ ] Add ✨ Scan button icon to Add Shift header
+- [ ] Add Scan button to Edit Shift header  
 - [ ] Add Scan button to Shift Details header
-- [ ] Create bottom sheet menu component
-- [ ] Wire all scan options to appropriate screens
+- [ ] Create bottom sheet menu component with options:
+  - [ ] 🧾 BEO (Event Details)
+  - [ ] 📊 Server Checkout
+  - [ ] 💼 Business Card
+  - [ ] 📄 Invoice (Coming Soon)
+  - [ ] 🧾 Receipt (Coming Soon)
 
-### Phase 6b: BEO Scanner (Week 2)
-- [ ] Create BEO scan screen
-- [ ] Implement multi-page detection
-- [ ] Build AI concatenation logic
-- [ ] Create review modal for extracted data
-- [ ] Auto-fill shift form from BEO data
-- [ ] Create Event Contact from BEO contact info
-
-### Phase 6c: Server Checkout Research (Week 1-2, parallel)
-- [ ] Research Toast POS format
-- [ ] Research Square format
-- [ ] Research Aloha/Micros format
-- [ ] Collect real-world examples
-- [ ] Document common fields
-- [ ] Create POS Format Guide
-
-### Phase 6d: Server Checkout Scanner (Week 3-4)
-- [ ] Create Checkout scan screen
-- [ ] Implement Gemini vision with POS-specific prompt
-- [ ] Build review modal for financial data
-- [ ] Auto-fill shift form from checkout data
-- [ ] Store checkout metadata (which POS system detected, confidence level)
+### Phase 6b: Server Checkout Scanner (Week 2-3)
+- [ ] Create checkout scan screen (photo picker)
+- [ ] Implement multi-page detection logic
+  - [ ] After each photo: "Another page?" or "Ready to import?"
+  - [ ] Concatenate multi-page data
+- [ ] Create verification screen UI
+  - [ ] Checkout preview card with confidence badges
+  - [ ] Questions section (responsive 2-4 cards)
+  - [ ] Action buttons (Approve/Answer/Discard)
+- [ ] Build Gemini vision integration
+  - [ ] POS system detection (Toast/Square/Aloha/etc)
+  - [ ] Field extraction with confidence scores
+  - [ ] Question generation for low-confidence fields
+- [ ] Create server_checkouts database table
+- [ ] Save verified checkout data
 - [ ] Error handling for unclear receipts
 
-### Phase 6e: Business Card Integration (Week 5)
-- [ ] Add Business Card option to bottom sheet menu
-- [ ] Test integration with existing business card scanner
+### Phase 6c: Checkout Analytics Tab (Week 3-4)
+- [ ] Add "Checkout Tracking" tab to Stats screen
+- [ ] Build analytics queries from server_checkouts table
+- [ ] Create dashboard UI with:
+  - [ ] Key metrics (total sales, avg sale, tip %)
+  - [ ] By Restaurant breakdown
+  - [ ] By POS System breakdown
+  - [ ] Charts (sales by day, tip % trend)
+- [ ] Add period selector (Week/Month/Year/Custom)
 
-### Phase 6f: Testing & Documentation (Week 5-6)
-- [ ] Test all three scanners with real-world data
-- [ ] Document POS detection accuracy
-- [ ] Create user guide for scanning
-- [ ] Note what worked, what needs improvement
+### Phase 6d: Optional Features (Week 4-5)
+- [ ] Import to Shift button
+  - [ ] Pre-fill Add Shift form with checkout data
+  - [ ] Map checkout fields to shift fields
+- [ ] Auto-import toggle in settings
+- [ ] Duplicate detection
+  - [ ] Warn if checkout already exists for same date/server/amount
+  - [ ] Options to create new or replace
+
+### Phase 6e: BEO Scanner (Week 5)
+- [ ] Same verification flow as checkout
+- [ ] Multi-page support (same logic)
+- [ ] Auto-fill shift form with event details
+- [ ] Create Event Contact from BEO data
+
+### Phase 6f: Business Card Integration (Week 5)
+- [ ] Add Business Card option to bottom sheet menu
+- [ ] Wire to existing business card scanner
+- [ ] Test integration
+
+### Phase 6g: Testing & Documentation (Week 6)
+- [ ] Test all scanners with 20+ real-world receipts
+- [ ] Document extraction accuracy by POS system
+- [ ] Collect edge cases and improvements
+- [ ] Create user guide
+- [ ] Gather feedback for v1.1
 
 ---
 
