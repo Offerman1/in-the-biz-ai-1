@@ -548,8 +548,6 @@ These steps are a **general guide** based on past experiences. Actual deployment
 
 -   In `lib/services/auth_service.dart`, make sure the Google Sign-In logic is correctly implemented for web.
 -   Use the correct client ID for web.
-   - **Web**: Uses `GoogleSignIn().signIn()` (the standard method that works on web)
-   - **Mobile**: Uses `GoogleSignIn.instance.authenticate()` (the new 7.x API method)
 *  On web you can't use `authenticate()` - you MUST use the Google button rendered by the SDK.
 
 #### 4. Create a GitHub Repository:
@@ -622,4 +620,8 @@ Based on user feedback, the following dark themes have been updated to use more 
 
 ### Security Alert - API Key Compromise (NEW - December 31, 2025):
 
-**CRITICAL: A Gemini API key was accidentally exposed
+**CRITICAL: A Gemini API key was accidentally exposed**
+
+**What happened:**
+- The `.env` file (containing your API key) was accidentally included in the GitHub repository for the web deployment.
+- A Google Cloud Platform email alerted to the exposed Gemini API key (ending
