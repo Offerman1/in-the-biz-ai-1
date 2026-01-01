@@ -601,65 +601,53 @@ class _AddJobScreenState extends State<AddJobScreen> {
 
             const SizedBox(height: 16),
 
-            // Job Title (SECOND) - Dropdown when industry is selected
+            // Job Title (SECOND) - Chips layout when industry is selected (like onboarding)
             if (_selectedIndustry != null &&
-                _selectedIndustry != '+ Add Custom Industry')
-              DropdownButtonFormField<String>(
-                value: _selectedJobTitle,
-                decoration: InputDecoration(
-                  hintText: 'Select your job title',
-                  prefixIcon: Icon(Icons.work, color: AppTheme.primaryGreen),
-                  filled: true,
-                  fillColor: AppTheme.cardBackground,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-                    borderSide: BorderSide.none,
-                  ),
+                _selectedIndustry != '+ Add Custom Industry') ...[
+              Text(
+                'Job Title',
+                style: AppTheme.labelMedium.copyWith(
+                  color: AppTheme.textSecondary,
                 ),
-                dropdownColor: AppTheme.cardBackground,
-                style: AppTheme.bodyLarge.copyWith(
-                  color: _selectedJobTitle == null ||
-                          _selectedJobTitle == '+ Add Custom Job Title'
-                      ? AppTheme.textMuted
-                      : AppTheme.textPrimary,
-                ),
-                hint: Text(
-                  'Select a job title',
-                  style: AppTheme.bodyLarge.copyWith(
-                    color: AppTheme.textMuted,
-                  ),
-                ),
-                items:
-                    _getJobTitlesForIndustry(_selectedIndustry).map((jobTitle) {
-                  return DropdownMenuItem(
-                    value: jobTitle,
-                    child: Text(
-                      jobTitle,
-                      style: AppTheme.bodyLarge.copyWith(
-                        color: jobTitle == '+ Add Custom Job Title'
-                            ? AppTheme.primaryGreen
-                            : AppTheme.textPrimary,
-                        fontWeight: jobTitle == '+ Add Custom Job Title'
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                      ),
+              ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: _getJobTitlesForIndustry(_selectedIndustry)
+                    .where((title) =>
+                        title !=
+                        '+ Add Custom Job Title') // Filter out the add button
+                    .map((jobTitle) {
+                  final isSelected = _selectedJobTitle == jobTitle;
+                  return FilterChip(
+                    label: Text(jobTitle),
+                    selected: isSelected,
+                    onSelected: (selected) {
+                      setState(() => _selectedJobTitle = jobTitle);
+                    },
+                    selectedColor: AppTheme.primaryGreen.withOpacity(0.3),
+                    backgroundColor: AppTheme.cardBackground,
+                    checkmarkColor: AppTheme.primaryGreen,
+                    labelStyle: TextStyle(
+                      color: isSelected
+                          ? AppTheme.primaryGreen
+                          : AppTheme.textPrimary,
                     ),
                   );
                 }).toList(),
-                onChanged: (value) {
-                  if (value == '+ Add Custom Job Title') {
-                    _showAddCustomJobTitleDialog();
-                  } else {
-                    setState(() => _selectedJobTitle = value);
-                  }
-                },
-                validator: (value) {
-                  if (value == null || value == '+ Add Custom Job Title') {
-                    return 'Please select a job title';
-                  }
-                  return null;
-                },
               ),
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: () => _showAddCustomJobTitleDialog(),
+                icon: const Icon(Icons.add),
+                label: const Text('Add Custom Title'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppTheme.textSecondary,
+                  side: BorderSide(color: AppTheme.cardBackgroundLight),
+                ),
+              ),
+            ],
 
             if (_selectedIndustry != null &&
                 _selectedIndustry != '+ Add Custom Industry')
