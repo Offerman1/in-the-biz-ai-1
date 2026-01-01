@@ -1350,9 +1350,9 @@ class _AddJobScreenState extends State<AddJobScreen> {
         // 💼 Retail & Sales
         if (currentTemplate.showItemsSold ||
             currentTemplate.showTransactionsCount ||
-            currentTemplate.showUpsellsCount ||
-            currentTemplate.showReturnsCount ||
-            currentTemplate.showShrinkAmount)
+            currentTemplate.showUpsells ||
+            currentTemplate.showReturns ||
+            currentTemplate.showShrink)
           _buildFieldCategory(
             '💼 Retail & Sales',
             [
@@ -1368,34 +1368,34 @@ class _AddJobScreenState extends State<AddJobScreen> {
                   setState(() => _showTransactionsCount =
                       !(_showTransactionsCount ?? false));
                 }),
-              if (currentTemplate.showUpsellsCount)
+              if (currentTemplate.showUpsells)
                 _buildToggleItem(
-                    'Upsells', _showUpsellsCount ?? true, Icons.trending_up,
+                    'Upsells', _showUpsells ?? true, Icons.trending_up,
                     () {
                   setState(
-                      () => _showUpsellsCount = !(_showUpsellsCount ?? false));
+                      () => _showUpsells = !(_showUpsells ?? false));
                 }),
-              if (currentTemplate.showReturnsCount)
+              if (currentTemplate.showReturns)
                 _buildToggleItem(
-                    'Returns', _showReturnsCount ?? true, Icons.keyboard_return,
+                    'Returns', _showReturns ?? true, Icons.keyboard_return,
                     () {
                   setState(
-                      () => _showReturnsCount = !(_showReturnsCount ?? false));
+                      () => _showReturns = !(_showReturns ?? false));
                 }),
-              if (currentTemplate.showShrinkAmount)
+              if (currentTemplate.showShrink)
                 _buildToggleItem(
-                    'Shrink', _showShrinkAmount ?? true, Icons.warning, () {
+                    'Shrink', _showShrink ?? true, Icons.warning, () {
                   setState(
-                      () => _showShrinkAmount = !(_showShrinkAmount ?? false));
+                      () => _showShrink = !(_showShrink ?? false));
                 }),
             ].where((w) => w != null).cast<Widget>().toList(),
           ),
 
         if (currentTemplate.showItemsSold ||
             currentTemplate.showTransactionsCount ||
-            currentTemplate.showUpsellsCount ||
-            currentTemplate.showReturnsCount ||
-            currentTemplate.showShrinkAmount)
+            currentTemplate.showUpsells ||
+            currentTemplate.showReturns ||
+            currentTemplate.showShrink)
           const SizedBox(height: 20),
 
         // 📝 Documentation
