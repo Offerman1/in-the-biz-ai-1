@@ -1,10 +1,6 @@
 {
   "terminal.integrated.defaultProfile.windows": "Command Prompt",
   "terminal.integrated.profiles.windows": {
-    "PowerShell": {
-      "source": "PowerShell",
-      "icon": "terminal-powershell"
-    },
     "Command Prompt": {
       "path": [
         "${env:windir}\\System32\\cmd.exe"

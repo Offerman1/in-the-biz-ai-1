@@ -334,6 +334,27 @@ class HeroCard extends StatelessWidget {
 
 ---
 
+## 💻 TERMINAL & SHELL RULES (NEW - January 1, 2026)
+
+- **ALWAYS use `cmd.exe` instead of PowerShell.**
+- To ensure VS Code **always** uses `cmd.exe`, add the following to your VS Code `settings.json` and remove the PowerShell profile:
+
+```json
+"terminal.integrated.defaultProfile.windows": "CommandPrompt",
+"terminal.integrated.profiles.windows": {
+  "Command Prompt": {
+    "path": "${env:windir}\\System32\\cmd.exe",
+    "args": [],
+    "icon": "terminal-cmd"
+  }
+}
+```
+This removes PowerShell from the profiles entirely, so VS Code can't offer it as an option and will **only** show Command Prompt. PowerShell itself will still be installed on your Windows machine but not available as an option in VS Code.
+- If the above settings do not work, try reloading the VS Code window (`Ctrl+Shift+P` → "Reload Window").
+- If a PowerShell terminal opens, manually switch to the Command Prompt tab or close the PowerShell terminal entirely so only `cmd.exe` is available.
+
+---
+
 ## 🗄️ SUPABASE DATABASE MIGRATIONS (NEW - December 31, 2025)
 
 **DO NOT use `supabase db push` or `supabase migration up`** - these require Docker and are unreliable on Windows.
@@ -787,37 +808,4 @@ ALTER TABLE public.shifts ADD COLUMN (
 │                                      │
 │ [ ] Yes, deduct from my tips         │
 │ [ ] No, it's part of my pay          │
-│ [ ] Not sure                         │
-└─────────────────────────────────────┘
-```
-
-**Questions Always Optional:**
-- Users CAN skip unanswered questions
-- No required fields (user choice)
-- Can edit verification data later if needed
-
----
-
-## 🎯 Implementation Strategy
-
-### Phase 6a: UI Foundation (Week 1)
-- [ ] Add ✨ Scan button icon to Add Shift header
-- [ ] Add Scan button to Edit Shift header
-- [ ] Add Scan button to Shift Details header
-- [ ] Create bottom sheet menu component with options:
-  - [ ] 🧾 BEO (Event Details)
-  - [ ] 📊 Server Checkout
-- [ ]
-
----
-
-## ⚙️ GIT & DEPLOYMENT RULES
-
-### Understanding Sync Changes:
-
--   When you click the **"Sync Changes"** button in VS Code's Git panel, it:
-    1.  **Commits** your changes to the local branch (typically `gh-pages`).
-    2.  **Pulls** any remote changes from the remote branch.
-    3.  **Pushes** your local commits to the remote branch on GitHub.
-
--   **"Sync Changes" alone does NOT update your website
+│
