@@ -73,6 +73,119 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
   final _flatRateController = TextEditingController();
   final _hourlyRateOverrideController = TextEditingController();
 
+  // =====================================================
+  // RIDESHARE & DELIVERY CONTROLLERS
+  // =====================================================
+  final _ridesCountController = TextEditingController();
+  final _deliveriesCountController = TextEditingController();
+  final _deadMilesController = TextEditingController();
+  final _fuelCostController = TextEditingController();
+  final _tollsParkingController = TextEditingController();
+  final _surgeMultiplierController = TextEditingController();
+  final _acceptanceRateController = TextEditingController();
+  final _baseFareController = TextEditingController();
+
+  // =====================================================
+  // MUSIC & ENTERTAINMENT CONTROLLERS
+  // =====================================================
+  final _gigTypeController = TextEditingController();
+  final _setupHoursController = TextEditingController();
+  final _performanceHoursController = TextEditingController();
+  final _breakdownHoursController = TextEditingController();
+  final _equipmentUsedController = TextEditingController();
+  final _equipmentRentalCostController = TextEditingController();
+  final _crewPaymentController = TextEditingController();
+  final _merchSalesController = TextEditingController();
+  final _audienceSizeController = TextEditingController();
+
+  // =====================================================
+  // ARTIST & CRAFTS CONTROLLERS
+  // =====================================================
+  final _piecesCreatedController = TextEditingController();
+  final _piecesSoldController = TextEditingController();
+  final _materialsCostController = TextEditingController();
+  final _salePriceController = TextEditingController();
+  final _venueCommissionPercentController = TextEditingController();
+
+  // =====================================================
+  // RETAIL/SALES CONTROLLERS
+  // =====================================================
+  final _itemsSoldController = TextEditingController();
+  final _transactionsCountController = TextEditingController();
+  final _upsellsCountController = TextEditingController();
+  final _upsellsAmountController = TextEditingController();
+  final _returnsCountController = TextEditingController();
+  final _returnsAmountController = TextEditingController();
+  final _shrinkAmountController = TextEditingController();
+  final _departmentController = TextEditingController();
+
+  // =====================================================
+  // SALON/SPA CONTROLLERS
+  // =====================================================
+  final _serviceTypeController = TextEditingController();
+  final _servicesCountController = TextEditingController();
+  final _productSalesController = TextEditingController();
+  final _repeatClientPercentController = TextEditingController();
+  final _chairRentalController = TextEditingController();
+  final _newClientsCountController = TextEditingController();
+  final _returningClientsCountController = TextEditingController();
+  final _walkinCountController = TextEditingController();
+  final _appointmentCountController = TextEditingController();
+
+  // =====================================================
+  // HOSPITALITY CONTROLLERS
+  // =====================================================
+  final _roomTypeController = TextEditingController();
+  final _roomsCleanedController = TextEditingController();
+  final _qualityScoreController = TextEditingController();
+  final _shiftTypeController = TextEditingController();
+  final _roomUpgradesController = TextEditingController();
+  final _guestsCheckedInController = TextEditingController();
+  final _carsParkedController = TextEditingController();
+
+  // =====================================================
+  // HEALTHCARE CONTROLLERS
+  // =====================================================
+  final _patientCountController = TextEditingController();
+  final _shiftDifferentialController = TextEditingController();
+  final _onCallHoursController = TextEditingController();
+  final _proceduresCountController = TextEditingController();
+  final _specializationController = TextEditingController();
+
+  // =====================================================
+  // FITNESS CONTROLLERS
+  // =====================================================
+  final _sessionsCountController = TextEditingController();
+  final _sessionTypeController = TextEditingController();
+  final _classSizeController = TextEditingController();
+  final _retentionRateController = TextEditingController();
+  final _cancellationsCountController = TextEditingController();
+  final _packageSalesController = TextEditingController();
+  final _supplementSalesController = TextEditingController();
+
+  // =====================================================
+  // CONSTRUCTION/TRADES CONTROLLERS
+  // =====================================================
+  final _laborCostController = TextEditingController();
+  final _subcontractorCostController = TextEditingController();
+  final _squareFootageController = TextEditingController();
+  final _weatherDelayHoursController = TextEditingController();
+
+  // =====================================================
+  // FREELANCER CONTROLLERS
+  // =====================================================
+  final _revisionsCountController = TextEditingController();
+  final _clientTypeController = TextEditingController();
+  final _expensesController = TextEditingController();
+  final _billableHoursController = TextEditingController();
+
+  // =====================================================
+  // RESTAURANT ADDITIONAL CONTROLLERS
+  // =====================================================
+  final _tableSectionController = TextEditingController();
+  final _cashSalesController = TextEditingController();
+  final _cardSalesController = TextEditingController();
+
   DateTime _selectedDate = DateTime.now();
   TimeOfDay? _startTime;
   TimeOfDay? _endTime;
