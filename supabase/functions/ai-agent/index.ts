@@ -92,9 +92,18 @@ serve(async (req) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      console.error("Auth error:", authError);
+      console.error("Auth error details:", {
+        error: authError,
+        errorMessage: authError?.message,
+        errorStatus: authError?.status,
+        hasUser: !!user,
+        authHeaderLength: authHeader.length,
+      });
       return new Response(
-        JSON.stringify({ error: "Invalid or expired token" }),
+        JSON.stringify({ 
+          error: "Invalid or expired token",
+          details: authError?.message || "No user found"
+        }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
