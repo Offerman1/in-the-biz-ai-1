@@ -50,7 +50,8 @@ class _CollapsibleTemplateSectionState
         color: AppTheme.cardBackground,
         borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
         border: widget.hasActiveFields
-            ? Border.all(color: AppTheme.primaryGreen.withOpacity(0.3), width: 1)
+            ? Border.all(
+                color: AppTheme.primaryGreen.withOpacity(0.3), width: 1)
             : null,
       ),
       child: Column(
