@@ -805,7 +805,7 @@ ALTER TABLE public.shifts ADD COLUMN (
 
 ---
 
-## 🤖 AI Implementation Strategy
+## 🎯 Implementation Strategy
 
 ### Phase 6a: UI Foundation (Week 1)
 - [ ] Add ✨ Scan button icon to Add Shift header
