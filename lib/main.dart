@@ -48,8 +48,46 @@ class InTheBizApp extends StatelessWidget {
           title: 'In The Biz AI',
           debugShowCheckedModeBanner: false,
           theme: themeProvider.getThemeData(),
-          home: const AuthWrapper(),
+          home: const ResponsiveWrapper(child: AuthWrapper()),
         );
+      },
+    );
+  }
+}
+
+/// Wrapper that constrains width on desktop to mobile size
+class ResponsiveWrapper extends StatelessWidget {
+  final Widget child;
+  
+  const ResponsiveWrapper({super.key, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // If screen width > 600px (tablet/desktop), constrain to mobile width
+        if (constraints.maxWidth > 600) {
+          return Container(
+            color: Colors.black, // Background color for desktop
+            child: Center(
+              child: Container(
+                width: 400, // Mobile width constraint
+                decoration: BoxDecoration(
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.3),
+                      blurRadius: 20,
+                      spreadRadius: 5,
+                    ),
+                  ],
+                ),
+                child: child,
+              ),
+            ),
+          );
+        }
+        // On mobile, show full width
+        return child;
       },
     );
   }
