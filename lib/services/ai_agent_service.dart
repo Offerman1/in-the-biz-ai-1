@@ -21,8 +21,10 @@ class AIAgentService {
       debugPrint('[AI Agent] User session exists: ${session != null}');
       if (session != null) {
         debugPrint('[AI Agent] User ID: ${session.user.id}');
-        debugPrint('[AI Agent] Access token length: ${session.accessToken.length}');
-        debugPrint('[AI Agent] Token type: ${session.accessToken.split('.').length} parts');
+        debugPrint(
+            '[AI Agent] Access token length: ${session.accessToken.length}');
+        debugPrint(
+            '[AI Agent] Token type: ${session.accessToken.split('.').length} parts');
       } else {
         debugPrint('[AI Agent] WARNING: No user session found!');
       }
