@@ -427,6 +427,7 @@ This section defines the UI placement strategy for the AI Vision features.
     *   AI should prompt: "Scan another page?" or "Ready to import?"
     *   Concatenate data from multi-page scans.
 -   **Server Checkout:** Extracts financial data and auto-fills the shift form.
+    *   AI should prompt: "Scan another page?" or "Ready to import?"
     *   Account for variable formats.
     *   Account for multiple pages in a checkout.
     *   Start simple, extract what is consistently available, and improve over time.
@@ -821,6 +822,4 @@ ALTER TABLE public.shifts ADD COLUMN (
 
 -   **"Sync Changes" alone does NOT update your website.**
 
-### Deploying Updates to the Website:
-
--   You need to run the `deploy-web
+###
