@@ -1260,11 +1260,11 @@ class _AddJobScreenState extends State<AddJobScreen> {
                   setState(() =>
                       _showBreakdownHours = !(_showBreakdownHours ?? false));
                 }),
-              if (currentTemplate.showEquipmentRentalCost)
+              if (currentTemplate.showEquipmentRental)
                 _buildToggleItem('Equipment Rental',
-                    _showEquipmentRentalCost ?? true, Icons.devices, () {
-                  setState(() => _showEquipmentRentalCost =
-                      !(_showEquipmentRentalCost ?? false));
+                    _showEquipmentRental ?? true, Icons.devices, () {
+                  setState(() => _showEquipmentRental =
+                      !(_showEquipmentRental ?? false));
                 }),
               if (currentTemplate.showCrewPayment)
                 _buildToggleItem(
