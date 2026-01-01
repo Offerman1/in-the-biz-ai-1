@@ -319,6 +319,124 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
     _overtimeHoursController.text = (shift.overtimeHours ?? 0).toString();
     _flatRateController.text = (shift.flatRate ?? 0).toString();
     _hourlyRateOverrideController.text = shift.hourlyRate.toString();
+    _salesAmountController.text = shift.salesAmount?.toString() ?? '';
+    _tipoutPercentController.text = shift.tipoutPercent?.toString() ?? '';
+    _additionalTipoutController.text = shift.additionalTipout?.toString() ?? '';
+    _additionalTipoutNoteController.text = shift.additionalTipoutNote ?? '';
+    _eventCostController.text = shift.eventCost?.toString() ?? '';
+
+    // =====================================================
+    // RIDESHARE & DELIVERY FIELDS
+    // =====================================================
+    _ridesCountController.text = shift.ridesCount?.toString() ?? '';
+    _deliveriesCountController.text = shift.deliveriesCount?.toString() ?? '';
+    _deadMilesController.text = shift.deadMiles?.toString() ?? '';
+    _fuelCostController.text = shift.fuelCost?.toString() ?? '';
+    _tollsParkingController.text = shift.tollsParking?.toString() ?? '';
+    _surgeMultiplierController.text = shift.surgeMultiplier?.toString() ?? '';
+    _acceptanceRateController.text = shift.acceptanceRate?.toString() ?? '';
+    _baseFareController.text = shift.baseFare?.toString() ?? '';
+
+    // =====================================================
+    // MUSIC & ENTERTAINMENT FIELDS
+    // =====================================================
+    _gigTypeController.text = shift.gigType ?? '';
+    _setupHoursController.text = shift.setupHours?.toString() ?? '';
+    _performanceHoursController.text = shift.performanceHours?.toString() ?? '';
+    _breakdownHoursController.text = shift.breakdownHours?.toString() ?? '';
+    _equipmentUsedController.text = shift.equipmentUsed ?? '';
+    _equipmentRentalCostController.text = shift.equipmentRentalCost?.toString() ?? '';
+    _crewPaymentController.text = shift.crewPayment?.toString() ?? '';
+    _merchSalesController.text = shift.merchSales?.toString() ?? '';
+    _audienceSizeController.text = shift.audienceSize?.toString() ?? '';
+
+    // =====================================================
+    // ARTIST & CRAFTS FIELDS
+    // =====================================================
+    _piecesCreatedController.text = shift.piecesCreated?.toString() ?? '';
+    _piecesSoldController.text = shift.piecesSold?.toString() ?? '';
+    _materialsCostController.text = shift.materialsCost?.toString() ?? '';
+    _salePriceController.text = shift.salePrice?.toString() ?? '';
+    _venueCommissionPercentController.text = shift.venueCommissionPercent?.toString() ?? '';
+
+    // =====================================================
+    // RETAIL/SALES FIELDS
+    // =====================================================
+    _itemsSoldController.text = shift.itemsSold?.toString() ?? '';
+    _transactionsCountController.text = shift.transactionsCount?.toString() ?? '';
+    _upsellsCountController.text = shift.upsellsCount?.toString() ?? '';
+    _upsellsAmountController.text = shift.upsellsAmount?.toString() ?? '';
+    _returnsCountController.text = shift.returnsCount?.toString() ?? '';
+    _returnsAmountController.text = shift.returnsAmount?.toString() ?? '';
+    _shrinkAmountController.text = shift.shrinkAmount?.toString() ?? '';
+    _departmentController.text = shift.department ?? '';
+
+    // =====================================================
+    // SALON/SPA FIELDS
+    // =====================================================
+    _serviceTypeController.text = shift.serviceType ?? '';
+    _servicesCountController.text = shift.servicesCount?.toString() ?? '';
+    _productSalesController.text = shift.productSales?.toString() ?? '';
+    _repeatClientPercentController.text = shift.repeatClientPercent?.toString() ?? '';
+    _chairRentalController.text = shift.chairRental?.toString() ?? '';
+    _newClientsCountController.text = shift.newClientsCount?.toString() ?? '';
+    _returningClientsCountController.text = shift.returningClientsCount?.toString() ?? '';
+    _walkinCountController.text = shift.walkinCount?.toString() ?? '';
+    _appointmentCountController.text = shift.appointmentCount?.toString() ?? '';
+
+    // =====================================================
+    // HOSPITALITY FIELDS
+    // =====================================================
+    _roomTypeController.text = shift.roomType ?? '';
+    _roomsCleanedController.text = shift.roomsCleaned?.toString() ?? '';
+    _qualityScoreController.text = shift.qualityScore?.toString() ?? '';
+    _shiftTypeController.text = shift.shiftType ?? '';
+    _roomUpgradesController.text = shift.roomUpgrades?.toString() ?? '';
+    _guestsCheckedInController.text = shift.guestsCheckedIn?.toString() ?? '';
+    _carsParkedController.text = shift.carsParked?.toString() ?? '';
+
+    // =====================================================
+    // HEALTHCARE FIELDS
+    // =====================================================
+    _patientCountController.text = shift.patientCount?.toString() ?? '';
+    _shiftDifferentialController.text = shift.shiftDifferential?.toString() ?? '';
+    _onCallHoursController.text = shift.onCallHours?.toString() ?? '';
+    _proceduresCountController.text = shift.proceduresCount?.toString() ?? '';
+    _specializationController.text = shift.specialization ?? '';
+
+    // =====================================================
+    // FITNESS FIELDS
+    // =====================================================
+    _sessionsCountController.text = shift.sessionsCount?.toString() ?? '';
+    _sessionTypeController.text = shift.sessionType ?? '';
+    _classSizeController.text = shift.classSize?.toString() ?? '';
+    _retentionRateController.text = shift.retentionRate?.toString() ?? '';
+    _cancellationsCountController.text = shift.cancellationsCount?.toString() ?? '';
+    _packageSalesController.text = shift.packageSales?.toString() ?? '';
+    _supplementSalesController.text = shift.supplementSales?.toString() ?? '';
+
+    // =====================================================
+    // CONSTRUCTION/TRADES FIELDS
+    // =====================================================
+    _laborCostController.text = shift.laborCost?.toString() ?? '';
+    _subcontractorCostController.text = shift.subcontractorCost?.toString() ?? '';
+    _squareFootageController.text = shift.squareFootage?.toString() ?? '';
+    _weatherDelayHoursController.text = shift.weatherDelayHours?.toString() ?? '';
+
+    // =====================================================
+    // FREELANCER FIELDS
+    // =====================================================
+    _revisionsCountController.text = shift.revisionsCount?.toString() ?? '';
+    _clientTypeController.text = shift.clientType ?? '';
+    _expensesController.text = shift.expenses?.toString() ?? '';
+    _billableHoursController.text = shift.billableHours?.toString() ?? '';
+
+    // =====================================================
+    // RESTAURANT ADDITIONAL FIELDS
+    // =====================================================
+    _tableSectionController.text = shift.tableSection ?? '';
+    _cashSalesController.text = shift.cashSales?.toString() ?? '';
+    _cardSalesController.text = shift.cardSales?.toString() ?? '';
 
     // Parse times if available
     if (shift.startTime != null) {
