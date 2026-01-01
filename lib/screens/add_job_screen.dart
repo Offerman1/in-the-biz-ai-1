@@ -269,6 +269,69 @@ class _AddJobScreenState extends State<AddJobScreen> {
     _overtimeMultiplier = template.overtimeMultiplier;
   }
 
+  /// Apply template settings when industry is selected
+  void _applyIndustryTemplate(String? industry) {
+    JobTemplate template;
+    switch (industry) {
+      case 'Restaurant/Bar/Nightclub':
+        template = JobTemplate.restaurant();
+        break;
+      case 'Construction/Trades':
+        template = JobTemplate.construction();
+        break;
+      case 'Freelancer/Consultant':
+        template = JobTemplate.freelancer();
+        break;
+      case 'Healthcare':
+        template = JobTemplate.healthcare();
+        break;
+      case 'Gig Worker':
+        template = JobTemplate.gigWorker();
+        break;
+      case 'Rideshare & Delivery':
+        template = JobTemplate.rideshareDelivery();
+        break;
+      case 'Music & Entertainment':
+        template = JobTemplate.musicEntertainment();
+        break;
+      case 'Artist & Crafts':
+        template = JobTemplate.artistCrafts();
+        break;
+      case 'Retail/Sales':
+        template = JobTemplate.retail();
+        break;
+      case 'Salon/Spa':
+        template = JobTemplate.salon();
+        break;
+      case 'Hospitality':
+        template = JobTemplate.hospitality();
+        break;
+      case 'Fitness':
+        template = JobTemplate.fitness();
+        break;
+      default:
+        template = JobTemplate();
+    }
+
+    // Update state variables from template
+    _payStructure = template.payStructure;
+    _showTips = template.showTips;
+    _showCommission = template.showCommission;
+    _showSales = template.showSales;
+    _showEventCost = template.showEventCost;
+    _showEventName = template.showEventName;
+    _showHostess = template.showHostess;
+    _showGuestCount = template.showGuestCount;
+    _showLocation = template.showLocation;
+    _showClientName = template.showClientName;
+    _showProjectName = template.showProjectName;
+    _showMileage = template.showMileage;
+    _showPhotos = template.showPhotos;
+    _showNotes = template.showNotes;
+    _tracksOvertime = template.tracksOvertime;
+    _overtimeMultiplier = template.overtimeMultiplier;
+  }
+
   @override
   void dispose() {
     _jobTitleController.dispose();
@@ -618,6 +681,8 @@ class _AddJobScreenState extends State<AddJobScreen> {
                     _selectedIndustry = value;
                     _selectedJobTitle =
                         null; // Reset job title when industry changes
+                    // Update template settings based on industry
+                    _applyIndustryTemplate(value);
                   });
                 }
               },
