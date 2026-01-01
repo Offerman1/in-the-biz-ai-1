@@ -8,6 +8,7 @@ import '../theme/app_theme.dart';
 import '../services/database_service.dart';
 import '../services/auth_service.dart';
 import '../models/industry_template.dart';
+import '../models/industry_data.dart';
 import '../models/job.dart';
 import '../models/job_template.dart';
 import '../models/shift.dart';
@@ -85,16 +86,66 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     super.dispose();
   }
 
-  Future<void> _loadIndustries() async {
+  /// Load industries from IndustryData (NOT database)
+  void _loadIndustries() {
     try {
-      final response = await _db.getIndustryTemplates();
+      // Create IndustryTemplate objects from IndustryData
+      final templates = <IndustryTemplate>[];
+      for (final industryKey in IndustryData.industries) {
+        // Get job titles for this industry from IndustryData
+        final jobTitles = IndustryData.getJobTitles(industryKey);
+        
+        // Convert to JobTypeTemplate objects with default rate of $15/hr
+        final jobTypes = jobTitles
+            .map((title) => JobTypeTemplate(name: title, rate: 15.0))
+            .toList();
+
+        templates.add(IndustryTemplate(
+          id: industryKey, // Use industry name as ID
+          industry: industryKey,
+          displayName: industryKey,
+          icon: _getIconKeyForIndustry(industryKey),
+          defaultJobTypes: jobTypes,
+          tipStructure: 'individual',
+        ));
+      }
+
       setState(() {
-        _industries =
-            response.map((i) => IndustryTemplate.fromSupabase(i)).toList();
+        _industries = templates;
         _isLoading = false;
       });
     } catch (e) {
       setState(() => _isLoading = false);
+    }
+  }
+
+  /// Map industry name to icon string
+  String? _getIconKeyForIndustry(String industry) {
+    switch (industry) {
+      case 'Restaurant/Bar/Nightclub':
+        return 'restaurant';
+      case 'Construction/Trades':
+        return 'construction';
+      case 'Freelancer/Consultant':
+        return 'freelancer';
+      case 'Healthcare':
+        return 'local_hospital';
+      case 'Rideshare & Delivery':
+        return 'delivery_dining';
+      case 'Music & Entertainment':
+        return 'celebration';
+      case 'Artist & Crafts':
+        return 'palette';
+      case 'Retail/Sales':
+        return 'store';
+      case 'Salon/Spa':
+        return 'spa';
+      case 'Hospitality':
+        return 'hotel';
+      case 'Fitness':
+        return 'fitness_center';
+      default:
+        return null;
     }
   }
 
