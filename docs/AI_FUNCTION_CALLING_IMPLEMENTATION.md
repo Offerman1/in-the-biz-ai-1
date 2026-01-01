@@ -3,9 +3,9 @@
 **Feature:** Full AI Agent with Function Calling (All Actions)  
 **Model:** Google Gemini 3 Flash Preview (`gemini-3-flash-preview`)  
 **Date Created:** December 29, 2025  
-**Status:** ✅ FULLY IMPLEMENTED & DEPLOYED
+**Status:** ✅ DEPLOYED & READY FOR TESTING
 
-**📍 Current Progress:** All phases complete! AI agent deployed with 55+ functions and 50+ industry-specific fields.
+**📍 Current Progress:** Backend complete, Flutter integrated, ready for device testing!
 
 ---
 
@@ -114,14 +114,13 @@ Gemini 3 can receive **images, PDFs, and documents** as function responses, not 
 ```
 supabase/functions/ai-agent/
   ├── index.ts                    # Main edge function handler
-  ├── function-declarations.ts    # All 55+ function definitions
+  ├── function-declarations.ts    # All 50+ function definitions
   ├── executors/
   │   ├── shift-executor.ts       # Execute shift-related functions
   │   ├── job-executor.ts         # Execute job-related functions
   │   ├── goal-executor.ts        # Execute goal-related functions
   │   ├── settings-executor.ts    # Execute settings functions
-  │   ├── analytics-executor.ts   # Execute query functions
-  │   └── contact-executor.ts     # Execute event contact functions
+  │   └── analytics-executor.ts   # Execute query functions
   ├── utils/
   │   ├── context-builder.ts      # Build user context for AI
   │   ├── date-parser.ts          # Parse natural language dates
@@ -171,124 +170,22 @@ lib/services/
 #### 1. `add_shift`
 **Description:** Create a new shift record  
 **Parameters:**
-
-**Core Fields:**
 - `date` (string, required) - Date in YYYY-MM-DD or natural language ("today", "yesterday", "last Tuesday")
 - `cashTips` (number) - Cash tips earned
 - `creditTips` (number) - Credit card tips
+- `tipOuts` (number) - Amount tipped out to others
 - `hourlyRate` (number) - Hourly wage rate
 - `hoursWorked` (number) - Hours worked
 - `eventName` (string) - Event or party name
 - `guestCount` (number) - Number of guests served
 - `notes` (string) - Additional notes
 - `jobId` (string) - Job UUID (null = auto-detect)
-- `startTime` (string) - Start time (e.g., "2:00 PM")
-- `endTime` (string) - End time (e.g., "11:00 PM")
-- `location` (string) - Work location
-- `salesAmount` (number) - Total sales
-- `tipoutPercent` (number) - Tip out percentage
-- `additionalTipout` (number) - Extra tip out amount
-- `commission` (number) - Commission earned
-- `mileage` (number) - Miles driven
-- `flatRate` (number) - Flat rate pay
-- `eventCost` (number) - Event cost
-
-**Rideshare & Delivery Fields:**
-- `ridesCount` (number) - Number of rides (Uber, Lyft)
-- `deliveriesCount` (number) - Number of deliveries (DoorDash, UberEats)
-- `deadMiles` (number) - Miles without passenger/delivery
-- `fuelCost` (number) - Fuel expenses
-- `tollsParking` (number) - Tolls and parking fees
-- `surgeMultiplier` (number) - Average surge (e.g., 1.5)
-- `acceptanceRate` (number) - Percentage accepted (0-100)
-- `baseFare` (number) - Total base fares before tips
-
-**Music & Entertainment Fields:**
-- `gigType` (string) - Type: wedding, corporate, club, private
-- `setupHours` (number) - Hours setting up
-- `performanceHours` (number) - Hours performing
-- `breakdownHours` (number) - Hours breaking down
-- `equipmentUsed` (string) - Equipment used
-- `equipmentRentalCost` (number) - Rental costs
-- `crewPayment` (number) - Payment to crew
-- `merchSales` (number) - Merchandise revenue
-- `audienceSize` (number) - Estimated audience
-
-**Artist & Crafts Fields:**
-- `piecesCreated` (number) - Items created
-- `piecesSold` (number) - Items sold
-- `materialsCost` (number) - Materials cost
-- `salePrice` (number) - Total sale price
-- `venueCommissionPercent` (number) - Venue commission (0-100)
-
-**Retail/Sales Fields:**
-- `itemsSold` (number) - Items sold
-- `transactionsCount` (number) - Transactions processed
-- `upsellsCount` (number) - Successful upsells
-- `upsellsAmount` (number) - Upsell revenue
-- `returnsCount` (number) - Returns processed
-- `returnsAmount` (number) - Return value
-- `shrinkAmount` (number) - Shrink/loss
-- `department` (string) - Department worked
-
-**Salon/Spa Fields:**
-- `serviceType` (string) - Service type (haircut, color, massage)
-- `servicesCount` (number) - Services performed
-- `productSales` (number) - Product sales revenue
-- `repeatClientPercent` (number) - Repeat clients (0-100)
-- `chairRental` (number) - Chair rental fee
-- `newClientsCount` (number) - New clients
-- `returningClientsCount` (number) - Returning clients
-- `walkinCount` (number) - Walk-in clients
-- `appointmentCount` (number) - Scheduled appointments
-
-**Hospitality Fields:**
-- `roomType` (string) - Room type (standard, suite)
-- `roomsCleaned` (number) - Rooms cleaned
-- `qualityScore` (number) - Quality score (0-100)
-- `shiftType` (string) - Shift: day, swing, night
-- `roomUpgrades` (number) - Upgrades sold
-- `guestsCheckedIn` (number) - Guests checked in
-- `carsParked` (number) - Cars parked (valet)
-
-**Healthcare Fields:**
-- `patientCount` (number) - Patients seen
-- `shiftDifferential` (number) - Night/weekend premium
-- `onCallHours` (number) - Hours on call
-- `proceduresCount` (number) - Procedures performed
-- `specialization` (string) - ER, ICU, OR, etc.
-
-**Fitness Fields:**
-- `sessionsCount` (number) - Training sessions
-- `sessionType` (string) - personal, group, class
-- `classSize` (number) - Average class size
-- `retentionRate` (number) - Client retention (0-100)
-- `cancellationsCount` (number) - Cancellations
-- `packageSales` (number) - Package revenue
-- `supplementSales` (number) - Supplement sales
-
-**Construction/Trades Fields:**
-- `laborCost` (number) - Labor costs
-- `subcontractorCost` (number) - Subcontractor costs
-- `squareFootage` (number) - Square footage worked
-- `weatherDelayHours` (number) - Weather delay hours
-
-**Freelancer Fields:**
-- `revisionsCount` (number) - Client revisions
-- `clientType` (string) - new, returning, referral
-- `expenses` (number) - Business expenses
-- `billableHours` (number) - Billable hours
-
-**Restaurant Fields:**
-- `tableSection` (string) - Section (patio, bar, main)
-- `cashSales` (number) - Cash sales
-- `cardSales` (number) - Card sales
 
 **Smart Behavior:**
 - If user has 1 job, auto-apply it
 - If user has 2+ jobs, ask which one
 - Parse natural dates ("the 22nd" → calculate actual date)
-- Only relevant fields shown based on job template
+- Follow up: "Want to add event name?" if not provided
 
 #### 2. `edit_shift`
 **Description:** Modify an existing shift  
@@ -727,227 +624,211 @@ lib/services/
 ## ✅ Implementation Checklist
 
 ### Phase 1: Foundation (Edge Function Setup)
-- [✅] Create `supabase/functions/ai-agent/index.ts` base file
-- [✅] Set up Gemini 3 Flash Preview model initialization
-- [✅] Implement conversation history management
-- [✅] Add CORS headers and authentication
-- [✅] Test basic chat without functions (sanity check)
+- [ ] Create `supabase/functions/ai-agent/index.ts` base file
+- [ ] Set up Gemini 3 Flash Preview model initialization
+- [ ] Implement conversation history management
+- [ ] Add CORS headers and authentication
+- [ ] Test basic chat without functions (sanity check)
 
 ### Phase 2: Function Declarations (Define All 55 Functions)
-- [✅] Create `function-declarations.ts` file
-- [✅] Define Shift Management functions (1-12)
-- [✅] Define Job Management functions (13-22)
-- [✅] Define Goal Management functions (23-30)
-- [✅] Define Theme & Appearance functions (31-34)
-- [✅] Define Notifications functions (35-39)
-- [✅] Define Settings functions (40-47)
-- [✅] Define Analytics functions (48-55)
-- [✅] Validate all function schemas (required fields, types, enums)
+- [ ] Create `function-declarations.ts` file
+- [ ] Define Shift Management functions (1-12)
+- [ ] Define Job Management functions (13-22)
+- [ ] Define Goal Management functions (23-30)
+- [ ] Define Theme & Appearance functions (31-34)
+- [ ] Define Notifications functions (35-39)
+- [ ] Define Settings functions (40-47)
+- [ ] Define Analytics functions (48-55)
+- [ ] Validate all function schemas (required fields, types, enums)
 
 ### Phase 3: Executors (Implement Function Logic)
-- [✅] Create `executors/shift-executor.ts`
-  - [✅] Implement add_shift
-  - [✅] Implement edit_shift
-  - [✅] Implement delete_shift
-  - [✅] Implement bulk_edit_shifts
-  - [✅] Implement bulk_delete_shifts
-  - [✅] Implement search_shifts
-  - [✅] Implement get_shift_details
-  - [✅] Implement attach_photo_to_shift
-  - [✅] Implement remove_photo_from_shift
-  - [✅] Implement get_shift_photos
-  - [✅] Implement calculate_shift_total
-  - [✅] Implement duplicate_shift
+- [ ] Create `executors/shift-executor.ts`
+  - [ ] Implement add_shift
+  - [ ] Implement edit_shift
+  - [ ] Implement delete_shift
+  - [ ] Implement bulk_edit_shifts
+  - [ ] Implement bulk_delete_shifts
+  - [ ] Implement search_shifts
+  - [ ] Implement get_shift_details
+  - [ ] Implement attach_photo_to_shift
+  - [ ] Implement remove_photo_from_shift
+  - [ ] Implement get_shift_photos
+  - [ ] Implement calculate_shift_total
+  - [ ] Implement duplicate_shift
 
-- [✅] Create `executors/job-executor.ts`
-  - [✅] Implement add_job (with industry inference)
-  - [✅] Implement edit_job
-  - [✅] Implement delete_job
-  - [✅] Implement set_default_job
-  - [✅] Implement end_job
-  - [✅] Implement restore_job
-  - [✅] Implement get_jobs
-  - [✅] Implement get_job_stats
-  - [✅] Implement compare_jobs
-  - [✅] Implement set_job_hourly_rate
+- [ ] Create `executors/job-executor.ts`
+  - [ ] Implement add_job (with industry inference)
+  - [ ] Implement edit_job
+  - [ ] Implement delete_job
+  - [ ] Implement set_default_job
+  - [ ] Implement end_job
+  - [ ] Implement restore_job
+  - [ ] Implement get_jobs
+  - [ ] Implement get_job_stats
+  - [ ] Implement compare_jobs
+  - [ ] Implement set_job_hourly_rate
 
-- [✅] Create `executors/goal-executor.ts`
-  - [✅] Implement set_daily_goal
-  - [✅] Implement set_weekly_goal
-  - [✅] Implement set_monthly_goal
-  - [✅] Implement set_yearly_goal
-  - [✅] Implement edit_goal
-  - [✅] Implement delete_goal
-  - [✅] Implement get_goals
-  - [✅] Implement get_goal_progress
+- [ ] Create `executors/goal-executor.ts`
+  - [ ] Implement set_daily_goal
+  - [ ] Implement set_weekly_goal
+  - [ ] Implement set_monthly_goal
+  - [ ] Implement set_yearly_goal
+  - [ ] Implement edit_goal
+  - [ ] Implement delete_goal
+  - [ ] Implement get_goals
+  - [ ] Implement get_goal_progress
 
-- [✅] Create `executors/settings-executor.ts`
-  - [✅] Implement change_theme
-  - [✅] Implement get_available_themes
-  - [✅] Implement preview_theme
-  - [✅] Implement revert_theme
-  - [✅] Implement toggle_notifications
-  - [✅] Implement set_shift_reminders
-  - [✅] Implement set_goal_reminders
-  - [✅] Implement set_quiet_hours
-  - [✅] Implement get_notification_settings
-  - [✅] Implement update_tax_settings
-  - [✅] Implement set_currency_format
-  - [✅] Implement set_date_format
-  - [✅] Implement set_week_start_day
-  - [✅] Implement export_data_csv
-  - [✅] Implement export_data_pdf
-  - [✅] Implement clear_chat_history
-  - [✅] Implement get_user_settings
+- [ ] Create `executors/settings-executor.ts`
+  - [ ] Implement change_theme
+  - [ ] Implement get_available_themes
+  - [ ] Implement preview_theme
+  - [ ] Implement revert_theme
+  - [ ] Implement toggle_notifications
+  - [ ] Implement set_shift_reminders
+  - [ ] Implement set_goal_reminders
+  - [ ] Implement set_quiet_hours
+  - [ ] Implement get_notification_settings
+  - [ ] Implement update_tax_settings
+  - [ ] Implement set_currency_format
+  - [ ] Implement set_date_format
+  - [ ] Implement set_week_start_day
+  - [ ] Implement export_data_csv
+  - [ ] Implement export_data_pdf
+  - [ ] Implement clear_chat_history
+  - [ ] Implement get_user_settings
 
-- [✅] Create `executors/analytics-executor.ts`
-  - [✅] Implement get_income_summary
-  - [✅] Implement compare_periods
-  - [✅] Implement get_best_days
-  - [✅] Implement get_worst_days
-  - [✅] Implement get_tax_estimate
-  - [✅] Implement get_projected_year_end
-  - [✅] Implement get_year_over_year
-  - [✅] Implement get_event_earnings
-
-- [✅] Create `executors/contact-executor.ts`
-  - [✅] Implement add_event_contact
-  - [✅] Implement edit_event_contact
-  - [✅] Implement delete_event_contact
-  - [✅] Implement search_contacts
-  - [✅] Implement get_contacts_for_shift
+- [ ] Create `executors/analytics-executor.ts`
+  - [ ] Implement get_income_summary
+  - [ ] Implement compare_periods
+  - [ ] Implement get_best_days
+  - [ ] Implement get_worst_days
+  - [ ] Implement get_tax_estimate
+  - [ ] Implement get_projected_year_end
+  - [ ] Implement get_year_over_year
+  - [ ] Implement get_event_earnings
 
 ### Phase 4: Utilities (Smart Features)
-- [✅] Create `utils/context-builder.ts`
-  - [✅] Build user context (jobs, recent shifts, goals, settings)
-  - [✅] Optimize context size (keep under 100K tokens)
+- [ ] Create `utils/context-builder.ts`
+  - [ ] Build user context (jobs, recent shifts, goals, settings)
+  - [ ] Optimize context size (keep under 100K tokens)
 
-- [✅] Create `utils/date-parser.ts`
-  - [✅] Parse "today", "yesterday", "tomorrow"
-  - [✅] Parse "last Tuesday", "next Friday"
-  - [✅] Parse "the 22nd" (infer month/year)
-  - [✅] Parse relative dates ("3 days ago", "2 weeks from now")
+- [ ] Create `utils/date-parser.ts`
+  - [ ] Parse "today", "yesterday", "tomorrow"
+  - [ ] Parse "last Tuesday", "next Friday"
+  - [ ] Parse "the 22nd" (infer month/year)
+  - [ ] Parse relative dates ("3 days ago", "2 weeks from now")
 
-- [✅] Create `utils/job-detector.ts`
-  - [✅] Auto-detect single job scenarios
-  - [✅] Generate clarifying questions for multiple jobs
-  - [✅] Match job mentions in messages
+- [ ] Create `utils/job-detector.ts`
+  - [ ] Auto-detect single job scenarios
+  - [ ] Generate clarifying questions for multiple jobs
+  - [ ] Match job mentions in messages
 
-- [✅] Create `utils/validators.ts`
-  - [✅] Validate date formats
-  - [✅] Validate numeric ranges
-  - [✅] Validate enum values
-  - [✅] Sanitize inputs (prevent injection)
+- [ ] Create `utils/validators.ts`
+  - [ ] Validate date formats
+  - [ ] Validate numeric ranges
+  - [ ] Validate enum values
+  - [ ] Sanitize inputs (prevent injection)
 
-- [✅] Create `utils/industry-inference.ts`
-  - [✅] Map job titles to industries
-  - [✅] Keywords database (bartender → Food Service, etc.)
+- [ ] Create `utils/industry-inference.ts`
+  - [ ] Map job titles to industries
+  - [ ] Keywords database (bartender → Food Service, etc.)
 
 ### Phase 5: Main Handler (Orchestration)
-- [✅] Implement function call detection
-- [✅] Implement function execution routing
-- [✅] Implement parallel function calling support
-- [✅] Implement sequential function calling support
-- [✅] Implement error handling for each function
-- [✅] Implement confirmation flow for destructive actions
-- [✅] Implement multi-turn conversation state management
-- [✅] Add logging for debugging
+- [ ] Implement function call detection
+- [ ] Implement function execution routing
+- [ ] Implement parallel function calling support
+- [ ] Implement sequential function calling support
+- [ ] Implement error handling for each function
+- [ ] Implement confirmation flow for destructive actions
+- [ ] Implement multi-turn conversation state management
+- [ ] Add logging for debugging
 
 ### Phase 6: Flutter Integration
-- [✅] Create `lib/services/ai_agent_service.dart`
-  - [✅] Method: `sendMessage(String message, List<ChatMessage> history)`
-  - [✅] Method: `clearHistory()`
-  - [✅] Handle API errors gracefully
+- [ ] Create `lib/services/ai_agent_service.dart`
+  - [ ] Method: `sendMessage(String message, List<ChatMessage> history)`
+  - [ ] Method: `clearHistory()`
+  - [ ] Handle API errors gracefully
 
-- [✅] Update `lib/screens/assistant_screen.dart`
-  - [✅] Switch from `chat` endpoint to `ai-agent` endpoint
-  - [✅] Add loading states for function executions
-  - [✅] Add confirmation dialogs for destructive actions
-  - [✅] Add success/error feedback for actions
-  - [✅] Update UI to show "AI is adding shift..." messages
+- [ ] Update `lib/screens/assistant_screen.dart`
+  - [ ] Switch from `chat` endpoint to `ai-agent` endpoint
+  - [ ] Add loading states for function executions
+  - [ ] Add confirmation dialogs for destructive actions
+  - [ ] Add success/error feedback for actions
+  - [ ] Update UI to show "AI is adding shift..." messages
 
-- [✅] Update `lib/providers/shift_provider.dart`
-  - [✅] Add listener for AI-created shifts (refresh list)
+- [ ] Update `lib/providers/shift_provider.dart`
+  - [ ] Add listener for AI-created shifts (refresh list)
 
-- [✅] Update `lib/providers/theme_provider.dart`
-  - [✅] Add listener for AI theme changes
+- [ ] Update `lib/providers/theme_provider.dart`
+  - [ ] Add listener for AI theme changes
 
 ### Phase 7: Database Optimizations
-- [✅] Create database indexes for common queries
-  - [✅] Index on shifts.date
-  - [✅] Index on shifts.job_id
-  - [✅] Index on shifts.event_name
-  - [✅] Index on goals.type and goals.job_id
+- [ ] Create database indexes for common queries
+  - [ ] Index on shifts.date
+  - [ ] Index on shifts.job_id
+  - [ ] Index on shifts.event_name
+  - [ ] Index on goals.type and goals.job_id
 
-- [✅] Add database functions for bulk operations
-  - [✅] `bulk_update_shifts(ids[], updates)`
-  - [✅] `bulk_delete_shifts(ids[])`
+- [ ] Add database functions for bulk operations
+  - [ ] `bulk_update_shifts(ids[], updates)`
+  - [ ] `bulk_delete_shifts(ids[])`
 
-- [✅] Verify Row Level Security policies
-  - [✅] Ensure all functions respect user_id filtering
-  - [✅] Test with multiple users
+- [ ] Verify Row Level Security policies
+  - [ ] Ensure all functions respect user_id filtering
+  - [ ] Test with multiple users
 
 ### Phase 8: Testing
-- [✅] Test each function individually
-  - [✅] Test with valid inputs
-  - [✅] Test with invalid inputs (expect graceful errors)
-  - [✅] Test with edge cases (empty strings, null values)
+- [ ] Test each function individually
+  - [ ] Test with valid inputs
+  - [ ] Test with invalid inputs (expect graceful errors)
+  - [ ] Test with edge cases (empty strings, null values)
 
-- [✅] Test multi-turn conversations
-  - [✅] Test follow-up questions
-  - [✅] Test context retention
+- [ ] Test multi-turn conversations
+  - [ ] Test follow-up questions
+  - [ ] Test context retention
 
-- [✅] Test parallel function calling
-  - [✅] "Add shift and set goal" (2 functions)
-  - [✅] "Add 3 shifts" (should batch)
+- [ ] Test parallel function calling
+  - [ ] "Add shift and set goal" (2 functions)
+  - [ ] "Add 3 shifts" (should batch)
 
-- [✅] Test sequential function calling
-  - [✅] "Get my best job and make it default"
-  - [✅] "Compare my jobs and delete the worst one"
+- [ ] Test sequential function calling
+  - [ ] "Get my best job and make it default"
+  - [ ] "Compare my jobs and delete the worst one"
 
-- [✅] Test smart features
-  - [✅] Job auto-detection (1 job vs. 2+ jobs)
-  - [✅] Natural date parsing
-  - [✅] Industry inference
-  - [✅] Confirmation prompts
+- [ ] Test smart features
+  - [ ] Job auto-detection (1 job vs. 2+ jobs)
+  - [ ] Natural date parsing
+  - [ ] Industry inference
+  - [ ] Confirmation prompts
 
-- [✅] Test error scenarios
-  - [✅] Invalid date
-  - [✅] Non-existent job ID
-  - [✅] Duplicate goal creation
-  - [✅] Database connection failures
+- [ ] Test error scenarios
+  - [ ] Invalid date
+  - [ ] Non-existent job ID
+  - [ ] Duplicate goal creation
+  - [ ] Database connection failures
 
-- [✅] Test security
-  - [✅] User A cannot access User B's data
-  - [✅] SQL injection attempts fail
-  - [✅] Destructive actions require confirmation
+- [ ] Test security
+  - [ ] User A cannot access User B's data
+  - [ ] SQL injection attempts fail
+  - [ ] Destructive actions require confirmation
 
 ### Phase 9: Deployment
-- [✅] Deploy edge function to production
+- [ ] Deploy edge function to production
   ```bash
   npx supabase functions deploy ai-agent --project-ref bokdjidrybwxbomemmrg
   ```
 
-- [✅] Test in production environment
-  - [✅] Test on Android phone (Seeker)
-  - [✅] Test on Android tablet
-  - [✅] Test with real user data
+- [ ] Test in production environment
+  - [ ] Test on Android phone (Seeker)
+  - [ ] Test on Android tablet
+  - [ ] Test with real user data
 
-- [✅] Monitor performance
-  - [✅] Check function execution times
-  - [✅] Monitor API costs (Gemini token usage)
-  - [✅] Check error rates
+- [ ] Monitor performance
+  - [ ] Check function execution times
+  - [ ] Monitor API costs (Gemini token usage)
+  - [ ] Check error rates
 
-### Phase 10: Industry-Specific Fields (Added December 31, 2025)
-- [✅] Add database columns for all industries (migration: `20251231_add_industry_fields.sql`)
-- [✅] Update `add_shift` function declaration with 50+ new field parameters
-- [✅] Update `shift-executor.ts` to handle all industry fields in add/edit/bulk operations
-- [✅] Verify Flutter `Shift` model has all fields
-- [✅] Verify `JobTemplate` has all show flags for industry-specific UI
-- [✅] Verify `AddShiftScreen` has controllers and UI for all fields
-- [✅] Deploy updated Edge Function (Version 30)
-
-### Phase 11: Documentation & Polish
+### Phase 10: Documentation & Polish
 - [ ] Update user-facing documentation
   - [ ] Add examples of AI commands to help screen
   - [ ] Create tutorial for first-time users
@@ -1173,4 +1054,4 @@ After reviewing this document:
 - [✅] Completed
 - [❌] Blocked/Issue
 
-**Last Updated:** December 31, 2025
+**Last Updated:** December 29, 2025
