@@ -1082,16 +1082,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 'Tips (Cash & Credit)',
                 'Track tips received',
                 template.showTips,
-                (value) =>
-                    _updateTemplate(jobName, template.copyWith(showTips: value)),
+                (value) => _updateTemplate(
+                    jobName, template.copyWith(showTips: value)),
               ),
             if (template.showSales)
               _buildTemplateToggle(
                 'Sales Amount',
                 'Track total sales for tip %',
                 template.showSales,
-                (value) =>
-                    _updateTemplate(jobName, template.copyWith(showSales: value)),
+                (value) => _updateTemplate(
+                    jobName, template.copyWith(showSales: value)),
               ),
             if (template.showCommission)
               _buildTemplateToggle(
@@ -1759,8 +1759,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 'Notes',
                 'Add notes to shifts',
                 template.showNotes,
-                (value) =>
-                    _updateTemplate(jobName, template.copyWith(showNotes: value)),
+                (value) => _updateTemplate(
+                    jobName, template.copyWith(showNotes: value)),
               ),
           ],
         ),
