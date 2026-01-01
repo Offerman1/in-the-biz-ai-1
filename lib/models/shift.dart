@@ -48,6 +48,119 @@ class Shift {
   final String? recurringSeriesId; // Links all shifts in same series
   final String? calendarEventId; // ID from device calendar if synced
 
+  // =====================================================
+  // RIDESHARE & DELIVERY FIELDS
+  // =====================================================
+  final int? ridesCount;
+  final int? deliveriesCount;
+  final double? deadMiles;
+  final double? fuelCost;
+  final double? tollsParking;
+  final double? surgeMultiplier;
+  final double? acceptanceRate;
+  final double? baseFare;
+
+  // =====================================================
+  // MUSIC & ENTERTAINMENT FIELDS
+  // =====================================================
+  final String? gigType;
+  final double? setupHours;
+  final double? performanceHours;
+  final double? breakdownHours;
+  final String? equipmentUsed;
+  final double? equipmentRentalCost;
+  final double? crewPayment;
+  final double? merchSales;
+  final int? audienceSize;
+
+  // =====================================================
+  // ARTIST & CRAFTS FIELDS
+  // =====================================================
+  final int? piecesCreated;
+  final int? piecesSold;
+  final double? materialsCost;
+  final double? salePrice;
+  final double? venueCommissionPercent;
+
+  // =====================================================
+  // RETAIL/SALES FIELDS
+  // =====================================================
+  final int? itemsSold;
+  final int? transactionsCount;
+  final int? upsellsCount;
+  final double? upsellsAmount;
+  final int? returnsCount;
+  final double? returnsAmount;
+  final double? shrinkAmount;
+  final String? department;
+
+  // =====================================================
+  // SALON/SPA FIELDS
+  // =====================================================
+  final String? serviceType;
+  final int? servicesCount;
+  final double? productSales;
+  final double? repeatClientPercent;
+  final double? chairRental;
+  final int? newClientsCount;
+  final int? returningClientsCount;
+  final int? walkinCount;
+  final int? appointmentCount;
+
+  // =====================================================
+  // HOSPITALITY FIELDS
+  // =====================================================
+  final String? roomType;
+  final int? roomsCleaned;
+  final double? qualityScore;
+  final String? shiftType;
+  final int? roomUpgrades;
+  final int? guestsCheckedIn;
+  final int? carsParked;
+
+  // =====================================================
+  // HEALTHCARE FIELDS
+  // =====================================================
+  final int? patientCount;
+  final double? shiftDifferential;
+  final double? onCallHours;
+  final int? proceduresCount;
+  final String? specialization;
+
+  // =====================================================
+  // FITNESS FIELDS
+  // =====================================================
+  final int? sessionsCount;
+  final String? sessionType;
+  final int? classSize;
+  final double? retentionRate;
+  final int? cancellationsCount;
+  final double? packageSales;
+  final double? supplementSales;
+
+  // =====================================================
+  // CONSTRUCTION/TRADES FIELDS
+  // =====================================================
+  final double? laborCost;
+  final double? subcontractorCost;
+  final double? squareFootage;
+  final double? weatherDelayHours;
+
+  // =====================================================
+  // FREELANCER FIELDS
+  // =====================================================
+  final int? revisionsCount;
+  final String? clientType;
+  final double? expenses;
+  final double? billableHours;
+
+  // =====================================================
+  // RESTAURANT FIELDS (additional)
+  // =====================================================
+  final String? tableSection;
+  final double? cashSales;
+  final double? cardSales;
+
   Shift({
     required this.id,
     required this.date,
