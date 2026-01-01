@@ -952,328 +952,345 @@ class _AddJobScreenState extends State<AddJobScreen> {
   Widget _buildOrganizedShiftFields() {
     final currentTemplate = _buildTemplate();
 
+    // Build all sections as widgets
+    final allSections = <String, Widget>{
+      'pay': _buildTemplateSection(
+        title: 'Pay Structure',
+        icon: Icons.attach_money,
+        children: [
+          _buildPayStructureSelector(currentTemplate),
+          if (currentTemplate.tracksOvertime)
+            _buildOvertimeMultiplier(currentTemplate),
+        ],
+      ),
+      'earnings': _buildTemplateSection(
+        title: 'Earnings Tracking',
+        icon: Icons.trending_up,
+        children: [
+          _buildTemplateToggle(
+            'Tips (Cash & Credit)',
+            'Track tips received',
+            _showTips,
+            (value) => setState(() => _showTips = value),
+          ),
+          _buildTemplateToggle(
+            'Sales Amount',
+            'Track total sales for tip %',
+            _showSales,
+            (value) => setState(() => _showSales = value),
+          ),
+          _buildTemplateToggle(
+            'Commission',
+            'Track sales commission',
+            _showCommission,
+            (value) => setState(() => _showCommission = value),
+          ),
+          _buildTemplateToggle(
+            'Overtime',
+            'Track overtime hours',
+            _tracksOvertime,
+            (value) => setState(() => _tracksOvertime = value),
+          ),
+        ],
+      ),
+      'rideshare': _buildTemplateSection(
+        title: '🚗 Rideshare & Delivery',
+        icon: Icons.directions_car,
+        children: [
+          _buildTemplateToggle(
+            'Rides Count',
+            'Number of rides/deliveries',
+            _showRidesCount ?? false,
+            (value) => setState(() => _showRidesCount = value),
+          ),
+          _buildTemplateToggle(
+            'Deadhead Miles',
+            'Miles without passengers',
+            _showDeadMiles ?? false,
+            (value) => setState(() => _showDeadMiles = value),
+          ),
+          _buildTemplateToggle(
+            'Fuel Cost',
+            'Track fuel expenses',
+            _showFuelCost ?? false,
+            (value) => setState(() => _showFuelCost = value),
+          ),
+          _buildTemplateToggle(
+            'Tolls & Parking',
+            'Track parking and toll fees',
+            _showTollsParking ?? false,
+            (value) => setState(() => _showTollsParking = value),
+          ),
+          _buildTemplateToggle(
+            'Surge Multiplier',
+            'Track surge pricing bonuses',
+            _showSurgeMultiplier ?? false,
+            (value) => setState(() => _showSurgeMultiplier = value),
+          ),
+          _buildTemplateToggle(
+            'Base Fare',
+            'Base fare vs tips breakdown',
+            _showBaseFare ?? false,
+            (value) => setState(() => _showBaseFare = value),
+          ),
+        ],
+      ),
+      'music': _buildTemplateSection(
+        title: '🎵 Music & Entertainment',
+        icon: Icons.music_note,
+        children: [
+          _buildTemplateToggle(
+            'Gig Type',
+            'Wedding, corporate, street, etc.',
+            _showGigType ?? false,
+            (value) => setState(() => _showGigType = value),
+          ),
+          _buildTemplateToggle(
+            'Setup Hours',
+            'Time to prepare equipment',
+            _showSetupHours ?? false,
+            (value) => setState(() => _showSetupHours = value),
+          ),
+          _buildTemplateToggle(
+            'Performance Hours',
+            'Time performing',
+            _showPerformanceHours ?? false,
+            (value) => setState(() => _showPerformanceHours = value),
+          ),
+          _buildTemplateToggle(
+            'Breakdown Hours',
+            'Time to pack up',
+            _showBreakdownHours ?? false,
+            (value) => setState(() => _showBreakdownHours = value),
+          ),
+          _buildTemplateToggle(
+            'Equipment Used',
+            'What equipment you used',
+            _showEquipmentUsed ?? false,
+            (value) => setState(() => _showEquipmentUsed = value),
+          ),
+          _buildTemplateToggle(
+            'Equipment Rental',
+            'Equipment rental costs',
+            _showEquipmentRental ?? false,
+            (value) => setState(() => _showEquipmentRental = value),
+          ),
+          _buildTemplateToggle(
+            'Crew Payment',
+            'Payment to crew members',
+            _showCrewPayment ?? false,
+            (value) => setState(() => _showCrewPayment = value),
+          ),
+          _buildTemplateToggle(
+            'Merchandise Sales',
+            'Sales of merchandise',
+            _showMerchSales ?? false,
+            (value) => setState(() => _showMerchSales = value),
+          ),
+          _buildTemplateToggle(
+            'Audience Size',
+            'Number of attendees',
+            _showAudienceSize ?? false,
+            (value) => setState(() => _showAudienceSize = value),
+          ),
+        ],
+      ),
+      'art': _buildTemplateSection(
+        title: '🎨 Art & Crafts',
+        icon: Icons.palette,
+        children: [
+          _buildTemplateToggle(
+            'Pieces Created',
+            'Number of items created',
+            _showPiecesCreated ?? false,
+            (value) => setState(() => _showPiecesCreated = value),
+          ),
+          _buildTemplateToggle(
+            'Pieces Sold',
+            'Number of items sold',
+            _showPiecesSold ?? false,
+            (value) => setState(() => _showPiecesSold = value),
+          ),
+          _buildTemplateToggle(
+            'Materials Cost',
+            'Cost of materials',
+            _showMaterialsCost ?? false,
+            (value) => setState(() => _showMaterialsCost = value),
+          ),
+          _buildTemplateToggle(
+            'Sale Price',
+            'Price per piece',
+            _showSalePrice ?? false,
+            (value) => setState(() => _showSalePrice = value),
+          ),
+          _buildTemplateToggle(
+            'Venue Commission',
+            'Commission to venue',
+            _showVenueCommission ?? false,
+            (value) => setState(() => _showVenueCommission = value),
+          ),
+        ],
+      ),
+      'retail': _buildTemplateSection(
+        title: '🛍️ Retail & Sales',
+        icon: Icons.shopping_bag,
+        children: [
+          _buildTemplateToggle(
+            'Items Sold',
+            'Number of items sold',
+            _showItemsSold ?? false,
+            (value) => setState(() => _showItemsSold = value),
+          ),
+          _buildTemplateToggle(
+            'Transactions',
+            'Number of transactions',
+            _showTransactionsCount ?? false,
+            (value) => setState(() => _showTransactionsCount = value),
+          ),
+          _buildTemplateToggle(
+            'Upsells',
+            'Number of upsells',
+            _showUpsells ?? false,
+            (value) => setState(() => _showUpsells = value),
+          ),
+          _buildTemplateToggle(
+            'Returns',
+            'Number of returns',
+            _showReturns ?? false,
+            (value) => setState(() => _showReturns = value),
+          ),
+          _buildTemplateToggle(
+            'Shrink',
+            'Inventory shrinkage',
+            _showShrink ?? false,
+            (value) => setState(() => _showShrink = value),
+          ),
+        ],
+      ),
+      'event': _buildTemplateSection(
+        title: '🎉 Event Details',
+        icon: Icons.celebration,
+        children: [
+          _buildTemplateToggle(
+            'Event/Party Name',
+            'Name the event',
+            _showEventName,
+            (value) => setState(() => _showEventName = value),
+          ),
+          _buildTemplateToggle(
+            'Event Cost',
+            'Total cost of event (DJs, planners)',
+            _showEventCost,
+            (value) => setState(() => _showEventCost = value),
+          ),
+          _buildTemplateToggle(
+            'Hostess Name',
+            'Track who hosted',
+            _showHostess,
+            (value) => setState(() => _showHostess = value),
+          ),
+          _buildTemplateToggle(
+            'Guest Count',
+            'Number of guests',
+            _showGuestCount,
+            (value) => setState(() => _showGuestCount = value),
+          ),
+        ],
+      ),
+      'work': _buildTemplateSection(
+        title: '📍 Work Details',
+        icon: Icons.location_on,
+        children: [
+          _buildTemplateToggle(
+            'Location',
+            'Where you worked',
+            _showLocation,
+            (value) => setState(() => _showLocation = value),
+          ),
+          _buildTemplateToggle(
+            'Client/Patient Name',
+            'Track clients',
+            _showClientName,
+            (value) => setState(() => _showClientName = value),
+          ),
+          _buildTemplateToggle(
+            'Project Name',
+            'Track projects',
+            _showProjectName,
+            (value) => setState(() => _showProjectName = value),
+          ),
+          _buildTemplateToggle(
+            'Mileage',
+            'Track miles driven',
+            _showMileage,
+            (value) => setState(() => _showMileage = value),
+          ),
+        ],
+      ),
+      'media': _buildTemplateSection(
+        title: 'Media & Documentation',
+        icon: Icons.image,
+        children: [
+          _buildTemplateToggle(
+            'Photos',
+            'Attach photos to shifts',
+            _showPhotos,
+            (value) => setState(() => _showPhotos = value),
+          ),
+          _buildTemplateToggle(
+            'Notes',
+            'Add shift notes',
+            _showNotes,
+            (value) => setState(() => _showNotes = value),
+          ),
+        ],
+      ),
+    };
+
+    // Determine the industry-specific section to prioritize
+    final industrySection = _getIndustrySpecificSection(_selectedIndustry);
+
+    // Build ordered list of sections
+    final sectionOrder = <String>['pay', 'earnings'];
+    if (industrySection != null) {
+      sectionOrder.add(industrySection);
+    }
+    // Add remaining sections (excluding pay, earnings, and industry-specific)
+    sectionOrder.addAll(
+      allSections.keys
+          .where((k) => !sectionOrder.contains(k))
+          .toList(),
+    );
+
     return ListView(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      children: [
-        // 💰 Pay Structure
-        _buildTemplateSection(
-          title: 'Pay Structure',
-          icon: Icons.attach_money,
-          children: [
-            _buildPayStructureSelector(currentTemplate),
-            if (currentTemplate.tracksOvertime)
-              _buildOvertimeMultiplier(currentTemplate),
-          ],
-        ),
-        const SizedBox(height: 16),
-
-        // 💵 Earnings Tracking
-        _buildTemplateSection(
-          title: 'Earnings Tracking',
-          icon: Icons.trending_up,
-          children: [
-            _buildTemplateToggle(
-              'Tips (Cash & Credit)',
-              'Track tips received',
-              _showTips,
-              (value) => setState(() => _showTips = value),
-            ),
-            _buildTemplateToggle(
-              'Sales Amount',
-              'Track total sales for tip %',
-              _showSales,
-              (value) => setState(() => _showSales = value),
-            ),
-            _buildTemplateToggle(
-              'Commission',
-              'Track sales commission',
-              _showCommission,
-              (value) => setState(() => _showCommission = value),
-            ),
-            _buildTemplateToggle(
-              'Overtime',
-              'Track overtime hours',
-              _tracksOvertime,
-              (value) => setState(() => _tracksOvertime = value),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-
-        // 🎉 Event Details
-        _buildTemplateSection(
-          title: 'Event Details',
-          icon: Icons.celebration,
-          children: [
-            _buildTemplateToggle(
-              'Event/Party Name',
-              'Name the event',
-              _showEventName,
-              (value) => setState(() => _showEventName = value),
-            ),
-            _buildTemplateToggle(
-              'Event Cost',
-              'Total cost of event (DJs, planners)',
-              _showEventCost,
-              (value) => setState(() => _showEventCost = value),
-            ),
-            _buildTemplateToggle(
-              'Hostess Name',
-              'Track who hosted',
-              _showHostess,
-              (value) => setState(() => _showHostess = value),
-            ),
-            _buildTemplateToggle(
-              'Guest Count',
-              'Number of guests',
-              _showGuestCount,
-              (value) => setState(() => _showGuestCount = value),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-
-        // 📍 Work Details
-        _buildTemplateSection(
-          title: 'Work Details',
-          icon: Icons.location_on,
-          children: [
-            _buildTemplateToggle(
-              'Location',
-              'Where you worked',
-              _showLocation,
-              (value) => setState(() => _showLocation = value),
-            ),
-            _buildTemplateToggle(
-              'Client/Patient Name',
-              'Track clients',
-              _showClientName,
-              (value) => setState(() => _showClientName = value),
-            ),
-            _buildTemplateToggle(
-              'Project Name',
-              'Track projects',
-              _showProjectName,
-              (value) => setState(() => _showProjectName = value),
-            ),
-            _buildTemplateToggle(
-              'Mileage',
-              'Track miles driven',
-              _showMileage,
-              (value) => setState(() => _showMileage = value),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-
-        // 🚗 Rideshare & Delivery
-        _buildTemplateSection(
-          title: '🚗 Rideshare & Delivery',
-          icon: Icons.directions_car,
-          children: [
-            _buildTemplateToggle(
-              'Rides Count',
-              'Number of rides/deliveries',
-              _showRidesCount ?? false,
-              (value) => setState(() => _showRidesCount = value),
-            ),
-            _buildTemplateToggle(
-              'Deadhead Miles',
-              'Miles without passengers',
-              _showDeadMiles ?? false,
-              (value) => setState(() => _showDeadMiles = value),
-            ),
-            _buildTemplateToggle(
-              'Fuel Cost',
-              'Track fuel expenses',
-              _showFuelCost ?? false,
-              (value) => setState(() => _showFuelCost = value),
-            ),
-            _buildTemplateToggle(
-              'Tolls & Parking',
-              'Track parking and toll fees',
-              _showTollsParking ?? false,
-              (value) => setState(() => _showTollsParking = value),
-            ),
-            _buildTemplateToggle(
-              'Surge Multiplier',
-              'Track surge pricing bonuses',
-              _showSurgeMultiplier ?? false,
-              (value) => setState(() => _showSurgeMultiplier = value),
-            ),
-            _buildTemplateToggle(
-              'Base Fare',
-              'Base fare vs tips breakdown',
-              _showBaseFare ?? false,
-              (value) => setState(() => _showBaseFare = value),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-
-        // 🎵 Music & Entertainment
-        _buildTemplateSection(
-          title: '🎵 Music & Entertainment',
-          icon: Icons.music_note,
-          children: [
-            _buildTemplateToggle(
-              'Gig Type',
-              'Wedding, corporate, street, etc.',
-              _showGigType ?? false,
-              (value) => setState(() => _showGigType = value),
-            ),
-            _buildTemplateToggle(
-              'Setup Hours',
-              'Time to prepare equipment',
-              _showSetupHours ?? false,
-              (value) => setState(() => _showSetupHours = value),
-            ),
-            _buildTemplateToggle(
-              'Performance Hours',
-              'Time performing',
-              _showPerformanceHours ?? false,
-              (value) => setState(() => _showPerformanceHours = value),
-            ),
-            _buildTemplateToggle(
-              'Breakdown Hours',
-              'Time to pack up',
-              _showBreakdownHours ?? false,
-              (value) => setState(() => _showBreakdownHours = value),
-            ),
-            _buildTemplateToggle(
-              'Equipment Used',
-              'What equipment you used',
-              _showEquipmentUsed ?? false,
-              (value) => setState(() => _showEquipmentUsed = value),
-            ),
-            _buildTemplateToggle(
-              'Equipment Rental',
-              'Equipment rental costs',
-              _showEquipmentRental ?? false,
-              (value) => setState(() => _showEquipmentRental = value),
-            ),
-            _buildTemplateToggle(
-              'Crew Payment',
-              'Payment to crew members',
-              _showCrewPayment ?? false,
-              (value) => setState(() => _showCrewPayment = value),
-            ),
-            _buildTemplateToggle(
-              'Merchandise Sales',
-              'Sales of merchandise',
-              _showMerchSales ?? false,
-              (value) => setState(() => _showMerchSales = value),
-            ),
-            _buildTemplateToggle(
-              'Audience Size',
-              'Number of attendees',
-              _showAudienceSize ?? false,
-              (value) => setState(() => _showAudienceSize = value),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-
-        // 🎨 Art & Crafts
-        _buildTemplateSection(
-          title: '🎨 Art & Crafts',
-          icon: Icons.palette,
-          children: [
-            _buildTemplateToggle(
-              'Pieces Created',
-              'Number of items created',
-              _showPiecesCreated ?? false,
-              (value) => setState(() => _showPiecesCreated = value),
-            ),
-            _buildTemplateToggle(
-              'Pieces Sold',
-              'Number of items sold',
-              _showPiecesSold ?? false,
-              (value) => setState(() => _showPiecesSold = value),
-            ),
-            _buildTemplateToggle(
-              'Materials Cost',
-              'Cost of materials',
-              _showMaterialsCost ?? false,
-              (value) => setState(() => _showMaterialsCost = value),
-            ),
-            _buildTemplateToggle(
-              'Sale Price',
-              'Price per piece',
-              _showSalePrice ?? false,
-              (value) => setState(() => _showSalePrice = value),
-            ),
-            _buildTemplateToggle(
-              'Venue Commission',
-              'Commission to venue',
-              _showVenueCommission ?? false,
-              (value) => setState(() => _showVenueCommission = value),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-
-        // 🛍️ Retail & Sales
-        _buildTemplateSection(
-          title: '🛍️ Retail & Sales',
-          icon: Icons.shopping_bag,
-          children: [
-            _buildTemplateToggle(
-              'Items Sold',
-              'Number of items sold',
-              _showItemsSold ?? false,
-              (value) => setState(() => _showItemsSold = value),
-            ),
-            _buildTemplateToggle(
-              'Transactions',
-              'Number of transactions',
-              _showTransactionsCount ?? false,
-              (value) => setState(() => _showTransactionsCount = value),
-            ),
-            _buildTemplateToggle(
-              'Upsells',
-              'Number of upsells',
-              _showUpsells ?? false,
-              (value) => setState(() => _showUpsells = value),
-            ),
-            _buildTemplateToggle(
-              'Returns',
-              'Number of returns',
-              _showReturns ?? false,
-              (value) => setState(() => _showReturns = value),
-            ),
-            _buildTemplateToggle(
-              'Shrink',
-              'Inventory shrinkage',
-              _showShrink ?? false,
-              (value) => setState(() => _showShrink = value),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-
-        // 📝 Media & Documentation
-        _buildTemplateSection(
-          title: 'Media & Documentation',
-          icon: Icons.image,
-          children: [
-            _buildTemplateToggle(
-              'Photos',
-              'Attach photos to shifts',
-              _showPhotos,
-              (value) => setState(() => _showPhotos = value),
-            ),
-            _buildTemplateToggle(
-              'Notes',
-              'Add shift notes',
-              _showNotes,
-              (value) => setState(() => _showNotes = value),
-            ),
-          ],
-        ),
-      ],
+      children: sectionOrder
+          .map<Widget>((key) {
+            final widget = allSections[key];
+            if (widget == null) return const SizedBox();
+            return Column(
+              children: [widget, const SizedBox(height: 16)],
+            );
+          })
+          .toList(),
     );
+  }
+
+  /// Get the industry-specific section key for the selected industry
+  String? _getIndustrySpecificSection(String? industry) {
+    switch (industry) {
+      case 'Rideshare & Delivery':
+        return 'rideshare';
+      case 'Music & Entertainment':
+        return 'music';
+      case 'Artist & Crafts':
+        return 'art';
+      case 'Retail/Sales':
+        return 'retail';
+      default:
+        return null;
+    }
   }
 
   /// Build collapsible template section
