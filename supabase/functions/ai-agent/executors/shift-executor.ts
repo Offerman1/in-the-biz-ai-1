@@ -224,6 +224,97 @@ export class ShiftExecutor {
     if (mileage) insertData.mileage = mileage;
     if (flatRate) insertData.flat_rate = flatRate;
     if (eventCost) insertData.event_cost = eventCost;
+    
+    // Rideshare & Delivery fields
+    if (ridesCount !== undefined) insertData.rides_count = ridesCount;
+    if (deliveriesCount !== undefined) insertData.deliveries_count = deliveriesCount;
+    if (deadMiles !== undefined) insertData.dead_miles = deadMiles;
+    if (fuelCost !== undefined) insertData.fuel_cost = fuelCost;
+    if (tollsParking !== undefined) insertData.tolls_parking = tollsParking;
+    if (surgeMultiplier !== undefined) insertData.surge_multiplier = surgeMultiplier;
+    if (acceptanceRate !== undefined) insertData.acceptance_rate = acceptanceRate;
+    if (baseFare !== undefined) insertData.base_fare = baseFare;
+    
+    // Music & Entertainment fields
+    if (gigType) insertData.gig_type = gigType;
+    if (setupHours !== undefined) insertData.setup_hours = setupHours;
+    if (performanceHours !== undefined) insertData.performance_hours = performanceHours;
+    if (breakdownHours !== undefined) insertData.breakdown_hours = breakdownHours;
+    if (equipmentUsed) insertData.equipment_used = equipmentUsed;
+    if (equipmentRentalCost !== undefined) insertData.equipment_rental_cost = equipmentRentalCost;
+    if (crewPayment !== undefined) insertData.crew_payment = crewPayment;
+    if (merchSales !== undefined) insertData.merch_sales = merchSales;
+    if (audienceSize !== undefined) insertData.audience_size = audienceSize;
+    
+    // Artist & Crafts fields
+    if (piecesCreated !== undefined) insertData.pieces_created = piecesCreated;
+    if (piecesSold !== undefined) insertData.pieces_sold = piecesSold;
+    if (materialsCost !== undefined) insertData.materials_cost = materialsCost;
+    if (salePrice !== undefined) insertData.sale_price = salePrice;
+    if (venueCommissionPercent !== undefined) insertData.venue_commission_percent = venueCommissionPercent;
+    
+    // Retail/Sales fields
+    if (itemsSold !== undefined) insertData.items_sold = itemsSold;
+    if (transactionsCount !== undefined) insertData.transactions_count = transactionsCount;
+    if (upsellsCount !== undefined) insertData.upsells_count = upsellsCount;
+    if (upsellsAmount !== undefined) insertData.upsells_amount = upsellsAmount;
+    if (returnsCount !== undefined) insertData.returns_count = returnsCount;
+    if (returnsAmount !== undefined) insertData.returns_amount = returnsAmount;
+    if (shrinkAmount !== undefined) insertData.shrink_amount = shrinkAmount;
+    if (department) insertData.department = department;
+    
+    // Salon/Spa fields
+    if (serviceType) insertData.service_type = serviceType;
+    if (servicesCount !== undefined) insertData.services_count = servicesCount;
+    if (productSales !== undefined) insertData.product_sales = productSales;
+    if (repeatClientPercent !== undefined) insertData.repeat_client_percent = repeatClientPercent;
+    if (chairRental !== undefined) insertData.chair_rental = chairRental;
+    if (newClientsCount !== undefined) insertData.new_clients_count = newClientsCount;
+    if (returningClientsCount !== undefined) insertData.returning_clients_count = returningClientsCount;
+    if (walkinCount !== undefined) insertData.walkin_count = walkinCount;
+    if (appointmentCount !== undefined) insertData.appointment_count = appointmentCount;
+    
+    // Hospitality fields
+    if (roomType) insertData.room_type = roomType;
+    if (roomsCleaned !== undefined) insertData.rooms_cleaned = roomsCleaned;
+    if (qualityScore !== undefined) insertData.quality_score = qualityScore;
+    if (shiftType) insertData.shift_type = shiftType;
+    if (roomUpgrades !== undefined) insertData.room_upgrades = roomUpgrades;
+    if (guestsCheckedIn !== undefined) insertData.guests_checked_in = guestsCheckedIn;
+    if (carsParked !== undefined) insertData.cars_parked = carsParked;
+    
+    // Healthcare fields
+    if (patientCount !== undefined) insertData.patient_count = patientCount;
+    if (shiftDifferential !== undefined) insertData.shift_differential = shiftDifferential;
+    if (onCallHours !== undefined) insertData.on_call_hours = onCallHours;
+    if (proceduresCount !== undefined) insertData.procedures_count = proceduresCount;
+    if (specialization) insertData.specialization = specialization;
+    
+    // Fitness fields
+    if (sessionsCount !== undefined) insertData.sessions_count = sessionsCount;
+    if (sessionType) insertData.session_type = sessionType;
+    if (classSize !== undefined) insertData.class_size = classSize;
+    if (retentionRate !== undefined) insertData.retention_rate = retentionRate;
+    if (cancellationsCount !== undefined) insertData.cancellations_count = cancellationsCount;
+    if (packageSales !== undefined) insertData.package_sales = packageSales;
+    if (supplementSales !== undefined) insertData.supplement_sales = supplementSales;
+    
+    // Construction/Trades fields
+    if (laborCost !== undefined) insertData.labor_cost = laborCost;
+    if (subcontractorCost !== undefined) insertData.subcontractor_cost = subcontractorCost;
+    if (squareFootage !== undefined) insertData.square_footage = squareFootage;
+    if (weatherDelayHours !== undefined) insertData.weather_delay_hours = weatherDelayHours;
+    
+    // Freelancer fields
+    if (revisionsCount !== undefined) insertData.revisions_count = revisionsCount;
+    if (clientType) insertData.client_type = clientType;
+    if (expenses !== undefined) insertData.expenses = expenses;
+    if (billableHours !== undefined) insertData.billable_hours = billableHours;
+    
+    // Restaurant Additional fields
+    if (tableSection) insertData.table_section = tableSection;
+    if (cashSales !== undefined) insertData.cash_sales = cashSales;
+    if (cardSales !== undefined) insertData.card_sales = cardSales;
 
     const { data, error } = await this.supabase
       .from("shifts")
