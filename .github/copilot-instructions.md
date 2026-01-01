@@ -820,6 +820,4 @@ ALTER TABLE public.shifts ADD COLUMN (
     2.  **Pulls** any remote changes from the remote branch.
     3.  **Pushes** your local commits to the remote branch on GitHub.
 
--   **"Sync Changes" alone does NOT update your website.**
-
-###
+-   **"Sync Changes" alone does NOT update your website
