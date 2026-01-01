@@ -946,158 +946,518 @@ class _AddJobScreenState extends State<AddJobScreen> {
   }
 
   Widget _buildOrganizedShiftFields() {
-    // Build the template based on current selections to show all available fields
     final currentTemplate = _buildTemplate();
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return ListView(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
       children: [
-        // 💰 Income Tracking
-        _buildFieldCategory(
-          '💰 Income Tracking',
-          [
-            if (currentTemplate.showTips)
-              _buildToggleItem('Tips', _showTips, Icons.attach_money, () {
-                setState(() => _showTips = !_showTips);
-              }),
-            if (currentTemplate.showSales)
-              _buildToggleItem('Sales Amount', _showSales, Icons.shopping_cart,
-                  () {
-                setState(() => _showSales = !_showSales);
-              }),
-            if (currentTemplate.showCommission)
-              _buildToggleItem('Commission', _showCommission, Icons.sell, () {
-                setState(() => _showCommission = !_showCommission);
-              }),
-            if (currentTemplate.showBaseFare)
-              _buildToggleItem(
-                  'Base Fare', _showBaseFare ?? true, Icons.trending_up, () {
-                setState(() => _showBaseFare = !(_showBaseFare ?? false));
-              }),
-          ].where((w) => w != null).cast<Widget>().toList(),
+        // 💰 Pay Structure
+        _buildTemplateSection(
+          title: 'Pay Structure',
+          icon: Icons.attach_money,
+          children: [
+            _buildPayStructureSelector(currentTemplate),
+            if (currentTemplate.tracksOvertime)
+              _buildOvertimeMultiplier(currentTemplate),
+          ],
         ),
+        const SizedBox(height: 16),
 
-        const SizedBox(height: 20),
-
-        // 📋 Job Details
-        _buildFieldCategory(
-          '📋 Job Details',
-          [
-            if (currentTemplate.showEventName)
-              _buildToggleItem('Event Name', _showEventName, Icons.celebration,
-                  () {
-                setState(() => _showEventName = !_showEventName);
-              }),
-            if (currentTemplate.showEventCost)
-              _buildToggleItem('Event Cost', _showEventCost, Icons.payments,
-                  () {
-                setState(() => _showEventCost = !_showEventCost);
-              }),
-            if (currentTemplate.showLocation)
-              _buildToggleItem('Location', _showLocation, Icons.location_on,
-                  () {
-                setState(() => _showLocation = !_showLocation);
-              }),
-            if (currentTemplate.showClientName)
-              _buildToggleItem(
-                  'Client Name', _showClientName, Icons.person_outline, () {
-                setState(() => _showClientName = !_showClientName);
-              }),
-            if (currentTemplate.showProjectName)
-              _buildToggleItem('Project', _showProjectName, Icons.folder, () {
-                setState(() => _showProjectName = !_showProjectName);
-              }),
-          ].where((w) => w != null).cast<Widget>().toList(),
+        // 💵 Earnings Tracking
+        _buildTemplateSection(
+          title: 'Earnings Tracking',
+          icon: Icons.trending_up,
+          children: [
+            _buildTemplateToggle(
+              'Tips (Cash & Credit)',
+              'Track tips received',
+              _showTips,
+              (value) => setState(() => _showTips = value),
+            ),
+            _buildTemplateToggle(
+              'Sales Amount',
+              'Track total sales for tip %',
+              _showSales,
+              (value) => setState(() => _showSales = value),
+            ),
+            _buildTemplateToggle(
+              'Commission',
+              'Track sales commission',
+              _showCommission,
+              (value) => setState(() => _showCommission = value),
+            ),
+            _buildTemplateToggle(
+              'Overtime',
+              'Track overtime hours',
+              _tracksOvertime,
+              (value) => setState(() => _tracksOvertime = value),
+            ),
+          ],
         ),
+        const SizedBox(height: 16),
 
-        const SizedBox(height: 20),
-
-        // 👥 People & Guests
-        _buildFieldCategory(
-          '👥 People & Guests',
-          [
-            if (currentTemplate.showHostess)
-              _buildToggleItem('Hostess', _showHostess, Icons.person, () {
-                setState(() => _showHostess = !_showHostess);
-              }),
-            if (currentTemplate.showGuestCount)
-              _buildToggleItem('Guest Count', _showGuestCount, Icons.groups,
-                  () {
-                setState(() => _showGuestCount = !_showGuestCount);
-              }),
-          ].where((w) => w != null).cast<Widget>().toList(),
+        // 🎉 Event Details
+        _buildTemplateSection(
+          title: 'Event Details',
+          icon: Icons.celebration,
+          children: [
+            _buildTemplateToggle(
+              'Event/Party Name',
+              'Name the event',
+              _showEventName,
+              (value) => setState(() => _showEventName = value),
+            ),
+            _buildTemplateToggle(
+              'Event Cost',
+              'Total cost of event (DJs, planners)',
+              _showEventCost,
+              (value) => setState(() => _showEventCost = value),
+            ),
+            _buildTemplateToggle(
+              'Hostess Name',
+              'Track who hosted',
+              _showHostess,
+              (value) => setState(() => _showHostess = value),
+            ),
+            _buildTemplateToggle(
+              'Guest Count',
+              'Number of guests',
+              _showGuestCount,
+              (value) => setState(() => _showGuestCount = value),
+            ),
+          ],
         ),
+        const SizedBox(height: 16),
 
-        const SizedBox(height: 20),
+        // 📍 Work Details
+        _buildTemplateSection(
+          title: 'Work Details',
+          icon: Icons.location_on,
+          children: [
+            _buildTemplateToggle(
+              'Location',
+              'Where you worked',
+              _showLocation,
+              (value) => setState(() => _showLocation = value),
+            ),
+            _buildTemplateToggle(
+              'Client/Patient Name',
+              'Track clients',
+              _showClientName,
+              (value) => setState(() => _showClientName = value),
+            ),
+            _buildTemplateToggle(
+              'Project Name',
+              'Track projects',
+              _showProjectName,
+              (value) => setState(() => _showProjectName = value),
+            ),
+            _buildTemplateToggle(
+              'Mileage',
+              'Track miles driven',
+              _showMileage,
+              (value) => setState(() => _showMileage = value),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
 
-        // 🚗 Expenses & Rideshare
-        if (currentTemplate.showMileage ||
-            currentTemplate.showRidesCount ||
-            currentTemplate.showDeadMiles ||
-            currentTemplate.showFuelCost ||
-            currentTemplate.showTollsParking)
-          _buildFieldCategory(
-            '🚗 Rideshare & Delivery',
-            [
-              if (currentTemplate.showRidesCount)
-                _buildToggleItem(
-                    'Rides Count', _showRidesCount ?? true, Icons.local_taxi,
-                    () {
-                  setState(() => _showRidesCount = !(_showRidesCount ?? false));
-                }),
-              if (currentTemplate.showDeadMiles)
-                _buildToggleItem('Deadhead Miles', _showDeadMiles ?? true,
-                    Icons.trending_down, () {
-                  setState(() => _showDeadMiles = !(_showDeadMiles ?? false));
-                }),
-              if (currentTemplate.showFuelCost)
-                _buildToggleItem(
-                    'Fuel Cost', _showFuelCost ?? true, Icons.local_gas_station,
-                    () {
-                  setState(() => _showFuelCost = !(_showFuelCost ?? false));
-                }),
-              if (currentTemplate.showTollsParking)
-                _buildToggleItem(
-                    'Tolls & Parking', _showTollsParking ?? true, Icons.paid,
-                    () {
-                  setState(
-                      () => _showTollsParking = !(_showTollsParking ?? false));
-                }),
-              if (currentTemplate.showSurgeMultiplier)
-                _buildToggleItem('Surge Multiplier',
-                    _showSurgeMultiplier ?? true, Icons.trending_up, () {
-                  setState(() =>
-                      _showSurgeMultiplier = !(_showSurgeMultiplier ?? false));
-                }),
-              if (currentTemplate.showMileage)
-                _buildToggleItem('Mileage', _showMileage, Icons.directions_car,
-                    () {
-                  setState(() => _showMileage = !_showMileage);
-                }),
-            ].where((w) => w != null).cast<Widget>().toList(),
-          ),
-
-        if (currentTemplate.showMileage ||
-            currentTemplate.showRidesCount ||
-            currentTemplate.showDeadMiles ||
-            currentTemplate.showFuelCost ||
-            currentTemplate.showTollsParking)
-          const SizedBox(height: 20),
+        // 🚗 Rideshare & Delivery
+        _buildTemplateSection(
+          title: '🚗 Rideshare & Delivery',
+          icon: Icons.directions_car,
+          children: [
+            _buildTemplateToggle(
+              'Rides Count',
+              'Number of rides/deliveries',
+              _showRidesCount ?? false,
+              (value) => setState(() => _showRidesCount = value),
+            ),
+            _buildTemplateToggle(
+              'Deadhead Miles',
+              'Miles without passengers',
+              _showDeadMiles ?? false,
+              (value) => setState(() => _showDeadMiles = value),
+            ),
+            _buildTemplateToggle(
+              'Fuel Cost',
+              'Track fuel expenses',
+              _showFuelCost ?? false,
+              (value) => setState(() => _showFuelCost = value),
+            ),
+            _buildTemplateToggle(
+              'Tolls & Parking',
+              'Track parking and toll fees',
+              _showTollsParking ?? false,
+              (value) => setState(() => _showTollsParking = value),
+            ),
+            _buildTemplateToggle(
+              'Surge Multiplier',
+              'Track surge pricing bonuses',
+              _showSurgeMultiplier ?? false,
+              (value) => setState(() => _showSurgeMultiplier = value),
+            ),
+            _buildTemplateToggle(
+              'Base Fare',
+              'Base fare vs tips breakdown',
+              _showBaseFare ?? false,
+              (value) => setState(() => _showBaseFare = value),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
 
         // 🎵 Music & Entertainment
-        if (currentTemplate.showGigType ||
-            currentTemplate.showSetupHours ||
-            currentTemplate.showPerformanceHours ||
-            currentTemplate.showBreakdownHours ||
-            currentTemplate.showEquipmentUsed ||
-            currentTemplate.showEquipmentRental ||
-            currentTemplate.showCrewPayment ||
-            currentTemplate.showMerchSales ||
-            currentTemplate.showAudienceSize)
-          _buildFieldCategory(
-            '🎵 Music & Entertainment',
-            [
-              if (currentTemplate.showGigType)
+        _buildTemplateSection(
+          title: '🎵 Music & Entertainment',
+          icon: Icons.music_note,
+          children: [
+            _buildTemplateToggle(
+              'Gig Type',
+              'Wedding, corporate, street, etc.',
+              _showGigType ?? false,
+              (value) => setState(() => _showGigType = value),
+            ),
+            _buildTemplateToggle(
+              'Setup Hours',
+              'Time to prepare equipment',
+              _showSetupHours ?? false,
+              (value) => setState(() => _showSetupHours = value),
+            ),
+            _buildTemplateToggle(
+              'Performance Hours',
+              'Time performing',
+              _showPerformanceHours ?? false,
+              (value) => setState(() => _showPerformanceHours = value),
+            ),
+            _buildTemplateToggle(
+              'Breakdown Hours',
+              'Time to pack up',
+              _showBreakdownHours ?? false,
+              (value) => setState(() => _showBreakdownHours = value),
+            ),
+            _buildTemplateToggle(
+              'Equipment Used',
+              'What equipment you used',
+              _showEquipmentUsed ?? false,
+              (value) => setState(() => _showEquipmentUsed = value),
+            ),
+            _buildTemplateToggle(
+              'Equipment Rental',
+              'Equipment rental costs',
+              _showEquipmentRental ?? false,
+              (value) => setState(() => _showEquipmentRental = value),
+            ),
+            _buildTemplateToggle(
+              'Crew Payment',
+              'Payment to crew members',
+              _showCrewPayment ?? false,
+              (value) => setState(() => _showCrewPayment = value),
+            ),
+            _buildTemplateToggle(
+              'Merchandise Sales',
+              'Sales of merchandise',
+              _showMerchSales ?? false,
+              (value) => setState(() => _showMerchSales = value),
+            ),
+            _buildTemplateToggle(
+              'Audience Size',
+              'Number of attendees',
+              _showAudienceSize ?? false,
+              (value) => setState(() => _showAudienceSize = value),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+
+        // 🎨 Art & Crafts
+        _buildTemplateSection(
+          title: '🎨 Art & Crafts',
+          icon: Icons.palette,
+          children: [
+            _buildTemplateToggle(
+              'Pieces Created',
+              'Number of items created',
+              _showPiecesCreated ?? false,
+              (value) => setState(() => _showPiecesCreated = value),
+            ),
+            _buildTemplateToggle(
+              'Pieces Sold',
+              'Number of items sold',
+              _showPiecesSold ?? false,
+              (value) => setState(() => _showPiecesSold = value),
+            ),
+            _buildTemplateToggle(
+              'Materials Cost',
+              'Cost of materials',
+              _showMaterialsCost ?? false,
+              (value) => setState(() => _showMaterialsCost = value),
+            ),
+            _buildTemplateToggle(
+              'Sale Price',
+              'Price per piece',
+              _showSalePrice ?? false,
+              (value) => setState(() => _showSalePrice = value),
+            ),
+            _buildTemplateToggle(
+              'Venue Commission',
+              'Commission to venue',
+              _showVenueCommission ?? false,
+              (value) => setState(() => _showVenueCommission = value),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+
+        // 🛍️ Retail & Sales
+        _buildTemplateSection(
+          title: '🛍️ Retail & Sales',
+          icon: Icons.shopping_bag,
+          children: [
+            _buildTemplateToggle(
+              'Items Sold',
+              'Number of items sold',
+              _showItemsSold ?? false,
+              (value) => setState(() => _showItemsSold = value),
+            ),
+            _buildTemplateToggle(
+              'Transactions',
+              'Number of transactions',
+              _showTransactionsCount ?? false,
+              (value) => setState(() => _showTransactionsCount = value),
+            ),
+            _buildTemplateToggle(
+              'Upsells',
+              'Number of upsells',
+              _showUpsells ?? false,
+              (value) => setState(() => _showUpsells = value),
+            ),
+            _buildTemplateToggle(
+              'Returns',
+              'Number of returns',
+              _showReturns ?? false,
+              (value) => setState(() => _showReturns = value),
+            ),
+            _buildTemplateToggle(
+              'Shrink',
+              'Inventory shrinkage',
+              _showShrink ?? false,
+              (value) => setState(() => _showShrink = value),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+
+        // 📝 Media & Documentation
+        _buildTemplateSection(
+          title: 'Media & Documentation',
+          icon: Icons.image,
+          children: [
+            _buildTemplateToggle(
+              'Photos',
+              'Attach photos to shifts',
+              _showPhotos,
+              (value) => setState(() => _showPhotos = value),
+            ),
+            _buildTemplateToggle(
+              'Notes',
+              'Add shift notes',
+              _showNotes,
+              (value) => setState(() => _showNotes = value),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  /// Build collapsible template section
+  Widget _buildTemplateSection({
+    required String title,
+    required IconData icon,
+    required List<Widget> children,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackground,
+        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+        border: Border.all(
+          color: AppTheme.cardBackgroundLight,
+        ),
+      ),
+      child: Theme(
+        data: Theme.of(context).copyWith(
+          dividerColor: Colors.transparent,
+        ),
+        child: ExpansionTile(
+          title: Row(
+            children: [
+              Icon(icon, color: AppTheme.primaryGreen, size: 24),
+              const SizedBox(width: 12),
+              Text(
+                title,
+                style: AppTheme.titleMedium.copyWith(
+                  color: AppTheme.textPrimary,
+                ),
+              ),
+            ],
+          ),
+          collapsedBackgroundColor: AppTheme.cardBackground,
+          backgroundColor: AppTheme.cardBackground,
+          textColor: AppTheme.textPrimary,
+          iconColor: AppTheme.primaryGreen,
+          initiallyExpanded: true,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Column(
+                children: children,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Build template toggle item
+  Widget _buildTemplateToggle(
+    String label,
+    String hint,
+    bool value,
+    Function(bool) onChanged,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: AppTheme.bodyMedium.copyWith(
+                    color: AppTheme.textPrimary,
+                  ),
+                ),
+                Text(
+                  hint,
+                  style: AppTheme.labelSmall.copyWith(
+                    color: AppTheme.textMuted,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Switch(
+            value: value,
+            onChanged: onChanged,
+            activeColor: AppTheme.primaryGreen,
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Build pay structure selector
+  Widget _buildPayStructureSelector(JobTemplate template) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'How are you paid?',
+            style: AppTheme.bodyMedium.copyWith(
+              color: AppTheme.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: ChoiceChip(
+                  label: const Text('Hourly'),
+                  selected: _payStructure == PayStructure.hourly,
+                  onSelected: (selected) => setState(
+                      () => _payStructure = PayStructure.hourly),
+                  selectedColor:
+                      AppTheme.primaryGreen.withOpacity(0.3),
+                  backgroundColor: AppTheme.cardBackgroundLight,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: ChoiceChip(
+                  label: const Text('Flat Rate'),
+                  selected: _payStructure == PayStructure.flatRate,
+                  onSelected: (selected) => setState(
+                      () => _payStructure = PayStructure.flatRate),
+                  selectedColor:
+                      AppTheme.primaryGreen.withOpacity(0.3),
+                  backgroundColor: AppTheme.cardBackgroundLight,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: ChoiceChip(
+                  label: const Text('Commission'),
+                  selected: _payStructure == PayStructure.commission,
+                  onSelected: (selected) => setState(
+                      () => _payStructure = PayStructure.commission),
+                  selectedColor:
+                      AppTheme.primaryGreen.withOpacity(0.3),
+                  backgroundColor: AppTheme.cardBackgroundLight,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Build overtime multiplier
+  Widget _buildOvertimeMultiplier(JobTemplate template) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Overtime Multiplier',
+                style: AppTheme.bodyMedium.copyWith(
+                  color: AppTheme.textPrimary,
+                ),
+              ),
+              Text(
+                '${_overtimeMultiplier}x',
+                style: AppTheme.titleMedium.copyWith(
+                  color: AppTheme.primaryGreen,
+                ),
+              ),
+            ],
+          ),
+          Slider(
+            value: _overtimeMultiplier,
+            min: 1.0,
+            max: 3.0,
+            divisions: 20,
+            activeColor: AppTheme.primaryGreen,
+            inactiveColor: AppTheme.cardBackgroundLight,
+            onChanged: (value) =>
+                setState(() => _overtimeMultiplier = value),
+          ),
+        ],
+      ),
+    );
+  }
                 _buildToggleItem(
                     'Gig Type', _showGigType ?? true, Icons.music_note, () {
                   setState(() => _showGigType = !(_showGigType ?? false));
