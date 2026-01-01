@@ -564,6 +564,10 @@ class JobTemplate {
       showEventName: false,
       showHostess: false,
       showGuestCount: false,
+      // Fitness-specific fields
+      showSessionsCount: true,
+      showPackageSales: true,
+      showSupplementSales: true,
     );
   }
 
@@ -581,6 +585,9 @@ class JobTemplate {
       showEventName: false,
       showHostess: false,
       showGuestCount: false,
+      // Healthcare-specific fields
+      showPatientCount: true,
+      showProceduresCount: true,
     );
   }
 
@@ -610,6 +617,10 @@ class JobTemplate {
       showEventName: false,
       showHostess: false,
       showGuestCount: false,
+      // Retail-specific fields
+      showItemsSold: true,
+      showTransactionsCount: true,
+      showShrink: true,
     );
   }
 
