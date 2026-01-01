@@ -1331,11 +1331,11 @@ class _AddJobScreenState extends State<AddJobScreen> {
                     () {
                   setState(() => _showSalePrice = !(_showSalePrice ?? false));
                 }),
-              if (currentTemplate.showVenueCommissionPercent)
+              if (currentTemplate.showVenueCommission)
                 _buildToggleItem('Venue Commission %',
-                    _showVenueCommissionPercent ?? true, Icons.percent, () {
-                  setState(() => _showVenueCommissionPercent =
-                      !(_showVenueCommissionPercent ?? false));
+                    _showVenueCommission ?? true, Icons.percent, () {
+                  setState(() => _showVenueCommission =
+                      !(_showVenueCommission ?? false));
                 }),
             ].where((w) => w != null).cast<Widget>().toList(),
           ),
