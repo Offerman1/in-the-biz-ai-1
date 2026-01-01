@@ -1,0 +1,27 @@
+{
+  "files.autoSave": "afterDelay",
+  "files.autoSaveDelay": 1000,
+  "chat.agent.enabled": true,
+  "github.copilot.chat.codeGeneration.useInstructionFiles": true,
+  "chat.instructionsFilesLocations": {
+    ".github/instructions": true,
+    ".github": true
+  },
+  "chat.tools.terminal.enableAutoApprove": true,
+  "chat.tools.terminal.autoApprove": {
+    "npm": true,
+    "node": true,
+    "git": true,
+    "flutter": true,
+    "dart": true,
+    "flutter pub get": true,
+    "flutter run": true,
+    "flutter create": true,
+    "flutter doctor": true,
+    "supabase": true,
+    "cd": true,
+    "ls": true,
+    "Get-Content": true,
+    "Get-ChildItem": true
+  }
+}

@@ -1,0 +1,39 @@
+# Miscellaneous
+*.class
+*.log
+*.lock
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.buildlog/
+.history
+.svn/
+
+# Flutter/Dart/Pub
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+/build/
+
+# Android
+android/gradle/wrapper/gradle-wrapper.properties
+android/local.properties
+android/**/generated/
+android/**/gradle/
+android/**/build/
+
+# iOS
+ios/Flutter/Generated.xcconfig
+ios/Flutter/flutter_export_environment.sh
+ios/Flutter/app.framework
+ios/Flutter/App.framework
+
+# Ignore SpecStory markdown chat logs
+.specstory/history/*.md
+
+# Supabase CLI temp files
+supabase/.temp/

@@ -1,0 +1,41 @@
+Yes! You can run on multiple devices simultaneously. Just run `flutter run` without specifying a device and it will give you options:
+
+```powershell
+cd "c:\Users\Brandon 2021\Desktop\In The Biz AI" ; flutter run -d all
+```
+
+cd "c:\Users\Brandon 2021\Desktop\In The Biz AI"
+flutter build apk --release
+
+Or run them in separate terminals:
+
+**Terminal 1 (Phone):**
+```powershell
+cd "c:\Users\Brandon 2021\Desktop\In The Biz AI" ; flutter run -d SM02G4061996968 SEEKER
+```
+
+**Terminal 2 (Tablet):**
+```powershell
+cd "c:\Users\Brandon 2021\Desktop\In The Biz AI" ; flutter run -d R92X3069WGW
+```
+
+The `-d all` flag will deploy to all connected devices at once, and hot reload will update both devices simultaneously. This is perfect for testing responsive design - you can see phone vs tablet layout side by side!
+
+**Terminal 1 (Phone)TARGET PHONE:**
+```powershell
+cd "c:\Users\Brandon 2021\Desktop\In The Biz AI" ; flutter run -d VGYTV88TLV6HBUJ7
+
+
+
+C:\Android\Sdk\platform-tools\adb.exe -s VGYTV88TLV6HBUJ7 tcpip 5555
+
+.\connect-wifi.bat  
+
+Press Ctrl+Shift+5 to split terminal (or click the split icon)
+In Terminal 1: flutter run -d 10.0.0.50:5555 (Tablet)
+Split again, Terminal 2: flutter run -d 10.0.0.65:5555 (Seeker)
+Split again, Terminal 3: flutter run -d 10.0.0.98:5555 (SN339D)
+
+deploy to web with 
+
+cd "c:\Users\Brandon 2021\Desktop\In The Biz AI" && flutter build web --release --base-href=/in-the-biz-ai/ && cd build\web && rmdir /s /q .git 2>nul && git init && git add . && git commit -m "Deploy" && git branch -M gh-pages && git remote add origin https://github.com/munzer221/in-the-biz-ai.git 2>nul && git push origin gh-pages --force && cd ..\.. && echo SUCCESS 

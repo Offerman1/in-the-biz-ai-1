@@ -1,0 +1,20 @@
+{
+  "name": "in-the-biz-ai-scripts",
+  "version": "1.0.0",
+  "description": "Automation scripts for In The Biz AI",
+  "main": "auto-commit.mjs",
+  "type": "module",
+  "scripts": {
+    "test": "node test-vision.mjs"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.1.3",
+    "dotenv": "^16.4.5",
+    "puppeteer": "^22.0.0",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2"
+  },
+  "devDependencies": {
+    "supabase": "^2.70.5"
+  }
+}

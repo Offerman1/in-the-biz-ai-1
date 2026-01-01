@@ -1,0 +1,36 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Auto-Commit Watcher",
+      "type": "shell",
+      "command": "node auto-commit.mjs",
+      "isBackground": true,
+      "problemMatcher": [],
+      "runOptions": { "runOn": "folderOpen" },
+      "presentation": { "reveal": "silent", "panel": "dedicated" }
+    },
+    {
+      "label": "Install Dependencies",
+      "type": "shell",
+      "command": "flutter pub get",
+      "presentation": { "reveal": "always", "panel": "dedicated" }
+    },
+    {
+      "label": "Dev Server (Flutter Web)",
+      "type": "shell",
+      "command": "flutter run -d chrome --web-port=8082",
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "dedicated" }
+    },
+    {
+      "label": "Vision Test (AI Enhanced)",
+      "type": "shell",
+      "command": "node test-vision.mjs",
+      "isBackground": false,
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "dedicated" }
+    }
+  ]
+}
