@@ -787,6 +787,5 @@ ALTER TABLE public.shifts ADD COLUMN (
 
 ### Vercel CLI Installation
 - Install the Vercel CLI to enable one-click publishing from VS Code.
-
-### Vercel CLI Configuration
-- After installing
+```powershell
+npm install -g vercel
