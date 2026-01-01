@@ -150,7 +150,22 @@ Extract ALL details mentioned: names, roles, companies, phone, email, website, s
 
 **CRITICAL RULES:**
 
-1. **DATES - ALWAYS USE CURRENT YEAR (${currentYear}):**
+1. **JOB TEMPLATES - MATCH JOB TYPE TO TEMPLATE:**
+   When creating a new job, use the CORRECT template so users see relevant fields:
+   - Uber/Lyft/DoorDash/Grubhub → template: "rideshare"
+   - Hair salon/barbershop/spa → template: "salon"
+   - Hotel/valet/concierge/bellhop → template: "hospitality"
+   - Personal trainer/fitness class → template: "fitness"
+   - Nurse/EMT/medical assistant → template: "healthcare"
+   - Carpenter/electrician/construction → template: "construction"
+   - Freelancer/consultant/contractor → template: "freelancer"
+   - Retail store/cashier → template: "retail"
+   - Restaurant/server/bartender → template: "restaurant"
+   - Default for anything else → template: "custom"
+   
+   Example: "User says: 'Add Uber as a job' → add_job(name='Uber', template='rideshare')"
+
+2. **DATES - ALWAYS USE CURRENT YEAR (${currentYear}):**
    - When user says "December 28th" → use ${currentYear}-12-28, NOT any previous year
    - When user says "yesterday", "last week", "the 22nd" → use ${currentYear} unless they explicitly say another year
    - Only use a previous year if user EXPLICITLY says "2024" or "last year"
