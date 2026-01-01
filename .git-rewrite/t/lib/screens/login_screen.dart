@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:convert';
+import 'dart:math';
+import 'package:crypto/crypto.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:google_sign_in_web/web_only.dart' as web;
 import '../services/auth_service.dart';
@@ -30,13 +33,22 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  String? _rawNonce;
+  String? _hashedNonce;
+
   Future<void> _initializeGoogleSignInWeb() async {
     try {
+      // Generate a raw nonce
+      _rawNonce = _generateNonce();
+      // Hash the nonce with SHA256
+      _hashedNonce = sha256.convert(utf8.encode(_rawNonce!)).toString();
+
       await GoogleSignIn.instance.initialize(
         clientId:
             '30441285456-pkvqkagh3fcv0b6n71t5tpnuda94l8d5.apps.googleusercontent.com',
         serverClientId:
             '30441285456-pkvqkagh3fcv0b6n71t5tpnuda94l8d5.apps.googleusercontent.com',
+        nonce: _hashedNonce,
       );
 
       GoogleSignIn.instance.authenticationEvents.listen((event) async {
@@ -49,6 +61,7 @@ class _LoginScreenState extends State<LoginScreen> {
             try {
               final response = await AuthService.signInWithIdToken(
                 idToken: googleAuth.idToken!,
+                nonce: _rawNonce,
               );
               if (response != null && mounted) {
                 Navigator.of(context).pushReplacement(
@@ -70,6 +83,15 @@ class _LoginScreenState extends State<LoginScreen> {
     } catch (e) {
       print('Failed to initialize Google Sign-In: $e');
     }
+  }
+
+  /// Generate a random nonce string
+  String _generateNonce([int length = 32]) {
+    const charset =
+        '0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._';
+    final random = Random.secure();
+    return List.generate(length, (_) => charset[random.nextInt(charset.length)])
+        .join();
   }
 
   @override
