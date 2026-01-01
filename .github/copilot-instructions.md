@@ -432,6 +432,36 @@ jobs:
 *   **Deployment Fails:** Check the GitHub Actions logs for error messages. Common issues include incorrect Flutter version or missing permissions.
 *   **Permissions Error:** If the deployment fails with a permission error, ensure that the workflow has "Read and write permissions" as described above.
 
+### ALTERNATIVE: Correct Manual Deployment with robocopy
+
+Due to issues with automated deployment, manual deployments remain the primary method.
+
+**Source:**
+- Code in the root of the gh-pages branch
+
+**Deployment Steps:**
+
+1.  **Build**: From the project root, build the web app:
+    ```powershell
+    flutter build web
+    ```
+
+2.  **Copy to Root**: Copy the contents of `/build/web` to the root directory, EXCLUDING the `build` directory itself (to avoid infinite loops). Use robocopy with proper exclusions to prevent accidental commits of node_modules, .git folder, etc.:
+
+```powershell
+robocopy "c:\Users\Brandon 2021\Desktop\In The Biz AI\build\web" "c:\Users\Brandon 2021\Desktop\In The Biz AI" *.* /E /XD build /XD .git /XD node_modules /XD android /XD ios /XD lib /XD docs /XD scripts /XD supabase /XD .idea /XD .vscode /XD .github /XD assets /XD web /XD .specstory /XD .dart_tool
+```
+
+*Note: Using robocopy is essential to prevent accidentally deleting files in the root directory.*
+
+3.  **Commit and Push**: Commit all the changes and push them to the `gh-pages` branch.
+
+```powershell
+git add *.js *.html *.json .last_build_id flutter_bootstrap.js flutter_service_worker.js
+git commit -m "Deploy: Web files in root for GitHub Pages"
+git push origin gh-pages
+```
+
 ### ALTERNATIVE: Automated Deployment with GitHub Actions (OLD INSTRUCTIONS)
 ~~Due to the current repository structure, where both source code and built files reside in the `gh-pages` branch root, GitHub Actions cannot be directly used for automated deployment without potentially destroying the source code.~~
 
@@ -644,7 +674,7 @@ To ensure the app looks good on both web and mobile devices, follow these guidel
 
 ### 1. Use a Responsive Wrapper
 
-Wrap the `MaterialApp` with a `ResponsiveWrapper` widget to constrain the width on desktop:
+~~Wrap the `MaterialApp` with a `ResponsiveWrapper` widget to constrain the width on desktop:~~
 
 ```dart
 import 'package:flutter/material.dart';
@@ -657,118 +687,17 @@ class InTheBizApp extends StatelessWidget {
     return MaterialApp(
       title: 'In The Biz AI',
       debugShowCheckedModeBanner: false,
-      home: const ResponsiveWrapper(child: AuthWrapper()),
+      home: const AuthWrapper(),
     );
   }
 }
 ```
 
-### 2. ResponsiveWrapper Implementation
-
-Create a `ResponsiveWrapper` widget to handle different screen sizes:
-
-```dart
-/// Wrapper that constrains width on desktop to mobile size
-class ResponsiveWrapper extends StatelessWidget {
-  final Widget child;
-
-  const ResponsiveWrapper({super.key, required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        // If screen width > 800px (desktop), constrain to tablet/mobile width
-        if (constraints.maxWidth > 800) {
-          return Container(
-            color: Colors.black, // Background color for desktop
-            child: Center(
-              child: Container(
-                width: 480, // Wider mobile/tablet width
-                constraints: const BoxConstraints(maxWidth: 480),
-                decoration: BoxDecoration(
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.3),
-                      blurRadius: 20,
-                      spreadRadius: 5,
-                    ),
-                  ],
-                ),
-                child: child,
-              ),
-            ),
-          );
-        }
-        // On mobile/tablet, show full width
-        return child;
-      },
-    );
-  }
-}
-```
-
-**Explanation:**
-- The `LayoutBuilder` detects screen width.
-- On desktop (width > 800px), it wraps the content in a Container with:
-  - A max-width of 480px to simulate a tablet/mobile layout.
-  - A black background and drop shadow for visual appeal.
-- On mobile/tablet (width <= 800px), it displays the content full-width.
+### ~~2. ResponsiveWrapper Implementation~~
+   The ResponsiveWrapper implementation was removed because now it's making everything a vertical line.
 
 ### 3. Responsive Values
    If responsiveness is needed within screens, use LayoutBuilder to detect screen size and provide different values.
 
 ### 4. Test on Multiple Devices
    Make sure to test your application on various devices, including mobile phones, tablets and desktop browsers, to ensure a consistent and user-friendly experience.
-
----
-
-## 🌐 WEB DEPLOYMENT TO GITHUB PAGES (CRITICAL - January 1, 2026)
-
-**IMPORTANT:** GitHub Pages serves files from the **ROOT** of the gh-pages branch, NOT from `build/web/` folder.
-
-### Correct Automated Deployment with GitHub Actions (UPDATED - January 1, 2026)
-
-**Current setup:**
-- Source code on `main` branch (lib/, pubspec.yaml, etc.)
-- Built files on `gh-pages` branch (auto-generated by GitHub Actions)
-- GitHub Pages serves from `gh-pages` branch root
-
-**Workflow:**
-1. Make changes in VS Code
-2. Commit and push to `main` (or click "Sync Changes" button)
-3. GitHub Actions automatically builds and deploys to `gh-pages`
-4. Changes are live at inthebiz.app in ~2-3 minutes
-
-**GitHub Actions Configuration:**
-
-1.  **Workflow File:** Ensure a workflow file named `.github/workflows/deploy.yml` exists in your repository.
-2.  **Workflow Configuration:**
-
-```yaml
-name: Deploy to GitHub Pages
-
-on:
-  push:
-    branches:
-      - main
-
-jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout main branch
-        uses: actions/checkout@v4
-
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.38.5' # Use current Flutter version
-          channel: 'stable'
-
-      - name: Install dependencies
-        run: flutter pub get
-
-      - name: Build web
-        run: flutter
