@@ -339,6 +339,7 @@ class HeroCard extends StatelessWidget {
 - **Monitor API key usage** in the cloud console to detect suspicious activity.
 - **For web deployments, configure Docker Desktop to start automatically** to ensure the Supabase CLI and other tools function correctly.
 - **When using Docker on Windows, restart the terminal** after installing Docker Desktop to ensure the Supabase CLI and other tools function correctly.
+- **From now on, don't use Powershell anymore use cmd.**
 
 ---
 
@@ -814,5 +815,4 @@ ALTER TABLE public.shifts ADD COLUMN (
 - [ ] Create bottom sheet menu component with options:
   - [ ] 🧾 BEO (Event Details)
   - [ ] 📊 Server Checkout
-  - [ ] 💼 Business Card
-  - [ ] 📄 Invoice (Coming Soon)
+  - [ ]
