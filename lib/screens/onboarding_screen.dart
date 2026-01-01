@@ -1209,8 +1209,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             'Gig Type',
             'Wedding, corporate, street, etc.',
             template.showGigType,
-            (value) => _updateTemplate(
-                jobName, template.copyWith(showGigType: value)),
+            (value) =>
+                _updateTemplate(jobName, template.copyWith(showGigType: value)),
           ),
           _buildTemplateToggle(
             'Setup Hours',
@@ -1326,22 +1326,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             'Upsells',
             'Warranties and credit cards',
             template.showUpsells,
-            (value) => _updateTemplate(
-                jobName, template.copyWith(showUpsells: value)),
+            (value) =>
+                _updateTemplate(jobName, template.copyWith(showUpsells: value)),
           ),
           _buildTemplateToggle(
             'Returns',
             'Return tracking',
             template.showReturns,
-            (value) => _updateTemplate(
-                jobName, template.copyWith(showReturns: value)),
+            (value) =>
+                _updateTemplate(jobName, template.copyWith(showReturns: value)),
           ),
           _buildTemplateToggle(
             'Shrink',
             'Inventory loss',
             template.showShrink,
-            (value) => _updateTemplate(
-                jobName, template.copyWith(showShrink: value)),
+            (value) =>
+                _updateTemplate(jobName, template.copyWith(showShrink: value)),
           ),
         ],
       ),
@@ -1367,8 +1367,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             'Hostess Name',
             'Track who hosted',
             template.showHostess,
-            (value) => _updateTemplate(
-                jobName, template.copyWith(showHostess: value)),
+            (value) =>
+                _updateTemplate(jobName, template.copyWith(showHostess: value)),
           ),
           _buildTemplateToggle(
             'Guest Count',
@@ -1408,8 +1408,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             'Mileage',
             'Track miles driven',
             template.showMileage,
-            (value) => _updateTemplate(
-                jobName, template.copyWith(showMileage: value)),
+            (value) =>
+                _updateTemplate(jobName, template.copyWith(showMileage: value)),
           ),
         ],
       ),
@@ -1605,7 +1605,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     };
 
     // Determine industry-specific section - this appears right after earnings
-    final industrySection = _getIndustrySpecificSectionForTemplate(_selectedIndustry);
+    final industrySection =
+        _getIndustrySpecificSectionForTemplate(_selectedIndustry);
 
     // Build ordered list
     final sectionOrder = <String>['pay', 'earnings'];
@@ -1619,15 +1620,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
     return ListView(
       padding: const EdgeInsets.all(16),
-      children: sectionOrder
-          .map<Widget>((key) {
-            final widget = allSections[key];
-            if (widget == null) return const SizedBox();
-            return Column(
-              children: [widget, const SizedBox(height: 16)],
-            );
-          })
-          .toList(),
+      children: sectionOrder.map<Widget>((key) {
+        final widget = allSections[key];
+        if (widget == null) return const SizedBox();
+        return Column(
+          children: [widget, const SizedBox(height: 16)],
+        );
+      }).toList(),
     );
   }
 
