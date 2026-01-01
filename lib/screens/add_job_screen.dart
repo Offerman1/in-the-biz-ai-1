@@ -140,10 +140,12 @@ class _AddJobScreenState extends State<AddJobScreen> {
       final jobTitles = _getJobTitlesForIndustry(_selectedIndustry);
       if (!jobTitles.contains(job.name)) {
         // Add custom job title to the custom list
-        if (!_customJobTitles.containsKey(_selectedIndustry)) {
-          _customJobTitles[_selectedIndustry] = [];
+        if (_selectedIndustry != null) {
+          if (!_customJobTitles.containsKey(_selectedIndustry)) {
+            _customJobTitles[_selectedIndustry!] = [];
+          }
+          _customJobTitles[_selectedIndustry]!.add(job.name);
         }
-        _customJobTitles[_selectedIndustry]!.add(job.name);
       }
       _selectedJobTitle = job.name;
     } else {
