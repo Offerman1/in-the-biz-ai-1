@@ -462,7 +462,6 @@ class _GoalsScreenState extends State<GoalsScreen>
                       ),
                     ),
                   ),
-            ),
 
             // Progress section (only if goal exists)
             if (hasGoal) ...[
