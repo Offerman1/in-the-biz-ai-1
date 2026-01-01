@@ -1345,7 +1345,7 @@ class _AddJobScreenState extends State<AddJobScreen> {
             currentTemplate.showPiecesSold ||
             currentTemplate.showMaterialsCost ||
             currentTemplate.showSalePrice ||
-            currentTemplate.showVenueCommissionPercent)
+            currentTemplate.showVenueCommission)
           const SizedBox(height: 20),
 
         // 💼 Retail & Sales
