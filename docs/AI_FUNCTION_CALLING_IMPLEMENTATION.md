@@ -171,22 +171,124 @@ lib/services/
 #### 1. `add_shift`
 **Description:** Create a new shift record  
 **Parameters:**
+
+**Core Fields:**
 - `date` (string, required) - Date in YYYY-MM-DD or natural language ("today", "yesterday", "last Tuesday")
 - `cashTips` (number) - Cash tips earned
 - `creditTips` (number) - Credit card tips
-- `tipOuts` (number) - Amount tipped out to others
 - `hourlyRate` (number) - Hourly wage rate
 - `hoursWorked` (number) - Hours worked
 - `eventName` (string) - Event or party name
 - `guestCount` (number) - Number of guests served
 - `notes` (string) - Additional notes
 - `jobId` (string) - Job UUID (null = auto-detect)
+- `startTime` (string) - Start time (e.g., "2:00 PM")
+- `endTime` (string) - End time (e.g., "11:00 PM")
+- `location` (string) - Work location
+- `salesAmount` (number) - Total sales
+- `tipoutPercent` (number) - Tip out percentage
+- `additionalTipout` (number) - Extra tip out amount
+- `commission` (number) - Commission earned
+- `mileage` (number) - Miles driven
+- `flatRate` (number) - Flat rate pay
+- `eventCost` (number) - Event cost
+
+**Rideshare & Delivery Fields:**
+- `ridesCount` (number) - Number of rides (Uber, Lyft)
+- `deliveriesCount` (number) - Number of deliveries (DoorDash, UberEats)
+- `deadMiles` (number) - Miles without passenger/delivery
+- `fuelCost` (number) - Fuel expenses
+- `tollsParking` (number) - Tolls and parking fees
+- `surgeMultiplier` (number) - Average surge (e.g., 1.5)
+- `acceptanceRate` (number) - Percentage accepted (0-100)
+- `baseFare` (number) - Total base fares before tips
+
+**Music & Entertainment Fields:**
+- `gigType` (string) - Type: wedding, corporate, club, private
+- `setupHours` (number) - Hours setting up
+- `performanceHours` (number) - Hours performing
+- `breakdownHours` (number) - Hours breaking down
+- `equipmentUsed` (string) - Equipment used
+- `equipmentRentalCost` (number) - Rental costs
+- `crewPayment` (number) - Payment to crew
+- `merchSales` (number) - Merchandise revenue
+- `audienceSize` (number) - Estimated audience
+
+**Artist & Crafts Fields:**
+- `piecesCreated` (number) - Items created
+- `piecesSold` (number) - Items sold
+- `materialsCost` (number) - Materials cost
+- `salePrice` (number) - Total sale price
+- `venueCommissionPercent` (number) - Venue commission (0-100)
+
+**Retail/Sales Fields:**
+- `itemsSold` (number) - Items sold
+- `transactionsCount` (number) - Transactions processed
+- `upsellsCount` (number) - Successful upsells
+- `upsellsAmount` (number) - Upsell revenue
+- `returnsCount` (number) - Returns processed
+- `returnsAmount` (number) - Return value
+- `shrinkAmount` (number) - Shrink/loss
+- `department` (string) - Department worked
+
+**Salon/Spa Fields:**
+- `serviceType` (string) - Service type (haircut, color, massage)
+- `servicesCount` (number) - Services performed
+- `productSales` (number) - Product sales revenue
+- `repeatClientPercent` (number) - Repeat clients (0-100)
+- `chairRental` (number) - Chair rental fee
+- `newClientsCount` (number) - New clients
+- `returningClientsCount` (number) - Returning clients
+- `walkinCount` (number) - Walk-in clients
+- `appointmentCount` (number) - Scheduled appointments
+
+**Hospitality Fields:**
+- `roomType` (string) - Room type (standard, suite)
+- `roomsCleaned` (number) - Rooms cleaned
+- `qualityScore` (number) - Quality score (0-100)
+- `shiftType` (string) - Shift: day, swing, night
+- `roomUpgrades` (number) - Upgrades sold
+- `guestsCheckedIn` (number) - Guests checked in
+- `carsParked` (number) - Cars parked (valet)
+
+**Healthcare Fields:**
+- `patientCount` (number) - Patients seen
+- `shiftDifferential` (number) - Night/weekend premium
+- `onCallHours` (number) - Hours on call
+- `proceduresCount` (number) - Procedures performed
+- `specialization` (string) - ER, ICU, OR, etc.
+
+**Fitness Fields:**
+- `sessionsCount` (number) - Training sessions
+- `sessionType` (string) - personal, group, class
+- `classSize` (number) - Average class size
+- `retentionRate` (number) - Client retention (0-100)
+- `cancellationsCount` (number) - Cancellations
+- `packageSales` (number) - Package revenue
+- `supplementSales` (number) - Supplement sales
+
+**Construction/Trades Fields:**
+- `laborCost` (number) - Labor costs
+- `subcontractorCost` (number) - Subcontractor costs
+- `squareFootage` (number) - Square footage worked
+- `weatherDelayHours` (number) - Weather delay hours
+
+**Freelancer Fields:**
+- `revisionsCount` (number) - Client revisions
+- `clientType` (string) - new, returning, referral
+- `expenses` (number) - Business expenses
+- `billableHours` (number) - Billable hours
+
+**Restaurant Fields:**
+- `tableSection` (string) - Section (patio, bar, main)
+- `cashSales` (number) - Cash sales
+- `cardSales` (number) - Card sales
 
 **Smart Behavior:**
 - If user has 1 job, auto-apply it
 - If user has 2+ jobs, ask which one
 - Parse natural dates ("the 22nd" → calculate actual date)
-- Follow up: "Want to add event name?" if not provided
+- Only relevant fields shown based on job template
 
 #### 2. `edit_shift`
 **Description:** Modify an existing shift  
