@@ -1,0 +1,6 @@
+tree cf784005c36dbddfd1624ac516633588feb491ac
+parent 6e9e8e16d8d2260d69396080f05e407514e2a33b
+author Munzer221 <altcoinkid@gmail.com> 1767164054 -0500
+committer Munzer221 <altcoinkid@gmail.com> 1767164054 -0500
+
+Security fix: Remove .env from version control

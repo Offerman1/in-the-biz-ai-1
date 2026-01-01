@@ -620,5 +620,6 @@ Based on user feedback, the following dark themes have been updated to use more 
 - **Forest Night:** (To be updated similarly - neutral backgrounds, green accents)
 - **PayPal Blue:** (To be updated similarly - neutral backgrounds, blue accents)
 
-### One-Click Web Deployment Script (NEW - December 31, 2025)
-- To easily deploy the web app after making changes, create
+### Security Alert - API Key Compromise (NEW - December 31, 2025):
+
+**CRITICAL: A Gemini API key was accidentally exposed

@@ -10,6 +10,11 @@
 .history
 .svn/
 
+# Environment Variables - NEVER COMMIT THESE
+.env
+.env.local
+.env.*.local
+
 # Flutter/Dart/Pub
 .dart_tool/
 .flutter-plugins
