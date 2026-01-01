@@ -228,54 +228,143 @@ class _GoalsScreenState extends State<GoalsScreen>
 
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.cardBackground,
-        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-        border: Border.all(
-          color: isComplete
-              ? AppTheme.primaryGreen.withOpacity(0.5)
-              : hasGoal
-                  ? AppTheme.primaryGreen.withOpacity(0.2)
-                  : Colors.transparent,
-          width: 1,
-        ),
+        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+        gradient: isComplete
+            ? LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppTheme.primaryGreen.withOpacity(0.25),
+                  AppTheme.accentBlue.withOpacity(0.15),
+                ],
+              )
+            : null,
+        boxShadow: [
+          if (isComplete)
+            BoxShadow(
+              color: AppTheme.primaryGreen.withOpacity(0.3),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+        ],
       ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: hasGoal ? AppTheme.cardBackground : AppTheme.cardBackground.withOpacity(0.5),
+          borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+          border: Border.all(
+            color: isComplete
+                ? AppTheme.primaryGreen.withOpacity(0.5)
+                : hasGoal
+                    ? AppTheme.primaryGreen.withOpacity(0.2)
+                    : AppTheme.cardBackgroundLight,
+            width: isComplete ? 2 : 1,
+          ),
+        ),
       child: Column(
         children: [
           // Header row
           ListTile(
             contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
             leading: Container(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: hasGoal
-                    ? AppTheme.primaryGreen.withOpacity(0.15)
-                    : AppTheme.cardBackgroundLight,
-                borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+                gradient: hasGoal
+                    ? LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          AppTheme.primaryGreen.withOpacity(0.3),
+                          AppTheme.accentBlue.withOpacity(0.2),
+                        ],
+                      )
+                    : null,
+                color: hasGoal ? null : AppTheme.cardBackgroundLight,
+                borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                boxShadow: hasGoal
+                    ? [
+                        BoxShadow(
+                          color: AppTheme.primaryGreen.withOpacity(0.2),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ]
+                    : null,
               ),
               child: Icon(
                 type.icon,
                 color: hasGoal ? AppTheme.primaryGreen : AppTheme.textMuted,
-                size: 20,
+                size: 24,
               ),
             ),
             title: Text(
               type.displayName,
               style: AppTheme.bodyLarge.copyWith(
-                fontWeight: hasGoal ? FontWeight.w600 : FontWeight.normal,
+                fontWeight: FontWeight.w600,
+                fontSize: 18,
+                color: isComplete ? AppTheme.primaryGreen : AppTheme.textPrimary,
               ),
             ),
             subtitle: hasGoal
-                ? Text(
-                    'Target: ${_currencyFormat.format(goal.targetAmount)}',
-                    style: AppTheme.bodyMedium.copyWith(
-                      color: AppTheme.primaryGreen,
-                    ),
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 4),
+                      Text(
+                        'Target: ${_currencyFormat.format(goal.targetAmount)}',
+                        style: AppTheme.bodyMedium.copyWith(
+                          color: AppTheme.primaryGreen,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      if (isComplete)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Row(
+                            children: [
+                              Icon(Icons.stars,
+                                  color: AppTheme.accentYellow, size: 14),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Crushing it!',
+                                style: AppTheme.labelSmall.copyWith(
+                                  color: AppTheme.accentYellow,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      else if (progressPercent > 0.7)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Text(
+                            'Almost there! 🔥',
+                            style: AppTheme.labelSmall.copyWith(
+                              color: AppTheme.accentOrange,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        )
+                      else if (progressPercent > 0.4)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Text(
+                            'Making progress 💪',
+                            style: AppTheme.labelSmall.copyWith(
+                              color: AppTheme.accentBlue,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                    ],
                   )
                 : Text(
-                    'Not set',
+                    'Tap to set your target',
                     style: AppTheme.bodyMedium.copyWith(
                       color: AppTheme.textMuted,
+                      fontStyle: FontStyle.italic,
                     ),
                   ),
             trailing: hasGoal
