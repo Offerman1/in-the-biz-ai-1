@@ -99,20 +99,21 @@ class _AddJobScreenState extends State<AddJobScreen> {
   /// Get job titles for an industry (combines standard + custom)
   List<String> _getJobTitlesForIndustry(String? industry) {
     if (industry == null) return [];
-    
+
     // Get standard titles from IndustryData
-    final standardTitles = List<String>.from(IndustryData.getJobTitles(industry));
-    
+    final standardTitles =
+        List<String>.from(IndustryData.getJobTitles(industry));
+
     // Add custom titles if any exist for this industry
     if (_customJobTitles.containsKey(industry)) {
       standardTitles.addAll(_customJobTitles[industry]!);
     }
-    
+
     // Add the "Add Custom" option if not already there
     if (!standardTitles.contains('+ Add Custom Job Title')) {
       standardTitles.add('+ Add Custom Job Title');
     }
-    
+
     return standardTitles;
   }
 
@@ -626,8 +627,8 @@ class _AddJobScreenState extends State<AddJobScreen> {
                     color: AppTheme.textMuted,
                   ),
                 ),
-                items: _getJobTitlesForIndustry(_selectedIndustry)
-                    .map((jobTitle) {
+                items:
+                    _getJobTitlesForIndustry(_selectedIndustry).map((jobTitle) {
                   return DropdownMenuItem(
                     value: jobTitle,
                     child: Text(
@@ -1534,7 +1535,8 @@ class _AddJobScreenState extends State<AddJobScreen> {
                   if (!_customJobTitles.containsKey(_selectedIndustry)) {
                     _customJobTitles[_selectedIndustry!] = [];
                   }
-                  if (!_customJobTitles[_selectedIndustry]!.contains(customJobTitle)) {
+                  if (!_customJobTitles[_selectedIndustry]!
+                      .contains(customJobTitle)) {
                     _customJobTitles[_selectedIndustry]!.add(customJobTitle);
                   }
                   _selectedJobTitle = customJobTitle;
