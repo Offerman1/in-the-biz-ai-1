@@ -1,0 +1,15 @@
+{
+  "buildCommand": "flutter build web --release",
+  "outputDirectory": "build/web",
+  "framework": null,
+  "installCommand": "flutter pub get",
+  "routes": [
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ]
+}
