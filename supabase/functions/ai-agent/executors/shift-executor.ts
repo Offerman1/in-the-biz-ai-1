@@ -671,6 +671,97 @@ export class ShiftExecutor {
     if (updates.mileage !== undefined) dbUpdates.mileage = updates.mileage;
     if (updates.flatRate !== undefined) dbUpdates.flat_rate = updates.flatRate;
     if (updates.eventCost !== undefined) dbUpdates.event_cost = updates.eventCost;
+    
+    // Rideshare & Delivery fields
+    if (updates.ridesCount !== undefined) dbUpdates.rides_count = updates.ridesCount;
+    if (updates.deliveriesCount !== undefined) dbUpdates.deliveries_count = updates.deliveriesCount;
+    if (updates.deadMiles !== undefined) dbUpdates.dead_miles = updates.deadMiles;
+    if (updates.fuelCost !== undefined) dbUpdates.fuel_cost = updates.fuelCost;
+    if (updates.tollsParking !== undefined) dbUpdates.tolls_parking = updates.tollsParking;
+    if (updates.surgeMultiplier !== undefined) dbUpdates.surge_multiplier = updates.surgeMultiplier;
+    if (updates.acceptanceRate !== undefined) dbUpdates.acceptance_rate = updates.acceptanceRate;
+    if (updates.baseFare !== undefined) dbUpdates.base_fare = updates.baseFare;
+    
+    // Music & Entertainment fields
+    if (updates.gigType !== undefined) dbUpdates.gig_type = updates.gigType;
+    if (updates.setupHours !== undefined) dbUpdates.setup_hours = updates.setupHours;
+    if (updates.performanceHours !== undefined) dbUpdates.performance_hours = updates.performanceHours;
+    if (updates.breakdownHours !== undefined) dbUpdates.breakdown_hours = updates.breakdownHours;
+    if (updates.equipmentUsed !== undefined) dbUpdates.equipment_used = updates.equipmentUsed;
+    if (updates.equipmentRentalCost !== undefined) dbUpdates.equipment_rental_cost = updates.equipmentRentalCost;
+    if (updates.crewPayment !== undefined) dbUpdates.crew_payment = updates.crewPayment;
+    if (updates.merchSales !== undefined) dbUpdates.merch_sales = updates.merchSales;
+    if (updates.audienceSize !== undefined) dbUpdates.audience_size = updates.audienceSize;
+    
+    // Artist & Crafts fields
+    if (updates.piecesCreated !== undefined) dbUpdates.pieces_created = updates.piecesCreated;
+    if (updates.piecesSold !== undefined) dbUpdates.pieces_sold = updates.piecesSold;
+    if (updates.materialsCost !== undefined) dbUpdates.materials_cost = updates.materialsCost;
+    if (updates.salePrice !== undefined) dbUpdates.sale_price = updates.salePrice;
+    if (updates.venueCommissionPercent !== undefined) dbUpdates.venue_commission_percent = updates.venueCommissionPercent;
+    
+    // Retail/Sales fields
+    if (updates.itemsSold !== undefined) dbUpdates.items_sold = updates.itemsSold;
+    if (updates.transactionsCount !== undefined) dbUpdates.transactions_count = updates.transactionsCount;
+    if (updates.upsellsCount !== undefined) dbUpdates.upsells_count = updates.upsellsCount;
+    if (updates.upsellsAmount !== undefined) dbUpdates.upsells_amount = updates.upsellsAmount;
+    if (updates.returnsCount !== undefined) dbUpdates.returns_count = updates.returnsCount;
+    if (updates.returnsAmount !== undefined) dbUpdates.returns_amount = updates.returnsAmount;
+    if (updates.shrinkAmount !== undefined) dbUpdates.shrink_amount = updates.shrinkAmount;
+    if (updates.department !== undefined) dbUpdates.department = updates.department;
+    
+    // Salon/Spa fields
+    if (updates.serviceType !== undefined) dbUpdates.service_type = updates.serviceType;
+    if (updates.servicesCount !== undefined) dbUpdates.services_count = updates.servicesCount;
+    if (updates.productSales !== undefined) dbUpdates.product_sales = updates.productSales;
+    if (updates.repeatClientPercent !== undefined) dbUpdates.repeat_client_percent = updates.repeatClientPercent;
+    if (updates.chairRental !== undefined) dbUpdates.chair_rental = updates.chairRental;
+    if (updates.newClientsCount !== undefined) dbUpdates.new_clients_count = updates.newClientsCount;
+    if (updates.returningClientsCount !== undefined) dbUpdates.returning_clients_count = updates.returningClientsCount;
+    if (updates.walkinCount !== undefined) dbUpdates.walkin_count = updates.walkinCount;
+    if (updates.appointmentCount !== undefined) dbUpdates.appointment_count = updates.appointmentCount;
+    
+    // Hospitality fields
+    if (updates.roomType !== undefined) dbUpdates.room_type = updates.roomType;
+    if (updates.roomsCleaned !== undefined) dbUpdates.rooms_cleaned = updates.roomsCleaned;
+    if (updates.qualityScore !== undefined) dbUpdates.quality_score = updates.qualityScore;
+    if (updates.shiftType !== undefined) dbUpdates.shift_type = updates.shiftType;
+    if (updates.roomUpgrades !== undefined) dbUpdates.room_upgrades = updates.roomUpgrades;
+    if (updates.guestsCheckedIn !== undefined) dbUpdates.guests_checked_in = updates.guestsCheckedIn;
+    if (updates.carsParked !== undefined) dbUpdates.cars_parked = updates.carsParked;
+    
+    // Healthcare fields
+    if (updates.patientCount !== undefined) dbUpdates.patient_count = updates.patientCount;
+    if (updates.shiftDifferential !== undefined) dbUpdates.shift_differential = updates.shiftDifferential;
+    if (updates.onCallHours !== undefined) dbUpdates.on_call_hours = updates.onCallHours;
+    if (updates.proceduresCount !== undefined) dbUpdates.procedures_count = updates.proceduresCount;
+    if (updates.specialization !== undefined) dbUpdates.specialization = updates.specialization;
+    
+    // Fitness fields
+    if (updates.sessionsCount !== undefined) dbUpdates.sessions_count = updates.sessionsCount;
+    if (updates.sessionType !== undefined) dbUpdates.session_type = updates.sessionType;
+    if (updates.classSize !== undefined) dbUpdates.class_size = updates.classSize;
+    if (updates.retentionRate !== undefined) dbUpdates.retention_rate = updates.retentionRate;
+    if (updates.cancellationsCount !== undefined) dbUpdates.cancellations_count = updates.cancellationsCount;
+    if (updates.packageSales !== undefined) dbUpdates.package_sales = updates.packageSales;
+    if (updates.supplementSales !== undefined) dbUpdates.supplement_sales = updates.supplementSales;
+    
+    // Construction/Trades fields
+    if (updates.laborCost !== undefined) dbUpdates.labor_cost = updates.laborCost;
+    if (updates.subcontractorCost !== undefined) dbUpdates.subcontractor_cost = updates.subcontractorCost;
+    if (updates.squareFootage !== undefined) dbUpdates.square_footage = updates.squareFootage;
+    if (updates.weatherDelayHours !== undefined) dbUpdates.weather_delay_hours = updates.weatherDelayHours;
+    
+    // Freelancer fields
+    if (updates.revisionsCount !== undefined) dbUpdates.revisions_count = updates.revisionsCount;
+    if (updates.clientType !== undefined) dbUpdates.client_type = updates.clientType;
+    if (updates.expenses !== undefined) dbUpdates.expenses = updates.expenses;
+    if (updates.billableHours !== undefined) dbUpdates.billable_hours = updates.billableHours;
+    
+    // Restaurant Additional fields
+    if (updates.tableSection !== undefined) dbUpdates.table_section = updates.tableSection;
+    if (updates.cashSales !== undefined) dbUpdates.cash_sales = updates.cashSales;
+    if (updates.cardSales !== undefined) dbUpdates.card_sales = updates.cardSales;
 
     // When updating ANY earnings-related field (tips, hours), ensure hourly_rate is set from job
     // This requires individual updates to set correct hourly_rate per shift
