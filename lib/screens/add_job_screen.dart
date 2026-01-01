@@ -1303,7 +1303,7 @@ class _AddJobScreenState extends State<AddJobScreen> {
             currentTemplate.showPiecesSold ||
             currentTemplate.showMaterialsCost ||
             currentTemplate.showSalePrice ||
-            currentTemplate.showVenueCommissionPercent)
+            currentTemplate.showVenueCommission)
           _buildFieldCategory(
             '🎨 Art & Crafts',
             [

@@ -50,7 +50,7 @@ cd "c:\Users\Brandon 2021\Desktop\In The Biz AI" ; flutter run -d 10.0.0.65:5555
 
 **User's Android Tablet:** Samsung Galaxy Tab (SM X210)
 **Tablet ID:** `R92X3069WGW`
-**IP Address:** `10.0.0.50`
+**Tablet IP Address:** `10.0.0.50`
 
 **To run the app on the user's tablet:**
 ```powershell
