@@ -402,6 +402,8 @@ class JobTemplate {
       showLocation: false,
       showClientName: false,
       showProjectName: false,
+      // Restaurant-specific fields
+      showTableSection: true,
     );
   }
 
