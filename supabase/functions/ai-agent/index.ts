@@ -71,8 +71,18 @@ serve(async (req) => {
       );
     }
 
-    // Create Supabase client using the Authorization header to authenticate the user
-    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+    // Create Supabase client with ANON key and user's auth header
+    // This is the correct pattern per Supabase docs
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
+    if (!supabaseAnonKey) {
+      console.error("SUPABASE_ANON_KEY not found in environment");
+      return new Response(
+        JSON.stringify({ error: "Server configuration error" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
       global: {
         headers: { Authorization: authHeader },
       },
