@@ -1121,83 +1121,484 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               (value) => _updateTemplate(
                   jobName, template.copyWith(showEventName: value)),
             ),
-            if (template.showEventCost)
-              _buildTemplateToggle(
-                'Event Cost',
-                'Total cost of event (DJs, planners)',
-                template.showEventCost,
-                (value) => _updateTemplate(
-                    jobName, template.copyWith(showEventCost: value)),
-              ),
-            if (template.showHostess)
-              _buildTemplateToggle(
-                'Hostess Name',
-                'Track who hosted',
-                template.showHostess,
-                (value) => _updateTemplate(
-                    jobName, template.copyWith(showHostess: value)),
-              ),
-            if (template.showGuestCount)
-              _buildTemplateToggle(
-                'Guest Count',
-                'Number of guests',
-                template.showGuestCount,
-                (value) => _updateTemplate(
-                    jobName, template.copyWith(showGuestCount: value)),
-              ),
+            _buildTemplateToggle(
+              'Event Cost',
+              'Total cost of event (DJs, planners)',
+              template.showEventCost,
+              (value) => _updateTemplate(
+                  jobName, template.copyWith(showEventCost: value)),
+            ),
+            _buildTemplateToggle(
+              'Hostess Name',
+              'Track who hosted',
+              template.showHostess,
+              (value) => _updateTemplate(
+                  jobName, template.copyWith(showHostess: value)),
+            ),
+            _buildTemplateToggle(
+              'Guest Count',
+              'Number of guests',
+              template.showGuestCount,
+              (value) => _updateTemplate(
+                  jobName, template.copyWith(showGuestCount: value)),
+            ),
           ],
         ),
-        if (template.showEventName ||
-            template.showEventCost ||
-            template.showHostess ||
-            template.showGuestCount)
-          const SizedBox(height: 16),
+        const SizedBox(height: 16),
 
         // Work Details Section
-        if (template.showLocation ||
-            template.showClientName ||
-            template.showProjectName ||
-            template.showMileage)
-          _buildTemplateSection(
-            title: 'Work Details',
-            icon: Icons.location_on,
-            children: [
-              if (template.showLocation)
-                _buildTemplateToggle(
-                  'Location',
-                  'Where you worked',
-                  template.showLocation,
-                  (value) => _updateTemplate(
-                      jobName, template.copyWith(showLocation: value)),
-                ),
-              if (template.showClientName)
-                _buildTemplateToggle(
-                  'Client/Patient Name',
-                  'Track clients',
-                  template.showClientName,
-                  (value) => _updateTemplate(
-                      jobName, template.copyWith(showClientName: value)),
-                ),
-              if (template.showProjectName)
-                _buildTemplateToggle(
-                  'Project Name',
-                  'Track projects',
-                  template.showProjectName,
-                  (value) => _updateTemplate(
-                      jobName, template.copyWith(showProjectName: value)),
-                ),
-              if (template.showMileage)
-                _buildTemplateToggle(
-                  'Mileage',
-                  'Track miles driven',
-                  template.showMileage,
-                  (value) => _updateTemplate(
-                      jobName, template.copyWith(showMileage: value)),
-                ),
-            ],
-          ),
-        if (template.showLocation ||
-            template.showClientName ||
+        _buildTemplateSection(
+          title: 'Work Details',
+          icon: Icons.location_on,
+          children: [
+            _buildTemplateToggle(
+              'Location',
+              'Where you worked',
+              template.showLocation,
+              (value) => _updateTemplate(
+                  jobName, template.copyWith(showLocation: value)),
+            ),
+            _buildTemplateToggle(
+              'Client/Patient Name',
+              'Track clients',
+              template.showClientName,
+              (value) => _updateTemplate(
+                  jobName, template.copyWith(showClientName: value)),
+            ),
+            _buildTemplateToggle(
+              'Project Name',
+              'Track projects',
+              template.showProjectName,
+              (value) => _updateTemplate(
+                  jobName, template.copyWith(showProjectName: value)),
+            ),
+            _buildTemplateToggle(
+              'Mileage',
+              'Track miles driven',
+              template.showMileage,
+              (value) => _updateTemplate(
+                  jobName, template.copyWith(showMileage: value)),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+
+        // Rideshare & Delivery Section
+        _buildTemplateSection(
+          title: '🚗 Rideshare & Delivery',
+          icon: Icons.directions_car,
+          children: [
+            _buildTemplateToggle(
+              'Rides Count',
+              'Number of rides/deliveries',
+              template.showRidesCount,
+              (value) => _updateTemplate(
+                  jobName, template.copyWith(showRidesCount: value)),
+            ),
+            _buildTemplateToggle(
+              'Deadhead Miles',
+              'Miles without passengers',
+              template.showDeadMiles,
+              (value) => _updateTemplate(
+                  jobName, template.copyWith(showDeadMiles: value)),
+            ),
+            _buildTemplateToggle(
+              'Fuel Cost',
+              'Track fuel expenses',
+              template.showFuelCost,
+              (value) => _updateTemplate(
+                  jobName, template.copyWith(showFuelCost: value)),
+            ),
+            _buildTemplateToggle(
+              'Tolls & Parking',
+              'Track parking and toll fees',
+              template.showTollsParking,
+              (value) => _updateTemplate(
+                  jobName, template.copyWith(showTollsParking: value)),
+            ),
+            _buildTemplateToggle(
+              'Surge Multiplier',
+              'Track surge pricing bonuses',
+              template.showSurgeMultiplier,
+              (value) => _updateTemplate(
+                  jobName, template.copyWith(showSurgeMultiplier: value)),
+            ),
+            _buildTemplateToggle(
+              'Base Fare',
+              'Base fare vs tips breakdown',
+              template.showBaseFare,
+              (value) => _updateTemplate(
+                  jobName, template.copyWith(showBaseFare: value)),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+
+        // Music & Entertainment Section
+        _buildTemplateSection(
+          title: '🎵 Music & Entertainment',
+          icon: Icons.music_note,
+          children: [
+            _buildTemplateToggle(
+              'Gig Type',
+              'Wedding, corporate, street, etc.',
+              template.showGigType,
+              (value) => _updateTemplate(
+                  jobName, template.copyWith(showGigType: value)),
+            ),
+            _buildTemplateToggle(
+              'Setup Hours',
+              'Time spent setting up',
+              template.showSetupHours,
+              (value) => _updateTemplate(
+                  jobName, template.copyWith(showSetupHours: value)),
+            ),
+            _buildTemplateToggle(
+              'Performance Hours',
+              'Actual performance time',
+              template.showPerformanceHours,
+              (value) => _updateTemplate(
+                  jobName, template.copyWith(showPerformanceHours: value)),
+            ),
+            _buildTemplateToggle(
+              'Breakdown Hours',
+              'Time spent breaking down',
+              template.showBreakdownHours,
+              (value) => _updateTemplate(
+                  jobName, template.copyWith(showBreakdownHours: value)),
+            ),
+            _buildTemplateToggle(
+              'Equipment Rental',
+              'Track equipment rental costs',
+              template.showEquipmentRental,
+              (value) => _updateTemplate(
+                  jobName, template.copyWith(showEquipmentRental: value)),
+            ),
+            _buildTemplateToggle(
+              'Crew Payment',
+              'Split payment with crew',
+              template.showCrewPayment,
+              (value) => _updateTemplate(
+                  jobName, template.copyWith(showCrewPayment: value)),
+            ),
+            _buildTemplateToggle(
+              'Merch Sales',
+              'Merchandise revenue',
+              template.showMerchSales,
+              (value) => _updateTemplate(
+                  jobName, template.copyWith(showMerchSales: value)),
+            ),
+            _buildTemplateToggle(
+              'Audience Size',
+              'Crowd/attendance numbers',
+              template.showAudienceSize,
+              (value) => _updateTemplate(
+                  jobName, template.copyWith(showAudienceSize: value)),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+
+        // Art & Crafts Section
+        _buildTemplateSection(
+          title: '🎨 Art & Crafts',
+          icon: Icons.palette,
+          children: [
+            _buildTemplateToggle(
+              'Pieces Created',
+              'Production count',
+              template.showPiecesCreated,
+              (value) => _updateTemplate(
+                  jobName, template.copyWith(showPiecesCreated: value)),
+            ),
+            _buildTemplateToggle(
+              'Pieces Sold',
+              'Sales count',
+              template.showPiecesSold,
+              (value) => _updateTemplate(
+                  jobName, template.copyWith(showPiecesSold: value)),
+            ),
+            _buildTemplateToggle(
+              'Materials Cost',
+              'Track material expenses',
+              template.showMaterialsCost,
+              (value) => _updateTemplate(
+                  jobName, template.copyWith(showMaterialsCost: value)),
+            ),
+            _buildTemplateToggle(
+              'Sale Price',
+              'Revenue per piece',
+              template.showSalePrice,
+              (value) => _updateTemplate(
+                  jobName, template.copyWith(showSalePrice: value)),
+            ),
+            _buildTemplateToggle(
+              'Venue Commission %',
+              'Gallery/venue commission percentage',
+              template.showVenueCommission,
+              (value) => _updateTemplate(
+                  jobName, template.copyWith(showVenueCommission: value)),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+
+        // Salon Section
+        _buildTemplateSection(
+          title: '💇 Salon & Spa',
+          icon: Icons.spa,
+          children: [
+            _buildTemplateToggle(
+              'Services Count',
+              'Number of services performed',
+              template.showServicesCount,
+              (value) => _updateTemplate(
+                  jobName, template.copyWith(showServicesCount: value)),
+            ),
+            _buildTemplateToggle(
+              'Product Sales',
+              'Separate product revenue',
+              template.showProductSales,
+              (value) => _updateTemplate(
+                  jobName, template.copyWith(showProductSales: value)),
+            ),
+            _buildTemplateToggle(
+              'Chair Rental',
+              'Freelance stylist chair costs',
+              template.showChairRental,
+              (value) => _updateTemplate(
+                  jobName, template.copyWith(showChairRental: value)),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+
+        // Hospitality Section
+        _buildTemplateSection(
+          title: '🏨 Hospitality',
+          icon: Icons.hotel,
+          children: [
+            _buildTemplateToggle(
+              'Rooms Cleaned',
+              'Housekeeping rooms count',
+              template.showRoomsCleaned,
+              (value) => _updateTemplate(
+                  jobName, template.copyWith(showRoomsCleaned: value)),
+            ),
+            _buildTemplateToggle(
+              'Room Upgrades',
+              'Front desk upsells',
+              template.showRoomUpgrades,
+              (value) => _updateTemplate(
+                  jobName, template.copyWith(showRoomUpgrades: value)),
+            ),
+            _buildTemplateToggle(
+              'Guests Checked In',
+              'Front desk checkins',
+              template.showGuestsCheckedIn,
+              (value) => _updateTemplate(
+                  jobName, template.copyWith(showGuestsCheckedIn: value)),
+            ),
+            _buildTemplateToggle(
+              'Cars Parked',
+              'Valet cars parked',
+              template.showCarsParked,
+              (value) => _updateTemplate(
+                  jobName, template.copyWith(showCarsParked: value)),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+
+        // Fitness Section
+        _buildTemplateSection(
+          title: '💪 Fitness',
+          icon: Icons.fitness_center,
+          children: [
+            _buildTemplateToggle(
+              'Sessions/Classes',
+              'Sessions or classes taught',
+              template.showSessionsCount,
+              (value) => _updateTemplate(
+                  jobName, template.copyWith(showSessionsCount: value)),
+            ),
+            _buildTemplateToggle(
+              'Package Sales',
+              'Fitness packages sold',
+              template.showPackageSales,
+              (value) => _updateTemplate(
+                  jobName, template.copyWith(showPackageSales: value)),
+            ),
+            _buildTemplateToggle(
+              'Supplement Sales',
+              'Supplements sold',
+              template.showSupplementSales,
+              (value) => _updateTemplate(
+                  jobName, template.copyWith(showSupplementSales: value)),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+
+        // Healthcare Section
+        _buildTemplateSection(
+          title: '⚕️ Healthcare',
+          icon: Icons.medical_services,
+          children: [
+            _buildTemplateToggle(
+              'Patient Count',
+              'Patients seen',
+              template.showPatientCount,
+              (value) => _updateTemplate(
+                  jobName, template.copyWith(showPatientCount: value)),
+            ),
+            _buildTemplateToggle(
+              'Procedures',
+              'Procedures performed',
+              template.showProceduresCount,
+              (value) => _updateTemplate(
+                  jobName, template.copyWith(showProceduresCount: value)),
+            ),
+            _buildTemplateToggle(
+              'On-Call Hours',
+              'On-call shift hours',
+              template.showOnCallHours,
+              (value) => _updateTemplate(
+                  jobName, template.copyWith(showOnCallHours: value)),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+
+        // Construction Section
+        _buildTemplateSection(
+          title: '🔨 Construction',
+          icon: Icons.construction,
+          children: [
+            _buildTemplateToggle(
+              'Labor Cost',
+              'Crew wages',
+              template.showLaborCost,
+              (value) => _updateTemplate(
+                  jobName, template.copyWith(showLaborCost: value)),
+            ),
+            _buildTemplateToggle(
+              'Subcontractor Cost',
+              'Specialist payments',
+              template.showSubcontractorCost,
+              (value) => _updateTemplate(
+                  jobName, template.copyWith(showSubcontractorCost: value)),
+            ),
+            _buildTemplateToggle(
+              'Square Footage',
+              'Work completed',
+              template.showSquareFootage,
+              (value) => _updateTemplate(
+                  jobName, template.copyWith(showSquareFootage: value)),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+
+        // Retail Section
+        _buildTemplateSection(
+          title: '💼 Retail & Sales',
+          icon: Icons.shopping_cart,
+          children: [
+            _buildTemplateToggle(
+              'Items Sold',
+              'Item count',
+              template.showItemsSold,
+              (value) => _updateTemplate(
+                  jobName, template.copyWith(showItemsSold: value)),
+            ),
+            _buildTemplateToggle(
+              'Transactions',
+              'Number of customers',
+              template.showTransactionsCount,
+              (value) => _updateTemplate(
+                  jobName, template.copyWith(showTransactionsCount: value)),
+            ),
+            _buildTemplateToggle(
+              'Upsells',
+              'Warranties and credit cards',
+              template.showUpsells,
+              (value) => _updateTemplate(
+                  jobName, template.copyWith(showUpsells: value)),
+            ),
+            _buildTemplateToggle(
+              'Returns',
+              'Return tracking',
+              template.showReturns,
+              (value) => _updateTemplate(
+                  jobName, template.copyWith(showReturns: value)),
+            ),
+            _buildTemplateToggle(
+              'Shrink',
+              'Inventory loss',
+              template.showShrink,
+              (value) => _updateTemplate(
+                  jobName, template.copyWith(showShrink: value)),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+
+        // Freelancer Section
+        _buildTemplateSection(
+          title: '👨‍💼 Freelancer',
+          icon: Icons.business,
+          children: [
+            _buildTemplateToggle(
+              'Revisions',
+              'Rounds of changes',
+              template.showRevisionsCount,
+              (value) => _updateTemplate(
+                  jobName, template.copyWith(showRevisionsCount: value)),
+            ),
+            _buildTemplateToggle(
+              'Client Type',
+              'Startup/SMB/Enterprise',
+              template.showClientType,
+              (value) => _updateTemplate(
+                  jobName, template.copyWith(showClientType: value)),
+            ),
+            _buildTemplateToggle(
+              'Expenses',
+              'Software, equipment, travel',
+              template.showExpenses,
+              (value) => _updateTemplate(
+                  jobName, template.copyWith(showExpenses: value)),
+            ),
+            _buildTemplateToggle(
+              'Billable Hours',
+              'Billable hours tracking',
+              template.showBillableHours,
+              (value) => _updateTemplate(
+                  jobName, template.copyWith(showBillableHours: value)),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+
+        // Documentation Section
+        _buildTemplateSection(
+          title: 'Documentation',
+          icon: Icons.note_alt,
+          children: [
+            _buildTemplateToggle(
+              'Notes',
+              'Add notes to shifts',
+              template.showNotes,
+              (value) =>
+                  _updateTemplate(jobName, template.copyWith(showNotes: value)),
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
+      ],
+    );
+  }
             template.showProjectName ||
             template.showMileage)
           const SizedBox(height: 16),
