@@ -477,6 +477,86 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
     _overtimeHoursController.dispose();
     _flatRateController.dispose();
     _hourlyRateOverrideController.dispose();
+    // Rideshare & Delivery
+    _ridesCountController.dispose();
+    _deliveriesCountController.dispose();
+    _deadMilesController.dispose();
+    _fuelCostController.dispose();
+    _tollsParkingController.dispose();
+    _surgeMultiplierController.dispose();
+    _acceptanceRateController.dispose();
+    _baseFareController.dispose();
+    // Music & Entertainment
+    _gigTypeController.dispose();
+    _setupHoursController.dispose();
+    _performanceHoursController.dispose();
+    _breakdownHoursController.dispose();
+    _equipmentUsedController.dispose();
+    _equipmentRentalCostController.dispose();
+    _crewPaymentController.dispose();
+    _merchSalesController.dispose();
+    _audienceSizeController.dispose();
+    // Artist & Crafts
+    _piecesCreatedController.dispose();
+    _piecesSoldController.dispose();
+    _materialsCostController.dispose();
+    _salePriceController.dispose();
+    _venueCommissionPercentController.dispose();
+    // Retail/Sales
+    _itemsSoldController.dispose();
+    _transactionsCountController.dispose();
+    _upsellsCountController.dispose();
+    _upsellsAmountController.dispose();
+    _returnsCountController.dispose();
+    _returnsAmountController.dispose();
+    _shrinkAmountController.dispose();
+    _departmentController.dispose();
+    // Salon/Spa
+    _serviceTypeController.dispose();
+    _servicesCountController.dispose();
+    _productSalesController.dispose();
+    _repeatClientPercentController.dispose();
+    _chairRentalController.dispose();
+    _newClientsCountController.dispose();
+    _returningClientsCountController.dispose();
+    _walkinCountController.dispose();
+    _appointmentCountController.dispose();
+    // Hospitality
+    _roomTypeController.dispose();
+    _roomsCleanedController.dispose();
+    _qualityScoreController.dispose();
+    _shiftTypeController.dispose();
+    _roomUpgradesController.dispose();
+    _guestsCheckedInController.dispose();
+    _carsParkedController.dispose();
+    // Healthcare
+    _patientCountController.dispose();
+    _shiftDifferentialController.dispose();
+    _onCallHoursController.dispose();
+    _proceduresCountController.dispose();
+    _specializationController.dispose();
+    // Fitness
+    _sessionsCountController.dispose();
+    _sessionTypeController.dispose();
+    _classSizeController.dispose();
+    _retentionRateController.dispose();
+    _cancellationsCountController.dispose();
+    _packageSalesController.dispose();
+    _supplementSalesController.dispose();
+    // Construction/Trades
+    _laborCostController.dispose();
+    _subcontractorCostController.dispose();
+    _squareFootageController.dispose();
+    _weatherDelayHoursController.dispose();
+    // Freelancer
+    _revisionsCountController.dispose();
+    _clientTypeController.dispose();
+    _expensesController.dispose();
+    _billableHoursController.dispose();
+    // Restaurant Additional
+    _tableSectionController.dispose();
+    _cashSalesController.dispose();
+    _cardSalesController.dispose();
     super.dispose();
   }
 
