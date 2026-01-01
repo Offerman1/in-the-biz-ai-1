@@ -83,8 +83,18 @@ serve(async (req) => {
     
     let userId = null;
     try {
-      // Decode JWT to get user ID (no verification needed - service key has full access)
-      const payload = JSON.parse(atob(token.split('.')[1]));
+      // Decode JWT to get user ID (Deno uses TextDecoder, not atob)
+      const parts = token.split('.');
+      if (parts.length !== 3) {
+        throw new Error("Invalid JWT format");
+      }
+      
+      // Decode base64url (JWT uses base64url, not standard base64)
+      const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+      const padded = base64.padEnd(base64.length + (4 - base64.length % 4) % 4, '=');
+      const decoded = Uint8Array.from(atob(padded), c => c.charCodeAt(0));
+      const payload = JSON.parse(new TextDecoder().decode(decoded));
+      
       userId = payload.sub;
       console.log("Extracted user ID from JWT:", userId);
     } catch (e) {
