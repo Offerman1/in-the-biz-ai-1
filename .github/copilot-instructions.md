@@ -10,7 +10,7 @@ description: AI rules derived by SpecStory from the project AI interaction histo
 # In The Biz AI - Copilot Instructions
 
 **Knowledge cutoff:** June 2024
-**Current date:** December 31, 2025
+**Current date:** January 1, 2026
 
 **These instructions are automatically applied to every Copilot chat session.**
 
