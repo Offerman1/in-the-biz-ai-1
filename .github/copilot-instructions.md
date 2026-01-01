@@ -388,6 +388,74 @@ git push origin gh-pages
 
 **Deployment takes 2-3 minutes to propagate on GitHub Pages.**
 
+### ALTERNATIVE: Automated Deployment with GitHub Actions (NEW - January 1, 2026)
+
+Due to the current repository structure, where both source code and built files reside in the `gh-pages` branch root, GitHub Actions cannot be directly used for automated deployment without potentially destroying the source code.
+
+**To enable automated deployments with GitHub Actions, refactor the repository structure:**
+
+1.  **Move Source Code to `main` Branch:** Create a new `main` branch and move all source code (lib/, pubspec.yaml, etc.) to this branch.
+2.  **Keep `gh-pages` for Built Files Only:** Ensure the `gh-pages` branch only contains the built web files.
+3.  **Configure GitHub Actions:** Set up a workflow to automatically build the Flutter web app from the `main` branch and deploy the built files to the `gh-pages` branch.
+
+**Once the repository structure is refactored, follow these steps to set up GitHub Actions:**
+
+1.  **Create a GitHub Actions Workflow File:** Create a new file named `.github/workflows/deploy.yml` in your repository.
+2.  **Add the Following Configuration:**
+
+```yaml
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout main branch
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.38.5' # Use current Flutter version
+          channel: 'stable'
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build web
+        run: flutter build web --release --base-href /
+
+      - name: Deploy to gh-pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build/web
+          publish_branch: gh-pages
+          cname: inthebiz.app
+```
+
+3.  **Update Flutter Version:** Ensure the `flutter-version` in the workflow file matches your current Flutter version. Check your local Flutter version by running `flutter --version` in the terminal.
+4.  **Set Workflow Permissions:**
+    -   Go to your repository settings: `https://github.com/munzer221/in-the-biz-ai/settings/actions`
+    -   Scroll down to **"Workflow permissions"**
+    -   Select **"Read and write permissions"**
+    -   Check the box for **"Allow GitHub Actions to create and approve pull requests"**
+    -   Click **Save**
+5.  **Commit and Push:** Commit the changes to the `main` branch and push them to the remote repository.
+6.  **Verify GitHub Pages Settings:**
+    -   Go to: `https://github.com/munzer221/in-the-biz-ai/settings/pages`
+    -   Make sure it's set to:
+        -   **Source:** Deploy from a branch
+        -   **Branch:** `gh-pages` / `/ (root)`
+
+**After completing these steps, GitHub Actions will automatically build and deploy your Flutter web app to GitHub Pages whenever you push changes to the `main` branch.**
+
 ---
 
 ## 🚀 ALTERNATIVE WEB DEPLOYMENT OPTIONS (UPDATED - January 1, 2026)
@@ -697,102 +765,3 @@ Correlate checkout data with shifts
 Show "On shifts with high sales, your tip % is X"
 Predict peak earning shifts
 Seasonal trends
-
-### POS Systems Analysis
-
-Document popular POS systems, as well as what data those systems can provide.
-
-**Systems to Research:**
-
-Toast (Hospitality focused)
-Square (Small business)
-Aloha/Oracle Micros (Enterprise)
-Micros (Legacy, still widely used)
-Clover (Square competitor)
-TouchBistro (iPad-based)
-Lightspeed (Retail/Restaurant)
-Handwritten (Manual receipts)
-
-## 👍 Extraction Priorities (MVP)
-Date, Total Sales Amount, Tip (if present), Payment Method, Server name (if present)
-
-## 📝 Real World Challenges
-
-### Challenge 1: Inconsistent Data Across POS Systems
-
-Solution Options:
-Extract whatever is available and mark confidence level
-Ask user in review modal if data looks wrong
-
-### Challenge 2: Ambiguous Totals
-
-Solution Options:
-Always extract subtotal (before tax) as sales
-Extract both subtotal AND total, let user choose
-
-### Challenge 3: Handwritten Tips
-
-Solution Options:
-Skip tip extraction if handwritten, let user type it
-Try OCR but mark as low confidence
-
-### Challenge 4: Faded/Old Receipts
-
-Solution Options:
-Try to extract anyway, marks low confidence
-Show user the original photo in review modal so they can manually verify/correct extracted data.
-
-### Challenge 5: Multiple Checkouts on One Receipt
-
-Solution Options:
-Warn user in modal if we detect multiple server names or table numbers. User can manually edit to match their specific check.
-
-### Challenge 6: Currency & International Formats
-
-Solution Options:
-Only support USD
-
-### Challenge 7: Service Charge vs. Tip
-
-Solution Options:
-Extract service charge separately, show user in review modal with label "Service Charge (likely deducted from your tips)". User can move it to additional_tipout field if it's a house fee.
-
-### Challenge 8: Date Format Variations
-
-Solution Options:
-Gemini is good at date detection. Extract it, but show user the parsed date in modal for confirmation (especially for YY ambiguity).
-
-### Challenge 9: Time Information (or Lack Thereof)
-
-Solution Options:
-Most users will already know what shift they worked. Show them the date, they fill in the time manually in the form.
-
-### Challenge 10: Confidence Scoring & User Trust
-
-Solution Options:
-Show confidence badges (Green checkmark for high confidence, Yellow warning for medium, Red X for low). Always show original photo so user can verify.
-
-### Questions UI
-
-Users can skip unanswered questions, unless there's required ones. If you're not sure about it for sure. If you have a low confidence, for sure you need to ask, but. They shouldn't be required to answer every question to complete it. If they want to leave some unanswered, that's their choice?
-
-### Question Cards
-
-It depends how much screen space we have. I suppose if we make them small enough you could do 3 or 4.
-
-### Service Charge Classification
-
-You should definitely have the question cards like Server charge classification for sure if you don't know it.
-
-### Checkout Analytics
-
-Should be on the stats screen. May want to have a toggle button somewhere where they can include server checkout tracking into overall analytics. Or keep it separate. In its own screen. Start out as its own tab. And then they can choose to include with Shift Analytics.
-
-## 📝 Data Storage
-
-### New Database Table: server_checkouts
-
-```sql
-CREATE TABLE public.server_checkouts (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES
