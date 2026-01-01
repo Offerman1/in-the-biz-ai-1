@@ -1,0 +1,8 @@
+{
+  "functions": [
+    {
+      "slug": "ai-agent",
+      "verifyJwt": false
+    }
+  ]
+}
