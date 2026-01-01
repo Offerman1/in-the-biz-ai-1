@@ -466,7 +466,7 @@ This section defines the UI placement strategy for the AI Vision features.
     *   Account for variable formats.
     *   Account for multiple pages in a checkout.
     *   Start simple, extract what is consistently available, and improve over time.
-    *   Review modal lets user verify/edit extracted data.
+    *   Review modal (user confirms/corrects) lets user verify/edit extracted data.
 -   **Receipt and Invoice:**
     *   These features are for future development.
     *   Build a separate "Invoice/Receipt Tracking" system for 1099 workers.
@@ -807,5 +807,4 @@ ALTER TABLE public.shifts ADD COLUMN (
 │    Found: Service Charge $15         │
 │                                      │
 │ [ ] Yes, deduct from my tips         │
-│ [ ] No, it's part of my pay          │
-│
+│ [ ] No, it's part
