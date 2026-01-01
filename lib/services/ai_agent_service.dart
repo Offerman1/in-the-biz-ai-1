@@ -16,6 +16,17 @@ class AIAgentService {
     try {
       debugPrint('[AI Agent] Sending message: $message');
 
+      // Check if user is logged in
+      final session = Supabase.instance.client.auth.currentSession;
+      debugPrint('[AI Agent] User session exists: ${session != null}');
+      if (session != null) {
+        debugPrint('[AI Agent] User ID: ${session.user.id}');
+        debugPrint('[AI Agent] Access token length: ${session.accessToken.length}');
+        debugPrint('[AI Agent] Token type: ${session.accessToken.split('.').length} parts');
+      } else {
+        debugPrint('[AI Agent] WARNING: No user session found!');
+      }
+
       // Use the Supabase client SDK to invoke the function
       // This automatically handles authentication headers (Authorization and apikey)
       final response = await Supabase.instance.client.functions.invoke(
