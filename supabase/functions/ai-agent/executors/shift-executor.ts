@@ -1,5 +1,4 @@
 // Shift Executor - Handles all shift-related function calls
-// Updated: Added industry-specific fields for rideshare, salon, hospitality, fitness, healthcare, construction, freelancer
 import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 export class ShiftExecutor {
@@ -63,67 +62,6 @@ export class ShiftExecutor {
       mileage,
       flatRate,
       eventCost,
-      // ============================================
-      // RIDESHARE/DELIVERY FIELDS
-      // ============================================
-      tripCount,
-      totalMiles,
-      tipsInApp,
-      surgePeakEarnings,
-      waitTimeMinutes,
-      deadheadMiles,
-      platformName,
-      bonusesIncentives,
-      // ============================================
-      // SALON/SPA FIELDS
-      // ============================================
-      servicesCount,
-      retailSales,
-      productCommissionPercent,
-      productCommission,
-      rebookingCount,
-      // ============================================
-      // HOSPITALITY FIELDS
-      // ============================================
-      roomServiceTips,
-      valetParkingTips,
-      minibarSales,
-      conciergeTips,
-      bellhopTips,
-      housekeepingTips,
-      banquetTips,
-      spaTips,
-      poolTips,
-      frontDeskTips,
-      hotelRoomNumber,
-      // ============================================
-      // FITNESS FIELDS
-      // ============================================
-      classCount,
-      personalTrainingSessions,
-      membershipSalesCommission,
-      supplementSales,
-      // ============================================
-      // HEALTHCARE FIELDS
-      // ============================================
-      proceduresAssisted,
-      overtimeHoursWorked,
-      onCallHours,
-      patientCount,
-      // ============================================
-      // CONSTRUCTION FIELDS
-      // ============================================
-      perDiemAmount,
-      toolAllowance,
-      hazardPay,
-      piecesCompleted,
-      pieceRate,
-      // ============================================
-      // FREELANCER FIELDS
-      // ============================================
-      invoiceNumber,
-      retainerAmount,
-      milestonePayment,
     } = args;
 
     // If no jobId provided, try to get the user's default or only job
@@ -207,75 +145,6 @@ export class ShiftExecutor {
     if (flatRate) insertData.flat_rate = flatRate;
     if (eventCost) insertData.event_cost = eventCost;
 
-    // ============================================
-    // RIDESHARE/DELIVERY FIELDS
-    // ============================================
-    if (tripCount !== undefined) insertData.trip_count = tripCount;
-    if (totalMiles !== undefined) insertData.total_miles = totalMiles;
-    if (tipsInApp !== undefined) insertData.tips_in_app = tipsInApp;
-    if (surgePeakEarnings !== undefined) insertData.surge_peak_earnings = surgePeakEarnings;
-    if (waitTimeMinutes !== undefined) insertData.wait_time_minutes = waitTimeMinutes;
-    if (deadheadMiles !== undefined) insertData.deadhead_miles = deadheadMiles;
-    if (platformName) insertData.platform_name = platformName;
-    if (bonusesIncentives !== undefined) insertData.bonuses_incentives = bonusesIncentives;
-
-    // ============================================
-    // SALON/SPA FIELDS
-    // ============================================
-    if (servicesCount !== undefined) insertData.services_count = servicesCount;
-    if (retailSales !== undefined) insertData.retail_sales = retailSales;
-    if (productCommissionPercent !== undefined) insertData.product_commission_percent = productCommissionPercent;
-    if (productCommission !== undefined) insertData.product_commission = productCommission;
-    if (rebookingCount !== undefined) insertData.rebooking_count = rebookingCount;
-
-    // ============================================
-    // HOSPITALITY FIELDS
-    // ============================================
-    if (roomServiceTips !== undefined) insertData.room_service_tips = roomServiceTips;
-    if (valetParkingTips !== undefined) insertData.valet_parking_tips = valetParkingTips;
-    if (minibarSales !== undefined) insertData.minibar_sales = minibarSales;
-    if (conciergeTips !== undefined) insertData.concierge_tips = conciergeTips;
-    if (bellhopTips !== undefined) insertData.bellhop_tips = bellhopTips;
-    if (housekeepingTips !== undefined) insertData.housekeeping_tips = housekeepingTips;
-    if (banquetTips !== undefined) insertData.banquet_tips = banquetTips;
-    if (spaTips !== undefined) insertData.spa_tips = spaTips;
-    if (poolTips !== undefined) insertData.pool_tips = poolTips;
-    if (frontDeskTips !== undefined) insertData.front_desk_tips = frontDeskTips;
-    if (hotelRoomNumber) insertData.hotel_room_number = hotelRoomNumber;
-
-    // ============================================
-    // FITNESS FIELDS
-    // ============================================
-    if (classCount !== undefined) insertData.class_count = classCount;
-    if (personalTrainingSessions !== undefined) insertData.personal_training_sessions = personalTrainingSessions;
-    if (membershipSalesCommission !== undefined) insertData.membership_sales_commission = membershipSalesCommission;
-    if (supplementSales !== undefined) insertData.supplement_sales = supplementSales;
-
-    // ============================================
-    // HEALTHCARE FIELDS
-    // ============================================
-    if (proceduresAssisted !== undefined) insertData.procedures_assisted = proceduresAssisted;
-    if (overtimeHoursWorked !== undefined) insertData.overtime_hours_worked = overtimeHoursWorked;
-    if (onCallHours !== undefined) insertData.on_call_hours = onCallHours;
-    if (patientCount !== undefined) insertData.patient_count = patientCount;
-
-    // ============================================
-    // CONSTRUCTION FIELDS
-    // ============================================
-    if (perDiemAmount !== undefined) insertData.per_diem_amount = perDiemAmount;
-    if (toolAllowance !== undefined) insertData.tool_allowance = toolAllowance;
-    if (hazardPay !== undefined) insertData.hazard_pay = hazardPay;
-    if (piecesCompleted !== undefined) insertData.pieces_completed = piecesCompleted;
-    if (pieceRate !== undefined) insertData.piece_rate = pieceRate;
-
-    // ============================================
-    // FREELANCER FIELDS
-    // ============================================
-    if (projectName) insertData.project_name = projectName;
-    if (invoiceNumber) insertData.invoice_number = invoiceNumber;
-    if (retainerAmount !== undefined) insertData.retainer_amount = retainerAmount;
-    if (milestonePayment !== undefined) insertData.milestone_payment = milestonePayment;
-
     const { data, error } = await this.supabase
       .from("shifts")
       .insert(insertData)
@@ -286,7 +155,7 @@ export class ShiftExecutor {
 
     // Calculate totals for response (not stored in DB)
     const totalTips = cashTips + creditTips;
-    const hourlyWages = finalHourlyRate * hoursWorked;
+    const hourlyWages = hourlyRate * hoursWorked;
     const totalIncome = hourlyWages + totalTips;
 
     // Build response with job info
@@ -330,8 +199,6 @@ export class ShiftExecutor {
     // Convert camelCase updates to snake_case for database
     // ONLY include columns that actually exist in the schema
     const dbUpdates: any = {};
-    
-    // Core fields
     if (updates.cashTips !== undefined) dbUpdates.cash_tips = updates.cashTips;
     if (updates.creditTips !== undefined) dbUpdates.credit_tips = updates.creditTips;
     if (updates.hourlyRate !== undefined) dbUpdates.hourly_rate = updates.hourlyRate;
@@ -356,74 +223,6 @@ export class ShiftExecutor {
     if (updates.mileage !== undefined) dbUpdates.mileage = updates.mileage;
     if (updates.flatRate !== undefined) dbUpdates.flat_rate = updates.flatRate;
     if (updates.eventCost !== undefined) dbUpdates.event_cost = updates.eventCost;
-
-    // ============================================
-    // RIDESHARE/DELIVERY FIELDS
-    // ============================================
-    if (updates.tripCount !== undefined) dbUpdates.trip_count = updates.tripCount;
-    if (updates.totalMiles !== undefined) dbUpdates.total_miles = updates.totalMiles;
-    if (updates.tipsInApp !== undefined) dbUpdates.tips_in_app = updates.tipsInApp;
-    if (updates.surgePeakEarnings !== undefined) dbUpdates.surge_peak_earnings = updates.surgePeakEarnings;
-    if (updates.waitTimeMinutes !== undefined) dbUpdates.wait_time_minutes = updates.waitTimeMinutes;
-    if (updates.deadheadMiles !== undefined) dbUpdates.deadhead_miles = updates.deadheadMiles;
-    if (updates.platformName !== undefined) dbUpdates.platform_name = updates.platformName;
-    if (updates.bonusesIncentives !== undefined) dbUpdates.bonuses_incentives = updates.bonusesIncentives;
-
-    // ============================================
-    // SALON/SPA FIELDS
-    // ============================================
-    if (updates.servicesCount !== undefined) dbUpdates.services_count = updates.servicesCount;
-    if (updates.retailSales !== undefined) dbUpdates.retail_sales = updates.retailSales;
-    if (updates.productCommissionPercent !== undefined) dbUpdates.product_commission_percent = updates.productCommissionPercent;
-    if (updates.productCommission !== undefined) dbUpdates.product_commission = updates.productCommission;
-    if (updates.rebookingCount !== undefined) dbUpdates.rebooking_count = updates.rebookingCount;
-
-    // ============================================
-    // HOSPITALITY FIELDS
-    // ============================================
-    if (updates.roomServiceTips !== undefined) dbUpdates.room_service_tips = updates.roomServiceTips;
-    if (updates.valetParkingTips !== undefined) dbUpdates.valet_parking_tips = updates.valetParkingTips;
-    if (updates.minibarSales !== undefined) dbUpdates.minibar_sales = updates.minibarSales;
-    if (updates.conciergeTips !== undefined) dbUpdates.concierge_tips = updates.conciergeTips;
-    if (updates.bellhopTips !== undefined) dbUpdates.bellhop_tips = updates.bellhopTips;
-    if (updates.housekeepingTips !== undefined) dbUpdates.housekeeping_tips = updates.housekeepingTips;
-    if (updates.banquetTips !== undefined) dbUpdates.banquet_tips = updates.banquetTips;
-    if (updates.spaTips !== undefined) dbUpdates.spa_tips = updates.spaTips;
-    if (updates.poolTips !== undefined) dbUpdates.pool_tips = updates.poolTips;
-    if (updates.frontDeskTips !== undefined) dbUpdates.front_desk_tips = updates.frontDeskTips;
-    if (updates.hotelRoomNumber !== undefined) dbUpdates.hotel_room_number = updates.hotelRoomNumber;
-
-    // ============================================
-    // FITNESS FIELDS
-    // ============================================
-    if (updates.classCount !== undefined) dbUpdates.class_count = updates.classCount;
-    if (updates.personalTrainingSessions !== undefined) dbUpdates.personal_training_sessions = updates.personalTrainingSessions;
-    if (updates.membershipSalesCommission !== undefined) dbUpdates.membership_sales_commission = updates.membershipSalesCommission;
-    if (updates.supplementSales !== undefined) dbUpdates.supplement_sales = updates.supplementSales;
-
-    // ============================================
-    // HEALTHCARE FIELDS
-    // ============================================
-    if (updates.proceduresAssisted !== undefined) dbUpdates.procedures_assisted = updates.proceduresAssisted;
-    if (updates.overtimeHoursWorked !== undefined) dbUpdates.overtime_hours_worked = updates.overtimeHoursWorked;
-    if (updates.onCallHours !== undefined) dbUpdates.on_call_hours = updates.onCallHours;
-    if (updates.patientCount !== undefined) dbUpdates.patient_count = updates.patientCount;
-
-    // ============================================
-    // CONSTRUCTION FIELDS
-    // ============================================
-    if (updates.perDiemAmount !== undefined) dbUpdates.per_diem_amount = updates.perDiemAmount;
-    if (updates.toolAllowance !== undefined) dbUpdates.tool_allowance = updates.toolAllowance;
-    if (updates.hazardPay !== undefined) dbUpdates.hazard_pay = updates.hazardPay;
-    if (updates.piecesCompleted !== undefined) dbUpdates.pieces_completed = updates.piecesCompleted;
-    if (updates.pieceRate !== undefined) dbUpdates.piece_rate = updates.pieceRate;
-
-    // ============================================
-    // FREELANCER FIELDS
-    // ============================================
-    if (updates.invoiceNumber !== undefined) dbUpdates.invoice_number = updates.invoiceNumber;
-    if (updates.retainerAmount !== undefined) dbUpdates.retainer_amount = updates.retainerAmount;
-    if (updates.milestonePayment !== undefined) dbUpdates.milestone_payment = updates.milestonePayment;
 
     // Always ensure hourly rate is set when updating hours or tips
     // Pull from job if shift has no hourly_rate or it's 0
@@ -477,15 +276,10 @@ export class ShiftExecutor {
 
       if (!shift) throw new Error(`No shift found on ${date}`);
 
-      // Calculate total for display
-      const totalTips = (shift.cash_tips || 0) + (shift.credit_tips || 0);
-      const hourlyWages = (shift.hourly_rate || 0) * (shift.hours_worked || 0);
-      const totalIncome = hourlyWages + totalTips;
-
       return {
         needsConfirmation: true,
         shift: shift,
-        message: `Are you sure you want to delete the shift from ${date}? You earned $${totalIncome.toFixed(2)} that day.`,
+        message: `Are you sure you want to delete the shift from ${date}? You earned $${shift.total_income.toFixed(2)} that day.`,
       };
     }
 
@@ -579,14 +373,6 @@ export class ShiftExecutor {
       if (updates.mileage !== undefined) changeDescriptions.push(`mileage to ${updates.mileage} miles`);
       if (updates.flatRate !== undefined) changeDescriptions.push(`flat rate to $${updates.flatRate}`);
       if (updates.eventCost !== undefined) changeDescriptions.push(`event cost to $${updates.eventCost}`);
-      // Industry-specific preview descriptions
-      if (updates.tripCount !== undefined) changeDescriptions.push(`trip count to ${updates.tripCount}`);
-      if (updates.totalMiles !== undefined) changeDescriptions.push(`total miles to ${updates.totalMiles}`);
-      if (updates.tipsInApp !== undefined) changeDescriptions.push(`in-app tips to $${updates.tipsInApp}`);
-      if (updates.servicesCount !== undefined) changeDescriptions.push(`services count to ${updates.servicesCount}`);
-      if (updates.classCount !== undefined) changeDescriptions.push(`class count to ${updates.classCount}`);
-      if (updates.patientCount !== undefined) changeDescriptions.push(`patient count to ${updates.patientCount}`);
-      if (updates.piecesCompleted !== undefined) changeDescriptions.push(`pieces completed to ${updates.piecesCompleted}`);
 
       return {
         needsConfirmation: true,
@@ -601,8 +387,6 @@ export class ShiftExecutor {
     // CONFIRMED - Actually update all shifts
     // Convert camelCase updates to snake_case
     const dbUpdates: any = {};
-    
-    // Core fields
     if (updates.cashTips !== undefined) dbUpdates.cash_tips = updates.cashTips;
     if (updates.creditTips !== undefined) dbUpdates.credit_tips = updates.creditTips;
     if (updates.hourlyRate !== undefined) dbUpdates.hourly_rate = updates.hourlyRate;
@@ -625,48 +409,6 @@ export class ShiftExecutor {
     if (updates.mileage !== undefined) dbUpdates.mileage = updates.mileage;
     if (updates.flatRate !== undefined) dbUpdates.flat_rate = updates.flatRate;
     if (updates.eventCost !== undefined) dbUpdates.event_cost = updates.eventCost;
-    
-    // Industry-specific fields
-    if (updates.tripCount !== undefined) dbUpdates.trip_count = updates.tripCount;
-    if (updates.totalMiles !== undefined) dbUpdates.total_miles = updates.totalMiles;
-    if (updates.tipsInApp !== undefined) dbUpdates.tips_in_app = updates.tipsInApp;
-    if (updates.surgePeakEarnings !== undefined) dbUpdates.surge_peak_earnings = updates.surgePeakEarnings;
-    if (updates.waitTimeMinutes !== undefined) dbUpdates.wait_time_minutes = updates.waitTimeMinutes;
-    if (updates.deadheadMiles !== undefined) dbUpdates.deadhead_miles = updates.deadheadMiles;
-    if (updates.platformName !== undefined) dbUpdates.platform_name = updates.platformName;
-    if (updates.bonusesIncentives !== undefined) dbUpdates.bonuses_incentives = updates.bonusesIncentives;
-    if (updates.servicesCount !== undefined) dbUpdates.services_count = updates.servicesCount;
-    if (updates.retailSales !== undefined) dbUpdates.retail_sales = updates.retailSales;
-    if (updates.productCommissionPercent !== undefined) dbUpdates.product_commission_percent = updates.productCommissionPercent;
-    if (updates.productCommission !== undefined) dbUpdates.product_commission = updates.productCommission;
-    if (updates.rebookingCount !== undefined) dbUpdates.rebooking_count = updates.rebookingCount;
-    if (updates.roomServiceTips !== undefined) dbUpdates.room_service_tips = updates.roomServiceTips;
-    if (updates.valetParkingTips !== undefined) dbUpdates.valet_parking_tips = updates.valetParkingTips;
-    if (updates.minibarSales !== undefined) dbUpdates.minibar_sales = updates.minibarSales;
-    if (updates.conciergeTips !== undefined) dbUpdates.concierge_tips = updates.conciergeTips;
-    if (updates.bellhopTips !== undefined) dbUpdates.bellhop_tips = updates.bellhopTips;
-    if (updates.housekeepingTips !== undefined) dbUpdates.housekeeping_tips = updates.housekeepingTips;
-    if (updates.banquetTips !== undefined) dbUpdates.banquet_tips = updates.banquetTips;
-    if (updates.spaTips !== undefined) dbUpdates.spa_tips = updates.spaTips;
-    if (updates.poolTips !== undefined) dbUpdates.pool_tips = updates.poolTips;
-    if (updates.frontDeskTips !== undefined) dbUpdates.front_desk_tips = updates.frontDeskTips;
-    if (updates.hotelRoomNumber !== undefined) dbUpdates.hotel_room_number = updates.hotelRoomNumber;
-    if (updates.classCount !== undefined) dbUpdates.class_count = updates.classCount;
-    if (updates.personalTrainingSessions !== undefined) dbUpdates.personal_training_sessions = updates.personalTrainingSessions;
-    if (updates.membershipSalesCommission !== undefined) dbUpdates.membership_sales_commission = updates.membershipSalesCommission;
-    if (updates.supplementSales !== undefined) dbUpdates.supplement_sales = updates.supplementSales;
-    if (updates.proceduresAssisted !== undefined) dbUpdates.procedures_assisted = updates.proceduresAssisted;
-    if (updates.overtimeHoursWorked !== undefined) dbUpdates.overtime_hours_worked = updates.overtimeHoursWorked;
-    if (updates.onCallHours !== undefined) dbUpdates.on_call_hours = updates.onCallHours;
-    if (updates.patientCount !== undefined) dbUpdates.patient_count = updates.patientCount;
-    if (updates.perDiemAmount !== undefined) dbUpdates.per_diem_amount = updates.perDiemAmount;
-    if (updates.toolAllowance !== undefined) dbUpdates.tool_allowance = updates.toolAllowance;
-    if (updates.hazardPay !== undefined) dbUpdates.hazard_pay = updates.hazardPay;
-    if (updates.piecesCompleted !== undefined) dbUpdates.pieces_completed = updates.piecesCompleted;
-    if (updates.pieceRate !== undefined) dbUpdates.piece_rate = updates.pieceRate;
-    if (updates.invoiceNumber !== undefined) dbUpdates.invoice_number = updates.invoiceNumber;
-    if (updates.retainerAmount !== undefined) dbUpdates.retainer_amount = updates.retainerAmount;
-    if (updates.milestonePayment !== undefined) dbUpdates.milestone_payment = updates.milestonePayment;
 
     // When updating ANY earnings-related field (tips, hours), ensure hourly_rate is set from job
     // This requires individual updates to set correct hourly_rate per shift
@@ -774,13 +516,7 @@ export class ShiftExecutor {
     const { data: shifts, error: findError } = await queryBuilder;
     if (findError) throw findError;
 
-    // Calculate total income that will be lost
-    let totalIncomeLost = 0;
-    for (const s of shifts) {
-      const tips = (s.cash_tips || 0) + (s.credit_tips || 0);
-      const wages = (s.hourly_rate || 0) * (s.hours_worked || 0);
-      totalIncomeLost += tips + wages;
-    }
+    const totalIncomeLost = shifts.reduce((sum: number, s: any) => sum + s.total_income, 0);
 
     // Delete shifts
     const shiftIds = shifts.map((s: any) => s.id);
@@ -819,12 +555,11 @@ export class ShiftExecutor {
     }
 
     if (query.minAmount) {
-      // Calculate total on the fly (can't filter by computed column)
-      // We'll filter after fetch
+      queryBuilder = queryBuilder.gte("total_income", query.minAmount);
     }
 
     if (query.maxAmount) {
-      // Same - filter after fetch
+      queryBuilder = queryBuilder.lte("total_income", query.maxAmount);
     }
 
     if (query.hasNotes !== undefined) {
@@ -839,24 +574,10 @@ export class ShiftExecutor {
 
     if (error) throw error;
 
-    // Post-filter by amount if needed
-    let filteredShifts = shifts;
-    if (query.minAmount || query.maxAmount) {
-      filteredShifts = shifts.filter((s: any) => {
-        const tips = (s.cash_tips || 0) + (s.credit_tips || 0);
-        const wages = (s.hourly_rate || 0) * (s.hours_worked || 0);
-        const total = tips + wages;
-        
-        if (query.minAmount && total < query.minAmount) return false;
-        if (query.maxAmount && total > query.maxAmount) return false;
-        return true;
-      });
-    }
-
     return {
       success: true,
-      count: filteredShifts.length,
-      shifts: filteredShifts,
+      count: shifts.length,
+      shifts: shifts,
     };
   }
 
@@ -940,6 +661,19 @@ export class ShiftExecutor {
     const hourlyWages = (shift.hourly_rate || 0) * (shift.hours_worked || 0);
     const totalIncome = hourlyWages + netTips;
 
+    // Update if different
+    if (shift.total_income !== totalIncome) {
+      await this.supabase
+        .from("shifts")
+        .update({
+          total_tips: totalTips,
+          net_tips: netTips,
+          hourly_wages: hourlyWages,
+          total_income: totalIncome,
+        })
+        .eq("id", shift.id);
+    }
+
     return {
       success: true,
       totalIncome: totalIncome,
@@ -969,14 +703,14 @@ export class ShiftExecutor {
       throw new Error(`No shift found on ${sourceDate}`);
     }
 
-    // Create duplicate with new date (remove id and timestamps)
-    const { id, created_at, updated_at, ...shiftData } = sourceShift;
-    
+    // Create duplicate with new date
     const { data: newShift, error: insertError } = await this.supabase
       .from("shifts")
       .insert({
-        ...shiftData,
+        ...sourceShift,
+        id: undefined, // Let database generate new ID
         date: targetDate,
+        created_at: undefined,
       })
       .select()
       .single();

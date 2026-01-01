@@ -1,6 +1,5 @@
 // Function Declarations for AI Agent
-// All 55+ functions the AI can call to perform actions
-// Updated: Added industry-specific fields for rideshare, salon, hospitality, fitness, healthcare, construction, freelancer
+// All 55 functions the AI can call to perform actions
 
 export const functionDeclarations = [
   // ============================================
@@ -8,7 +7,7 @@ export const functionDeclarations = [
   // ============================================
   {
     name: "add_shift",
-    description: "Create a new shift record with earnings, tips, hours, and event details. If user mentions specific amounts, use those. If user has only one job, auto-apply it. IMPORTANT: Extract ALL information from the user's message including start/end times. For industry-specific workers (rideshare, salon, hospitality, fitness, healthcare, construction, freelancer), also extract relevant fields like trip count, services performed, room tips, classes taught, procedures assisted, etc.",
+    description: "Create a new shift record with earnings, tips, hours, and event details. If user mentions specific amounts, use those. If user has only one job, auto-apply it. IMPORTANT: Extract ALL information from the user's message including start/end times.",
     parameters: {
       type: "object",
       properties: {
@@ -108,187 +107,6 @@ export const functionDeclarations = [
           type: "number",
           description: "Event cost in dollars",
         },
-        // ============================================
-        // RIDESHARE/DELIVERY FIELDS
-        // ============================================
-        tripCount: {
-          type: "number",
-          description: "Number of trips/deliveries completed (Uber, Lyft, DoorDash, etc.)",
-        },
-        totalMiles: {
-          type: "number",
-          description: "Total miles driven during shift",
-        },
-        tipsInApp: {
-          type: "number",
-          description: "Tips received through the app",
-        },
-        surgePeakEarnings: {
-          type: "number",
-          description: "Surge or peak hour bonus earnings",
-        },
-        waitTimeMinutes: {
-          type: "number",
-          description: "Total wait time in minutes",
-        },
-        deadheadMiles: {
-          type: "number",
-          description: "Miles driven without a passenger/delivery (unpaid miles)",
-        },
-        platformName: {
-          type: "string",
-          description: "Platform name (Uber, Lyft, DoorDash, Instacart, etc.)",
-        },
-        bonusesIncentives: {
-          type: "number",
-          description: "Bonuses or incentive pay earned",
-        },
-        // ============================================
-        // SALON/SPA FIELDS
-        // ============================================
-        servicesCount: {
-          type: "number",
-          description: "Number of services performed (haircuts, treatments, etc.)",
-        },
-        retailSales: {
-          type: "number",
-          description: "Retail product sales amount",
-        },
-        productCommissionPercent: {
-          type: "number",
-          description: "Commission percentage on product sales",
-        },
-        productCommission: {
-          type: "number",
-          description: "Commission earned on product sales in dollars",
-        },
-        rebookingCount: {
-          type: "number",
-          description: "Number of clients who rebooked",
-        },
-        // ============================================
-        // HOSPITALITY FIELDS
-        // ============================================
-        roomServiceTips: {
-          type: "number",
-          description: "Tips from room service",
-        },
-        valetParkingTips: {
-          type: "number",
-          description: "Tips from valet parking",
-        },
-        minibarSales: {
-          type: "number",
-          description: "Minibar sales amount",
-        },
-        conciergeTips: {
-          type: "number",
-          description: "Tips received as concierge",
-        },
-        bellhopTips: {
-          type: "number",
-          description: "Tips received as bellhop",
-        },
-        housekeepingTips: {
-          type: "number",
-          description: "Tips received for housekeeping",
-        },
-        banquetTips: {
-          type: "number",
-          description: "Tips from banquet events",
-        },
-        spaTips: {
-          type: "number",
-          description: "Tips from spa services",
-        },
-        poolTips: {
-          type: "number",
-          description: "Tips from pool service",
-        },
-        frontDeskTips: {
-          type: "number",
-          description: "Tips received at front desk",
-        },
-        hotelRoomNumber: {
-          type: "string",
-          description: "Hotel room number (for tracking)",
-        },
-        // ============================================
-        // FITNESS FIELDS
-        // ============================================
-        classCount: {
-          type: "number",
-          description: "Number of fitness classes taught",
-        },
-        personalTrainingSessions: {
-          type: "number",
-          description: "Number of personal training sessions",
-        },
-        membershipSalesCommission: {
-          type: "number",
-          description: "Commission from membership sales",
-        },
-        supplementSales: {
-          type: "number",
-          description: "Supplement/product sales amount",
-        },
-        // ============================================
-        // HEALTHCARE FIELDS
-        // ============================================
-        proceduresAssisted: {
-          type: "number",
-          description: "Number of procedures assisted",
-        },
-        overtimeHoursWorked: {
-          type: "number",
-          description: "Overtime hours specifically tracked for healthcare",
-        },
-        onCallHours: {
-          type: "number",
-          description: "On-call hours worked",
-        },
-        patientCount: {
-          type: "number",
-          description: "Number of patients seen/served",
-        },
-        // ============================================
-        // CONSTRUCTION FIELDS
-        // ============================================
-        perDiemAmount: {
-          type: "number",
-          description: "Per diem allowance received",
-        },
-        toolAllowance: {
-          type: "number",
-          description: "Tool allowance amount",
-        },
-        hazardPay: {
-          type: "number",
-          description: "Hazard pay earned",
-        },
-        piecesCompleted: {
-          type: "number",
-          description: "Number of pieces/units completed (piece work)",
-        },
-        pieceRate: {
-          type: "number",
-          description: "Rate per piece in dollars",
-        },
-        // ============================================
-        // FREELANCER FIELDS
-        // ============================================
-        invoiceNumber: {
-          type: "string",
-          description: "Invoice number for the work",
-        },
-        retainerAmount: {
-          type: "number",
-          description: "Retainer payment amount",
-        },
-        milestonePayment: {
-          type: "number",
-          description: "Milestone payment received",
-        },
       },
       required: ["date"],
     },
@@ -296,7 +114,7 @@ export const functionDeclarations = [
 
   {
     name: "edit_shift",
-    description: "Modify an existing shift by date. Can update any field including industry-specific fields.",
+    description: "Modify an existing shift by date. Can update any field.",
     parameters: {
       type: "object",
       properties: {
@@ -306,7 +124,7 @@ export const functionDeclarations = [
         },
         updates: {
           type: "object",
-          description: "Object containing fields to update. Supports all add_shift fields including industry-specific ones like tripCount, servicesCount, roomServiceTips, classCount, proceduresAssisted, perDiemAmount, invoiceNumber, etc.",
+          description: "Object containing fields to update (e.g., {cashTips: 60, notes: 'Busy night'})",
         },
       },
       required: ["date", "updates"],
@@ -363,7 +181,7 @@ NEVER execute bulk edits without user confirmation first.`,
         },
         updates: {
           type: "object",
-          description: "Fields to update on all matching shifts. Supports all shift fields including industry-specific ones.",
+          description: "Fields to update on all matching shifts",
           properties: {
             cashTips: { type: "number", description: "Cash tips amount" },
             creditTips: { type: "number", description: "Credit tips amount" },
@@ -387,16 +205,6 @@ NEVER execute bulk edits without user confirmation first.`,
             mileage: { type: "number", description: "Miles driven" },
             flatRate: { type: "number", description: "Flat rate pay" },
             eventCost: { type: "number", description: "Event cost" },
-            // Industry-specific fields
-            tripCount: { type: "number", description: "Number of trips/deliveries" },
-            totalMiles: { type: "number", description: "Total miles driven" },
-            tipsInApp: { type: "number", description: "Tips through app" },
-            surgePeakEarnings: { type: "number", description: "Surge/peak earnings" },
-            servicesCount: { type: "number", description: "Services performed" },
-            retailSales: { type: "number", description: "Retail sales" },
-            classCount: { type: "number", description: "Classes taught" },
-            patientCount: { type: "number", description: "Patients seen" },
-            piecesCompleted: { type: "number", description: "Pieces completed" },
           },
         },
         confirmed: {
