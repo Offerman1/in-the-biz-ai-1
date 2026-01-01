@@ -107,6 +107,315 @@ export const functionDeclarations = [
           type: "number",
           description: "Event cost in dollars",
         },
+        // ============================================
+        // RIDESHARE & DELIVERY FIELDS
+        // ============================================
+        ridesCount: {
+          type: "number",
+          description: "Number of rides completed (Uber, Lyft, etc.)",
+        },
+        deliveriesCount: {
+          type: "number",
+          description: "Number of deliveries completed (DoorDash, UberEats, etc.)",
+        },
+        deadMiles: {
+          type: "number",
+          description: "Miles driven without a passenger or delivery",
+        },
+        fuelCost: {
+          type: "number",
+          description: "Fuel expenses for the shift in dollars",
+        },
+        tollsParking: {
+          type: "number",
+          description: "Tolls and parking fees in dollars",
+        },
+        surgeMultiplier: {
+          type: "number",
+          description: "Average surge/boost multiplier (e.g., 1.5, 2.0)",
+        },
+        acceptanceRate: {
+          type: "number",
+          description: "Percentage of ride/delivery requests accepted (0-100)",
+        },
+        baseFare: {
+          type: "number",
+          description: "Total base fares before tips in dollars",
+        },
+        // ============================================
+        // MUSIC & ENTERTAINMENT FIELDS
+        // ============================================
+        gigType: {
+          type: "string",
+          description: "Type of performance: wedding, corporate, club, private, etc.",
+        },
+        setupHours: {
+          type: "number",
+          description: "Hours spent setting up equipment",
+        },
+        performanceHours: {
+          type: "number",
+          description: "Hours performing",
+        },
+        breakdownHours: {
+          type: "number",
+          description: "Hours breaking down equipment",
+        },
+        equipmentUsed: {
+          type: "string",
+          description: "Equipment used for the gig",
+        },
+        equipmentRentalCost: {
+          type: "number",
+          description: "Cost of rented equipment in dollars",
+        },
+        crewPayment: {
+          type: "number",
+          description: "Payment to crew members in dollars",
+        },
+        merchSales: {
+          type: "number",
+          description: "Merchandise sales revenue in dollars",
+        },
+        audienceSize: {
+          type: "number",
+          description: "Estimated audience size",
+        },
+        // ============================================
+        // ARTIST & CRAFTS FIELDS
+        // ============================================
+        piecesCreated: {
+          type: "number",
+          description: "Number of pieces/items created",
+        },
+        piecesSold: {
+          type: "number",
+          description: "Number of pieces/items sold",
+        },
+        materialsCost: {
+          type: "number",
+          description: "Cost of materials used in dollars",
+        },
+        salePrice: {
+          type: "number",
+          description: "Total sale price of items in dollars",
+        },
+        venueCommissionPercent: {
+          type: "number",
+          description: "Commission percentage taken by venue (0-100)",
+        },
+        // ============================================
+        // RETAIL/SALES FIELDS
+        // ============================================
+        itemsSold: {
+          type: "number",
+          description: "Number of items sold",
+        },
+        transactionsCount: {
+          type: "number",
+          description: "Number of transactions processed",
+        },
+        upsellsCount: {
+          type: "number",
+          description: "Number of successful upsells",
+        },
+        upsellsAmount: {
+          type: "number",
+          description: "Revenue from upsells in dollars",
+        },
+        returnsCount: {
+          type: "number",
+          description: "Number of returns processed",
+        },
+        returnsAmount: {
+          type: "number",
+          description: "Value of returned items in dollars",
+        },
+        shrinkAmount: {
+          type: "number",
+          description: "Shrink/loss amount in dollars",
+        },
+        department: {
+          type: "string",
+          description: "Department worked in",
+        },
+        // ============================================
+        // SALON/SPA FIELDS
+        // ============================================
+        serviceType: {
+          type: "string",
+          description: "Type of service provided (haircut, color, massage, etc.)",
+        },
+        servicesCount: {
+          type: "number",
+          description: "Number of services performed",
+        },
+        productSales: {
+          type: "number",
+          description: "Product sales revenue in dollars",
+        },
+        repeatClientPercent: {
+          type: "number",
+          description: "Percentage of repeat clients (0-100)",
+        },
+        chairRental: {
+          type: "number",
+          description: "Chair rental fee paid in dollars",
+        },
+        newClientsCount: {
+          type: "number",
+          description: "Number of new clients",
+        },
+        returningClientsCount: {
+          type: "number",
+          description: "Number of returning clients",
+        },
+        walkinCount: {
+          type: "number",
+          description: "Number of walk-in clients",
+        },
+        appointmentCount: {
+          type: "number",
+          description: "Number of scheduled appointments",
+        },
+        // ============================================
+        // HOSPITALITY FIELDS
+        // ============================================
+        roomType: {
+          type: "string",
+          description: "Type of room (standard, suite, penthouse, etc.)",
+        },
+        roomsCleaned: {
+          type: "number",
+          description: "Number of rooms cleaned (housekeeping)",
+        },
+        qualityScore: {
+          type: "number",
+          description: "Quality inspection score (0-100)",
+        },
+        shiftType: {
+          type: "string",
+          description: "Shift type: day, swing, night, graveyard",
+        },
+        roomUpgrades: {
+          type: "number",
+          description: "Number of room upgrades sold",
+        },
+        guestsCheckedIn: {
+          type: "number",
+          description: "Number of guests checked in (front desk)",
+        },
+        carsParked: {
+          type: "number",
+          description: "Number of cars parked (valet)",
+        },
+        // ============================================
+        // HEALTHCARE FIELDS
+        // ============================================
+        patientCount: {
+          type: "number",
+          description: "Number of patients seen",
+        },
+        shiftDifferential: {
+          type: "number",
+          description: "Shift differential pay in dollars (night/weekend premium)",
+        },
+        onCallHours: {
+          type: "number",
+          description: "Hours on call",
+        },
+        proceduresCount: {
+          type: "number",
+          description: "Number of procedures performed/assisted",
+        },
+        specialization: {
+          type: "string",
+          description: "Medical specialization (ER, ICU, OR, etc.)",
+        },
+        // ============================================
+        // FITNESS FIELDS
+        // ============================================
+        sessionsCount: {
+          type: "number",
+          description: "Number of training sessions conducted",
+        },
+        sessionType: {
+          type: "string",
+          description: "Type of session: personal, group, class",
+        },
+        classSize: {
+          type: "number",
+          description: "Average class size for group sessions",
+        },
+        retentionRate: {
+          type: "number",
+          description: "Client retention percentage (0-100)",
+        },
+        cancellationsCount: {
+          type: "number",
+          description: "Number of client cancellations",
+        },
+        packageSales: {
+          type: "number",
+          description: "Package sales revenue in dollars",
+        },
+        supplementSales: {
+          type: "number",
+          description: "Supplement/product sales in dollars",
+        },
+        // ============================================
+        // CONSTRUCTION/TRADES FIELDS
+        // ============================================
+        laborCost: {
+          type: "number",
+          description: "Labor costs in dollars",
+        },
+        subcontractorCost: {
+          type: "number",
+          description: "Subcontractor costs in dollars",
+        },
+        squareFootage: {
+          type: "number",
+          description: "Square footage worked",
+        },
+        weatherDelayHours: {
+          type: "number",
+          description: "Hours delayed due to weather",
+        },
+        // ============================================
+        // FREELANCER FIELDS
+        // ============================================
+        revisionsCount: {
+          type: "number",
+          description: "Number of revisions requested by client",
+        },
+        clientType: {
+          type: "string",
+          description: "Client type: new, returning, referral",
+        },
+        expenses: {
+          type: "number",
+          description: "Business expenses for the shift in dollars",
+        },
+        billableHours: {
+          type: "number",
+          description: "Billable hours worked",
+        },
+        // ============================================
+        // RESTAURANT ADDITIONAL FIELDS
+        // ============================================
+        tableSection: {
+          type: "string",
+          description: "Table section worked (e.g., patio, bar, main floor)",
+        },
+        cashSales: {
+          type: "number",
+          description: "Cash sales amount in dollars",
+        },
+        cardSales: {
+          type: "number",
+          description: "Card sales amount in dollars",
+        },
       },
       required: ["date"],
     },
