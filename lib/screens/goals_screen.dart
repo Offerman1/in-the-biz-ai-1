@@ -675,7 +675,7 @@ class _GoalsScreenState extends State<GoalsScreen>
               ),
             ),
           ],
-        ],
+        ),
       ),
     );
   }
