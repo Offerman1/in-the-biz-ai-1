@@ -503,7 +503,8 @@ class Shift {
       piecesSold: piecesSold ?? this.piecesSold,
       materialsCost: materialsCost ?? this.materialsCost,
       salePrice: salePrice ?? this.salePrice,
-      venueCommissionPercent: venueCommissionPercent ?? this.venueCommissionPercent,
+      venueCommissionPercent:
+          venueCommissionPercent ?? this.venueCommissionPercent,
       // Retail/Sales
       itemsSold: itemsSold ?? this.itemsSold,
       transactionsCount: transactionsCount ?? this.transactionsCount,
@@ -520,7 +521,8 @@ class Shift {
       repeatClientPercent: repeatClientPercent ?? this.repeatClientPercent,
       chairRental: chairRental ?? this.chairRental,
       newClientsCount: newClientsCount ?? this.newClientsCount,
-      returningClientsCount: returningClientsCount ?? this.returningClientsCount,
+      returningClientsCount:
+          returningClientsCount ?? this.returningClientsCount,
       walkinCount: walkinCount ?? this.walkinCount,
       appointmentCount: appointmentCount ?? this.appointmentCount,
       // Hospitality
