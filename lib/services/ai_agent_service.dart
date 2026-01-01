@@ -27,6 +27,7 @@ class AIAgentService {
       );
 
       debugPrint('[AI Agent] Response status: ${response.status}');
+      debugPrint('[AI Agent] Raw response data: ${response.data}');
 
       // Check for success status (200-299)
       if (response.status >= 200 && response.status < 300) {
@@ -48,12 +49,14 @@ class AIAgentService {
         if (response.data is Map && response.data['error'] != null) {
           errorMessage = response.data['error'];
         }
+        debugPrint('[AI Agent] ERROR MESSAGE: $errorMessage');
         throw Exception(errorMessage);
       }
     } on FunctionException catch (e) {
       // Supabase SDK specific exception for function errors
       debugPrint('[AI Agent] Function Error: ${e.details}');
       debugPrint('[AI Agent] Status: ${e.status}');
+      debugPrint('[AI Agent] Full Exception: $e');
 
       // Try to extract error message from details
       String errorMessage = 'AI agent request failed';
@@ -65,12 +68,15 @@ class AIAgentService {
         errorMessage = e.details.toString();
       }
 
+      debugPrint('[AI Agent] FINAL ERROR: $errorMessage');
       return {
         'success': false,
         'error': errorMessage,
       };
     } catch (e) {
       debugPrint('[AI Agent] Exception: $e');
+      debugPrint('[AI Agent] Exception type: ${e.runtimeType}');
+      debugPrint('[AI Agent] Exception toString: ${e.toString()}');
       return {
         'success': false,
         'error': e.toString(),
