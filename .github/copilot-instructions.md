@@ -355,6 +355,41 @@ This removes PowerShell from the profiles entirely, so VS Code can't offer it as
 
 ---
 
+## 🌐 WEB DEPLOYMENT TO GITHUB PAGES (CRITICAL - January 1, 2026)
+
+**IMPORTANT:** GitHub Pages serves files from the **ROOT** of the gh-pages branch, NOT from `build/web/` folder.
+
+### Correct Deployment Process:
+
+**Step 1: Build**
+```powershell
+cd "c:\Users\Brandon 2021\Desktop\In The Biz AI"
+flutter build web
+```
+
+**Step 2: Copy files from build/web to root**
+```powershell
+robocopy "c:\Users\Brandon 2021\Desktop\In The Biz AI\build\web" "c:\Users\Brandon 2021\Desktop\In The Biz AI" *.* /E /XD build /XD .git /XD node_modules /XD android /XD ios /XD lib /XD docs /XD scripts /XD supabase /XD .idea /XD .vscode /XD .github /XD assets /XD web /XD .specstory /XD .dart_tool
+```
+
+**Step 3: Commit and push root files**
+```powershell
+cd "c:\Users\Brandon 2021\Desktop\In The Biz AI"
+git add *.js *.html *.json .last_build_id flutter_bootstrap.js flutter_service_worker.js
+git commit -m "Deploy: Web build to root"
+git push origin gh-pages
+```
+
+**Why this matters:**
+- GitHub Pages serves from: `https://inthebiz.app/` (root of gh-pages branch)
+- If files stay in `build/web/`, they won't be accessible
+- Old files in root will be served instead of new build
+- Always verify files are copied to root before deployment
+
+**Deployment takes 2-3 minutes to propagate on GitHub Pages.**
+
+---
+
 ## 🗄️ SUPABASE DATABASE MIGRATIONS (NEW - December 31, 2025)
 
 **DO NOT use `supabase db push` or `supabase migration up`** - these require Docker and are unreliable on Windows.
