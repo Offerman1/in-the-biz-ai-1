@@ -27,6 +27,8 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
   bool _isSignUp = false;
   String? _errorMessage;
+  String? _currentNonce;
+  String? _currentHashedNonce;
 
   @override
   void initState() {
@@ -38,11 +40,16 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _initializeGoogleSignInWeb() async {
     try {
+      // Generate initial nonce
+      _currentNonce = _generateNonce();
+      _currentHashedNonce = sha256.convert(utf8.encode(_currentNonce!)).toString();
+
       await GoogleSignIn.instance.initialize(
         clientId:
             '30441285456-pkvqkagh3fcv0b6n71t5tpnuda94l8d5.apps.googleusercontent.com',
         serverClientId:
             '30441285456-pkvqkagh3fcv0b6n71t5tpnuda94l8d5.apps.googleusercontent.com',
+        nonce: _currentHashedNonce,
       );
 
       GoogleSignIn.instance.authenticationEvents.listen((event) async {
@@ -61,13 +68,10 @@ class _LoginScreenState extends State<LoginScreen> {
             final googleAuth = await user.authentication;
 
             if (googleAuth.idToken != null) {
-              // Generate fresh nonce for each sign-in attempt
-              final rawNonce = _generateNonce();
-              final hashedNonce = sha256.convert(utf8.encode(rawNonce)).toString();
-
+              // Use the nonce that was set during initialize()
               final response = await AuthService.signInWithIdToken(
                 idToken: googleAuth.idToken!,
-                nonce: hashedNonce,
+                nonce: _currentNonce,
               );
               
               if (response != null && mounted) {
@@ -75,6 +79,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   MaterialPageRoute(builder: (_) => const DashboardScreen()),
                 );
               }
+              
+              // Generate new nonce for next sign-in attempt
+              _currentNonce = _generateNonce();
+              _currentHashedNonce = sha256.convert(utf8.encode(_currentNonce!)).toString();
             }
           } catch (e) {
             print('Supabase sign-in error: $e');
@@ -84,6 +92,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 _isLoading = false;
               });
             }
+            
+            // Generate new nonce for retry attempt
+            _currentNonce = _generateNonce();
+            _currentHashedNonce = sha256.convert(utf8.encode(_currentNonce!)).toString();
           }
         }
       });
