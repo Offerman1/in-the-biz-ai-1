@@ -235,6 +235,39 @@ class _AddJobScreenState extends State<AddJobScreen> {
     _showNotes = template.showNotes;
     _tracksOvertime = template.tracksOvertime;
     _overtimeMultiplier = template.overtimeMultiplier;
+
+    // Rideshare & Delivery fields
+    _showRidesCount = template.showRidesCount;
+    _showDeadMiles = template.showDeadMiles;
+    _showFuelCost = template.showFuelCost;
+    _showTollsParking = template.showTollsParking;
+    _showSurgeMultiplier = template.showSurgeMultiplier;
+    _showBaseFare = template.showBaseFare;
+
+    // Music & Entertainment fields
+    _showGigType = template.showGigType;
+    _showSetupHours = template.showSetupHours;
+    _showPerformanceHours = template.showPerformanceHours;
+    _showBreakdownHours = template.showBreakdownHours;
+    _showEquipmentUsed = template.showEquipmentUsed;
+    _showEquipmentRental = template.showEquipmentRental;
+    _showCrewPayment = template.showCrewPayment;
+    _showMerchSales = template.showMerchSales;
+    _showAudienceSize = template.showAudienceSize;
+
+    // Art & Crafts fields
+    _showPiecesCreated = template.showPiecesCreated;
+    _showPiecesSold = template.showPiecesSold;
+    _showMaterialsCost = template.showMaterialsCost;
+    _showSalePrice = template.showSalePrice;
+    _showVenueCommission = template.showVenueCommission;
+
+    // Retail & Sales fields
+    _showItemsSold = template.showItemsSold;
+    _showTransactionsCount = template.showTransactionsCount;
+    _showUpsells = template.showUpsells;
+    _showReturns = template.showReturns;
+    _showShrink = template.showShrink;
   }
 
   @override
@@ -1637,3 +1670,4 @@ class _AddJobScreenState extends State<AddJobScreen> {
     );
   }
 }
+                
