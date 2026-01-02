@@ -718,7 +718,7 @@ Format as JSON with confidence scores for each field.
 
 **Clarification on AI Vision and Format Support (January 2, 2026):**
 
-- **ALL scanners use AI vision (Gemini 3 Flash).** There's no "format support" in the traditional sense - the AI reads the image and extracts data, regardless of format.
+- **ALL scanners use AI vision (Gemini 2.0 Flash Exp).** There's no "format support" in the traditional sense - the AI reads the image and extracts data, regardless of format.
 
 ### 🤖 **How AI Vision Works (All Scanners):**
 
@@ -730,4 +730,6 @@ Format as JSON with confidence scores for each field.
 - **Business Card:** AI reads text from any card design
 - **Invoice:** AI extracts client/amount from any invoice layout
 
-**The "formats" mentioned are just AI training context
+**The "formats" mentioned are just AI training context - we tell the AI in the prompt what to expect (e.g., "Toast receipts usually have 'Net Sales' at the bottom"), but the AI handles ALL formats with the same vision model.**
+
+**No format detection code. No conditional logic. Just AI vision + smart prompts.**

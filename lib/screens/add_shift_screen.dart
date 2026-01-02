@@ -1154,7 +1154,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
   // ============================================================================
   // UNIFIED AI VISION SCANNER SYSTEM
   // ============================================================================
-  
+
   /// Handle scan type selection from the bottom sheet menu
   void _handleScanTypeSelected(ScanType scanType) {
     Navigator.push(
@@ -1172,7 +1172,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
   Future<void> _handleScanComplete(DocumentScanSession session) async {
     // Show loading indicator
     if (!mounted) return;
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -1186,7 +1186,8 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
               ),
             ),
             const SizedBox(width: 12),
-            Text('Processing ${session.pageCount} page${session.pageCount == 1 ? '' : 's'} with AI...'),
+            Text(
+                'Processing ${session.pageCount} page${session.pageCount == 1 ? '' : 's'} with AI...'),
           ],
         ),
         duration: const Duration(seconds: 30),
@@ -1350,7 +1351,8 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 8),
           child: ListTile(
             contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-            leading: Icon(Icons.insert_drive_file, color: AppTheme.accentOrange),
+            leading:
+                Icon(Icons.insert_drive_file, color: AppTheme.accentOrange),
             title: Text('Choose File', style: AppTheme.bodyMedium),
             subtitle: Text(
               'PDF, Word, Excel, etc.',
@@ -1496,7 +1498,8 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
             // ✨ Scan button - Opens AI Vision Scanner menu
             IconButton(
               icon: const Text('✨', style: TextStyle(fontSize: 24)),
-              onPressed: () => showScanTypeMenu(context, _handleScanTypeSelected),
+              onPressed: () =>
+                  showScanTypeMenu(context, _handleScanTypeSelected),
               tooltip: 'AI Scanner',
             ),
             // 📎 Attach button - Consolidated media menu

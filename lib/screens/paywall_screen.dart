@@ -72,7 +72,8 @@ class _PaywallScreenState extends State<PaywallScreen> {
                 style: TextStyle(color: Colors.red),
               )
             else
-              ...offerings.map((package) => _buildPackageButton(context, package)),
+              ...offerings
+                  .map((package) => _buildPackageButton(context, package)),
             const SizedBox(height: 24),
             TextButton(
               onPressed: () async {
@@ -83,7 +84,8 @@ class _PaywallScreenState extends State<PaywallScreen> {
                   Navigator.of(context).pop();
                 } else if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('No purchases to restore found.')),
+                    const SnackBar(
+                        content: Text('No purchases to restore found.')),
                   );
                 }
               },
@@ -123,8 +125,9 @@ class _PaywallScreenState extends State<PaywallScreen> {
   }
 
   Widget _buildPackageButton(BuildContext context, Package package) {
-    final subscriptionService = Provider.of<SubscriptionService>(context, listen: false);
-    
+    final subscriptionService =
+        Provider.of<SubscriptionService>(context, listen: false);
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 16.0),
       child: SizedBox(

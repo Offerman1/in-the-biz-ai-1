@@ -54,7 +54,8 @@ class SubscriptionService extends ChangeNotifier {
   Future<void> _fetchOfferings() async {
     try {
       final offerings = await Purchases.getOfferings();
-      if (offerings.current != null && offerings.current!.availablePackages.isNotEmpty) {
+      if (offerings.current != null &&
+          offerings.current!.availablePackages.isNotEmpty) {
         _offerings = offerings.current!.availablePackages;
         notifyListeners();
       }

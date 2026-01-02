@@ -9,7 +9,7 @@ class AdService {
 
   InterstitialAd? _interstitialAd;
   bool _isAdLoaded = false;
-  
+
   // TODO: Replace with your actual AdMob App IDs when ready for production
   // These are Google's Test IDs
   String get appId {
@@ -30,7 +30,7 @@ class AdService {
         return 'ca-app-pub-3940256099942544/4411468910';
       }
     }
-    
+
     // TODO: Replace with your real Ad Unit IDs
     if (Platform.isAndroid) {
       return 'ca-app-pub-3940256099942544/1033173712'; // Placeholder
@@ -54,7 +54,8 @@ class AdService {
           debugPrint('Interstitial Ad loaded.');
           _interstitialAd = ad;
           _isAdLoaded = true;
-          _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
+          _interstitialAd!.fullScreenContentCallback =
+              FullScreenContentCallback(
             onAdDismissedFullScreenContent: (ad) {
               debugPrint('Ad dismissed.');
               ad.dispose();
