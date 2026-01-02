@@ -353,6 +353,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const SizedBox(height: 12),
                   _buildScheduleSyncTile(),
                   const SizedBox(height: 8),
+                  _buildCalendarExportSection(),
+                  const SizedBox(height: 8),
                   _buildJobGroupingTile(),
 
                   const SizedBox(height: 24),
