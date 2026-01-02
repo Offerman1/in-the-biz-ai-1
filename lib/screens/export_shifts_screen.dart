@@ -36,6 +36,34 @@ class _ExportShiftsScreenState extends State<ExportShiftsScreen> {
   bool _isLoading = true;
   bool _isProcessing = false;
 
+  /// Converts 24-hour time format to 12-hour format with AM/PM
+  String _formatTime(String? time) {
+    if (time == null || time.isEmpty) return '';
+
+    // If already in 12-hour format (contains AM/PM), return as is
+    if (time.toUpperCase().contains('AM') ||
+        time.toUpperCase().contains('PM')) {
+      return time;
+    }
+
+    try {
+      // Parse 24-hour format (e.g., "15:30" or "15:30:00")
+      final parts = time.split(':');
+      if (parts.isEmpty) return time;
+
+      int hour = int.parse(parts[0]);
+      final minute = parts.length > 1 ? parts[1] : '00';
+
+      final period = hour >= 12 ? 'PM' : 'AM';
+      hour = hour % 12;
+      if (hour == 0) hour = 12;
+
+      return '$hour:$minute $period';
+    } catch (e) {
+      return time; // Return original if parsing fails
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -409,7 +437,7 @@ class _ExportShiftsScreenState extends State<ExportShiftsScreen> {
                                   if (shift.startTime != null &&
                                       shift.endTime != null)
                                     Text(
-                                      '${shift.startTime} - ${shift.endTime}',
+                                      '${_formatTime(shift.startTime)} - ${_formatTime(shift.endTime)}',
                                       style: AppTheme.labelSmall.copyWith(
                                         color: AppTheme.textMuted,
                                       ),
