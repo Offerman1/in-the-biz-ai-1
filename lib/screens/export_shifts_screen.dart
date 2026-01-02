@@ -371,8 +371,11 @@ class _ExportShiftsScreenState extends State<ExportShiftsScreen> {
                             final shift = _filteredShifts[index];
                             final job = _jobs.firstWhere(
                               (j) => j.id == shift.jobId,
-                              orElse: () =>
-                                  Job(id: '', name: 'Unknown', color: '', userId: ''),
+                              orElse: () => Job(
+                                  id: '',
+                                  name: 'Unknown',
+                                  color: '',
+                                  userId: ''),
                             );
 
                             return CheckboxListTile(
