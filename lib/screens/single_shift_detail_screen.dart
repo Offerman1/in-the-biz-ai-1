@@ -1030,38 +1030,28 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
     for (final sectionKey in fieldOrder) {
       switch (sectionKey) {
         case 'earnings_section':
-          widgets.add(
-              _buildBreakdownCard(key: const ValueKey('earnings_section')));
-          widgets.add(const SizedBox(
-              key: ValueKey('earnings_section_spacer'), height: 20));
+          widgets
+              .add(_buildBreakdownCard(key: ValueKey('earnings_section')));
           break;
 
         case 'event_details_section':
-          widgets.add(
-              _buildBEOSection(key: const ValueKey('event_details_section')));
-          widgets.add(const SizedBox(
-              key: ValueKey('event_details_section_spacer'), height: 20));
+          widgets
+              .add(_buildBEOSection(key: ValueKey('event_details_section')));
           break;
 
         case 'work_details_section':
-          widgets.add(_buildWorkDetailsCard(
-              key: const ValueKey('work_details_section')));
-          widgets.add(const SizedBox(
-              key: ValueKey('work_details_section_spacer'), height: 20));
+          widgets.add(
+              _buildWorkDetailsCard(key: ValueKey('work_details_section')));
           break;
 
         case 'time_section':
-          widgets.add(_buildAdditionalEarningsCard(
-              key: const ValueKey('time_section')));
           widgets.add(
-              const SizedBox(key: ValueKey('time_section_spacer'), height: 20));
+              _buildAdditionalEarningsCard(key: ValueKey('time_section')));
           break;
 
         case 'documentation_section':
           widgets.add(
-              _buildNotesCard(key: const ValueKey('documentation_section')));
-          widgets.add(const SizedBox(
-              key: ValueKey('documentation_section_spacer'), height: 20));
+              _buildNotesCard(key: ValueKey('documentation_section')));
           break;
       }
     }
@@ -1069,7 +1059,7 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
     return widgets;
   }
 
-  Widget _buildEventTeamSection({Key? key}) {
+  Widget _buildEventTeamSection() {
     return Container(
       decoration: BoxDecoration(
         color: AppTheme.cardBackground,
@@ -1362,12 +1352,11 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
     }
   }
 
-  Widget _buildCombinedHeroCard({Key? key}) {
+  Widget _buildCombinedHeroCard() {
     final baseEarnings = effectiveHourlyRate * shift.hoursWorked;
     final totalTips = shift.cashTips + shift.creditTips;
 
     return HeroCard(
-      key: key,
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 16), // Reduced padding
       borderRadius: AppTheme.radiusLarge,
       child: Row(
@@ -2595,13 +2584,12 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
     );
   }
 
-  Widget _buildPhotosCard(BuildContext context, {Key? key}) {
+  Widget _buildPhotosCard(BuildContext context) {
     // Parse photo paths (comma-separated string)
     final photoPaths =
         shift.imageUrl!.split(',').where((p) => p.trim().isNotEmpty).toList();
 
     return Container(
-      key: key,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AppTheme.cardBackground,
@@ -2934,9 +2922,8 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
     }
   }
 
-  Widget _buildAttachmentsCard({Key? key}) {
+  Widget _buildAttachmentsCard() {
     return Container(
-      key: key,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AppTheme.cardBackground,
