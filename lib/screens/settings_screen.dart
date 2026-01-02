@@ -27,6 +27,8 @@ import 'notification_settings_screen.dart';
 import 'job_grouping_screen.dart';
 import 'appearance_settings_screen.dart';
 import 'event_contacts_screen.dart';
+import '../services/subscription_service.dart';
+import 'paywall_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
