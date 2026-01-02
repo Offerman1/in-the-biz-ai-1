@@ -2,7 +2,9 @@ import 'dart:convert';
 import 'package:device_calendar/device_calendar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
+import 'package:timezone/timezone.dart' as tz;
 import '../models/shift.dart';
+import '../models/job.dart';
 import '../services/database_service.dart';
 
 class CalendarSyncService {
@@ -211,8 +213,13 @@ class CalendarSyncService {
 
       // Get job name for event title
       final jobs = await _db.getJobs();
-      final job = jobs.firstWhere((j) => j.id == shift.jobId,
-          orElse: () => null as Job);
+      Job? job;
+      try {
+        final jobMap = jobs.firstWhere((j) => j['id'] == shift.jobId);
+        job = Job.fromMap(jobMap);
+      } catch (e) {
+        job = null;
+      }
       final jobName = job?.name ?? 'Work Shift';
 
       // Build event title and description
@@ -228,8 +235,8 @@ class CalendarSyncService {
         calendarId,
         title: title,
         description: description,
-        start: startDateTime,
-        end: endDateTime,
+        start: tz.TZDateTime.from(startDateTime, tz.local),
+        end: tz.TZDateTime.from(endDateTime, tz.local),
         location: job?.employer,
       );
 
@@ -238,14 +245,14 @@ class CalendarSyncService {
         // Update existing event
         event.eventId = shift.calendarEventId;
         final result = await _deviceCalendarPlugin.createOrUpdateEvent(event);
-        if (result?.isSuccess == true) {
+        if (result.isSuccess) {
           return shift.calendarEventId;
         }
       } else {
         // Create new event
         final result = await _deviceCalendarPlugin.createOrUpdateEvent(event);
-        if (result?.isSuccess == true && result?.data != null) {
-          return result!.data; // Return the new event ID
+        if (result.isSuccess && result.data != null) {
+          return result.data; // Return the new event ID
         }
       }
 
