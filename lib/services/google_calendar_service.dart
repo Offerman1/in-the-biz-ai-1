@@ -21,18 +21,18 @@ class GoogleCalendarService {
     }
 
     try {
-      final googleSignIn = GoogleSignIn(
+      final googleSignIn = GoogleSignIn.standard(
         scopes: AuthService.calendarScopes,
       );
 
       // Check if already signed in
-      final account = await googleSignIn.signInSilently();
+      final account = googleSignIn.currentUser;
       if (account == null) {
         return false;
       }
 
       // Get authenticated HTTP client
-      final httpClient = await googleSignIn.authenticatedClient();
+      final httpClient = await account.authenticatedClient();
       if (httpClient == null) {
         return false;
       }
@@ -52,18 +52,18 @@ class GoogleCalendarService {
     }
 
     try {
-      final googleSignIn = GoogleSignIn(
+      final googleSignIn = GoogleSignIn.standard(
         scopes: AuthService.calendarScopes,
       );
 
       // Sign in to request calendar permissions
-      final account = await googleSignIn.signIn();
+      final account = await googleSignIn.authenticate();
       if (account == null) {
         return false;
       }
 
       // Get authenticated HTTP client
-      final httpClient = await googleSignIn.authenticatedClient();
+      final httpClient = await account.authenticatedClient();
       if (httpClient == null) {
         return false;
       }
