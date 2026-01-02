@@ -1481,8 +1481,8 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
 
         case 'earnings_section':
           if (_template!.showTips || _template!.showCommission) {
-            widgets.add(
-                _buildEarningsSection(key: ValueKey('earnings_section')));
+            widgets
+                .add(_buildEarningsSection(key: ValueKey('earnings_section')));
           }
           break;
 

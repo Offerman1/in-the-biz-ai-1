@@ -1030,13 +1030,11 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
     for (final sectionKey in fieldOrder) {
       switch (sectionKey) {
         case 'earnings_section':
-          widgets
-              .add(_buildBreakdownCard(key: ValueKey('earnings_section')));
+          widgets.add(_buildBreakdownCard(key: ValueKey('earnings_section')));
           break;
 
         case 'event_details_section':
-          widgets
-              .add(_buildBEOSection(key: ValueKey('event_details_section')));
+          widgets.add(_buildBEOSection(key: ValueKey('event_details_section')));
           break;
 
         case 'work_details_section':
@@ -1045,13 +1043,12 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
           break;
 
         case 'time_section':
-          widgets.add(
-              _buildAdditionalEarningsCard(key: ValueKey('time_section')));
+          widgets
+              .add(_buildAdditionalEarningsCard(key: ValueKey('time_section')));
           break;
 
         case 'documentation_section':
-          widgets.add(
-              _buildNotesCard(key: ValueKey('documentation_section')));
+          widgets.add(_buildNotesCard(key: ValueKey('documentation_section')));
           break;
       }
     }
