@@ -4148,10 +4148,11 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
     }
   }
 
-  Widget _buildEventTeamSection() {
+  Widget _buildEventTeamSection({Key? key}) {
     if (widget.existingShift == null) return const SizedBox.shrink();
 
     return Container(
+      key: key,
       decoration: BoxDecoration(
         color: AppTheme.cardBackground,
         borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
