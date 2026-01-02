@@ -1269,20 +1269,17 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
                 AppTheme.titleLarge.copyWith(color: AppTheme.adaptiveTextColor),
           ),
           actions: [
+            // ✨ Scan button - Opens AI Vision Scanner menu
             IconButton(
-              icon: Icon(Icons.camera_alt, color: AppTheme.primaryGreen),
-              onPressed: _pickImageFromCamera,
-              tooltip: 'Take Photo',
+              icon: const Text('✨', style: TextStyle(fontSize: 24)),
+              onPressed: () => showScanTypeMenu(context, _handleScanTypeSelected),
+              tooltip: 'AI Scanner',
             ),
-            IconButton(
-              icon: Icon(Icons.videocam, color: AppTheme.primaryGreen),
-              onPressed: _pickVideoFromCamera,
-              tooltip: 'Record Video',
-            ),
+            // 📎 Attach button - Consolidated media menu
             IconButton(
               icon: Icon(Icons.attach_file, color: AppTheme.primaryGreen),
-              onPressed: _showAttachmentMenu,
-              tooltip: 'Add Attachment',
+              onPressed: _showConsolidatedAttachmentMenu,
+              tooltip: 'Attach Media',
             ),
             TextButton(
               onPressed: _isSaving ? null : _saveShift,
