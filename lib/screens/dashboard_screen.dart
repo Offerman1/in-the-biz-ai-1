@@ -791,13 +791,13 @@ class _HomeScreenState extends State<_HomeScreen> {
                         ),
                       ),
                   ] else ...[
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 8),
                     if (_selectedPeriod != 'all' && previousTotal > 0)
                       Center(
                         child: Container(
-                          height: 32,
+                          height: 28,
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
+                            horizontal: 12,
                           ),
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
