@@ -6,6 +6,7 @@ import 'package:in_the_biz_ai/screens/login_screen.dart';
 import 'package:in_the_biz_ai/screens/onboarding_screen.dart';
 import 'package:in_the_biz_ai/providers/shift_provider.dart';
 import 'package:in_the_biz_ai/providers/theme_provider.dart';
+import 'package:in_the_biz_ai/providers/field_order_provider.dart';
 import 'package:in_the_biz_ai/services/database_service.dart';
 import 'package:in_the_biz_ai/services/notification_service.dart';
 import 'package:in_the_biz_ai/utils/run_migrations.dart';
@@ -31,6 +32,7 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => ShiftProvider()),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => FieldOrderProvider()),
       ],
       child: const InTheBizApp(),
     ),
