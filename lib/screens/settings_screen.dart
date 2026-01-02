@@ -2519,7 +2519,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 FutureBuilder<Map<String, dynamic>?>(
                   future: QuickBooksService.getCompanyInfo(),
                   builder: (context, companySnapshot) {
-                    if (companySnapshot.hasData && companySnapshot.data != null) {
+                    if (companySnapshot.hasData &&
+                        companySnapshot.data != null) {
                       final company = companySnapshot.data!;
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 16),
@@ -2626,7 +2627,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text('Cancel', style: TextStyle(color: AppTheme.textSecondary)),
+              child: Text('Cancel',
+                  style: TextStyle(color: AppTheme.textSecondary)),
             ),
             ElevatedButton(
               onPressed: () {
@@ -2682,7 +2684,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancel', style: TextStyle(color: AppTheme.textSecondary)),
+            child:
+                Text('Cancel', style: TextStyle(color: AppTheme.textSecondary)),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -2730,7 +2733,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: const Text('Connection failed. Check your code and try again.'),
+                      content: const Text(
+                          'Connection failed. Check your code and try again.'),
                       backgroundColor: AppTheme.accentRed,
                     ),
                   );

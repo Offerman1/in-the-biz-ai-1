@@ -7,7 +7,7 @@ import 'dart:convert';
 /// Handles authentication and data export to QuickBooks
 class QuickBooksService {
   // QuickBooks OAuth Configuration
-  static const String _clientId = 'YOUR_QB_CLIENT_ID'; // Set in production
+  static const String _clientId = 'ABlJYKtCpoj5EExrViEXWisoEgCYqqKfWy3pqdqekQ7ZxtqxPK'; // Set in production
   static const String _clientSecret = 'YOUR_QB_CLIENT_SECRET';
   static const String _redirectUri = 'https://inthebiz.app/quickbooks-callback';
   static const String _authEndpoint =
