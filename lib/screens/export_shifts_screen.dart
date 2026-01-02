@@ -372,7 +372,7 @@ class _ExportShiftsScreenState extends State<ExportShiftsScreen> {
                             final job = _jobs.firstWhere(
                               (j) => j.id == shift.jobId,
                               orElse: () =>
-                                  Job(id: '', name: 'Unknown', color: ''),
+                                  Job(id: '', name: 'Unknown', color: '', userId: ''),
                             );
 
                             return CheckboxListTile(
@@ -388,7 +388,7 @@ class _ExportShiftsScreenState extends State<ExportShiftsScreen> {
                                 });
                               },
                               title: Text(
-                                job['name'] as String? ?? 'Unknown',
+                                job.name,
                                 style: AppTheme.bodyLarge.copyWith(
                                   fontWeight: FontWeight.w600,
                                 ),
