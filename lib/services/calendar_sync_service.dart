@@ -268,7 +268,7 @@ class CalendarSyncService {
     try {
       final result =
           await _deviceCalendarPlugin.deleteEvent(calendarId, eventId);
-      return result?.isSuccess ?? false;
+      return result != null && result.isSuccess;
     } catch (e) {
       print('Error deleting calendar event: $e');
       return false;
