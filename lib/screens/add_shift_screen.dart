@@ -1349,18 +1349,6 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
                     children: _buildOrderedSections(
                         fieldOrderProvider.formFieldOrder),
                   ),
-
-                  // Attachments Section (for existing shifts)
-                  if (widget.existingShift != null) ...[
-                    _buildAttachmentsSection(),
-                    const SizedBox(height: 16),
-                  ],
-
-                  // Event Team Section (for existing shifts)
-                  if (widget.existingShift != null) ...[
-                    _buildEventTeamSection(),
-                    const SizedBox(height: 16),
-                  ],
                 ],
               );
             },
@@ -1524,6 +1512,26 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
               key: ValueKey('documentation_section'),
               padding: const EdgeInsets.only(bottom: 16),
               child: _buildDocumentationSection(),
+            ));
+          }
+          break;
+
+        case 'attachments_section':
+          if (widget.existingShift != null) {
+            widgets.add(Padding(
+              key: ValueKey('attachments_section'),
+              padding: const EdgeInsets.only(bottom: 16),
+              child: _buildAttachmentsSection(),
+            ));
+          }
+          break;
+
+        case 'event_team_section':
+          if (widget.existingShift != null) {
+            widgets.add(Padding(
+              key: ValueKey('event_team_section'),
+              padding: const EdgeInsets.only(bottom: 16),
+              child: _buildEventTeamSection(),
             ));
           }
           break;
