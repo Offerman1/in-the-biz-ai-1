@@ -15,6 +15,7 @@ import '../models/job_template.dart';
 import '../models/event_contact.dart';
 import '../models/shift_attachment.dart';
 import '../providers/shift_provider.dart';
+import '../providers/field_order_provider.dart';
 import '../services/database_service.dart';
 import '../services/notification_service.dart';
 import '../theme/app_theme.dart';
