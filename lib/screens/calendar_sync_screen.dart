@@ -82,7 +82,8 @@ class _CalendarSyncScreenState extends State<CalendarSyncScreen> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: Text('OK', style: TextStyle(color: AppTheme.primaryGreen)),
+                child:
+                    Text('OK', style: TextStyle(color: AppTheme.primaryGreen)),
               ),
             ],
           ),
