@@ -514,16 +514,16 @@ class _ShiftDetailScreenState extends State<ShiftDetailScreen>
                         const SizedBox(height: 40),
                         Text(
                           DateFormat('EEEE').format(widget.date),
-                          style: const TextStyle(
-                            color: Colors.black54,
+                          style: TextStyle(
+                            color: AppTheme.textMuted,
                             fontSize: 16,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
                         Text(
                           DateFormat('MMMM d, y').format(widget.date),
-                          style: const TextStyle(
-                            color: Colors.black87,
+                          style: TextStyle(
+                            color: AppTheme.textSecondary,
                             fontSize: 20,
                             fontWeight: FontWeight.w600,
                           ),
@@ -531,17 +531,17 @@ class _ShiftDetailScreenState extends State<ShiftDetailScreen>
                         const SizedBox(height: 12),
                         Text(
                           currencyFormat.format(totalIncome),
-                          style: const TextStyle(
-                            color: Colors.black,
+                          style: TextStyle(
+                            color: AppTheme.textPrimary,
                             fontSize: 48,
                             fontWeight: FontWeight.bold,
                             letterSpacing: -2,
                           ),
                         ),
-                        const Text(
+                        Text(
                           'TOTAL EARNED',
                           style: TextStyle(
-                            color: Colors.black54,
+                            color: AppTheme.textMuted,
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
                             letterSpacing: 1,
