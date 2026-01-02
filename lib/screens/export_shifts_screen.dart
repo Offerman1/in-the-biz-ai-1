@@ -47,6 +47,7 @@ class _ExportShiftsScreenState extends State<ExportShiftsScreen> {
     try {
       final shiftProvider = Provider.of<ShiftProvider>(context, listen: false);
       final jobs = await _db.getJobs();
+      final jobModels = jobs.map((j) => Job.fromSupabase(j)).toList();
 
       // Filter shifts based on mode
       final allShifts = shiftProvider.shifts;
@@ -59,7 +60,7 @@ class _ExportShiftsScreenState extends State<ExportShiftsScreen> {
 
       setState(() {
         _shifts = filteredShifts;
-        _jobs = jobs;
+        _jobs = jobModels;
         _isLoading = false;
       });
     } catch (e) {
@@ -122,7 +123,7 @@ class _ExportShiftsScreenState extends State<ExportShiftsScreen> {
                 ..._jobs.map((job) => CheckboxListTile(
                       title: Text(job.name, style: AppTheme.bodyMedium),
                       subtitle: job.employer != null
-                          ? Text(job.employer!, style: AppTheme.bodySmall)
+                          ? Text(job.employer!, style: AppTheme.labelSmall)
                           : null,
                       value: tempSelected.contains(job.id),
                       activeColor: AppTheme.primaryGreen,
@@ -405,7 +406,7 @@ class _ExportShiftsScreenState extends State<ExportShiftsScreen> {
                                       shift.endTime != null)
                                     Text(
                                       '${shift.startTime} - ${shift.endTime}',
-                                      style: AppTheme.bodySmall.copyWith(
+                                      style: AppTheme.labelSmall.copyWith(
                                         color: AppTheme.textMuted,
                                       ),
                                     ),
