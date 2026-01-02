@@ -730,6 +730,4 @@ Format as JSON with confidence scores for each field.
 - **Business Card:** AI reads text from any card design
 - **Invoice:** AI extracts client/amount from any invoice layout
 
-**The "formats" mentioned are just AI training context - we tell the AI in the prompt what to expect (e.g., "Toast receipts usually have 'Net Sales' at the bottom"), but the AI handles ALL formats with the same vision model.**
-
-**No format detection code. No conditional logic. Just AI vision + smart prompts.**
+**The "formats" mentioned are just
