@@ -2514,7 +2514,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ],
               ),
               const SizedBox(height: 16),
-              if (isConnected) ..[
+              if (isConnected) ...[
                 // Show company info when connected
                 FutureBuilder<Map<String, dynamic>?>(
                   future: QuickBooksService.getCompanyInfo(),
@@ -2555,7 +2555,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   ),
                 ),
-              ] else ..[
+              ] else ...[
                 // Connect button
                 SizedBox(
                   width: double.infinity,
@@ -2572,10 +2572,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  '• Auto-export invoices\n'
-                  '• Sync income data\n'
-                  '• Smart category suggestions\n'
-                  '• Tax prep ready',
+                  '\u2022 Auto-export invoices\\n'
+                  '\u2022 Sync income data\\n'
+                  '\u2022 Smart category suggestions\\n'
+                  '\u2022 Tax prep ready',
                   style: AppTheme.bodySmall.copyWith(
                     color: AppTheme.textSecondary,
                     height: 1.6,
