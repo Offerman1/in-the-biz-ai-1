@@ -1306,59 +1306,60 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
           key: _formKey,
           child: Consumer<FieldOrderProvider>(
             builder: (context, fieldOrderProvider, _) {
-              return ReorderableListView(
+              return ListView(
                 padding: const EdgeInsets.fromLTRB(
                     16, 16, 16, 90), // Bottom padding for fixed AI bar
-                onReorder: (oldIndex, newIndex) {
-                  _handleReorder(
-                      oldIndex, newIndex, fieldOrderProvider.formFieldOrder);
-                },
                 children: [
                   // Photo Thumbnails (if any photos captured) - NOT reorderable
                   if (_capturedPhotos.isNotEmpty) ...[
-                    _buildPhotoThumbnails(key: const ValueKey('photos')),
-                    const SizedBox(key: ValueKey('photos_spacer'), height: 16),
+                    _buildPhotoThumbnails(),
+                    const SizedBox(height: 16),
                   ],
 
                   // Hero Card - Income Summary (NOT reorderable)
-                  _buildHeroCard(key: const ValueKey('hero_card')),
+                  _buildHeroCard(),
 
-                  const SizedBox(key: ValueKey('hero_spacer'), height: 16),
+                  const SizedBox(height: 16),
 
                   // My Job Selector (NOT reorderable)
-                  _buildJobSelector(key: const ValueKey('job_selector')),
+                  _buildJobSelector(),
 
-                  const SizedBox(key: ValueKey('job_spacer'), height: 16),
+                  const SizedBox(height: 16),
 
                   // Date (NOT reorderable)
-                  _buildDateSelector(key: const ValueKey('date_selector')),
+                  _buildDateSelector(),
 
-                  const SizedBox(key: ValueKey('date_spacer'), height: 16),
+                  const SizedBox(height: 16),
 
                   // Recurring Shift Section (only for future dates) - NOT reorderable
                   if (widget.existingShift == null &&
                       _selectedDate.isAfter(DateTime.now())) ...[
-                    _buildRecurringSection(key: const ValueKey('recurring')),
-                    const SizedBox(
-                        key: ValueKey('recurring_spacer'), height: 16),
+                    _buildRecurringSection(),
+                    const SizedBox(height: 16),
                   ],
 
-                  // Reorderable dynamic sections based on field order
-                  ..._buildOrderedSections(fieldOrderProvider.formFieldOrder),
+                  // Reorderable dynamic sections
+                  ReorderableListView(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    onReorder: (oldIndex, newIndex) {
+                      _handleReorder(oldIndex, newIndex,
+                          fieldOrderProvider.formFieldOrder);
+                    },
+                    children: _buildOrderedSections(
+                        fieldOrderProvider.formFieldOrder),
+                  ),
 
-                  // Attachments Section (for existing shifts) - Could be reorderable
+                  // Attachments Section (for existing shifts)
                   if (widget.existingShift != null) ...[
-                    _buildAttachmentsSection(
-                        key: const ValueKey('attachments')),
-                    const SizedBox(
-                        key: ValueKey('attachments_spacer'), height: 16),
+                    _buildAttachmentsSection(),
+                    const SizedBox(height: 16),
                   ],
 
-                  // Event Team Section (for existing shifts) - Could be reorderable
+                  // Event Team Section (for existing shifts)
                   if (widget.existingShift != null) ...[
-                    _buildEventTeamSection(key: const ValueKey('event_team')),
-                    const SizedBox(
-                        key: ValueKey('event_team_spacer'), height: 16),
+                    _buildEventTeamSection(),
+                    const SizedBox(height: 16),
                   ],
                 ],
               );
