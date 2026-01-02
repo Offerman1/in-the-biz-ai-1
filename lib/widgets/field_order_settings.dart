@@ -98,7 +98,7 @@ class FieldOrderSettings extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                   )),
               subtitle: Text('Restore all default field orders',
-                  style: AppTheme.bodySmall
+                  style: AppTheme.labelSmall
                       .copyWith(color: AppTheme.textSecondary)),
               onTap: () {
                 _showResetConfirmation(
