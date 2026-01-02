@@ -372,6 +372,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const SizedBox(height: 12),
                   _buildScheduleSyncTile(),
                   const SizedBox(height: 8),
+                  if (kIsWeb)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppTheme.accentBlue.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                          border: Border.all(
+                            color: AppTheme.accentBlue.withOpacity(0.3),
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.info_outline,
+                                color: AppTheme.accentBlue, size: 20),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                'Web version syncs with Google Calendar only. Mobile app supports all device calendars.',
+                                style: AppTheme.labelSmall.copyWith(
+                                  color: AppTheme.textSecondary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   _buildCalendarExportSection(),
                   const SizedBox(height: 8),
                   _buildJobGroupingTile(),
@@ -1943,7 +1973,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   if (result == true && mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: const Text('Shifts synced to Google Calendar'),
+                        content: Text(kIsWeb
+                            ? 'Shifts synced to Google Calendar'
+                            : 'Shifts synced to calendar'),
                         backgroundColor: AppTheme.primaryGreen,
                       ),
                     );
