@@ -25,7 +25,8 @@ class FieldOrderSettings extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               'Customize the order of sections by long-pressing and dragging on Add Shift or Shift Details screens.',
-              style: AppTheme.bodySmall.copyWith(color: AppTheme.textSecondary),
+              style:
+                  AppTheme.labelSmall.copyWith(color: AppTheme.textSecondary),
             ),
             const SizedBox(height: 16),
 
@@ -36,7 +37,7 @@ class FieldOrderSettings extends StatelessWidget {
               title: Text('Reset Add/Edit Shift Layout',
                   style: AppTheme.bodyMedium),
               subtitle: Text('Restore default field order for data entry',
-                  style: AppTheme.bodySmall
+                  style: AppTheme.labelSmall
                       .copyWith(color: AppTheme.textSecondary)),
               onTap: () {
                 _showResetConfirmation(
@@ -65,7 +66,7 @@ class FieldOrderSettings extends StatelessWidget {
               title: Text('Reset Shift Details Layout',
                   style: AppTheme.bodyMedium),
               subtitle: Text('Restore default field order for shift preview',
-                  style: AppTheme.bodySmall
+                  style: AppTheme.labelSmall
                       .copyWith(color: AppTheme.textSecondary)),
               onTap: () {
                 _showResetConfirmation(
