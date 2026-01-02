@@ -747,4 +747,4 @@ Instead of fixed heights, use:
 
 When debugging calendar sync issues, remember:
 
--   There may be
+-   The `device
