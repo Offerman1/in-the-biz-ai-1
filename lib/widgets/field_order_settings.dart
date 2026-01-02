@@ -80,8 +80,7 @@ class FieldOrderSettings extends StatelessWidget {
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content:
-                                const Text('✓ Shift Details layout reset'),
+                            content: const Text('✓ Shift Details layout reset'),
                             backgroundColor: AppTheme.successColor,
                           ),
                         );
