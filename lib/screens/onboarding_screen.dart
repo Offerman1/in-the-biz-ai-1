@@ -455,11 +455,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Widget _buildWelcomePage() {
-    return Padding(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
           // App Logo
           Container(
             width: 120,
@@ -500,7 +501,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           _buildFeatureItem(Icons.chat_bubble, 'AI assistant for insights'),
           const SizedBox(height: 16),
           _buildFeatureItem(Icons.trending_up, 'Track income & goals'),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -517,11 +519,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Widget _buildImportDataPage() {
-    return Padding(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
           Icon(Icons.cloud_download, size: 80, color: AppTheme.primaryGreen),
           const SizedBox(height: 32),
           Text(

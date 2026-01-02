@@ -64,16 +64,18 @@ class _AllShiftsScreenState extends State<AllShiftsScreen> {
         ),
         elevation: 0,
       ),
-      body: filteredShifts.isEmpty
-          ? _buildEmptyState()
-          : ListView.builder(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              itemCount: filteredShifts.length,
-              itemBuilder: (context, index) {
-                final shift = filteredShifts[index];
-                return _buildShiftCard(context, shift, _jobs);
-              },
-            ),
+      body: SafeArea(
+        child: filteredShifts.isEmpty
+            ? _buildEmptyState()
+            : ListView.builder(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                itemCount: filteredShifts.length,
+                itemBuilder: (context, index) {
+                  final shift = filteredShifts[index];
+                  return _buildShiftCard(context, shift, _jobs);
+                },
+              ),
+      ),
     );
   }
 

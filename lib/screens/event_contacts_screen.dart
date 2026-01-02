@@ -234,9 +234,10 @@ class _EventContactsScreenState extends State<EventContactsScreen> {
         backgroundColor: AppTheme.primaryGreen,
         child: const Icon(Icons.add, color: Colors.black),
       ),
-      body: Column(
-        children: [
-          // Search bar
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Search bar
           Padding(
             padding: const EdgeInsets.all(16),
             child: TextField(
