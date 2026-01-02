@@ -1936,10 +1936,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               child: Icon(Icons.sync, color: AppTheme.primaryGreen),
             ),
-            title: Text('Auto-Sync to Google Calendar',
+            title: Text('Auto-Sync to Calendar',
                 style: AppTheme.bodyMedium),
             subtitle: Text(
-              'Automatically export new shifts to your calendar',
+              kIsWeb
+                  ? 'Automatically export new shifts to Google Calendar'
+                  : 'Automatically export new shifts to your device calendar',
               style: AppTheme.labelSmall.copyWith(color: AppTheme.textMuted),
             ),
             trailing: Switch(
