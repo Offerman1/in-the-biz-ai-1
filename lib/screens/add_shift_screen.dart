@@ -1232,70 +1232,300 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
 
   /// Process BEO scan - Extract event details
   Future<void> _processBEOScan(DocumentScanSession session) async {
-    // TODO: Call analyze-beo Edge Function
-    // TODO: Show verification screen with extracted data
-    // TODO: Pre-fill shift form fields
-    if (mounted) {
+    try {
+      final userId = _db.supabase.auth.currentUser!.id;
+      final result = await _visionScanner.analyzeBEO(session.imagePaths, userId);
+
+      if (!mounted) return;
+
+      // Hide loading snackbar
       ScaffoldMessenger.of(context).clearSnackBars();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('BEO Scanner: Coming soon!')),
+
+      // Show verification screen
+      final confirmed = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ScanVerificationScreen(
+            scanType: ScanType.beo,
+            extractedData: result['data'] as Map<String, dynamic>,
+            confidenceScores: result['data']['ai_confidence_scores'] as Map<String, dynamic>?,
+            onConfirm: (data) async {
+              // Pre-fill shift form with BEO data
+              setState(() {
+                if (data['event_name'] != null) {
+                  _eventNameController.text = data['event_name'].toString();
+                }
+                if (data['guest_count_confirmed'] != null) {
+                  _guestCountController.text = data['guest_count_confirmed'].toString();
+                }
+                if (data['total_sale_amount'] != null) {
+                  _eventCostController.text = data['total_sale_amount'].toString();
+                }
+                if (data['commission_amount'] != null) {
+                  _commissionController.text = data['commission_amount'].toString();
+                }
+                if (data['venue_name'] != null) {
+                  _locationController.text = data['venue_name'].toString();
+                }
+                if (data['primary_contact_name'] != null) {
+                  _hostessController.text = data['primary_contact_name'].toString();
+                }
+                if (data['formatted_notes'] != null) {
+                  _notesController.text = data['formatted_notes'].toString();
+                }
+              });
+            },
+          ),
+        ),
       );
+
+      if (confirmed == true && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('BEO data imported successfully!'),
+            backgroundColor: AppTheme.successColor,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).clearSnackBars();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('BEO scan failed: $e'),
+            backgroundColor: AppTheme.dangerColor,
+          ),
+        );
+      }
     }
   }
 
   /// Process server checkout scan - Extract financial data
   Future<void> _processCheckoutScan(DocumentScanSession session) async {
-    // TODO: Call analyze-checkout Edge Function
-    // TODO: Detect POS system
-    // TODO: Extract sales, tips, tipout
-    // TODO: Validate math (Net Tips = Gross - Tipout)
-    // TODO: Show verification screen
-    if (mounted) {
-      ScaffoldMessenger.of(context).clearSnackBars();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Checkout Scanner: Coming soon!')),
+    try {
+      final userId = _db.supabase.auth.currentUser!.id;
+      final result = await _visionScanner.analyzeCheckout(
+        session.imagePaths,
+        userId,
+        shiftId: widget.existingShift?.id,
       );
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).clearSnackBars();
+
+      // Show verification screen
+      final confirmed = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ScanVerificationScreen(
+            scanType: ScanType.checkout,
+            extractedData: result['data'] as Map<String, dynamic>,
+            confidenceScores: result['data']['ai_confidence_scores'] as Map<String, dynamic>?,
+            onConfirm: (data) async {
+              // Pre-fill shift form with checkout data
+              setState(() {
+                if (data['total_sales'] != null) {
+                  _salesAmountController.text = data['total_sales'].toString();
+                }
+                if (data['gross_tips'] != null) {
+                  _creditTipsController.text = data['gross_tips'].toString();
+                }
+                if (data['tipout_amount'] != null) {
+                  _additionalTipoutController.text = data['tipout_amount'].toString();
+                }
+                if (data['tipout_percentage'] != null) {
+                  _tipoutPercentController.text = data['tipout_percentage'].toString();
+                }
+              });
+            },
+          ),
+        ),
+      );
+
+      if (confirmed == true && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Checkout data imported successfully!'),
+            backgroundColor: AppTheme.successColor,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).clearSnackBars();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Checkout scan failed: $e'),
+            backgroundColor: AppTheme.dangerColor,
+          ),
+        );
+      }
     }
   }
 
   /// Process business card scan - Add contact
   Future<void> _processBusinessCardScan(DocumentScanSession session) async {
-    // TODO: Call scan-business-card Edge Function
-    // TODO: Extract name, company, role, phone, email, socials
-    // TODO: Show add contact screen pre-filled
-    if (mounted) {
-      ScaffoldMessenger.of(context).clearSnackBars();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Business Card Scanner: Coming soon!')),
+    try {
+      final userId = _db.supabase.auth.currentUser!.id;
+      final result = await _visionScanner.scanBusinessCard(
+        session.imagePaths,
+        userId,
+        shiftId: widget.existingShift?.id,
       );
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).clearSnackBars();
+
+      // Show verification screen
+      final confirmed = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ScanVerificationScreen(
+            scanType: ScanType.businessCard,
+            extractedData: result['data'] as Map<String, dynamic>,
+            confidenceScores: result['data']['ai_confidence_scores'] as Map<String, dynamic>?,
+            onConfirm: (data) async {
+              // Contact already saved by Edge Function
+              // Just refresh the contacts list
+              await _loadEventContacts();
+            },
+          ),
+        ),
+      );
+
+      if (confirmed == true && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Contact "${result['data']['name']}" added successfully!'),
+            backgroundColor: AppTheme.successColor,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).clearSnackBars();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Business card scan failed: $e'),
+            backgroundColor: AppTheme.dangerColor,
+          ),
+        );
+      }
     }
   }
 
   /// Process paycheck scan - Track W-2 income
   Future<void> _processPaycheckScan(DocumentScanSession session) async {
-    // TODO: Call analyze-paycheck Edge Function
-    // TODO: Extract pay period, gross, taxes, YTD
-    // TODO: Run Reality Check (compare to logged shifts)
-    // TODO: Show verification screen
-    if (mounted) {
+    try {
+      final userId = _db.supabase.auth.currentUser!.id;
+      final result = await _visionScanner.analyzePaycheck(session.imagePaths, userId);
+
+      if (!mounted) return;
+
       ScaffoldMessenger.of(context).clearSnackBars();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Paycheck Scanner: Coming soon!')),
+
+      // Check for Reality Check warning
+      final realityCheck = result['realityCheck'] as Map<String, dynamic>?;
+      final unreportedGap = realityCheck?['unreportedGap'] as double?;
+
+      // Show verification screen
+      final confirmed = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ScanVerificationScreen(
+            scanType: ScanType.paycheck,
+            extractedData: result['data'] as Map<String, dynamic>,
+            confidenceScores: result['data']['ai_confidence_scores'] as Map<String, dynamic>?,
+            onConfirm: (data) async {
+              // Paycheck already saved by Edge Function
+            },
+          ),
+        ),
       );
+
+      if (confirmed == true && mounted) {
+        String message = 'Paycheck tracked successfully!';
+        
+        // Show Reality Check warning if applicable
+        if (unreportedGap != null && unreportedGap > 100) {
+          message = '⚠️ Reality Check: \$${unreportedGap.toFixed(2)} in unreported tips detected. Set aside ~\$${(unreportedGap * 0.22).toFixed(2)} for taxes.';
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message),
+            backgroundColor: unreportedGap != null && unreportedGap > 100 
+                ? AppTheme.warningColor 
+                : AppTheme.successColor,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).clearSnackBars();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Paycheck scan failed: $e'),
+            backgroundColor: AppTheme.dangerColor,
+          ),
+        );
+      }
     }
   }
 
   /// Process invoice scan - Track freelancer income
   Future<void> _processInvoiceScan(DocumentScanSession session) async {
-    // TODO: Call analyze-invoice Edge Function
-    // TODO: Extract client, amount, due date
-    // TODO: QuickBooks integration
-    // TODO: Show verification screen
-    if (mounted) {
+    try {
+      final userId = _db.supabase.auth.currentUser!.id;
+      final result = await _visionScanner.analyzeInvoice(session.imagePaths, userId);
+
+      if (!mounted) return;
+
       ScaffoldMessenger.of(context).clearSnackBars();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Invoice Scanner: Coming soon!')),
+
+      // Show verification screen
+      final confirmed = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ScanVerificationScreen(
+            scanType: ScanType.invoice,
+            extractedData: result['data'] as Map<String, dynamic>,
+            confidenceScores: result['data']['ai_confidence_scores'] as Map<String, dynamic>?,
+            onConfirm: (data) async {
+              // Invoice already saved by Edge Function
+            },
+          ),
+        ),
       );
+
+      if (confirmed == true && mounted) {
+        final qbCategory = result['quickbooksCategory'] as String?;
+        String message = 'Invoice tracked successfully!';
+        
+        if (qbCategory != null) {
+          message = 'Invoice tracked! QuickBooks category: $qbCategory';
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message),
+            backgroundColor: AppTheme.successColor,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).clearSnackBars();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Invoice scan failed: $e'),
+            backgroundColor: AppTheme.dangerColor,
+          ),
+        );
+      }
     }
   }
 
