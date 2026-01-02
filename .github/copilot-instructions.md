@@ -678,7 +678,21 @@ This section defines the UI placement strategy for the AI Vision features.
 
 To ensure the app looks good on both web and mobile devices, follow these guidelines:
 
-### 1. Use a Responsive Wrapper
+### 1. Add Viewport Meta Tag (CRITICAL - January 2, 2026)
+Without this, mobile browsers can't properly scale or allow pinch-zoom.
+Add the following line to the `<head>` section of your `web/index.html` file:
+
+```html
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+```
+
+This tells the browser:
+- Use device width (not desktop width)
+- Start at 1x zoom
+- Allow users to zoom up to 5x
+- Enable pinch-to-zoom
+
+### 2. Use a Responsive Wrapper
 
 ~~Wrap the `MaterialApp` with a `ResponsiveWrapper` widget to constrain the width on desktop:~~
 
@@ -699,13 +713,33 @@ class InTheBizApp extends StatelessWidget {
 }
 ```
 
-### ~~2. ResponsiveWrapper Implementation~~
+### ~~3. ResponsiveWrapper Implementation~~
    The ResponsiveWrapper implementation was removed because now it's making everything a vertical line.
 
-### 3. Responsive Values
+### 4. Responsive Values
    If responsiveness is needed within screens, use LayoutBuilder to detect screen size and provide different values.
 
-### 4. Test on Multiple Devices
+### 5. Wrap Screens in SafeArea + SingleChildScrollView (January 2, 2026)
+Any screen with overflow issues needs to be scrollable:
+
+```dart
+SafeArea(
+  child: SingleChildScrollView(
+    child: YourContent(),
+  ),
+)
+```
+
+### 6. Respect Text Scale Factor (January 2, 2026)
+Flutter should automatically handle this, but we need to ensure `MediaQuery` isn't being overridden anywhere.
+
+### 7. Use Flexible Layouts (January 2, 2026)
+Instead of fixed heights, use:
+- `Expanded` and `Flexible` widgets
+- `MediaQuery.of(context).size.height * 0.5` (percentage-based)
+- `LayoutBuilder` for responsive sizing
+
+### 8. Test on Multiple Devices
    Make sure to test your application on various devices, including mobile phones, tablets and desktop browsers, to ensure a consistent and user-friendly experience.
 
 ---
@@ -713,28 +747,4 @@ class InTheBizApp extends StatelessWidget {
 
 When debugging calendar sync issues, remember:
 
--   There may be differences in how calendar access is granted and handled between web and mobile platforms.
--   Check the `_requestPermissions` method in the `calendar_sync_screen.dart` file for platform-specific logic.
--   The `device_calendar` and `permission_handler` plugins **don't support web browsers**. They're native mobile plugins that require iOS/Android code.
--   On the web, the "Grant Calendar Access" button will not work with the `device_calendar` and `permission_handler` plugins. A solution is to use the Google Calendar API (OAuth flow) on the web, while keeping the current device calendar integration for mobile.
-
-### Web Calendar Integration Options: (NEW - January 2, 2026)
-
--   **Google Calendar API** (Best Option)
-    -   Users can connect their Google Calendar via OAuth
-    -   Full read/write access to events
-    -   Works perfectly on web
-    -   Requires Google Cloud setup, but you're already using Google Sign-In
-
--   **Microsoft Graph API** (Outlook/Office 365)
-    -   Similar to Google Calendar API
-    -   Good for users with Outlook calendars
-
--   **Manual ICS File Import**
-    -   Let users upload `.ics` calendar files
-    -   Parse and import events from the file
-    -   Works everywhere, no permissions needed
-
--   **CalDAV Protocol**
-    -   Standard calendar protocol
-    -   Works with many
+-   There may be
