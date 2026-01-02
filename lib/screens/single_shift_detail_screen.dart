@@ -2514,12 +2514,13 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
     );
   }
 
-  Widget _buildNotesCard() {
+  Widget _buildNotesCard({Key? key}) {
     final isEditing = _activeEditField == 'notes';
     final controller = _controllers['notes']!;
     final focusNode = _focusNodes['notes']!;
 
     return Container(
+      key: key,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AppTheme.cardBackground,
