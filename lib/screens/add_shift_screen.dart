@@ -1476,17 +1476,13 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
 
       switch (sectionKey) {
         case 'time_section':
-          widgets.add(_buildTimeSection(key: const ValueKey('time_section')));
-          widgets.add(
-              const SizedBox(key: ValueKey('time_section_spacer'), height: 16));
+          widgets.add(_buildTimeSection(key: ValueKey('time_section')));
           break;
 
         case 'earnings_section':
           if (_template!.showTips || _template!.showCommission) {
             widgets.add(
-                _buildEarningsSection(key: const ValueKey('earnings_section')));
-            widgets.add(const SizedBox(
-                key: ValueKey('earnings_section_spacer'), height: 16));
+                _buildEarningsSection(key: ValueKey('earnings_section')));
           }
           break;
 
@@ -1495,9 +1491,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
               _template!.showHostess ||
               _template!.showGuestCount) {
             widgets.add(_buildEventDetailsSection(
-                key: const ValueKey('event_details_section')));
-            widgets.add(const SizedBox(
-                key: ValueKey('event_details_section_spacer'), height: 16));
+                key: ValueKey('event_details_section')));
           }
           break;
 
@@ -1507,18 +1501,14 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
               _template!.showProjectName ||
               _template!.showMileage) {
             widgets.add(_buildWorkDetailsSection(
-                key: const ValueKey('work_details_section')));
-            widgets.add(const SizedBox(
-                key: ValueKey('work_details_section_spacer'), height: 16));
+                key: ValueKey('work_details_section')));
           }
           break;
 
         case 'documentation_section':
           if (_template!.showNotes || _template!.showPhotos) {
             widgets.add(_buildDocumentationSection(
-                key: const ValueKey('documentation_section')));
-            widgets.add(const SizedBox(
-                key: ValueKey('documentation_section_spacer'), height: 16));
+                key: ValueKey('documentation_section')));
           }
           break;
       }

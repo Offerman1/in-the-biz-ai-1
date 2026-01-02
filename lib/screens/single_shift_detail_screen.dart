@@ -949,40 +949,46 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
           },
           child: Consumer<FieldOrderProvider>(
             builder: (context, fieldOrderProvider, _) {
-              return ReorderableListView(
+              return SingleChildScrollView(
                 padding: const EdgeInsets.all(24),
-                onReorder: (oldIndex, newIndex) {
-                  _handleReorder(
-                      oldIndex, newIndex, fieldOrderProvider.detailsFieldOrder);
-                },
-                children: [
-                  // Combined Hero Card - Job Info + Earnings + Date (NOT reorderable)
-                  _buildCombinedHeroCard(key: const ValueKey('hero_card')),
-                  const SizedBox(key: ValueKey('hero_spacer'), height: 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Combined Hero Card - Job Info + Earnings + Date (NOT reorderable)
+                    _buildCombinedHeroCard(),
+                    const SizedBox(height: 20),
 
-                  // Reorderable sections based on field order
-                  ..._buildOrderedSections(
-                      fieldOrderProvider.detailsFieldOrder),
+                    // Reorderable sections
+                    ReorderableListView(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      onReorder: (oldIndex, newIndex) {
+                        _handleReorder(oldIndex, newIndex,
+                            fieldOrderProvider.detailsFieldOrder);
+                      },
+                      children: _buildOrderedSections(
+                          fieldOrderProvider.detailsFieldOrder),
+                    ),
 
-                  // Photos (if any)
-                  if (shift.imageUrl != null && shift.imageUrl!.isNotEmpty) ...[
-                    _buildPhotosCard(context, key: const ValueKey('photos')),
-                    const SizedBox(key: ValueKey('photos_spacer'), height: 20),
+                    // Photos (if any)
+                    if (shift.imageUrl != null &&
+                        shift.imageUrl!.isNotEmpty) ...[
+                      _buildPhotosCard(context),
+                      const SizedBox(height: 20),
+                    ],
+
+                    // File Attachments
+                    _buildAttachmentsCard(),
+                    const SizedBox(height: 20),
+
+                    // Event Team (Contacts)
+                    _buildEventTeamSection(),
+                    const SizedBox(height: 20),
+
+                    // Extra bottom padding for scrolling
+                    const SizedBox(height: 60),
                   ],
-
-                  // File Attachments
-                  _buildAttachmentsCard(key: const ValueKey('attachments')),
-                  const SizedBox(
-                      key: ValueKey('attachments_spacer'), height: 20),
-
-                  // Event Team (Contacts)
-                  _buildEventTeamSection(key: const ValueKey('event_team')),
-                  const SizedBox(
-                      key: ValueKey('event_team_spacer'), height: 20),
-
-                  // Extra bottom padding for scrolling
-                  const SizedBox(key: ValueKey('bottom_padding'), height: 60),
-                ],
+                ),
               );
             },
           ),
