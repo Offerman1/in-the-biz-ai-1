@@ -2299,8 +2299,9 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
     );
   }
 
-  Widget _buildBreakdownCard() {
+  Widget _buildBreakdownCard({Key? key}) {
     return Container(
+      key: key,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AppTheme.cardBackground,
@@ -2586,12 +2587,13 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
     );
   }
 
-  Widget _buildPhotosCard(BuildContext context) {
+  Widget _buildPhotosCard(BuildContext context, {Key? key}) {
     // Parse photo paths (comma-separated string)
     final photoPaths =
         shift.imageUrl!.split(',').where((p) => p.trim().isNotEmpty).toList();
 
     return Container(
+      key: key,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AppTheme.cardBackground,
