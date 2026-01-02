@@ -729,7 +729,7 @@ class _HomeScreenState extends State<_HomeScreen> {
                         ),
                         Positioned.fill(
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            padding: const EdgeInsets.symmetric(horizontal: 14),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
@@ -737,7 +737,7 @@ class _HomeScreenState extends State<_HomeScreen> {
                                   '${(goalPercent * 100).toInt()}% of goal',
                                   style: TextStyle(
                                     color: Colors.white,
-                                    fontSize: 12,
+                                    fontSize: 11,
                                     fontWeight: FontWeight.w700,
                                     shadows: [
                                       Shadow(
@@ -753,7 +753,7 @@ class _HomeScreenState extends State<_HomeScreen> {
                                       .format(_activeGoal!.targetAmount),
                                   style: TextStyle(
                                     color: Colors.white,
-                                    fontSize: 12,
+                                    fontSize: 11,
                                     fontWeight: FontWeight.w700,
                                     shadows: [
                                       Shadow(
@@ -797,7 +797,7 @@ class _HomeScreenState extends State<_HomeScreen> {
                         child: Container(
                           height: 32,
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
+                            horizontal: 14,
                           ),
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
@@ -841,7 +841,7 @@ class _HomeScreenState extends State<_HomeScreen> {
                                   color: percentChange >= 0
                                       ? AppTheme.primaryGreen
                                       : AppTheme.accentRed,
-                                  fontSize: 12,
+                                  fontSize: 11,
                                   fontWeight: FontWeight.w700,
                                   shadows: [
                                     Shadow(
