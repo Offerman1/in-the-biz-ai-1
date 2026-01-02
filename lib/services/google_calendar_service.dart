@@ -21,18 +21,21 @@ class GoogleCalendarService {
     }
 
     try {
-      final googleSignIn = GoogleSignIn(
+      final googleSignIn = GoogleSignIn.standard(
         scopes: AuthService.calendarScopes,
       );
 
       // Check if already signed in
-      final account = await googleSignIn.signInSilently();
-      if (account == null) {
+      var currentUser = googleSignIn.currentUser;
+      if (currentUser == null) {
+        currentUser = await googleSignIn.signInSilently();
+      }
+      if (currentUser == null) {
         return false;
       }
 
       // Get authenticated HTTP client using extension method
-      final httpClient = await googleSignIn.authenticatedClient();
+      final httpClient = await currentUser.authenticatedClient();
       if (httpClient == null) {
         return false;
       }
@@ -52,7 +55,7 @@ class GoogleCalendarService {
     }
 
     try {
-      final googleSignIn = GoogleSignIn(
+      final googleSignIn = GoogleSignIn.standard(
         scopes: AuthService.calendarScopes,
       );
 
@@ -63,7 +66,7 @@ class GoogleCalendarService {
       }
 
       // Get authenticated HTTP client using extension method
-      final httpClient = await googleSignIn.authenticatedClient();
+      final httpClient = await account.authenticatedClient();
       if (httpClient == null) {
         return false;
       }
@@ -241,18 +244,19 @@ class GoogleCalendarService {
     try {
       // Get job name
       final jobs = await _db.getJobs();
-      Job? job;
+      String jobName = 'Work';
+      String? employer;
       try {
         final jobMap = jobs.firstWhere((j) => j['id'] == shift.jobId);
-        job = Job.fromMap(jobMap);
+        jobName = jobMap['name'] as String? ?? 'Work';
+        employer = jobMap['employer'] as String?;
       } catch (e) {
-        job = Job(id: '', name: 'Work', color: '');
+        // Job not found, use defaults
       }
-      final jobName = job.name;
 
       // Build event
       final title = '🍺 $jobName';
-      final description = _buildEventDescription(shift, job);
+      final description = _buildEventDescription(shift, null);
 
       final startDateTime = _parseShiftDateTime(shift.date, shift.startTime);
       final endDateTime = _parseShiftDateTime(shift.date, shift.endTime);
@@ -264,7 +268,7 @@ class GoogleCalendarService {
         ..start!.dateTime = startDateTime.toUtc()
         ..end = calendar.EventDateTime()
         ..end!.dateTime = endDateTime.toUtc()
-        ..location = job.employer;
+        ..location = employer;
 
       // Create or update event
       if (shift.calendarEventId != null) {
@@ -301,7 +305,7 @@ class GoogleCalendarService {
   }
 
   /// Build event description with shift details
-  String _buildEventDescription(Shift shift, Job? job) {
+  String _buildEventDescription(Shift shift, dynamic jobData) {
     final lines = <String>[];
 
     if (shift.status == 'scheduled') {

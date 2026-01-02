@@ -387,7 +387,7 @@ class _ExportShiftsScreenState extends State<ExportShiftsScreen> {
                                 });
                               },
                               title: Text(
-                                job.name,
+                                job['name'] as String? ?? 'Unknown',
                                 style: AppTheme.bodyLarge.copyWith(
                                   fontWeight: FontWeight.w600,
                                 ),
