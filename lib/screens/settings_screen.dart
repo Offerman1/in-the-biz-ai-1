@@ -361,8 +361,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                   const SizedBox(height: 24),
 
-                  // Field Layout Section
-                  _buildSectionHeader('FIELD LAYOUT'),
+                  // Shift Layout Section
+                  _buildSectionHeader('SHIFT LAYOUT'),
                   const SizedBox(height: 12),
                   const FieldOrderSettings(),
 
