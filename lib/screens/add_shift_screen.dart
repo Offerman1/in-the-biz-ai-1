@@ -1234,7 +1234,8 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
   Future<void> _processBEOScan(DocumentScanSession session) async {
     try {
       final userId = _db.supabase.auth.currentUser!.id;
-      final result = await _visionScanner.analyzeBEO(session.imagePaths, userId);
+      final result =
+          await _visionScanner.analyzeBEO(session.imagePaths, userId);
 
       if (!mounted) return;
 
@@ -1248,7 +1249,8 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
           builder: (context) => ScanVerificationScreen(
             scanType: ScanType.beo,
             extractedData: result['data'] as Map<String, dynamic>,
-            confidenceScores: result['data']['ai_confidence_scores'] as Map<String, dynamic>?,
+            confidenceScores:
+                result['data']['ai_confidence_scores'] as Map<String, dynamic>?,
             onConfirm: (data) async {
               // Pre-fill shift form with BEO data
               setState(() {
@@ -1256,19 +1258,23 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
                   _eventNameController.text = data['event_name'].toString();
                 }
                 if (data['guest_count_confirmed'] != null) {
-                  _guestCountController.text = data['guest_count_confirmed'].toString();
+                  _guestCountController.text =
+                      data['guest_count_confirmed'].toString();
                 }
                 if (data['total_sale_amount'] != null) {
-                  _eventCostController.text = data['total_sale_amount'].toString();
+                  _eventCostController.text =
+                      data['total_sale_amount'].toString();
                 }
                 if (data['commission_amount'] != null) {
-                  _commissionController.text = data['commission_amount'].toString();
+                  _commissionController.text =
+                      data['commission_amount'].toString();
                 }
                 if (data['venue_name'] != null) {
                   _locationController.text = data['venue_name'].toString();
                 }
                 if (data['primary_contact_name'] != null) {
-                  _hostessController.text = data['primary_contact_name'].toString();
+                  _hostessController.text =
+                      data['primary_contact_name'].toString();
                 }
                 if (data['formatted_notes'] != null) {
                   _notesController.text = data['formatted_notes'].toString();
@@ -1321,7 +1327,8 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
           builder: (context) => ScanVerificationScreen(
             scanType: ScanType.checkout,
             extractedData: result['data'] as Map<String, dynamic>,
-            confidenceScores: result['data']['ai_confidence_scores'] as Map<String, dynamic>?,
+            confidenceScores:
+                result['data']['ai_confidence_scores'] as Map<String, dynamic>?,
             onConfirm: (data) async {
               // Pre-fill shift form with checkout data
               setState(() {
@@ -1332,10 +1339,12 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
                   _creditTipsController.text = data['gross_tips'].toString();
                 }
                 if (data['tipout_amount'] != null) {
-                  _additionalTipoutController.text = data['tipout_amount'].toString();
+                  _additionalTipoutController.text =
+                      data['tipout_amount'].toString();
                 }
                 if (data['tipout_percentage'] != null) {
-                  _tipoutPercentController.text = data['tipout_percentage'].toString();
+                  _tipoutPercentController.text =
+                      data['tipout_percentage'].toString();
                 }
               });
             },
@@ -1385,7 +1394,8 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
           builder: (context) => ScanVerificationScreen(
             scanType: ScanType.businessCard,
             extractedData: result['data'] as Map<String, dynamic>,
-            confidenceScores: result['data']['ai_confidence_scores'] as Map<String, dynamic>?,
+            confidenceScores:
+                result['data']['ai_confidence_scores'] as Map<String, dynamic>?,
             onConfirm: (data) async {
               // Contact already saved by Edge Function
               // Just refresh the contacts list
@@ -1398,7 +1408,8 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
       if (confirmed == true && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Contact "${result['data']['name']}" added successfully!'),
+            content:
+                Text('Contact "${result['data']['name']}" added successfully!'),
             backgroundColor: AppTheme.successColor,
           ),
         );
@@ -1420,7 +1431,8 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
   Future<void> _processPaycheckScan(DocumentScanSession session) async {
     try {
       final userId = _db.supabase.auth.currentUser!.id;
-      final result = await _visionScanner.analyzePaycheck(session.imagePaths, userId);
+      final result =
+          await _visionScanner.analyzePaycheck(session.imagePaths, userId);
 
       if (!mounted) return;
 
@@ -1437,7 +1449,8 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
           builder: (context) => ScanVerificationScreen(
             scanType: ScanType.paycheck,
             extractedData: result['data'] as Map<String, dynamic>,
-            confidenceScores: result['data']['ai_confidence_scores'] as Map<String, dynamic>?,
+            confidenceScores:
+                result['data']['ai_confidence_scores'] as Map<String, dynamic>?,
             onConfirm: (data) async {
               // Paycheck already saved by Edge Function
             },
@@ -1447,17 +1460,18 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
 
       if (confirmed == true && mounted) {
         String message = 'Paycheck tracked successfully!';
-        
+
         // Show Reality Check warning if applicable
         if (unreportedGap != null && unreportedGap > 100) {
-          message = '⚠️ Reality Check: \$${unreportedGap.toFixed(2)} in unreported tips detected. Set aside ~\$${(unreportedGap * 0.22).toFixed(2)} for taxes.';
+          message =
+              '⚠️ Reality Check: \$${unreportedGap.toFixed(2)} in unreported tips detected. Set aside ~\$${(unreportedGap * 0.22).toFixed(2)} for taxes.';
         }
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(message),
-            backgroundColor: unreportedGap != null && unreportedGap > 100 
-                ? AppTheme.warningColor 
+            backgroundColor: unreportedGap != null && unreportedGap > 100
+                ? AppTheme.warningColor
                 : AppTheme.successColor,
             duration: const Duration(seconds: 5),
           ),
@@ -1480,7 +1494,8 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
   Future<void> _processInvoiceScan(DocumentScanSession session) async {
     try {
       final userId = _db.supabase.auth.currentUser!.id;
-      final result = await _visionScanner.analyzeInvoice(session.imagePaths, userId);
+      final result =
+          await _visionScanner.analyzeInvoice(session.imagePaths, userId);
 
       if (!mounted) return;
 
@@ -1493,7 +1508,8 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
           builder: (context) => ScanVerificationScreen(
             scanType: ScanType.invoice,
             extractedData: result['data'] as Map<String, dynamic>,
-            confidenceScores: result['data']['ai_confidence_scores'] as Map<String, dynamic>?,
+            confidenceScores:
+                result['data']['ai_confidence_scores'] as Map<String, dynamic>?,
             onConfirm: (data) async {
               // Invoice already saved by Edge Function
             },
@@ -1504,7 +1520,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
       if (confirmed == true && mounted) {
         final qbCategory = result['quickbooksCategory'] as String?;
         String message = 'Invoice tracked successfully!';
-        
+
         if (qbCategory != null) {
           message = 'Invoice tracked! QuickBooks category: $qbCategory';
         }
