@@ -266,6 +266,7 @@ class HeroCard extends StatelessWidget {
   const HeroCard({
     super.key,
     required this.child,
+    this.child,
     this.padding,
     this.margin,
     this.borderRadius,
@@ -679,7 +680,7 @@ This section defines the UI placement strategy for the AI Vision features.
 
 ### 5. AI Vision Pay Stub Extraction:
 
-### What AI Needs to Identify:
+### How AI Needs to Identify:
 
 **Common Pay Stub Formats:**
 - ADP pay stubs
@@ -715,30 +716,18 @@ Extract paycheck information from this pay stub image:
 Format as JSON with confidence scores for each field.
 ```
 
----
-## 📱 RESPONSIVE UI RULES (NEW - January 1, 2026)
+**Clarification on AI Vision and Format Support (January 2, 2026):**
 
-To ensure the app looks good on both web and mobile devices, follow these guidelines:
+- **ALL scanners use AI vision (Gemini 3 Flash).** There's no "format support" in the traditional sense - the AI reads the image and extracts data, regardless of format.
 
-### 1. Add Viewport Meta Tag (CRITICAL - January 2, 2026)
-Without this, mobile browsers can't properly scale or allow pinch-zoom.
-The following line MUST be in the `<head>` section of your `web/index.html` file:
+### 🤖 **How AI Vision Works (All Scanners):**
 
-```html
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-```
+**The AI doesn't need "format support" - it READS the image like a human would:**
 
-This tells the browser:
-- Use device width (not desktop width)
-- Start at 1x zoom
-- Allow users to zoom up to 5x
-- Enable pinch-to-zoom
+- **Paycheck Scanner:** AI looks at the pay stub image and finds "Gross Pay: $1,234" wherever it appears - whether it's ADP's layout, Gusto's layout, or a handwritten note from a mom-and-pop restaurant
+- **Checkout Scanner:** AI finds "Total Sales" and "Tips" whether it's Toast's format, Square's format, or scribbled on a napkin
+- **BEO Scanner:** AI reads multi-page contracts and extracts event details regardless of venue template
+- **Business Card:** AI reads text from any card design
+- **Invoice:** AI extracts client/amount from any invoice layout
 
-**This was the #1 cause of mobile scaling issues on Android devices with large text/accessibility settings enabled.**
-
-### 2. Always Use SafeArea
-All screens MUST wrap their body content in `SafeArea` to prevent overlap with system UI (notches, status bars, navigation gestures):
-
-```dart
-Scaffold(
-  body: SafeArea
+**The "formats" mentioned are just AI training context
