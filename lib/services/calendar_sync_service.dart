@@ -216,7 +216,7 @@ class CalendarSyncService {
       Job? job;
       try {
         final jobMap = jobs.firstWhere((j) => j['id'] == shift.jobId);
-        job = Job.fromMap(jobMap);
+        job = Job.fromSupabase(jobMap);
       } catch (e) {
         job = null;
       }
@@ -245,13 +245,13 @@ class CalendarSyncService {
         // Update existing event
         event.eventId = shift.calendarEventId;
         final result = await _deviceCalendarPlugin.createOrUpdateEvent(event);
-        if (result.isSuccess) {
+        if (result != null && result.isSuccess) {
           return shift.calendarEventId;
         }
       } else {
         // Create new event
         final result = await _deviceCalendarPlugin.createOrUpdateEvent(event);
-        if (result.isSuccess && result.data != null) {
+        if (result != null && result.isSuccess && result.data != null) {
           return result.data; // Return the new event ID
         }
       }
