@@ -1,0 +1,4 @@
+app_identifier("com.inthebiz.app") # Your new unique Bundle ID
+apple_id("your-email@example.com") # Your Apple ID email
+itc_team_id("12345678") # Your App Store Connect Team ID
+team_id("ABC123DEF") # Your Developer Portal Team ID

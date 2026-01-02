@@ -1,0 +1,2 @@
+json_key_file("android/fastlane/api-key.json") # You need to download this from Google Cloud
+package_name("com.inthebiz.app") # Your new unique package name

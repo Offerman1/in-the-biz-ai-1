@@ -1,0 +1,27 @@
+default_platform(:ios)
+
+platform :ios do
+  desc "Push a new release build to the App Store"
+  lane :release do
+    build_app(workspace: "Runner.xcworkspace", scheme: "Runner")
+    upload_to_app_store
+  end
+
+  desc "Create In-App Purchases (Requires 'spaceship')"
+  lane :create_iap do
+    # This lane creates the products in App Store Connect
+    # Run this ONCE to set up your products
+    
+    # Monthly Subscription
+    produce(
+      app_identifier: "com.inthebiz.app",
+      app_name: "In The Biz AI",
+      language: "en-US",
+      app_version: "1.0.0",
+      sku: "com.inthebiz.app"
+    )
+    
+    # Note: 'produce' creates the app. To create IAPs, we use 'spaceship' directly or plugins.
+    # Fastlane doesn't have a simple one-line "create_iap" action built-in without scripting.
+  end
+end
