@@ -1,10 +1,14 @@
 import 'dart:typed_data';
 import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/shift.dart';
 import '../models/job.dart';
 import '../models/event_contact.dart';
 import '../models/shift_attachment.dart';
+import 'calendar_sync_service.dart';
+import 'google_calendar_service.dart';
 
 class DatabaseService {
   static SupabaseClient get _supabase => Supabase.instance.client;
@@ -47,7 +51,12 @@ class DatabaseService {
         .select()
         .single();
 
-    return Shift.fromSupabase(response);
+    final savedShift = Shift.fromSupabase(response);
+    
+    // Auto-export to calendar if enabled
+    await _autoExportShift(savedShift);
+    
+    return savedShift;
   }
 
   /// Get all shifts for current user
