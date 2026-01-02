@@ -1886,4 +1886,317 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
     );
   }
+
+  Widget _buildCalendarExportSection() {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackground,
+        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+      ),
+      child: Column(
+        children: [
+          // Auto-sync toggle
+          ListTile(
+            leading: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: AppTheme.primaryGreen.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(Icons.sync, color: AppTheme.primaryGreen),
+            ),
+            title: Text('Auto-Sync to Calendar', style: AppTheme.bodyMedium),
+            subtitle: Text(
+              'Automatically export shifts to your calendar',
+              style: AppTheme.labelSmall.copyWith(color: AppTheme.textMuted),
+            ),
+            trailing: Switch(
+              value: _isAutoSyncEnabled,
+              activeColor: AppTheme.primaryGreen,
+              onChanged: _setAutoSyncPreference,
+            ),
+          ),
+          
+          const Divider(height: 1),
+          
+          // Choose shifts to sync
+          ListTile(
+            onTap: () async {
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const ExportShiftsScreen(isRemoveMode: false),
+                ),
+              );
+              if (result == true && mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: const Text('Shifts exported successfully'),
+                    backgroundColor: AppTheme.primaryGreen,
+                  ),
+                );
+              }
+            },
+            leading: const SizedBox(width: 40), // Alignment with toggle
+            title: Text('Choose Shifts to Sync', style: AppTheme.bodyMedium),
+            subtitle: Text(
+              'Select specific shifts to export',
+              style: AppTheme.labelSmall.copyWith(color: AppTheme.textMuted),
+            ),
+            trailing: Icon(Icons.chevron_right, color: AppTheme.textMuted),
+          ),
+          
+          const Divider(height: 1),
+          
+          // Sync all shifts now
+          ListTile(
+            onTap: () => _syncAllShifts(),
+            leading: const SizedBox(width: 40),
+            title: Row(
+              children: [
+                Icon(Icons.flash_on, color: AppTheme.accentYellow, size: 18),
+                const SizedBox(width: 6),
+                Text('Sync All Shifts Now', style: AppTheme.bodyMedium),
+              ],
+            ),
+            subtitle: Text(
+              'Export all unsynced shifts',
+              style: AppTheme.labelSmall.copyWith(color: AppTheme.textMuted),
+            ),
+            trailing: Icon(Icons.chevron_right, color: AppTheme.textMuted),
+          ),
+          
+          const Divider(height: 1),
+          
+          // Choose events to remove
+          ListTile(
+            onTap: () async {
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const ExportShiftsScreen(isRemoveMode: true),
+                ),
+              );
+              if (result == true && mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: const Text('Calendar events removed'),
+                    backgroundColor: AppTheme.accentOrange,
+                  ),
+                );
+              }
+            },
+            leading: const SizedBox(width: 40),
+            title: Text('Choose Events to Remove', style: AppTheme.bodyMedium),
+            subtitle: Text(
+              'Select synced events to delete',
+              style: AppTheme.labelSmall.copyWith(color: AppTheme.textMuted),
+            ),
+            trailing: Icon(Icons.chevron_right, color: AppTheme.textMuted),
+          ),
+          
+          const Divider(height: 1),
+          
+          // Remove all synced events
+          ListTile(
+            onTap: () => _removeAllSyncedEvents(),
+            leading: const SizedBox(width: 40),
+            title: Row(
+              children: [
+                Icon(Icons.warning_amber, color: AppTheme.accentRed, size: 18),
+                const SizedBox(width: 6),
+                Text('Remove All Synced Events', 
+                  style: AppTheme.bodyMedium.copyWith(color: AppTheme.accentRed)),
+              ],
+            ),
+            subtitle: Text(
+              'Delete all exported calendar events',
+              style: AppTheme.labelSmall.copyWith(color: AppTheme.textMuted),
+            ),
+            trailing: Icon(Icons.chevron_right, color: AppTheme.textMuted),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _syncAllShifts() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.cardBackground,
+        title: Text('Sync All Shifts?', style: AppTheme.titleLarge),
+        content: Text(
+          'This will export all unsynced shifts to your calendar. Continue?',
+          style: AppTheme.bodyMedium,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primaryGreen,
+              foregroundColor: Colors.black,
+            ),
+            child: const Text('Sync All'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    // Show loading dialog
+    if (mounted) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => Center(
+          child: CircularProgressIndicator(color: AppTheme.primaryGreen),
+        ),
+      );
+    }
+
+    try {
+      final shiftProvider = Provider.of<ShiftProvider>(context, listen: false);
+      final unsyncedShifts = shiftProvider.shifts
+          .where((s) => s.calendarEventId == null)
+          .toList();
+
+      int successCount = 0;
+      final calendarSync = CalendarSyncService();
+      final googleCalendar = GoogleCalendarService();
+
+      for (final shift in unsyncedShifts) {
+        String? eventId;
+        if (kIsWeb) {
+          eventId = await googleCalendar.exportShiftToCalendar(shift);
+        } else {
+          eventId = await calendarSync.exportShiftToCalendar(shift);
+        }
+
+        if (eventId != null) {
+          final updatedShift = shift.copyWith(calendarEventId: eventId);
+          await _db.updateShift(updatedShift);
+          successCount++;
+        }
+      }
+
+      if (mounted) {
+        Navigator.pop(context); // Close loading dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('$successCount shifts exported to calendar'),
+            backgroundColor: AppTheme.primaryGreen,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context); // Close loading dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error syncing shifts: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _removeAllSyncedEvents() async {
+    final shiftProvider = Provider.of<ShiftProvider>(context, listen: false);
+    final syncedCount = shiftProvider.shifts
+        .where((s) => s.calendarEventId != null)
+        .length;
+
+    if (syncedCount == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No synced events to remove')),
+      );
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.cardBackground,
+        title: Text('Remove All Synced Events?', style: AppTheme.titleLarge),
+        content: Text(
+          'This will delete $syncedCount calendar events. This action cannot be undone. Continue?',
+          style: AppTheme.bodyMedium,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.accentRed,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Remove All'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    // Show loading dialog
+    if (mounted) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => Center(
+          child: CircularProgressIndicator(color: AppTheme.primaryGreen),
+        ),
+      );
+    }
+
+    try {
+      final syncedShifts = shiftProvider.shifts
+          .where((s) => s.calendarEventId != null)
+          .toList();
+
+      int successCount = 0;
+      final calendarSync = CalendarSyncService();
+      final googleCalendar = GoogleCalendarService();
+
+      for (final shift in syncedShifts) {
+        bool success;
+        if (kIsWeb) {
+          success = await googleCalendar.deleteCalendarEvent(shift.calendarEventId!);
+        } else {
+          success = await calendarSync.deleteCalendarEvent('primary', shift.calendarEventId!);
+        }
+
+        if (success) {
+          final updatedShift = shift.copyWith(calendarEventId: null);
+          await _db.updateShift(updatedShift);
+          successCount++;
+        }
+      }
+
+      if (mounted) {
+        Navigator.pop(context); // Close loading dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('$successCount calendar events removed'),
+            backgroundColor: AppTheme.accentOrange,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context); // Close loading dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error removing events: $e')),
+        );
+      }
+    }
+  }
 }
