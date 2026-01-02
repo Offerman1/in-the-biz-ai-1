@@ -187,4 +187,133 @@ class CalendarSyncService {
       return true; // If error, allow sync
     }
   }
+
+  /// Export a shift to device calendar (Mobile only)
+  /// Returns the calendar event ID if successful, null if failed
+  Future<String?> exportShiftToCalendar(Shift shift, {String? calendarId}) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      
+      // Get selected calendar ID if not provided
+      calendarId ??= prefs.getString('selected_calendar_id');
+      if (calendarId == null) {
+        print('No calendar selected for export');
+        return null;
+      }
+
+      // Check permission
+      final hasPermission = await _deviceCalendarPlugin.hasPermissions();
+      if (!hasPermission.isSuccess || !(hasPermission.data ?? false)) {
+        print('No calendar permission for export');
+        return null;
+      }
+
+      // Get job name for event title
+      final jobs = await _db.getJobs();
+      final job = jobs.firstWhere((j) => j.id == shift.jobId, orElse: () => null as Job);
+      final jobName = job?.name ?? 'Work Shift';
+
+      // Build event title and description
+      final title = '🍺 $jobName';
+      final description = _buildEventDescription(shift, job);
+
+      // Create start and end DateTime
+      final startDateTime = _parseShiftDateTime(shift.date, shift.startTime);
+      final endDateTime = _parseShiftDateTime(shift.date, shift.endTime);
+
+      // Create calendar event
+      final event = Event(
+        calendarId,
+        title: title,
+        description: description,
+        start: startDateTime,
+        end: endDateTime,
+        location: job?.employer,
+      );
+
+      // Create or update event
+      if (shift.calendarEventId != null) {
+        // Update existing event
+        event.eventId = shift.calendarEventId;
+        final result = await _deviceCalendarPlugin.createOrUpdateEvent(event);
+        if (result?.isSuccess == true) {
+          return shift.calendarEventId;
+        }
+      } else {
+        // Create new event
+        final result = await _deviceCalendarPlugin.createOrUpdateEvent(event);
+        if (result?.isSuccess == true && result?.data != null) {
+          return result!.data; // Return the new event ID
+        }
+      }
+
+      return null;
+    } catch (e) {
+      print('Error exporting shift to calendar: $e');
+      return null;
+    }
+  }
+
+  /// Delete a shift's calendar event (Mobile only)
+  Future<bool> deleteCalendarEvent(String calendarId, String eventId) async {
+    try {
+      final result = await _deviceCalendarPlugin.deleteEvent(calendarId, eventId);
+      return result?.isSuccess ?? false;
+    } catch (e) {
+      print('Error deleting calendar event: $e');
+      return false;
+    }
+  }
+
+  /// Build event description with shift details
+  String _buildEventDescription(Shift shift, Job? job) {
+    final lines = <String>[];
+    
+    if (shift.status == 'scheduled') {
+      lines.add('📅 Scheduled Shift');
+    } else {
+      // Include earnings for completed shifts
+      lines.add('💰 Total Earned: \$${shift.totalIncome.toStringAsFixed(2)}');
+      
+      if (shift.hourlyRate > 0 && shift.hoursWorked > 0) {
+        lines.add('⏱️ ${shift.hoursWorked.toStringAsFixed(1)} hrs @ \$${shift.hourlyRate.toStringAsFixed(2)}/hr');
+      }
+      
+      final totalTips = shift.cashTips + shift.creditTips;
+      if (totalTips > 0) {
+        lines.add('💵 Tips: \$${totalTips.toStringAsFixed(2)}');
+      }
+    }
+    
+    if (shift.notes != null && shift.notes!.isNotEmpty) {
+      lines.add('');
+      lines.add('📝 Notes:');
+      lines.add(shift.notes!);
+    }
+    
+    lines.add('');
+    lines.add('Created by In The Biz AI');
+    
+    return lines.join('\n');
+  }
+
+  /// Parse shift date and time string into DateTime
+  DateTime _parseShiftDateTime(DateTime date, String? timeString) {
+    if (timeString == null || timeString.isEmpty) {
+      return date;
+    }
+    
+    try {
+      final parts = timeString.split(':');
+      if (parts.length == 2) {
+        final hour = int.parse(parts[0]);
+        final minute = int.parse(parts[1]);
+        return DateTime(date.year, date.month, date.day, hour, minute);
+      }
+    } catch (e) {
+      print('Error parsing time: $timeString');
+    }
+    
+    return date;
+  }
 }
