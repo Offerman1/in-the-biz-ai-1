@@ -29,23 +29,24 @@ class GoogleCalendarService {
 
       // Get the authentication events stream to check if user is signed in
       final signInEvents = GoogleSignIn.instance.authenticationEvents;
-      
+
       // Try lightweight authentication first
       await GoogleSignIn.instance.attemptLightweightAuthentication();
-      
+
       // Wait briefly for authentication event
       final currentAuth = await signInEvents.first.timeout(
         const Duration(seconds: 2),
         onTimeout: () => null,
       );
-      
+
       if (currentAuth == null) {
         return false; // Not signed in
       }
 
       // Get authorized client using the current authorization
-      final authClient = await currentAuth.authClient(scopes: AuthService.calendarScopes);
-      
+      final authClient =
+          await currentAuth.authClient(scopes: AuthService.calendarScopes);
+
       _calendarApi = calendar.CalendarApi(authClient);
       return true;
     } catch (e) {
@@ -69,17 +70,18 @@ class GoogleCalendarService {
 
       // Authenticate user
       await GoogleSignIn.instance.authenticate();
-      
+
       // Get the authentication event
       final auth = await GoogleSignIn.instance.authenticationEvents.first;
-      
+
       // Request authorization for calendar scopes
       final authorization = await auth.authorizationClient.authorizeScopes(
         AuthService.calendarScopes,
       );
-      
+
       // Get authenticated HTTP client
-      final httpClient = authorization.authClient(scopes: AuthService.calendarScopes);
+      final httpClient =
+          authorization.authClient(scopes: AuthService.calendarScopes);
 
       _calendarApi = calendar.CalendarApi(httpClient);
 
