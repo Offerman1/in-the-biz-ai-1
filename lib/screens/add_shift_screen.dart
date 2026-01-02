@@ -1371,7 +1371,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
     );
   }
 
-  Widget _buildHeroCard() {
+  Widget _buildHeroCard({Key? key}) {
     final hours = double.tryParse(_hoursWorkedController.text) ?? 0;
     final cashTips = double.tryParse(_cashTipsController.text) ?? 0;
     final creditTips = double.tryParse(_creditTipsController.text) ?? 0;
@@ -1388,6 +1388,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
     final totalIncome = baseEarnings + totalTips + commission + flatRate;
 
     return HeroCard(
+      key: key,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       child: Row(
         children: [
@@ -1552,10 +1553,11 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
     );
   }
 
-  Widget _buildJobSelector() {
+  Widget _buildJobSelector({Key? key}) {
     final selectedJobName = _selectedJob?.name ?? 'Select a job';
     final selectedEmployer = _selectedJob?.employer;
     return CollapsibleSection(
+      key: key,
       title: 'My Job: $selectedJobName',
       icon: Icons.work,
       initiallyExpanded: false,
