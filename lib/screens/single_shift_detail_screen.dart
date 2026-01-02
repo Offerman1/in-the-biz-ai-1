@@ -10,6 +10,7 @@ import '../models/shift.dart';
 import '../models/event_contact.dart';
 import '../models/shift_attachment.dart';
 import '../providers/shift_provider.dart';
+import '../providers/field_order_provider.dart';
 import '../screens/add_shift_screen.dart';
 import '../screens/event_contacts_screen.dart';
 import '../screens/add_edit_contact_screen.dart';
