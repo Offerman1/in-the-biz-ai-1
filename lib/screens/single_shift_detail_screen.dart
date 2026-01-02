@@ -1053,6 +1053,32 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
             child: _buildNotesCard(),
           ));
           break;
+
+        case 'photos_section':
+          if (shift.imageUrl != null && shift.imageUrl!.isNotEmpty) {
+            widgets.add(Padding(
+              key: ValueKey('photos_section'),
+              padding: const EdgeInsets.only(bottom: 20),
+              child: _buildPhotosCard(context),
+            ));
+          }
+          break;
+
+        case 'attachments_section':
+          widgets.add(Padding(
+            key: ValueKey('attachments_section'),
+            padding: const EdgeInsets.only(bottom: 20),
+            child: _buildAttachmentsCard(),
+          ));
+          break;
+
+        case 'event_team_section':
+          widgets.add(Padding(
+            key: ValueKey('event_team_section'),
+            padding: const EdgeInsets.only(bottom: 20),
+            child: _buildEventTeamSection(),
+          ));
+          break;
       }
     }
 
