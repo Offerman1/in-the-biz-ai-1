@@ -961,7 +961,8 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
                   const SizedBox(key: ValueKey('hero_spacer'), height: 20),
 
                   // Reorderable sections based on field order
-                  ..._buildOrderedSections(fieldOrderProvider.detailsFieldOrder),
+                  ..._buildOrderedSections(
+                      fieldOrderProvider.detailsFieldOrder),
 
                   // Photos (if any)
                   if (shift.imageUrl != null && shift.imageUrl!.isNotEmpty) ...[
@@ -976,7 +977,8 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
 
                   // Event Team (Contacts)
                   _buildEventTeamSection(key: const ValueKey('event_team')),
-                  const SizedBox(key: ValueKey('event_team_spacer'), height: 20),
+                  const SizedBox(
+                      key: ValueKey('event_team_spacer'), height: 20),
 
                   // Extra bottom padding for scrolling
                   const SizedBox(key: ValueKey('bottom_padding'), height: 60),
@@ -1022,15 +1024,15 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
     for (final sectionKey in fieldOrder) {
       switch (sectionKey) {
         case 'earnings_section':
-          widgets.add(_buildBreakdownCard(
-              key: const ValueKey('earnings_section')));
+          widgets.add(
+              _buildBreakdownCard(key: const ValueKey('earnings_section')));
           widgets.add(const SizedBox(
               key: ValueKey('earnings_section_spacer'), height: 20));
           break;
 
         case 'event_details_section':
-          widgets.add(_buildBEOSection(
-              key: const ValueKey('event_details_section')));
+          widgets.add(
+              _buildBEOSection(key: const ValueKey('event_details_section')));
           widgets.add(const SizedBox(
               key: ValueKey('event_details_section_spacer'), height: 20));
           break;
@@ -1045,13 +1047,13 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
         case 'time_section':
           widgets.add(_buildAdditionalEarningsCard(
               key: const ValueKey('time_section')));
-          widgets.add(const SizedBox(
-              key: ValueKey('time_section_spacer'), height: 20));
+          widgets.add(
+              const SizedBox(key: ValueKey('time_section_spacer'), height: 20));
           break;
 
         case 'documentation_section':
-          widgets.add(_buildNotesCard(
-              key: const ValueKey('documentation_section')));
+          widgets.add(
+              _buildNotesCard(key: const ValueKey('documentation_section')));
           widgets.add(const SizedBox(
               key: ValueKey('documentation_section_spacer'), height: 20));
           break;

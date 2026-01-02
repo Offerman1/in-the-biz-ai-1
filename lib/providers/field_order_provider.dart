@@ -37,7 +37,7 @@ class FieldOrderProvider extends ChangeNotifier {
   Future<void> _loadFieldOrders() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      
+
       // Load form field order
       final formOrderJson = prefs.getString('shift_form_field_order');
       if (formOrderJson != null) {

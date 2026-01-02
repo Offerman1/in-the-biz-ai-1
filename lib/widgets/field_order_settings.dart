@@ -48,8 +48,7 @@ class FieldOrderSettings extends StatelessWidget {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content:
-                              const Text('✓ Add/Edit Shift layout reset'),
+                          content: const Text('✓ Add/Edit Shift layout reset'),
                           backgroundColor: AppTheme.successColor,
                         ),
                       );
@@ -150,8 +149,8 @@ class FieldOrderSettings extends StatelessWidget {
                 Navigator.pop(dialogContext);
                 onConfirm();
               },
-              child: Text('Reset',
-                  style: TextStyle(color: AppTheme.dangerColor)),
+              child:
+                  Text('Reset', style: TextStyle(color: AppTheme.dangerColor)),
             ),
           ],
         );

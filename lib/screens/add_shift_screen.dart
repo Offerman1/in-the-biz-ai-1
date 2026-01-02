@@ -1317,8 +1317,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
                   // Photo Thumbnails (if any photos captured) - NOT reorderable
                   if (_capturedPhotos.isNotEmpty) ...[
                     _buildPhotoThumbnails(key: const ValueKey('photos')),
-                    const SizedBox(
-                        key: ValueKey('photos_spacer'), height: 16),
+                    const SizedBox(key: ValueKey('photos_spacer'), height: 16),
                   ],
 
                   // Hero Card - Income Summary (NOT reorderable)
@@ -1357,8 +1356,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
 
                   // Event Team Section (for existing shifts) - Could be reorderable
                   if (widget.existingShift != null) ...[
-                    _buildEventTeamSection(
-                        key: const ValueKey('event_team')),
+                    _buildEventTeamSection(key: const ValueKey('event_team')),
                     const SizedBox(
                         key: ValueKey('event_team_spacer'), height: 16),
                   ],
@@ -1479,14 +1477,14 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
       switch (sectionKey) {
         case 'time_section':
           widgets.add(_buildTimeSection(key: const ValueKey('time_section')));
-          widgets.add(const SizedBox(
-              key: ValueKey('time_section_spacer'), height: 16));
+          widgets.add(
+              const SizedBox(key: ValueKey('time_section_spacer'), height: 16));
           break;
 
         case 'earnings_section':
           if (_template!.showTips || _template!.showCommission) {
-            widgets.add(_buildEarningsSection(
-                key: const ValueKey('earnings_section')));
+            widgets.add(
+                _buildEarningsSection(key: const ValueKey('earnings_section')));
             widgets.add(const SizedBox(
                 key: ValueKey('earnings_section_spacer'), height: 16));
           }
