@@ -403,6 +403,9 @@ jobs:
         run: flutter pub get
 
       - name: Build web
+        run: flutter pub get
+
+      - name: Build web
         run: flutter build web --release --base-href /
 
       - name: Deploy to gh-pages
@@ -701,3 +704,11 @@ class InTheBizApp extends StatelessWidget {
 
 ### 4. Test on Multiple Devices
    Make sure to test your application on various devices, including mobile phones, tablets and desktop browsers, to ensure a consistent and user-friendly experience.
+
+---
+## 📅 CALENDAR SYNC ISSUES (NEW - January 2, 2026)
+
+When debugging calendar sync issues, remember:
+
+-   There may be differences in how calendar access is granted and handled between web and mobile platforms.
+-   Check the `_requestPermissions` method in the `calendar_sync_screen.dart` file for platform-specific logic.
