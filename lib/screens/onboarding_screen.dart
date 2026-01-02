@@ -461,46 +461,46 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-          // App Logo
-          Container(
-            width: 120,
-            height: 120,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(25),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(25),
-              child: ColorFiltered(
-                colorFilter: ColorFilter.mode(
-                  AppTheme.primaryGreen,
-                  BlendMode.modulate,
-                ),
-                child: Image.asset(
-                  'assets/icon/app_icon.png',
-                  fit: BoxFit.cover,
+            // App Logo
+            Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(25),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(25),
+                child: ColorFiltered(
+                  colorFilter: ColorFilter.mode(
+                    AppTheme.primaryGreen,
+                    BlendMode.modulate,
+                  ),
+                  child: Image.asset(
+                    'assets/icon/app_icon.png',
+                    fit: BoxFit.cover,
+                  ),
                 ),
               ),
             ),
-          ),
-          const SizedBox(height: 32),
-          Text(
-            'Welcome to\nIn The Biz',
-            style:
-                AppTheme.headlineLarge.copyWith(color: AppTheme.primaryGreen),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Your AI-powered financial companion for the service industry',
-            style: AppTheme.bodyLarge.copyWith(color: AppTheme.textSecondary),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 48),
-          _buildFeatureItem(Icons.camera_alt, 'Scan receipts & BEOs'),
-          const SizedBox(height: 16),
-          _buildFeatureItem(Icons.chat_bubble, 'AI assistant for insights'),
-          const SizedBox(height: 16),
-          _buildFeatureItem(Icons.trending_up, 'Track income & goals'),
+            const SizedBox(height: 32),
+            Text(
+              'Welcome to\nIn The Biz',
+              style:
+                  AppTheme.headlineLarge.copyWith(color: AppTheme.primaryGreen),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Your AI-powered financial companion for the service industry',
+              style: AppTheme.bodyLarge.copyWith(color: AppTheme.textSecondary),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 48),
+            _buildFeatureItem(Icons.camera_alt, 'Scan receipts & BEOs'),
+            const SizedBox(height: 16),
+            _buildFeatureItem(Icons.chat_bubble, 'AI assistant for insights'),
+            const SizedBox(height: 16),
+            _buildFeatureItem(Icons.trending_up, 'Track income & goals'),
           ],
         ),
       ),
@@ -525,67 +525,67 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-          Icon(Icons.cloud_download, size: 80, color: AppTheme.primaryGreen),
-          const SizedBox(height: 32),
-          Text(
-            'Import Your Work History',
-            style:
-                AppTheme.headlineLarge.copyWith(color: AppTheme.primaryGreen),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Connect your calendar or import a file to get started quickly',
-            style: AppTheme.bodyLarge.copyWith(color: AppTheme.textSecondary),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 48),
+            Icon(Icons.cloud_download, size: 80, color: AppTheme.primaryGreen),
+            const SizedBox(height: 32),
+            Text(
+              'Import Your Work History',
+              style:
+                  AppTheme.headlineLarge.copyWith(color: AppTheme.primaryGreen),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Connect your calendar or import a file to get started quickly',
+              style: AppTheme.bodyLarge.copyWith(color: AppTheme.textSecondary),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 48),
 
-          // Calendar button
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              icon: const Icon(Icons.calendar_today, size: 24),
-              label: const Text('Connect Calendar',
-                  style: TextStyle(fontSize: 16)),
-              onPressed: _startCalendarImport,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primaryGreen,
-                foregroundColor: Colors.black,
-                padding: const EdgeInsets.symmetric(vertical: 16),
+            // Calendar button
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                icon: const Icon(Icons.calendar_today, size: 24),
+                label: const Text('Connect Calendar',
+                    style: TextStyle(fontSize: 16)),
+                onPressed: _startCalendarImport,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primaryGreen,
+                  foregroundColor: Colors.black,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
               ),
             ),
-          ),
 
-          const SizedBox(height: 16),
+            const SizedBox(height: 16),
 
-          // CSV button
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              icon: const Icon(Icons.upload_file, size: 24),
-              label:
-                  const Text('Import CSV File', style: TextStyle(fontSize: 16)),
-              onPressed: _startCsvImport,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.cardBackground,
-                foregroundColor: AppTheme.primaryGreen,
-                padding: const EdgeInsets.symmetric(vertical: 16),
+            // CSV button
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                icon: const Icon(Icons.upload_file, size: 24),
+                label: const Text('Import CSV File',
+                    style: TextStyle(fontSize: 16)),
+                onPressed: _startCsvImport,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.cardBackground,
+                  foregroundColor: AppTheme.primaryGreen,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
               ),
             ),
-          ),
 
-          const SizedBox(height: 24),
+            const SizedBox(height: 24),
 
-          TextButton(
-            onPressed: _skipImport,
-            child: Text(
-              'Skip - I\'ll add shifts manually',
-              style: AppTheme.bodyMedium.copyWith(color: AppTheme.textMuted),
+            TextButton(
+              onPressed: _skipImport,
+              child: Text(
+                'Skip - I\'ll add shifts manually',
+                style: AppTheme.bodyMedium.copyWith(color: AppTheme.textMuted),
+              ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
       ),
     );
   }
