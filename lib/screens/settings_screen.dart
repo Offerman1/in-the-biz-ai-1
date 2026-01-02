@@ -2131,7 +2131,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     style: AppTheme.bodyMedium
                         .copyWith(color: AppTheme.accentRed)),
                 subtitle: Text(
-                  'Remove all synced shifts from Google Calendar',
+                  kIsWeb
+                      ? 'Remove all synced shifts from Google Calendar'
+                      : 'Remove all synced shifts from your calendar',
                   style:
                       AppTheme.labelSmall.copyWith(color: AppTheme.textMuted),
                 ),
