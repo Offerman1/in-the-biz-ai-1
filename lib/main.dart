@@ -9,6 +9,8 @@ import 'package:in_the_biz_ai/providers/theme_provider.dart';
 import 'package:in_the_biz_ai/providers/field_order_provider.dart';
 import 'package:in_the_biz_ai/services/database_service.dart';
 import 'package:in_the_biz_ai/services/notification_service.dart';
+import 'package:in_the_biz_ai/services/ad_service.dart';
+import 'package:in_the_biz_ai/services/subscription_service.dart';
 import 'package:in_the_biz_ai/utils/run_migrations.dart';
 
 void main() async {
@@ -24,6 +26,12 @@ void main() async {
   // Initialize notifications
   await NotificationService().initialize();
 
+  // Initialize AdMob
+  await AdService().initialize();
+
+  // Initialize Subscription Service
+  await SubscriptionService().initialize();
+
   // Run database migrations
   await runMigrations();
 
@@ -33,6 +41,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => ShiftProvider()),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => FieldOrderProvider()),
+        ChangeNotifierProvider(create: (_) => SubscriptionService()),
       ],
       child: const InTheBizApp(),
     ),
