@@ -19,31 +19,10 @@ class GoogleCalendarService {
       return false; // Only works on web
     }
 
-    try {
-      final googleSignIn = GoogleSignIn.instance;
-
-      // Check if already signed in
-      final account = googleSignIn.currentUser;
-      if (account == null) {
-        return false;
-      }
-
-      // Get authenticated HTTP client
-      final httpClient = (await account.authentication).then((auth) {
-        // This won't work - we need extension package
-        return null;
-      });
-      if (httpClient == null) {
-        return false;
-      }
-
-      _calendarApi = calendar.CalendarApi(httpClient);
-      return true;
-    } catch (e) {
-      print('Error initializing Google Calendar API: $e');
-      return false;
-    }
-  }
+    // TODO: Implement proper Google Calendar API authentication
+    // Requires extension_google_sign_in_as_googleapis_auth package
+    print('Google Calendar API not yet implemented for web');
+    return false;
 
   /// Request calendar access (re-authenticate with calendar scopes)
   Future<bool> requestCalendarAccess() async {
