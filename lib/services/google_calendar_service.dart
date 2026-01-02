@@ -241,8 +241,13 @@ class GoogleCalendarService {
     try {
       // Get job name
       final jobs = await _db.getJobs();
-      final job = jobs.firstWhere((j) => j.id == shift.jobId,
-          orElse: () => Job(id: '', name: 'Work', color: ''));
+      Job? job;
+      try {
+        final jobMap = jobs.firstWhere((j) => j['id'] == shift.jobId);
+        job = Job.fromMap(jobMap);
+      } catch (e) {
+        job = Job(id: '', name: 'Work', color: '');
+      }
       final jobName = job.name;
 
       // Build event
