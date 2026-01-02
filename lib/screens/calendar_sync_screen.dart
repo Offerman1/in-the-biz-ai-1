@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:device_calendar/device_calendar.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -66,6 +67,30 @@ class _CalendarSyncScreenState extends State<CalendarSyncScreen> {
   }
 
   Future<void> _requestPermissions() async {
+    // Calendar sync is not supported on web
+    if (kIsWeb) {
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            backgroundColor: AppTheme.cardBackground,
+            title: Text('Not Available on Web', style: AppTheme.titleLarge),
+            content: Text(
+              'Calendar sync is only available on the mobile app. Please use the In The Biz mobile app to sync your calendar.',
+              style: AppTheme.bodyMedium,
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text('OK', style: TextStyle(color: AppTheme.primaryGreen)),
+              ),
+            ],
+          ),
+        );
+      }
+      return;
+    }
+
     // First try using permission_handler for a proper system dialog
     var status = await Permission.calendar.request();
 
