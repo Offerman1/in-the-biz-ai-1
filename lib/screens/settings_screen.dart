@@ -51,6 +51,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _isJobsSectionExpanded = false; // MY JOBS collapsed by default
   bool _isTaxSectionExpanded = false; // TAX ESTIMATION collapsed by default
   bool _isAutoSyncEnabled = false; // Calendar auto-sync toggle
+  bool _isQuickBooksConnected = false; // QuickBooks connection status
+  String? _qbCompanyName; // QuickBooks company name
 
   final List<String> _states = [
     'AL',
@@ -2438,6 +2440,380 @@ class _SettingsScreenState extends State<SettingsScreen> {
         Navigator.pop(context); // Close loading dialog
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error removing events: $e')),
+        );
+      }
+    }
+  }
+
+  Widget _buildQuickBooksSection() {
+    return FutureBuilder<bool>(
+      future: QuickBooksService.isConnected(),
+      builder: (context, snapshot) {
+        final isConnected = snapshot.data ?? false;
+
+        return Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: AppTheme.cardBackground,
+            borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: isConnected
+                          ? AppTheme.primaryGreen.withOpacity(0.15)
+                          : AppTheme.accentBlue.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.account_balance,
+                      color: isConnected
+                          ? AppTheme.primaryGreen
+                          : AppTheme.accentBlue,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'QuickBooks Integration',
+                          style: AppTheme.bodyLarge.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          isConnected
+                              ? '✓ Connected'
+                              : 'Export invoices & shifts',
+                          style: AppTheme.bodySmall.copyWith(
+                            color: isConnected
+                                ? AppTheme.primaryGreen
+                                : AppTheme.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (isConnected)
+                    IconButton(
+                      icon: Icon(
+                        Icons.sync,
+                        color: AppTheme.primaryGreen,
+                      ),
+                      onPressed: () => _testQuickBooksConnection(),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              if (isConnected) ..[
+                // Show company info when connected
+                FutureBuilder<Map<String, dynamic>?>(
+                  future: QuickBooksService.getCompanyInfo(),
+                  builder: (context, companySnapshot) {
+                    if (companySnapshot.hasData && companySnapshot.data != null) {
+                      final company = companySnapshot.data!;
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.business,
+                              size: 16,
+                              color: AppTheme.textSecondary,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              company['CompanyName'] ?? 'Unknown Company',
+                              style: AppTheme.bodyMedium,
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
+                ),
+                // Disconnect button
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () => _disconnectQuickBooks(),
+                    icon: const Icon(Icons.link_off),
+                    label: const Text('Disconnect'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppTheme.accentRed,
+                      side: BorderSide(color: AppTheme.accentRed),
+                    ),
+                  ),
+                ),
+              ] else ..[
+                // Connect button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () => _connectQuickBooks(),
+                    icon: const Icon(Icons.link),
+                    label: const Text('Connect to QuickBooks'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.accentBlue,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  '• Auto-export invoices\n'
+                  '• Sync income data\n'
+                  '• Smart category suggestions\n'
+                  '• Tax prep ready',
+                  style: AppTheme.bodySmall.copyWith(
+                    color: AppTheme.textSecondary,
+                    height: 1.6,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _connectQuickBooks() async {
+    // Open QuickBooks OAuth URL
+    final authUrl = QuickBooksService.getAuthorizationUrl();
+
+    if (mounted) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          backgroundColor: AppTheme.cardBackground,
+          title: Text('Connect QuickBooks', style: AppTheme.titleMedium),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'You will be redirected to QuickBooks to authorize In The Biz AI.',
+                style: AppTheme.bodyMedium,
+              ),
+              const SizedBox(height: 16),
+              SelectableText(
+                authUrl,
+                style: AppTheme.bodySmall.copyWith(
+                  color: AppTheme.accentBlue,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'After authorizing, you\'ll receive a code. Enter it in the next step.',
+                style: AppTheme.bodySmall.copyWith(
+                  color: AppTheme.textSecondary,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Cancel', style: TextStyle(color: AppTheme.textSecondary)),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _showAuthCodeDialog();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryGreen,
+              ),
+              child: const Text('Continue'),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
+  Future<void> _showAuthCodeDialog() async {
+    final codeController = TextEditingController();
+    final realmIdController = TextEditingController();
+
+    if (!mounted) return;
+
+    return showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.cardBackground,
+        title: Text('Enter Authorization Code', style: AppTheme.titleMedium),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: codeController,
+              decoration: InputDecoration(
+                labelText: 'Authorization Code',
+                hintText: 'Paste code from QuickBooks',
+                border: OutlineInputBorder(),
+              ),
+              style: AppTheme.bodyMedium,
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: realmIdController,
+              decoration: InputDecoration(
+                labelText: 'Realm ID (Company ID)',
+                hintText: 'Found in URL after authorization',
+                border: OutlineInputBorder(),
+              ),
+              style: AppTheme.bodyMedium,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel', style: TextStyle(color: AppTheme.textSecondary)),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final code = codeController.text.trim();
+              final realmId = realmIdController.text.trim();
+
+              if (code.isEmpty || realmId.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Please enter both values')),
+                );
+                return;
+              }
+
+              Navigator.pop(context);
+
+              // Show loading
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (context) => Center(
+                  child: CircularProgressIndicator(
+                    color: AppTheme.primaryGreen,
+                  ),
+                ),
+              );
+
+              final success = await QuickBooksService.exchangeCodeForToken(
+                code,
+                realmId,
+              );
+
+              if (mounted) {
+                Navigator.pop(context); // Close loading
+
+                if (success) {
+                  setState(() {
+                    _isQuickBooksConnected = true;
+                  });
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: const Text('✓ Connected to QuickBooks'),
+                      backgroundColor: AppTheme.primaryGreen,
+                    ),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: const Text('Connection failed. Check your code and try again.'),
+                      backgroundColor: AppTheme.accentRed,
+                    ),
+                  );
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primaryGreen,
+            ),
+            child: const Text('Connect'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _testQuickBooksConnection() async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => Center(
+        child: CircularProgressIndicator(color: AppTheme.primaryGreen),
+      ),
+    );
+
+    final companyInfo = await QuickBooksService.getCompanyInfo();
+
+    if (mounted) {
+      Navigator.pop(context); // Close loading
+
+      if (companyInfo != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('✓ Connected to ${companyInfo['CompanyName']}'),
+            backgroundColor: AppTheme.primaryGreen,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Connection test failed'),
+            backgroundColor: AppTheme.accentRed,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _disconnectQuickBooks() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.cardBackground,
+        title: Text('Disconnect QuickBooks?', style: AppTheme.titleMedium),
+        content: Text(
+          'You can reconnect anytime.',
+          style: AppTheme.bodyMedium,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.accentRed,
+            ),
+            child: const Text('Disconnect'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      await QuickBooksService.disconnect();
+      if (mounted) {
+        setState(() {
+          _isQuickBooksConnected = false;
+          _qbCompanyName = null;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Disconnected from QuickBooks')),
         );
       }
     }
