@@ -2027,7 +2027,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 title:
                     Text('Choose Shifts to Sync', style: AppTheme.bodyMedium),
                 subtitle: Text(
-                  'Select specific shifts to export to Google Calendar',
+                  kIsWeb
+                      ? 'Select specific shifts to export to Google Calendar'
+                      : 'Select specific shifts to export to your calendar',
                   style:
                       AppTheme.labelSmall.copyWith(color: AppTheme.textMuted),
                 ),
@@ -2048,7 +2050,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 title: Text('Sync All Shifts Now', style: AppTheme.bodyMedium),
                 subtitle: Text(
-                  'Export all unsynced shifts to Google Calendar',
+                  kIsWeb
+                      ? 'Export all unsynced shifts to Google Calendar'
+                      : 'Export all unsynced shifts to your calendar',
                   style:
                       AppTheme.labelSmall.copyWith(color: AppTheme.textMuted),
                 ),
