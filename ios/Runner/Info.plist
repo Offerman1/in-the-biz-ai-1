@@ -45,6 +45,9 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<!-- AdMob App ID (Test ID) -->
+	<key>GADApplicationIdentifier</key>
+	<string>ca-app-pub-3940256099942544~1458002511</string>
 	<!-- Calendar Access Permission -->
 	<key>NSCalendarsUsageDescription</key>
 	<string>We need calendar access to import your work schedule from Hot Schedules, 7shifts, and other scheduling apps.</string>
