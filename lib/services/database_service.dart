@@ -52,10 +52,10 @@ class DatabaseService {
         .single();
 
     final savedShift = Shift.fromSupabase(response);
-    
+
     // Auto-export to calendar if enabled
     await _autoExportShift(savedShift);
-    
+
     return savedShift;
   }
 
@@ -105,7 +105,7 @@ class DatabaseService {
       'event_cost': shift.eventCost,
       'updated_at': DateTime.now().toIso8601String(),
     }).eq('id', shift.id);
-    
+
     // Auto-export to calendar if enabled and shift is already synced
     await _autoExportShift(shift);
   }
@@ -122,24 +122,27 @@ class DatabaseService {
             .eq('id', shiftId)
             .eq('user_id', userId)
             .maybeSingle();
-        
+
         if (response != null) {
           final shift = Shift.fromSupabase(response);
-          
+
           // Delete calendar event if exists
           if (shift.calendarEventId != null) {
             final prefs = await SharedPreferences.getInstance();
             final autoSync = prefs.getBool('auto_sync_calendar') ?? false;
-            
+
             if (autoSync) {
               try {
                 if (kIsWeb) {
                   final googleCalendar = GoogleCalendarService();
-                  await googleCalendar.deleteCalendarEvent(shift.calendarEventId!);
+                  await googleCalendar
+                      .deleteCalendarEvent(shift.calendarEventId!);
                 } else {
                   final calendarSync = CalendarSyncService();
-                  final calendarId = prefs.getString('selected_calendar_id') ?? 'primary';
-                  await calendarSync.deleteCalendarEvent(calendarId, shift.calendarEventId!);
+                  final calendarId =
+                      prefs.getString('selected_calendar_id') ?? 'primary';
+                  await calendarSync.deleteCalendarEvent(
+                      calendarId, shift.calendarEventId!);
                 }
               } catch (e) {
                 print('Failed to delete calendar event: $e');
@@ -152,7 +155,7 @@ class DatabaseService {
         print('Failed to fetch shift for calendar cleanup: $e');
       }
     }
-    
+
     // Delete the shift
     await _supabase.from('shifts').delete().eq('id', shiftId);
   }
@@ -1070,9 +1073,9 @@ class DatabaseService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final autoSync = prefs.getBool('auto_sync_calendar') ?? false;
-      
+
       if (!autoSync) return; // Auto-sync disabled
-      
+
       // Export to calendar based on platform
       String? eventId;
       if (kIsWeb) {
@@ -1081,9 +1084,10 @@ class DatabaseService {
       } else {
         final calendarSync = CalendarSyncService();
         final calendarId = prefs.getString('selected_calendar_id');
-        eventId = await calendarSync.exportShiftToCalendar(shift, calendarId: calendarId);
+        eventId = await calendarSync.exportShiftToCalendar(shift,
+            calendarId: calendarId);
       }
-      
+
       // If we got an event ID and it's different, update the shift
       if (eventId != null && shift.calendarEventId != eventId) {
         await _supabase.from('shifts').update({
