@@ -1476,13 +1476,20 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
 
       switch (sectionKey) {
         case 'time_section':
-          widgets.add(_buildTimeSection(key: ValueKey('time_section')));
+          widgets.add(Padding(
+            key: ValueKey('time_section'),
+            padding: const EdgeInsets.only(bottom: 16),
+            child: _buildTimeSection(),
+          ));
           break;
 
         case 'earnings_section':
           if (_template!.showTips || _template!.showCommission) {
-            widgets
-                .add(_buildEarningsSection(key: ValueKey('earnings_section')));
+            widgets.add(Padding(
+              key: ValueKey('earnings_section'),
+              padding: const EdgeInsets.only(bottom: 16),
+              child: _buildEarningsSection(),
+            ));
           }
           break;
 
@@ -1490,8 +1497,11 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
           if (_template!.showEventName ||
               _template!.showHostess ||
               _template!.showGuestCount) {
-            widgets.add(_buildEventDetailsSection(
-                key: ValueKey('event_details_section')));
+            widgets.add(Padding(
+              key: ValueKey('event_details_section'),
+              padding: const EdgeInsets.only(bottom: 16),
+              child: _buildEventDetailsSection(),
+            ));
           }
           break;
 
@@ -1500,15 +1510,21 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
               _template!.showClientName ||
               _template!.showProjectName ||
               _template!.showMileage) {
-            widgets.add(_buildWorkDetailsSection(
-                key: ValueKey('work_details_section')));
+            widgets.add(Padding(
+              key: ValueKey('work_details_section'),
+              padding: const EdgeInsets.only(bottom: 16),
+              child: _buildWorkDetailsSection(),
+            ));
           }
           break;
 
         case 'documentation_section':
           if (_template!.showNotes || _template!.showPhotos) {
-            widgets.add(_buildDocumentationSection(
-                key: ValueKey('documentation_section')));
+            widgets.add(Padding(
+              key: ValueKey('documentation_section'),
+              padding: const EdgeInsets.only(bottom: 16),
+              child: _buildDocumentationSection(),
+            ));
           }
           break;
       }
