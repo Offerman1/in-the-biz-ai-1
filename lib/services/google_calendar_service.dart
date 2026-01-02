@@ -55,7 +55,7 @@ class GoogleCalendarService {
     }
 
     try {
-      final googleSignIn = GoogleSignIn.standard(
+      final googleSignIn = GoogleSignIn(
         scopes: AuthService.calendarScopes,
       );
 
