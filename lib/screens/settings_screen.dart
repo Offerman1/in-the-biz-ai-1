@@ -331,6 +331,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
             : ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
+                  // Pro Banner
+                  Consumer<SubscriptionService>(
+                    builder: (context, subscriptionService, child) {
+                      if (subscriptionService.isPro)
+                        return const SizedBox.shrink();
+                      return Column(
+                        children: [
+                          _buildProBanner(),
+                          const SizedBox(height: 24),
+                        ],
+                      );
+                    },
+                  ),
+
                   // Jobs Section - Collapsible
                   _buildSectionHeader('MY JOBS'),
                   const SizedBox(height: 12),
@@ -478,6 +492,58 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
       ), // Close NavigationWrapper child Scaffold
     ); // Close NavigationWrapper
+  }
+
+  Widget _buildProBanner() {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const PaywallScreen()),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [AppTheme.accentYellow, AppTheme.accentOrange],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.star, color: Colors.white, size: 32),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Upgrade to Pro',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Remove ads, unlimited AI, and more!',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios, color: Colors.white, size: 16),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildSectionHeader(String title, {VoidCallback? onAdd}) {
