@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:extension_google_sign_in_as_googleapis_auth/extension_google_sign_in_as_googleapis_auth.dart';
 import 'package:googleapis/calendar/v3.dart' as calendar;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/shift.dart';
@@ -19,10 +20,30 @@ class GoogleCalendarService {
       return false; // Only works on web
     }
 
-    // TODO: Implement proper Google Calendar API authentication
-    // Requires extension_google_sign_in_as_googleapis_auth package
-    print('Google Calendar API not yet implemented for web');
-    return false;
+    try {
+      final googleSignIn = GoogleSignIn(
+        scopes: AuthService.calendarScopes,
+      );
+
+      // Check if already signed in
+      final account = await googleSignIn.signInSilently();
+      if (account == null) {
+        return false;
+      }
+
+      // Get authenticated HTTP client using extension method
+      final httpClient = await googleSignIn.authenticatedClient();
+      if (httpClient == null) {
+        return false;
+      }
+
+      _calendarApi = calendar.CalendarApi(httpClient);
+      return true;
+    } catch (e) {
+      print('Error initializing Google Calendar API: $e');
+      return false;
+    }
+  }
 
   /// Request calendar access (re-authenticate with calendar scopes)
   Future<bool> requestCalendarAccess() async {
@@ -31,18 +52,18 @@ class GoogleCalendarService {
     }
 
     try {
-      final googleSignIn = GoogleSignIn.standard(
+      final googleSignIn = GoogleSignIn(
         scopes: AuthService.calendarScopes,
       );
 
       // Sign in to request calendar permissions
-      final account = await googleSignIn.authenticate();
+      final account = await googleSignIn.signIn();
       if (account == null) {
         return false;
       }
 
-      // Get authenticated HTTP client
-      final httpClient = await account.authenticatedClient();
+      // Get authenticated HTTP client using extension method
+      final httpClient = await googleSignIn.authenticatedClient();
       if (httpClient == null) {
         return false;
       }
