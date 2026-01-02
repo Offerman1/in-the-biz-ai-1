@@ -13,6 +13,15 @@ import 'google_calendar_service.dart';
 class DatabaseService {
   static SupabaseClient get _supabase => Supabase.instance.client;
 
+  /// Helper to format DateTime to YYYY-MM-DD in local timezone
+  static String _formatDateLocal(DateTime date) {
+    // Format in local time, not UTC
+    final year = date.year.toString().padLeft(4, '0');
+    final month = date.month.toString().padLeft(2, '0');
+    final day = date.day.toString().padLeft(2, '0');
+    return '$year-$month-$day';
+  }
+
   // ============================================
   // SHIFTS
   // ============================================
@@ -26,7 +35,7 @@ class DatabaseService {
         .from('shifts')
         .insert({
           'user_id': userId,
-          'date': shift.date.toIso8601String().split('T')[0],
+          'date': _formatDateLocal(shift.date),
           'cash_tips': shift.cashTips,
           'credit_tips': shift.creditTips,
           'hourly_rate': shift.hourlyRate,
@@ -77,7 +86,7 @@ class DatabaseService {
   /// Update a shift
   Future<void> updateShift(Shift shift) async {
     await _supabase.from('shifts').update({
-      'date': shift.date.toIso8601String().split('T')[0],
+      'date': _formatDateLocal(shift.date),
       'cash_tips': shift.cashTips,
       'credit_tips': shift.creditTips,
       'hourly_rate': shift.hourlyRate,
@@ -169,8 +178,8 @@ class DatabaseService {
         .from('shifts')
         .select()
         .eq('user_id', userId)
-        .gte('date', start.toIso8601String().split('T')[0])
-        .lte('date', end.toIso8601String().split('T')[0])
+        .gte('date', _formatDateLocal(start))
+        .lte('date', _formatDateLocal(end))
         .order('date', ascending: false);
 
     return (response as List).map((e) => Shift.fromSupabase(e)).toList();
@@ -410,8 +419,8 @@ class DatabaseService {
           'type': type,
           'target_amount': targetAmount,
           'target_hours': targetHours,
-          'start_date': startDate?.toIso8601String().split('T')[0],
-          'end_date': endDate?.toIso8601String().split('T')[0],
+          'start_date': startDate != null ? _formatDateLocal(startDate) : null,
+          'end_date': endDate != null ? _formatDateLocal(endDate) : null,
         })
         .select()
         .single();

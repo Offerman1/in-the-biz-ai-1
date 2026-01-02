@@ -2085,8 +2085,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   if (result == true && mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content:
-                            const Text('Events removed from Google Calendar'),
+                        content: Text(kIsWeb
+                            ? 'Events removed from Google Calendar'
+                            : 'Events removed from calendar'),
                         backgroundColor: AppTheme.accentOrange,
                       ),
                     );
@@ -2105,7 +2106,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 title:
                     Text('Unsync Specific Events', style: AppTheme.bodyMedium),
                 subtitle: Text(
-                  'Choose synced shifts to remove from calendar',
+                  kIsWeb
+                      ? 'Choose synced shifts to remove from Google Calendar'
+                      : 'Choose synced shifts to remove from your calendar',
                   style:
                       AppTheme.labelSmall.copyWith(color: AppTheme.textMuted),
                 ),
