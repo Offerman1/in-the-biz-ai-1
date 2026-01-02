@@ -238,93 +238,94 @@ class _EventContactsScreenState extends State<EventContactsScreen> {
         child: Column(
           children: [
             // Search bar
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: TextField(
-              controller: _searchController,
-              onChanged: (_) => _applyFilters(),
-              style: TextStyle(color: AppTheme.textPrimary),
-              decoration: InputDecoration(
-                hintText: 'Search contacts...',
-                hintStyle: TextStyle(color: AppTheme.textMuted),
-                prefixIcon: Icon(Icons.search, color: AppTheme.textMuted),
-                suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(
-                        icon: Icon(Icons.clear, color: AppTheme.textMuted),
-                        onPressed: () {
-                          _searchController.clear();
-                          _applyFilters();
-                        },
-                      )
-                    : null,
-                filled: true,
-                fillColor: AppTheme.cardBackground,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: TextField(
+                controller: _searchController,
+                onChanged: (_) => _applyFilters(),
+                style: TextStyle(color: AppTheme.textPrimary),
+                decoration: InputDecoration(
+                  hintText: 'Search contacts...',
+                  hintStyle: TextStyle(color: AppTheme.textMuted),
+                  prefixIcon: Icon(Icons.search, color: AppTheme.textMuted),
+                  suffixIcon: _searchController.text.isNotEmpty
+                      ? IconButton(
+                          icon: Icon(Icons.clear, color: AppTheme.textMuted),
+                          onPressed: () {
+                            _searchController.clear();
+                            _applyFilters();
+                          },
+                        )
+                      : null,
+                  filled: true,
+                  fillColor: AppTheme.cardBackground,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
                 ),
               ),
             ),
-          ),
 
-          // Category filter chips
-          if (widget.shiftId == null)
-            SizedBox(
-              height: 44,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                itemCount: _categories.length,
-                itemBuilder: (context, index) {
-                  final category = _categories[index];
-                  final isSelected = _selectedCategory == category;
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
-                    child: FilterChip(
-                      label: Text(category),
-                      selected: isSelected,
-                      onSelected: (selected) {
-                        setState(() {
-                          _selectedCategory = selected ? category : 'All';
-                          _applyFilters();
-                        });
-                      },
-                      selectedColor: AppTheme.primaryGreen,
-                      backgroundColor: AppTheme.cardBackground,
-                      labelStyle: TextStyle(
-                        color:
-                            isSelected ? Colors.black : AppTheme.textSecondary,
-                        fontWeight:
-                            isSelected ? FontWeight.w600 : FontWeight.normal,
-                      ),
-                      checkmarkColor: Colors.black,
-                    ),
-                  );
-                },
-              ),
-            ),
-
-          const SizedBox(height: 8),
-
-          // Contacts list
-          Expanded(
-            child: _isLoading
-                ? Center(
-                    child:
-                        CircularProgressIndicator(color: AppTheme.primaryGreen),
-                  )
-                : _filteredContacts.isEmpty
-                    ? _buildEmptyState()
-                    : ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        itemCount: _filteredContacts.length,
-                        itemBuilder: (context, index) {
-                          return _buildContactCard(_filteredContacts[index]);
+            // Category filter chips
+            if (widget.shiftId == null)
+              SizedBox(
+                height: 44,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  itemCount: _categories.length,
+                  itemBuilder: (context, index) {
+                    final category = _categories[index];
+                    final isSelected = _selectedCategory == category;
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: FilterChip(
+                        label: Text(category),
+                        selected: isSelected,
+                        onSelected: (selected) {
+                          setState(() {
+                            _selectedCategory = selected ? category : 'All';
+                            _applyFilters();
+                          });
                         },
+                        selectedColor: AppTheme.primaryGreen,
+                        backgroundColor: AppTheme.cardBackground,
+                        labelStyle: TextStyle(
+                          color: isSelected
+                              ? Colors.black
+                              : AppTheme.textSecondary,
+                          fontWeight:
+                              isSelected ? FontWeight.w600 : FontWeight.normal,
+                        ),
+                        checkmarkColor: Colors.black,
                       ),
-          ),
-        ],
-      ),
+                    );
+                  },
+                ),
+              ),
+
+            const SizedBox(height: 8),
+
+            // Contacts list
+            Expanded(
+              child: _isLoading
+                  ? Center(
+                      child: CircularProgressIndicator(
+                          color: AppTheme.primaryGreen),
+                    )
+                  : _filteredContacts.isEmpty
+                      ? _buildEmptyState()
+                      : ListView.builder(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          itemCount: _filteredContacts.length,
+                          itemBuilder: (context, index) {
+                            return _buildContactCard(_filteredContacts[index]);
+                          },
+                        ),
+            ),
+          ],
+        ),
       ),
     );
   }
