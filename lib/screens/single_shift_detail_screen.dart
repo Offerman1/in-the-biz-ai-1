@@ -970,21 +970,6 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
                           fieldOrderProvider.detailsFieldOrder),
                     ),
 
-                    // Photos (if any)
-                    if (shift.imageUrl != null &&
-                        shift.imageUrl!.isNotEmpty) ...[
-                      _buildPhotosCard(context),
-                      const SizedBox(height: 20),
-                    ],
-
-                    // File Attachments
-                    _buildAttachmentsCard(),
-                    const SizedBox(height: 20),
-
-                    // Event Team (Contacts)
-                    _buildEventTeamSection(),
-                    const SizedBox(height: 20),
-
                     // Extra bottom padding for scrolling
                     const SizedBox(height: 60),
                   ],
