@@ -4639,6 +4639,28 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
   Future<void> _pickAndUploadFile() async {
     if (widget.existingShift == null) return;
 
+    // Check Pro status and limits
+    final subscriptionService =
+        Provider.of<SubscriptionService>(context, listen: false);
+    if (!subscriptionService.isPro && _attachments.length >= 5) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content:
+              const Text('Free limit reached (5 attachments). Upgrade to Pro!'),
+          action: SnackBarAction(
+            label: 'Upgrade',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const PaywallScreen()),
+              );
+            },
+          ),
+        ),
+      );
+      return;
+    }
+
     try {
       // Pick a file of any type
       final result = await FilePicker.platform.pickFiles(
