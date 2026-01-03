@@ -48,8 +48,7 @@ class _LoginScreenState extends State<LoginScreen> {
       await GoogleSignIn.instance.initialize(
         clientId:
             '30441285456-pkvqkagh3fcv0b6n71t5tpnuda94l8d5.apps.googleusercontent.com',
-        serverClientId:
-            '30441285456-pkvqkagh3fcv0b6n71t5tpnuda94l8d5.apps.googleusercontent.com',
+        // serverClientId is not supported on web - only works on mobile
         nonce: _currentNonce, // Send RAW nonce to Google, it will hash it
       );
 

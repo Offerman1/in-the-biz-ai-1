@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -28,11 +29,15 @@ void main() async {
   // Initialize notifications
   await NotificationService().initialize();
 
-  // Initialize AdMob
-  await AdService().initialize();
+  // Initialize AdMob (mobile only)
+  if (!kIsWeb) {
+    await AdService().initialize();
+  }
 
-  // Initialize Subscription Service
-  await SubscriptionService().initialize();
+  // Initialize Subscription Service (mobile only)
+  if (!kIsWeb) {
+    await SubscriptionService().initialize();
+  }
 
   // Run database migrations
   await runMigrations();
@@ -43,7 +48,9 @@ void main() async {
         ChangeNotifierProvider(create: (_) => ShiftProvider()),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => FieldOrderProvider()),
-        ChangeNotifierProvider(create: (_) => SubscriptionService()),
+        // Only provide SubscriptionService on mobile
+        if (!kIsWeb)
+          ChangeNotifierProvider(create: (_) => SubscriptionService()),
       ],
       child: const InTheBizApp(),
     ),
