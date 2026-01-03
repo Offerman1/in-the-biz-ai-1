@@ -15,14 +15,6 @@ class AuthService {
   static const String _iosClientId =
       '30441285456-9ea4rfqkepbjigq8jku8qkamr8abap3r.apps.googleusercontent.com';
 
-  // OAuth scopes for Google Calendar access
-  static const List<String> calendarScopes = [
-    'email',
-    'profile',
-    'https://www.googleapis.com/auth/calendar.readonly',
-    'https://www.googleapis.com/auth/calendar.events',
-  ];
-
   // Get current user
   static User? get currentUser => _supabase.auth.currentUser;
 
@@ -52,7 +44,7 @@ class AuthService {
 
       await GoogleSignIn.instance.initialize(
         clientId: clientId,
-        // serverClientId is not supported on mobile - only use clientId for iOS
+        serverClientId: _webClientId,
       );
 
       final GoogleSignInAccount? googleUser =
