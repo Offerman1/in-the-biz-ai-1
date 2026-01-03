@@ -68,7 +68,8 @@ class SubscriptionService extends ChangeNotifier {
     try {
       final purchaseResult = await Purchases.purchasePackage(package);
       _customerInfo = purchaseResult.customerInfo;
-      _isPro = purchaseResult.customerInfo.entitlements.all['pro']?.isActive ?? false;
+      _isPro = purchaseResult.customerInfo.entitlements.all['pro']?.isActive ??
+          false;
       notifyListeners();
       return _isPro;
     } on PlatformException catch (e) {
