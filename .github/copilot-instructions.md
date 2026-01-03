@@ -25,6 +25,7 @@ description: AI rules derived by SpecStory from the project AI interaction histo
 - **Implementation guides:** Add to relevant phase docs in `docs/phases/`
 - **New features:** Document in `docs/FEATURE_BACKLOG.md` (if not started) or roadmap (if completed)
 - **Technical specs:** Create dedicated docs in `docs/` folder
+- **App Store Submission:** Create `docs/APP_STORE_SUBMISSION_GUIDE.md` and `docs/GOOGLE_PLAY_SUBMISSION_GUIDE.md`
 
 **These copilot instructions should ONLY contain:**
 - Critical workflow rules (device IDs, deployment commands, theme rules)
@@ -726,8 +727,4 @@ Format as JSON with confidence scores for each field.
 
 - **Paycheck Scanner:** AI looks at the pay stub image and finds "Gross Pay: $1,234" wherever it appears - whether it's ADP's layout, Gusto's layout, or a handwritten note from a mom-and-pop restaurant
 - **Checkout Scanner:** AI finds "Total Sales" and "Tips" whether it's Toast's format, Square's format, or scribbled on a napkin
-- **BEO Scanner:** AI reads multi-page contracts and extracts event details regardless of venue template
-- **Business Card:** AI reads text from any card design
-- **Invoice:** AI extracts client/amount from any invoice layout
-
-**The "formats" mentioned are just
+- **BEO Scanner:** AI reads multi-page contracts and extracts event details regardless
