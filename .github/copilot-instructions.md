@@ -337,6 +337,71 @@ class HeroCard extends StatelessWidget {
 
 ---
 
+## 🔐 GOOGLE PLAY & REVENUECAT API ACCESS (NEW - January 3, 2026)
+
+**We have automated API access to both Google Play Console and RevenueCat.**
+
+### Google Play Developer API
+
+**Service Account:** `revenuecat-play-billing@gen-lang-client-0009693474.iam.gserviceaccount.com`
+**Credentials File:** `play-service-account.json` (in project root)
+**Package Name:** `com.inthebiz.app`
+
+**Available Scripts:**
+```cmd
+# Test Google Play API authentication
+node scripts/test-play-auth.mjs
+
+# Create subscription products in Google Play
+node scripts/create-play-products.mjs
+```
+
+**What the AI can do automatically:**
+- ✅ Create subscription products in Google Play Console
+- ✅ Test API authentication
+- ✅ List existing subscriptions
+- ✅ Verify service account permissions
+
+**Requirements:**
+- Service account must have **Admin (all permissions)** at app level in Play Console
+- Payment profile must be set up in Google Play Console
+- App must be uploaded to Play Console (at least to internal testing)
+
+### RevenueCat API
+
+**API Keys stored in `.env`:**
+- `REVENUECAT_SECRET_KEY` - V2 Secret Key (starts with `sk_`)
+- `REVENUECAT_PUBLIC_KEY` - Public SDK key (starts with `goog_`)
+
+**Project Info:**
+- **Project ID:** `proj42034829`
+- **App ID:** `app9cc9915545`
+
+**Available Script:**
+```cmd
+# Automatically configure RevenueCat (products, entitlements, offerings)
+node scripts/setup-revenuecat-complete.mjs
+```
+
+**What the AI can do automatically:**
+- ✅ Create products in RevenueCat
+- ✅ Create entitlements
+- ✅ Create offerings and packages
+- ✅ Attach products to entitlements
+- ✅ Configure complete subscription setup
+
+**Current Configuration:**
+- **Products:** `pro_monthly:monthly-plan` ($4.99/mo), `pro_yearly:yearly-plan` ($49.99/yr)
+- **Entitlement:** `pro`
+- **Offering:** `default` with packages `monthly` and `annual`
+
+**When user asks to modify subscriptions:**
+1. Use the appropriate script to make changes via API
+2. Do NOT ask user to manually configure things in dashboards
+3. Both Google Play and RevenueCat can be managed programmatically
+
+---
+
 ## 💻 TERMINAL & SHELL RULES (NEW - January 1, 2026)
 
 - **ALWAYS use `cmd.exe` instead of PowerShell.**
