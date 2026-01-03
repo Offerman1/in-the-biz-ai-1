@@ -336,19 +336,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
             : ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
-                  // Pro Banner
-                  Consumer<SubscriptionService>(
-                    builder: (context, subscriptionService, child) {
-                      if (subscriptionService.isPro)
-                        return const SizedBox.shrink();
-                      return Column(
-                        children: [
-                          _buildProBanner(),
-                          const SizedBox(height: 24),
-                        ],
-                      );
-                    },
-                  ),
+                  // Pro Banner - only show on mobile (subscriptions not available on web)
+                  if (!kIsWeb)
+                    Consumer<SubscriptionService>(
+                      builder: (context, subscriptionService, child) {
+                        if (subscriptionService.isPro)
+                          return const SizedBox.shrink();
+                        return Column(
+                          children: [
+                            _buildProBanner(),
+                            const SizedBox(height: 24),
+                          ],
+                        );
+                      },
+                    ),
 
                   // Jobs Section - Collapsible
                   _buildSectionHeader('MY JOBS'),
@@ -2865,6 +2866,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildDebugProToggle() {
+    // Debug Pro Toggle not available on web (no subscription service)
+    if (kIsWeb) {
+      return const SizedBox.shrink();
+    }
     return Consumer<SubscriptionService>(
       builder: (context, subscriptionService, child) {
         return Container(
