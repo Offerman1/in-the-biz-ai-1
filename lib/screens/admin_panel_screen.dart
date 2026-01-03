@@ -14,12 +14,15 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
   final _emailController = TextEditingController();
   final _notesController = TextEditingController();
   List<Map<String, dynamic>> _proUsers = [];
+  Map<String, dynamic>? _subscriptionAnalytics;
   bool _isLoading = true;
+  bool _isLoadingAnalytics = false;
 
   @override
   void initState() {
     super.initState();
     _loadProUsers();
+    _loadSubscriptionAnalytics();
   }
 
   @override
@@ -28,7 +31,6 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
     _notesController.dispose();
     super.dispose();
   }
-
   Future<void> _loadProUsers() async {
     setState(() => _isLoading = true);
     final users = await SubscriptionService().getProUsers();
@@ -36,6 +38,16 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
       _proUsers = users;
       _isLoading = false;
     });
+  }
+
+  Future<void> _loadSubscriptionAnalytics() async {
+    setState(() => _isLoadingAnalytics = true);
+    final analytics = await SubscriptionService().getSubscriptionAnalytics();
+    setState(() {
+      _subscriptionAnalytics = analytics;
+      _isLoadingAnalytics = false;
+    });
+  } });
   }
 
   Future<void> _grantProAccess() async {
@@ -123,10 +135,86 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
       appBar: AppBar(
         backgroundColor: AppTheme.darkBackground,
         title: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(Icons.admin_panel_settings, color: AppTheme.accentOrange),
-            const SizedBox(width: 12),
-            Text('Admin Panel', style: AppTheme.titleLarge),
+            // Subscription Analytics Section
+            if (_isLoadingAnalytics)
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: AppTheme.cardBackground,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                ),
+                child: Center(
+                  child: CircularProgressIndicator(color: AppTheme.primaryGreen),
+                ),
+              )
+            else if (_subscriptionAnalytics != null)
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: AppTheme.cardBackground,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                  border: Border.all(
+                    color: AppTheme.accentBlue.withOpacity(0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.analytics, color: AppTheme.accentBlue, size: 24),
+                        const SizedBox(width: 12),
+                        Text(
+                          'Your Subscription Analytics',
+                          style: AppTheme.titleMedium.copyWith(
+                            color: AppTheme.accentBlue,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    _buildAnalyticRow(
+                      'Status',
+                      _subscriptionAnalytics!['is_subscribed'] == true ? 'Pro Active ✅' : 'Free Tier',
+                      _subscriptionAnalytics!['is_subscribed'] == true
+                          ? AppTheme.successColor
+                          : AppTheme.textSecondary,
+                    ),
+                    const SizedBox(height: 8),
+                    _buildAnalyticRow(
+                      'Plan Type',
+                      _subscriptionAnalytics!['subscription_type']?.toString().toUpperCase() ?? 'NONE',
+                      AppTheme.textPrimary,
+                    ),
+                    if (_subscriptionAnalytics!['will_renew'] != null) ...[
+                      const SizedBox(height: 8),
+                      _buildAnalyticRow(
+                        'Auto-Renew',
+                        _subscriptionAnalytics!['will_renew'] == true ? 'Enabled ✅' : 'Disabled ❌',
+                        _subscriptionAnalytics!['will_renew'] == true
+                            ? AppTheme.successColor
+                            : AppTheme.dangerColor,
+                      ),
+                    ],
+                    const SizedBox(height: 12),
+                    Text(
+                      'Note: Full analytics (MRR, total subs, etc.) will be available once RevenueCat API keys are configured.',
+                      style: AppTheme.labelSmall.copyWith(
+                        color: AppTheme.textMuted,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            const SizedBox(height: 24),
+
+            // Grant Pro Access SectionAppTheme.titleLarge),
           ],
         ),
       ),
@@ -249,10 +337,29 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                           color: AppTheme.textMuted, size: 48),
                       const SizedBox(height: 12),
                       Text(
-                        'No Pro users yet',
-                        style: AppTheme.bodyMedium
-                            .copyWith(color: AppTheme.textMuted),
-                      ),
+      },
+    );
+  }
+
+  Widget _buildAnalyticRow(String label, String value, Color valueColor) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: AppTheme.bodyMedium.copyWith(color: AppTheme.textSecondary),
+        ),
+        Text(
+          value,
+          style: AppTheme.bodyMedium.copyWith(
+            color: valueColor,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+}                     ),
                     ],
                   ),
                 ),

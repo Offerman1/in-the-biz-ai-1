@@ -199,4 +199,31 @@ class SubscriptionService extends ChangeNotifier {
       return [];
     }
   }
+
+  /// Get subscription analytics (admin function)
+  Future<Map<String, dynamic>> getSubscriptionAnalytics() async {
+    try {
+      // Get customer info from RevenueCat
+      final customerInfo = await Purchases.getCustomerInfo();
+      
+      // Calculate metrics
+      final hasActiveSub = customerInfo.entitlements.all['pro']?.isActive ?? false;
+      final subPeriodType = customerInfo.entitlements.all['pro']?.periodType;
+      
+      return {
+        'is_subscribed': hasActiveSub,
+        'subscription_type': subPeriodType?.name ?? 'none',
+        'original_purchase_date': customerInfo.entitlements.all['pro']?.originalPurchaseDate,
+        'expiration_date': customerInfo.entitlements.all['pro']?.expirationDate,
+        'will_renew': customerInfo.entitlements.all['pro']?.willRenew ?? false,
+      };
+    } catch (e) {
+      debugPrint('Error fetching subscription analytics: $e');
+      return {
+        'is_subscribed': false,
+        'subscription_type': 'error',
+        'error': e.toString(),
+      };
+    }
+  }
 }
