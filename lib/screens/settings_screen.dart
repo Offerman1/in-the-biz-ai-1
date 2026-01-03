@@ -2830,4 +2830,53 @@ class _SettingsScreenState extends State<SettingsScreen> {
       }
     }
   }
+
+  Widget _buildDebugProToggle() {
+    return Consumer<SubscriptionService>(
+      builder: (context, subscriptionService, child) {
+        return Container(
+          decoration: BoxDecoration(
+            color: AppTheme.cardBackground,
+            borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+            border: Border.all(
+              color: AppTheme.accentOrange.withOpacity(0.3),
+              width: 1,
+            ),
+          ),
+          child: ListTile(
+            leading: Icon(Icons.admin_panel_settings,
+                color: AppTheme.accentOrange),
+            title: Text('Debug Pro Mode',
+                style: AppTheme.titleMedium
+                    .copyWith(color: AppTheme.accentOrange)),
+            subtitle: Text(
+              'Bypass paywall for testing (Debug builds only)',
+              style: AppTheme.bodySmall.copyWith(color: AppTheme.textMuted),
+            ),
+            trailing: Switch(
+              value: subscriptionService.isDebugProMode,
+              onChanged: (value) async {
+                await subscriptionService.setDebugProMode(value);
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        value
+                            ? '✓ Debug Pro Mode ENABLED - All Pro features unlocked'
+                            : '✗ Debug Pro Mode DISABLED - Paywall active',
+                      ),
+                      backgroundColor: value
+                          ? AppTheme.successColor
+                          : AppTheme.dangerColor,
+                    ),
+                  );
+                }
+              },
+              activeColor: AppTheme.accentOrange,
+            ),
+          ),
+        );
+      },
+    );
+  }
 }
