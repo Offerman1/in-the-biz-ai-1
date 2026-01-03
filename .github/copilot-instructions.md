@@ -658,6 +658,7 @@ node scripts/get-tester-emails.mjs
 **Adding Testers:**
 - Run `node scripts/get-tester-emails.mjs` to get emails from database
 - Testers must be added manually via Play Console (API doesn't support email lists, only Google Groups)
+- **If you create a NEW service account through the Google Play Console:** Be sure to grant it access to RevenueCat as well.
 
 ### RevenueCat API
 
