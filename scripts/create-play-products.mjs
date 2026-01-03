@@ -22,7 +22,7 @@ const PRODUCTS = [
     },
     billingPeriod: 'P1M', // ISO 8601 duration: 1 month
     title: 'Pro Monthly',
-    description: 'Unlimited shifts, photos, and AI features. No ads.',
+    description: 'Unlimited shifts & AI features',
   },
   {
     productId: 'pro_yearly',
@@ -33,7 +33,7 @@ const PRODUCTS = [
     },
     billingPeriod: 'P1Y', // ISO 8601 duration: 1 year
     title: 'Pro Yearly',
-    description: 'Unlimited shifts, photos, and AI features. No ads. Save $9.89!',
+    description: 'Unlimited shifts & AI. Save $10!',
   },
 ];
 
