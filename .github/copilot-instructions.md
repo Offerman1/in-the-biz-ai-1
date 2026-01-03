@@ -244,7 +244,7 @@ Container(
 - **Header Icon Color:** Header icons (in app bars, etc.) must use `AppTheme.headerIconColor` to automatically switch between black (for light themes) and white (for dark themes) based on the background luminance.
 - **"Add Job" and "Restore Deleted Jobs" Buttons:** In the "My Jobs" section of the settings screen, the text on these buttons should use `AppTheme.adaptiveTextColor` to switch between white and black based on the current theme.
 - **"Export PDF" and "Export CSV" Options:** In the stats screen's export dropdown, the text on these options should use `AppTheme.adaptiveTextColor` to switch between white and black based on the current theme.
-- **"Clear Chat" Option:** In the chat assistant, the "Clear Chat" text should use `AppTheme.adaptiveTextColor` to switch between black in light mode and white in dark mode.
+- **"Clear Chat" Option:** In the chat assistant, the chat assistant, the "Clear Chat" text should use `AppTheme.adaptiveTextColor` to switch between black in light mode and white in dark mode.
 - **Job Tab Text Color:** When a job is selected in light mode, the text should be white for better visibility.
 - **Job Filter/Period Filter Text Color:** When a job is selected, or one of the filters of day, week, month, year or all is selected on the hero card, the inner text should be white.
 
@@ -727,4 +727,4 @@ Format as JSON with confidence scores for each field.
 **The AI doesn't need "format support" - it READS the image like a human would:**
 
 - **Paycheck Scanner:** AI looks at the pay stub image and finds "Gross Pay: $1,234" wherever it appears - whether it's ADP's layout, Gusto's layout, or a handwritten note from a mom-and-pop restaurant
-- **Checkout Scanner:** AI finds "Total Sales" and "Tips" whether it's Toast's format, Square's format, or
+- **Checkout Scanner:** AI finds "Total Sales" and "Tips" whether it's Toast's format, Square'
