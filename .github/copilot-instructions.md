@@ -366,6 +366,8 @@ node scripts/upload-release.mjs
 - ✅ List existing subscriptions
 - ✅ Verify service account permissions
 
+**IMPORTANT:** Always ASK the user before uploading a release. Do NOT automatically run `upload-release.mjs` without explicit confirmation. The script is available but should only be used when user explicitly requests deployment.
+
 **Requirements:**
 - Service account must have **Admin (all permissions)** at app level in Play Console
 - Payment profile must be set up in Google Play Console
