@@ -18,6 +18,8 @@ import '../providers/shift_provider.dart';
 import '../providers/field_order_provider.dart';
 import '../services/database_service.dart';
 import '../services/notification_service.dart';
+import '../services/ad_service.dart';
+import '../services/subscription_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/collapsible_section.dart';
 import '../widgets/hero_card.dart';
@@ -27,6 +29,12 @@ import 'add_job_screen.dart';
 import 'settings_screen.dart';
 import 'event_contacts_screen.dart';
 import 'add_edit_contact_screen.dart';
+import 'document_scanner_screen.dart';
+import 'scan_verification_screen.dart';
+import 'paywall_screen.dart';
+import '../widgets/scan_type_menu.dart';
+import '../models/vision_scan.dart';
+import '../services/vision_scanner_service.dart';
 
 class AddShiftScreen extends StatefulWidget {
   final Shift? existingShift;
@@ -49,6 +57,7 @@ class AddShiftScreen extends StatefulWidget {
 class _AddShiftScreenState extends State<AddShiftScreen> {
   final _formKey = GlobalKey<FormState>();
   final DatabaseService _db = DatabaseService();
+  final VisionScannerService _visionScanner = VisionScannerService();
 
   // Controllers for all possible fields
   final _cashTipsController = TextEditingController();
@@ -683,6 +692,13 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
       return;
     }
 
+    // Check for Pro status and show ad if needed
+    final subscriptionService =
+        Provider.of<SubscriptionService>(context, listen: false);
+    if (!subscriptionService.isPro) {
+      await AdService().showInterstitialAd();
+    }
+
     setState(() => _isSaving = true);
 
     try {
@@ -1139,6 +1155,469 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
     );
   }
 
+  // ============================================================================
+  // UNIFIED AI VISION SCANNER SYSTEM
+  // ============================================================================
+
+  /// Handle scan type selection from the bottom sheet menu
+  void _handleScanTypeSelected(ScanType scanType) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DocumentScannerScreen(
+          scanType: scanType,
+          onScanComplete: _handleScanComplete,
+        ),
+      ),
+    );
+  }
+
+  /// Handle completed scan session - process images with AI
+  Future<void> _handleScanComplete(DocumentScanSession session) async {
+    // Show loading indicator
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Text(
+                'Processing ${session.pageCount} page${session.pageCount == 1 ? '' : 's'} with AI...'),
+          ],
+        ),
+        duration: const Duration(seconds: 30),
+        backgroundColor: AppTheme.primaryGreen.withOpacity(0.9),
+      ),
+    );
+
+    try {
+      // Route to appropriate handler based on scan type
+      switch (session.scanType) {
+        case ScanType.beo:
+          await _processBEOScan(session);
+          break;
+        case ScanType.checkout:
+          await _processCheckoutScan(session);
+          break;
+        case ScanType.businessCard:
+          await _processBusinessCardScan(session);
+          break;
+        case ScanType.paycheck:
+          await _processPaycheckScan(session);
+          break;
+        case ScanType.invoice:
+          await _processInvoiceScan(session);
+          break;
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).clearSnackBars();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Scan processing failed: $e'),
+            backgroundColor: AppTheme.dangerColor,
+          ),
+        );
+      }
+    }
+  }
+
+  /// Process BEO scan - Extract event details
+  Future<void> _processBEOScan(DocumentScanSession session) async {
+    try {
+      final userId = _db.supabase.auth.currentUser!.id;
+      final result =
+          await _visionScanner.analyzeBEO(session.imagePaths, userId);
+
+      if (!mounted) return;
+
+      // Hide loading snackbar
+      ScaffoldMessenger.of(context).clearSnackBars();
+
+      // Show verification screen
+      final confirmed = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ScanVerificationScreen(
+            scanType: ScanType.beo,
+            extractedData: result['data'] as Map<String, dynamic>,
+            confidenceScores:
+                result['data']['ai_confidence_scores'] as Map<String, dynamic>?,
+            onConfirm: (data) async {
+              // Pre-fill shift form with BEO data
+              setState(() {
+                if (data['event_name'] != null) {
+                  _eventNameController.text = data['event_name'].toString();
+                }
+                if (data['guest_count_confirmed'] != null) {
+                  _guestCountController.text =
+                      data['guest_count_confirmed'].toString();
+                }
+                if (data['total_sale_amount'] != null) {
+                  _eventCostController.text =
+                      data['total_sale_amount'].toString();
+                }
+                if (data['commission_amount'] != null) {
+                  _commissionController.text =
+                      data['commission_amount'].toString();
+                }
+                if (data['venue_name'] != null) {
+                  _locationController.text = data['venue_name'].toString();
+                }
+                if (data['primary_contact_name'] != null) {
+                  _hostessController.text =
+                      data['primary_contact_name'].toString();
+                }
+                if (data['formatted_notes'] != null) {
+                  _notesController.text = data['formatted_notes'].toString();
+                }
+              });
+            },
+          ),
+        ),
+      );
+
+      if (confirmed == true && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('BEO data imported successfully!'),
+            backgroundColor: AppTheme.successColor,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).clearSnackBars();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('BEO scan failed: $e'),
+            backgroundColor: AppTheme.dangerColor,
+          ),
+        );
+      }
+    }
+  }
+
+  /// Process server checkout scan - Extract financial data
+  Future<void> _processCheckoutScan(DocumentScanSession session) async {
+    try {
+      final userId = _db.supabase.auth.currentUser!.id;
+      final result = await _visionScanner.analyzeCheckout(
+        session.imagePaths,
+        userId,
+        shiftId: widget.existingShift?.id,
+      );
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).clearSnackBars();
+
+      // Show verification screen
+      final confirmed = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ScanVerificationScreen(
+            scanType: ScanType.checkout,
+            extractedData: result['data'] as Map<String, dynamic>,
+            confidenceScores:
+                result['data']['ai_confidence_scores'] as Map<String, dynamic>?,
+            onConfirm: (data) async {
+              // Pre-fill shift form with checkout data
+              setState(() {
+                if (data['total_sales'] != null) {
+                  _salesAmountController.text = data['total_sales'].toString();
+                }
+                if (data['gross_tips'] != null) {
+                  _creditTipsController.text = data['gross_tips'].toString();
+                }
+                if (data['tipout_amount'] != null) {
+                  _additionalTipoutController.text =
+                      data['tipout_amount'].toString();
+                }
+                if (data['tipout_percentage'] != null) {
+                  _tipoutPercentController.text =
+                      data['tipout_percentage'].toString();
+                }
+              });
+            },
+          ),
+        ),
+      );
+
+      if (confirmed == true && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Checkout data imported successfully!'),
+            backgroundColor: AppTheme.successColor,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).clearSnackBars();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Checkout scan failed: $e'),
+            backgroundColor: AppTheme.dangerColor,
+          ),
+        );
+      }
+    }
+  }
+
+  /// Process business card scan - Add contact
+  Future<void> _processBusinessCardScan(DocumentScanSession session) async {
+    try {
+      final userId = _db.supabase.auth.currentUser!.id;
+      final result = await _visionScanner.scanBusinessCard(
+        session.imagePaths,
+        userId,
+        shiftId: widget.existingShift?.id,
+      );
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).clearSnackBars();
+
+      // Show verification screen
+      final confirmed = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ScanVerificationScreen(
+            scanType: ScanType.businessCard,
+            extractedData: result['data'] as Map<String, dynamic>,
+            confidenceScores:
+                result['data']['ai_confidence_scores'] as Map<String, dynamic>?,
+            onConfirm: (data) async {
+              // Contact already saved by Edge Function
+              // Just refresh the contacts list
+              await _loadEventContacts();
+            },
+          ),
+        ),
+      );
+
+      if (confirmed == true && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content:
+                Text('Contact "${result['data']['name']}" added successfully!'),
+            backgroundColor: AppTheme.successColor,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).clearSnackBars();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Business card scan failed: $e'),
+            backgroundColor: AppTheme.dangerColor,
+          ),
+        );
+      }
+    }
+  }
+
+  /// Process paycheck scan - Track W-2 income
+  Future<void> _processPaycheckScan(DocumentScanSession session) async {
+    try {
+      final userId = _db.supabase.auth.currentUser!.id;
+      final result =
+          await _visionScanner.analyzePaycheck(session.imagePaths, userId);
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).clearSnackBars();
+
+      // Check for Reality Check warning
+      final realityCheck = result['realityCheck'] as Map<String, dynamic>?;
+      final unreportedGap = realityCheck?['unreportedGap'] as double?;
+
+      // Show verification screen
+      final confirmed = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ScanVerificationScreen(
+            scanType: ScanType.paycheck,
+            extractedData: result['data'] as Map<String, dynamic>,
+            confidenceScores:
+                result['data']['ai_confidence_scores'] as Map<String, dynamic>?,
+            onConfirm: (data) async {
+              // Paycheck already saved by Edge Function
+            },
+          ),
+        ),
+      );
+
+      if (confirmed == true && mounted) {
+        String message = 'Paycheck tracked successfully!';
+
+        // Show Reality Check warning if applicable
+        if (unreportedGap != null && unreportedGap > 100) {
+          message =
+              '⚠️ Reality Check: \$${unreportedGap.toStringAsFixed(2)} in unreported tips detected. Set aside ~\$${(unreportedGap * 0.22).toStringAsFixed(2)} for taxes.';
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message),
+            backgroundColor: unreportedGap != null && unreportedGap > 100
+                ? AppTheme.warningColor
+                : AppTheme.successColor,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).clearSnackBars();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Paycheck scan failed: $e'),
+            backgroundColor: AppTheme.dangerColor,
+          ),
+        );
+      }
+    }
+  }
+
+  /// Process invoice scan - Track freelancer income
+  Future<void> _processInvoiceScan(DocumentScanSession session) async {
+    try {
+      final userId = _db.supabase.auth.currentUser!.id;
+      final result =
+          await _visionScanner.analyzeInvoice(session.imagePaths, userId);
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).clearSnackBars();
+
+      // Show verification screen
+      final confirmed = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ScanVerificationScreen(
+            scanType: ScanType.invoice,
+            extractedData: result['data'] as Map<String, dynamic>,
+            confidenceScores:
+                result['data']['ai_confidence_scores'] as Map<String, dynamic>?,
+            onConfirm: (data) async {
+              // Invoice already saved by Edge Function
+            },
+          ),
+        ),
+      );
+
+      if (confirmed == true && mounted) {
+        final qbCategory = result['quickbooksCategory'] as String?;
+        String message = 'Invoice tracked successfully!';
+
+        if (qbCategory != null) {
+          message = 'Invoice tracked! QuickBooks category: $qbCategory';
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message),
+            backgroundColor: AppTheme.successColor,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).clearSnackBars();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Invoice scan failed: $e'),
+            backgroundColor: AppTheme.dangerColor,
+          ),
+        );
+      }
+    }
+  }
+
+  /// Consolidated attachment menu - Take Photo, Record Video, Pick from Gallery, Attach File
+  Future<void> _showConsolidatedAttachmentMenu() async {
+    await showMenu(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        MediaQuery.of(context).size.width - 250, // Right side
+        kToolbarHeight + 10, // Just below the app bar
+        10,
+        0,
+      ),
+      color: AppTheme.cardBackground,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+      ),
+      items: [
+        PopupMenuItem(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: ListTile(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+            leading: Icon(Icons.camera_alt, color: AppTheme.primaryGreen),
+            title: Text('Take Photo', style: AppTheme.bodyMedium),
+            onTap: () {
+              Navigator.pop(context);
+              _pickImageFromCamera();
+            },
+          ),
+        ),
+        PopupMenuItem(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: ListTile(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+            leading: Icon(Icons.videocam, color: AppTheme.accentBlue),
+            title: Text('Record Video', style: AppTheme.bodyMedium),
+            onTap: () {
+              Navigator.pop(context);
+              _pickVideoFromCamera();
+            },
+          ),
+        ),
+        PopupMenuItem(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: ListTile(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+            leading: Icon(Icons.photo_library, color: AppTheme.primaryGreen),
+            title: Text('Pick from Gallery', style: AppTheme.bodyMedium),
+            onTap: () {
+              Navigator.pop(context);
+              _pickImageFromGallery();
+            },
+          ),
+        ),
+        PopupMenuItem(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: ListTile(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+            leading:
+                Icon(Icons.insert_drive_file, color: AppTheme.accentOrange),
+            title: Text('Choose File', style: AppTheme.bodyMedium),
+            subtitle: Text(
+              'PDF, Word, Excel, etc.',
+              style: AppTheme.labelSmall.copyWith(color: AppTheme.textMuted),
+            ),
+            onTap: () {
+              Navigator.pop(context);
+              _pickFile();
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
   Future<void> _pickFile() async {
     try {
       final result = await FilePicker.platform.pickFiles(
@@ -1266,20 +1745,18 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
                 AppTheme.titleLarge.copyWith(color: AppTheme.adaptiveTextColor),
           ),
           actions: [
+            // ✨ Scan button - Opens AI Vision Scanner menu
             IconButton(
-              icon: Icon(Icons.camera_alt, color: AppTheme.primaryGreen),
-              onPressed: _pickImageFromCamera,
-              tooltip: 'Take Photo',
+              icon: const Text('✨', style: TextStyle(fontSize: 24)),
+              onPressed: () =>
+                  showScanTypeMenu(context, _handleScanTypeSelected),
+              tooltip: 'AI Scanner',
             ),
-            IconButton(
-              icon: Icon(Icons.videocam, color: AppTheme.primaryGreen),
-              onPressed: _pickVideoFromCamera,
-              tooltip: 'Record Video',
-            ),
+            // 📎 Attach button - Consolidated media menu
             IconButton(
               icon: Icon(Icons.attach_file, color: AppTheme.primaryGreen),
-              onPressed: _showAttachmentMenu,
-              tooltip: 'Add Attachment',
+              onPressed: _showConsolidatedAttachmentMenu,
+              tooltip: 'Attach Media',
             ),
             TextButton(
               onPressed: _isSaving ? null : _saveShift,
@@ -4414,6 +4891,28 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
 
   Future<void> _pickAndUploadFile() async {
     if (widget.existingShift == null) return;
+
+    // Check Pro status and limits
+    final subscriptionService =
+        Provider.of<SubscriptionService>(context, listen: false);
+    if (!subscriptionService.isPro && _attachments.length >= 5) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content:
+              const Text('Free limit reached (5 attachments). Upgrade to Pro!'),
+          action: SnackBarAction(
+            label: 'Upgrade',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => PaywallScreen()),
+              );
+            },
+          ),
+        ),
+      );
+      return;
+    }
 
     try {
       // Pick a file of any type
