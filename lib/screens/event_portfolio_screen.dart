@@ -38,7 +38,7 @@ class _EventPortfolioScreenState extends State<EventPortfolioScreen> {
 
       // Apply type filter if not "All"
       if (_selectedFilter != 'all') {
-        query = query.filter('event_type', 'eq', _selectedFilter);
+        query = query.eq('event_type', _selectedFilter);
       }
 
       final response = await query;
