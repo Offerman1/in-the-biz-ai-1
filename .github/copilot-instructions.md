@@ -357,6 +357,9 @@ node scripts/create-play-products.mjs
 
 # Upload new release to Google Play (internal testing track)
 node scripts/upload-release.mjs
+
+# Get tester emails from database
+node scripts/get-tester-emails.mjs
 ```
 
 **What the AI can do automatically:**
@@ -368,7 +371,7 @@ node scripts/upload-release.mjs
 - ✅ Verify service account permissions
 - ✅ Extract tester emails from Supabase database
 
-**IMPORTANT:** Always ASK the user before uploading a release. Do NOT automatically run `upload-release.mjs` without explicit confirmation. The script is available but should only be used when user explicitly requests deployment. The script is available but should only be used when user explicitly requests deployment.
+**IMPORTANT:** Always ASK the user before uploading a release. Do NOT automatically run `upload-release.mjs` without explicit confirmation. The script is available but should only be used when user explicitly requests deployment.
 
 **Requirements:**
 - Service account must have **Admin (all permissions)** at app level in Play Console
@@ -705,4 +708,3 @@ This section defines the UI placement strategy for the AI Vision features.
     ```
     ┌──────────────────────────────────┐
     │  What would you like to scan?    │
-    ├────────────────────────────────
