@@ -11,10 +11,10 @@
         android:label="ITB"
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon">
-        <!-- AdMob App ID (Test ID) -->
+        <!-- AdMob App ID (Real Production ID) -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-3940256099942544~3347511713"/>
+            android:value="ca-app-pub-1150666051629225~2172594466"/>
         <activity
             android:name=".MainActivity"
             android:exported="true"
