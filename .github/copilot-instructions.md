@@ -432,9 +432,8 @@ This removes PowerShell from the profiles entirely, so VS Code can't offer it as
 3. GitHub Actions automatically builds and deploys to `gh-pages`
 4. Changes are live at inthebiz.app in ~2-3 minutes
 
-**GitHub Actions Configuration:**
-
-1.  **Workflow File:** Ensure a workflow file named `.github/workflows/deploy.yml` exists in your repository.
+**Workflow File:**
+1. Ensure a workflow file named `.github/workflows/deploy.yml` exists in your repository.
 2.  **Workflow Configuration:**
 
 ```yaml
@@ -506,9 +505,8 @@ Due to issues with automated deployment, manual deployments remain the primary m
 
 1.  **Build**: From the project root, build the web app:
     ```powershell
-    flutter build web
+    flutter build web --release --base-href=/
     ```
-
 2.  **Copy to Root**: Copy the contents of `/build/web` to the root directory, EXCLUDING the `build` directory itself (to avoid infinite loops). Use robocopy with proper exclusions to prevent accidental commits of node_modules, .git folder, etc.:
 
 ```powershell
@@ -520,7 +518,7 @@ robocopy "c:\Users\Brandon 2021\Desktop\In The Biz AI\build\web" "c:\Users\Brand
 3.  **Commit and Push**: Commit all the changes and push them to the `gh-pages` branch.
 
 ```powershell
-git add *.js *.html *.json .last_build_id flutter_bootstrap.js flutter_service_worker.js canvaskit version.json
+git add *.js *.html *.json .last_build_id flutter_bootstrap.js flutter_service_worker.js canvaskit version.json icons
 git commit -m "Deploy: Web files in root for GitHub Pages"
 git push origin gh-pages
 ```
@@ -607,7 +605,7 @@ On Windows, configure Docker Desktop to start automatically to ensure the Supaba
 
 ---
 
-## 🔐 GOOGLE PLAY & REVENUECAT API ACCESS (NEW - January 3, 2026)
+## 🔐 GOOGLE PLAY & REVENUECAT API ACCESS (UPDATED - January 3, 2026)
 
 **We have automated API access to both Google Play Console and RevenueCat.**
 
@@ -634,14 +632,13 @@ node scripts/get-tester-emails.mjs
 
 **What the AI can do automatically:**
 - ✅ Create subscription products in Google Play Console
-- ✅ Upload app bundles (.aab files) to internal testing
-- ✅ Create releases on internal testing track
+- ✅ Upload new releases to Google Play (internal testing track)
 - ✅ Test API authentication
 - ✅ List existing subscriptions
 - ✅ Verify service account permissions
 - ✅ Extract tester emails from Supabase database
 
-**IMPORTANT:** Always ASK the user before uploading a release. Do NOT automatically run `upload-release.mjs` without explicit confirmation. The script is available but should only be used when user explicitly requests deployment. The script is available but should only be used when user explicitly requests deployment.
+**IMPORTANT:** Always ASK the user before uploading a release. Do NOT automatically run `upload-release.mjs` without explicit confirmation. The script is available but should only be used when user explicitly requests deployment.
 
 **Requirements:**
 - Service account must have **Admin (all permissions)** at app level in Play Console
@@ -658,7 +655,8 @@ node scripts/get-tester-emails.mjs
 **Adding Testers:**
 - Run `node scripts/get-tester-emails.mjs` to get emails from database
 - Testers must be added manually via Play Console (API doesn't support email lists, only Google Groups)
-- **If you create a NEW service account through the Google Play Console:** Be sure to grant it access to RevenueCat as well.
+
+**If you create a NEW service account through the Google Play Console:** Be sure to grant it access to RevenueCat as well.
 
 ### RevenueCat API
 
@@ -668,8 +666,7 @@ node scripts/get-tester-emails.mjs
 **Available Script:**\n&#96;&#96;&#96;cmd\n# Automatically configure RevenueCat (products, entitlements, offerings)\nnode scripts/setup-revenuecat-complete.mjs\n&#96;&#96;&#96;\n
 **What the AI can do automatically:**\n- ✅ Create products in RevenueCat\n- ✅ Create entitlements\n- ✅ Create offerings and packages\n- ✅ Attach products to entitlements\n- ✅ Configure complete subscription setup\n
 **Current Configuration:**\n- **Products:** &#96;pro_monthly:monthly-plan&#96; ($4.99/mo), &#96;pro_yearly:yearly-plan&#96; ($49.99/yr)\n- **Entitlement:** &#96;pro&#96;\n- **Offering:** &#96;default&#96; with packages &#96;monthly&#96; and &#96;annual&#96;\n
-**When user asks to modify subscriptions:**\n1. Use the appropriate script to make changes via API\n2. Do NOT ask user to manually configure things in dashboards
-3. Both Google Play and RevenueCat can be managed programmatically
+**When user asks to modify subscriptions:**\n1. Use the appropriate script to make changes via API\n2. Do NOT ask user to manually configure things in dashboards\n3. Both Google Play and RevenueCat can be managed programmatically
 
 ---
 
@@ -691,3 +688,9 @@ node scripts/get-tester-emails.mjs
 This removes PowerShell from the profiles entirely, so VS Code can't offer it as an option and will **only** show Command Prompt. PowerShell itself will still be installed on your Windows machine but not available as an option in VS Code.
 - If the above settings do not work, try reloading the VS Code window (`Ctrl+Shift+P` → "Reload Window").
 - If a PowerShell terminal opens, manually switch to the Command Prompt tab or close the PowerShell terminal entirely so only `cmd.exe` is available.
+
+---
+
+## 🛑 CRITICAL: WEB DEPLOYMENT IS MALFUNCTIONING - DO NOT DEPLOY WITHOUT BRANDON'S DIRECT SUPERVISION
+
+GitHub Pages deployment is currently malfunctioning due to a series of errors. **DO NOT attempt to deploy the web app (inthebiz.app) without direct supervision from Brandon.** Continuing to deploy using the automated scripts will likely result in a broken website. Instead, seek guidance from Brandon to troubleshoot the deployment process.

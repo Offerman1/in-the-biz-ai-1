@@ -6,7 +6,7 @@ echo.
 
 REM Step 1: Build the Flutter web app
 echo [1/3] Building Flutter web app...
-flutter build web --release --base-href=/in-the-biz-ai/
+flutter build web --release --base-href=/
 if %ERRORLEVEL% NEQ 0 (
     echo.
     echo ========================================
