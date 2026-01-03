@@ -354,10 +354,14 @@ node scripts/test-play-auth.mjs
 
 # Create subscription products in Google Play
 node scripts/create-play-products.mjs
+
+# Upload new release to Google Play
+node scripts/upload-release.mjs
 ```
 
 **What the AI can do automatically:**
 - ✅ Create subscription products in Google Play Console
+- ✅ Upload new releases to Google Play (internal testing track)
 - ✅ Test API authentication
 - ✅ List existing subscriptions
 - ✅ Verify service account permissions
@@ -707,5 +711,4 @@ This section defines the UI placement strategy for the AI Vision features.
     *   Account for variable formats.
     *   Account for multiple pages in a checkout.
     *   Start simple, extract what is consistently available, and improve over time.
-    *   Review modal lets user verify/edit extracted data.
--   **Business Card:** Creates/adds to Event Contacts and attaches it to the current shift
+    *
