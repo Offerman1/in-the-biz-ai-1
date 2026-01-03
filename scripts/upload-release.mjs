@@ -68,7 +68,7 @@ async function uploadRelease() {
         track: TRACK,
         releases: [{
           versionCodes: [versionCode.toString()],
-          status: 'completed',
+          status: 'draft', // Use 'draft' for apps not yet published
           releaseNotes: [{
             language: 'en-US',
             text: 'Bug fixes and performance improvements',
