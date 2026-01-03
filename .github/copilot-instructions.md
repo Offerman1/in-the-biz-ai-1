@@ -670,3 +670,24 @@ node scripts/get-tester-emails.mjs
 **Current Configuration:**\n- **Products:** &#96;pro_monthly:monthly-plan&#96; ($4.99/mo), &#96;pro_yearly:yearly-plan&#96; ($49.99/yr)\n- **Entitlement:** &#96;pro&#96;\n- **Offering:** &#96;default&#96; with packages &#96;monthly&#96; and &#96;annual&#96;\n
 **When user asks to modify subscriptions:**\n1. Use the appropriate script to make changes via API\n2. Do NOT ask user to manually configure things in dashboards
 3. Both Google Play and RevenueCat can be managed programmatically
+
+---
+
+## 💻 TERMINAL & SHELL RULES (NEW - January 1, 2026)
+
+- **ALWAYS use `cmd.exe` instead of PowerShell.**
+- To ensure VS Code **always** uses `cmd.exe`, add the following to your VS Code `settings.json` and remove the PowerShell profile:
+
+```json
+"terminal.integrated.defaultProfile.windows": "CommandPrompt",
+"terminal.integrated.profiles.windows": {
+  "Command Prompt": {
+    "path": "${env:windir}\\System32\\cmd.exe",
+    "args": [],
+    "icon": "terminal-cmd"
+  }
+}
+```
+This removes PowerShell from the profiles entirely, so VS Code can't offer it as an option and will **only** show Command Prompt. PowerShell itself will still be installed on your Windows machine but not available as an option in VS Code.
+- If the above settings do not work, try reloading the VS Code window (`Ctrl+Shift+P` → "Reload Window").
+- If a PowerShell terminal opens, manually switch to the Command Prompt tab or close the PowerShell terminal entirely so only `cmd.exe` is available.
