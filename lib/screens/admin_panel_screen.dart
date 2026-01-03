@@ -31,6 +31,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
     _notesController.dispose();
     super.dispose();
   }
+
   Future<void> _loadProUsers() async {
     setState(() => _isLoading = true);
     final users = await SubscriptionService().getProUsers();
@@ -152,7 +153,8 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                   borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
                 ),
                 child: Center(
-                  child: CircularProgressIndicator(color: AppTheme.primaryGreen),
+                  child:
+                      CircularProgressIndicator(color: AppTheme.primaryGreen),
                 ),
               )
             else if (_subscriptionAnalytics != null)
@@ -171,7 +173,8 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.analytics, color: AppTheme.accentBlue, size: 24),
+                        Icon(Icons.analytics,
+                            color: AppTheme.accentBlue, size: 24),
                         const SizedBox(width: 12),
                         Text(
                           'Your Subscription Analytics',
@@ -185,7 +188,9 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                     const SizedBox(height: 16),
                     _buildAnalyticRow(
                       'Status',
-                      _subscriptionAnalytics!['is_subscribed'] == true ? 'Pro Active ✅' : 'Free Tier',
+                      _subscriptionAnalytics!['is_subscribed'] == true
+                          ? 'Pro Active ✅'
+                          : 'Free Tier',
                       _subscriptionAnalytics!['is_subscribed'] == true
                           ? AppTheme.successColor
                           : AppTheme.textSecondary,
@@ -193,14 +198,19 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                     const SizedBox(height: 8),
                     _buildAnalyticRow(
                       'Plan Type',
-                      _subscriptionAnalytics!['subscription_type']?.toString().toUpperCase() ?? 'NONE',
+                      _subscriptionAnalytics!['subscription_type']
+                              ?.toString()
+                              .toUpperCase() ??
+                          'NONE',
                       AppTheme.textPrimary,
                     ),
                     if (_subscriptionAnalytics!['will_renew'] != null) ...[
                       const SizedBox(height: 8),
                       _buildAnalyticRow(
                         'Auto-Renew',
-                        _subscriptionAnalytics!['will_renew'] == true ? 'Enabled ✅' : 'Disabled ❌',
+                        _subscriptionAnalytics!['will_renew'] == true
+                            ? 'Enabled ✅'
+                            : 'Disabled ❌',
                         _subscriptionAnalytics!['will_renew'] == true
                             ? AppTheme.successColor
                             : AppTheme.dangerColor,
@@ -419,6 +429,25 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildAnalyticRow(String label, String value, Color valueColor) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: AppTheme.bodyMedium.copyWith(color: AppTheme.textSecondary),
+        ),
+        Text(
+          value,
+          style: AppTheme.bodyMedium.copyWith(
+            color: valueColor,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
     );
   }
 }
