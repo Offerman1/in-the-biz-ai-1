@@ -366,6 +366,7 @@ node scripts/create-play-products.mjs
 - Service account must have **Admin (all permissions)** at app level in Play Console
 - Payment profile must be set up in Google Play Console
 - App must be uploaded to Play Console (at least to internal testing)
+- Google Play Android Developer API must be enabled
 
 ### RevenueCat API
 
@@ -706,5 +707,4 @@ This section defines the UI placement strategy for the AI Vision features.
     *   Account for multiple pages in a checkout.
     *   Start simple, extract what is consistently available, and improve over time.
     *   Review modal lets user verify/edit extracted data.
--   **Business Card:** Creates/adds to Event Contacts and attaches it to the current shift.
--   **Invoice (Future):**
+-   **Business Card:** Creates/adds to Event Contacts and attaches it to the current shift
