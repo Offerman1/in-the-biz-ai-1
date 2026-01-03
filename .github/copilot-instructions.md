@@ -25,7 +25,7 @@ description: AI rules derived by SpecStory from the project AI interaction histo
 - **Implementation guides:** Add to relevant phase docs in `docs/phases/`
 - **New features:** Document in `docs/FEATURE_BACKLOG.md` (if not started) or roadmap (if completed)
 - **Technical specs:** Create dedicated docs in `docs/` folder
-- **App Store Submission:** Create `docs/APP_STORE_SUBMISSION_GUIDE.md` and `docs/GOOGLE_PLAY_SUBMISSION_GUIDE.md`
+- **App Store Submission:** Create `docs/APP_STORE_SUBMISSION_GUIDE.md` and `GOOGLE_PLAY_SUBMISSION_GUIDE.md`
 - **Fastlane Setup Guide:** Create `docs/FASTLANE_SETUP_GUIDE.md`
 
 **These copilot instructions should ONLY contain:**
@@ -708,3 +708,4 @@ This section defines the UI placement strategy for the AI Vision features.
     ```
     ┌──────────────────────────────────┐
     │  What would you like to scan?    │
+</rules
