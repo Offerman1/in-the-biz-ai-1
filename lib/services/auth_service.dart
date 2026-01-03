@@ -52,7 +52,7 @@ class AuthService {
 
       await GoogleSignIn.instance.initialize(
         clientId: clientId,
-        serverClientId: _webClientId,
+        // serverClientId is not supported on mobile - only use clientId for iOS
       );
 
       final GoogleSignInAccount? googleUser =
