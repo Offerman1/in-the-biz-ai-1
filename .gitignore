@@ -15,6 +15,10 @@
 .env.local
 .env.*.local
 
+# Google Cloud Service Account - NEVER COMMIT
+play-service-account.json
+*-service-account.json
+
 # Flutter/Dart/Pub
 .dart_tool/
 .flutter-plugins
