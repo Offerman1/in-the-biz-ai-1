@@ -495,6 +495,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                   const SizedBox(height: 24),
 
+                  // Admin / Debug Section
+                  if (kDebugMode) ...[
+                    _buildSectionHeader('ADMIN / DEBUG'),
+                    const SizedBox(height: 12),
+                    _buildDebugProToggle(),
+                    const SizedBox(height: 24),
+                  ],
+
                   // Account Section
                   _buildSectionHeader('ACCOUNT'),
                   const SizedBox(height: 12),
