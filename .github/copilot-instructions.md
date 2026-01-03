@@ -452,6 +452,55 @@ git commit -m "Deploy: Web files in root for GitHub Pages"
 git push origin gh-pages
 ```
 
+**Deployment Script (deploy.bat) (NEW - January 3, 2026):**
+
+Create a batch file (`deploy.bat`) in the project root directory with the following content:
+
+```bat
+@echo off
+echo.
+echo ========================================
+echo   IN THE BIZ - WEB DEPLOYMENT
+echo ========================================
+echo.
+
+echo Step 1: Building Flutter web app...
+call flutter build web --release --base-href=/
+if errorlevel 1 (
+    echo BUILD FAILED!
+    pause
+    exit /b 1
+)
+
+echo.
+echo Step 2: Copying build files to root...
+xcopy /E /Y "build\web\*" "." >nul
+
+echo.
+echo Step 3: Committing changes...
+git add .
+git commit -m "Deploy: %date% %time%"
+
+echo.
+echo Step 4: Pushing to GitHub...
+git push origin gh-pages
+
+echo.
+echo ========================================
+echo   DEPLOYMENT COMPLETE!
+echo   Website: https://inthebiz.app
+echo ========================================
+echo.
+pause
+```
+
+**How to Use the Script:**
+
+1.  Double-click `deploy.bat` in File Explorer.
+2.  Alternatively, type `deploy.bat` in the terminal and press Enter.
+
+This script automates the entire deployment process, including building the app, copying the build files to the root directory, committing the changes, and pushing them to the `gh-pages` branch.
+
 ---
 
 ## 🗄️ SUPABASE DATABASE MIGRATIONS (NEW - December 31, 2025)

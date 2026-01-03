@@ -40,18 +40,14 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _initializeGoogleSignInWeb() async {
     try {
-      // Generate initial nonce
-      // According to Supabase docs: send HASHED nonce to Google, RAW nonce to Supabase
-      _currentNonce = _generateNonce();
-      _currentHashedNonce =
-          sha256.convert(utf8.encode(_currentNonce!)).toString();
-
+      // Skip nonce for now - it's optional and causing issues with the Flutter google_sign_in package
+      // The package may be handling nonce differently than expected
       await GoogleSignIn.instance.initialize(
         clientId:
             '30441285456-pkvqkagh3fcv0b6n71t5tpnuda94l8d5.apps.googleusercontent.com',
         serverClientId:
             '30441285456-pkvqkagh3fcv0b6n71t5tpnuda94l8d5.apps.googleusercontent.com',
-        nonce: _currentHashedNonce, // Send HASHED nonce to Google
+        // No nonce - let Supabase handle it
       );
 
       GoogleSignIn.instance.authenticationEvents.listen((event) async {
@@ -70,10 +66,10 @@ class _LoginScreenState extends State<LoginScreen> {
             final googleAuth = await user.authentication;
 
             if (googleAuth.idToken != null) {
-              // Send RAW nonce to Supabase (it will hash and compare to token)
+              // No nonce - simpler flow
               final response = await AuthService.signInWithIdToken(
                 idToken: googleAuth.idToken!,
-                nonce: _currentNonce,
+                nonce: null, // Skip nonce
               );
 
               if (response != null && mounted) {
@@ -81,11 +77,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   MaterialPageRoute(builder: (_) => const DashboardScreen()),
                 );
               }
-
-              // Generate new nonce for next sign-in attempt
-              _currentNonce = _generateNonce();
-              _currentHashedNonce =
-                  sha256.convert(utf8.encode(_currentNonce!)).toString();
             }
           } catch (e) {
             print('Supabase sign-in error: $e');
@@ -95,11 +86,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 _isLoading = false;
               });
             }
-
-            // Generate new nonce for retry attempt
-            _currentNonce = _generateNonce();
-            _currentHashedNonce =
-                sha256.convert(utf8.encode(_currentNonce!)).toString();
           }
         }
       });
