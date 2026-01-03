@@ -71,6 +71,9 @@ async function createSubscriptionProducts() {
         const response = await androidPublisher.monetization.subscriptions.create({
           packageName: PACKAGE_NAME,
           productId: product.productId,
+          regionsVersion: {
+            version: '2022/02',
+          },
           requestBody: {
             packageName: PACKAGE_NAME,
             productId: product.productId,
