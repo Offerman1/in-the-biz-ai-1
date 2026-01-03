@@ -10,6 +10,10 @@
 .history
 .svn/
 
+# Node modules - NEVER COMMIT
+node_modules/
+package-lock.json
+
 # Environment Variables - NEVER COMMIT THESE
 .env
 .env.local

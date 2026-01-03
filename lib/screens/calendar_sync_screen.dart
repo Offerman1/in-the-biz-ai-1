@@ -67,30 +67,8 @@ class _CalendarSyncScreenState extends State<CalendarSyncScreen> {
   }
 
   Future<void> _requestPermissions() async {
-    // Calendar sync is not supported on web
-    if (kIsWeb) {
-      if (mounted) {
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            backgroundColor: AppTheme.cardBackground,
-            title: Text('Not Available on Web', style: AppTheme.titleLarge),
-            content: Text(
-              'Calendar sync is only available on the mobile app. Please use the In The Biz mobile app to sync your calendar.',
-              style: AppTheme.bodyMedium,
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child:
-                    Text('OK', style: TextStyle(color: AppTheme.primaryGreen)),
-              ),
-            ],
-          ),
-        );
-      }
-      return;
-    }
+    // Note: Calendar sync on web uses Google Calendar API
+    // Device calendar is only for mobile platforms
 
     // First try using permission_handler for a proper system dialog
     var status = await Permission.calendar.request();
@@ -562,7 +540,7 @@ class _CalendarSyncScreenState extends State<CalendarSyncScreen> {
               ),
               const SizedBox(height: 16),
               SizedBox(
-                height: 80,
+                height: 100,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
                   itemCount: _calendars.length,
@@ -572,7 +550,7 @@ class _CalendarSyncScreenState extends State<CalendarSyncScreen> {
                     return GestureDetector(
                       onTap: () => _loadEventsFromCalendar(calendar),
                       child: Container(
-                        width: 150,
+                        width: 180,
                         margin: const EdgeInsets.only(right: 12),
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
@@ -596,12 +574,14 @@ class _CalendarSyncScreenState extends State<CalendarSyncScreen> {
                               Icons.calendar_today,
                               color: isSelected
                                   ? AppTheme.primaryGreen
-                                  : AppTheme.textSecondary,
+                                  : (calendar.color != null
+                                      ? Color(calendar.color!)
+                                      : AppTheme.textSecondary),
                               size: 20,
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              calendar.name ?? 'Calendar',
+                              _getCalendarDisplayName(calendar),
                               style: TextStyle(
                                 color: isSelected
                                     ? AppTheme.primaryGreen
@@ -610,7 +590,7 @@ class _CalendarSyncScreenState extends State<CalendarSyncScreen> {
                                     ? FontWeight.bold
                                     : FontWeight.normal,
                               ),
-                              maxLines: 1,
+                              maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ],
@@ -810,6 +790,27 @@ class _CalendarSyncScreenState extends State<CalendarSyncScreen> {
     }
 
     return result.join(' ');
+  }
+
+  /// Get display name for calendar with multiple fallbacks
+  /// In release builds, calendar.name is often null/empty but accountName is available
+  String _getCalendarDisplayName(Calendar calendar) {
+    // Try calendar name first (works in debug)
+    if (calendar.name != null && calendar.name!.isNotEmpty) {
+      return calendar.name!;
+    }
+
+    // Fallback to accountName (works in release)
+    if (calendar.accountName != null && calendar.accountName!.isNotEmpty) {
+      // If accountType is available, show it too for clarity
+      if (calendar.accountType != null && calendar.accountType!.isNotEmpty) {
+        return '${calendar.accountName!} (${calendar.accountType!})';
+      }
+      return calendar.accountName!;
+    }
+
+    // Last resort fallback
+    return 'Calendar';
   }
 
   Widget _buildEventCard(Event event) {
