@@ -40,16 +40,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _initializeGoogleSignInWeb() async {
     try {
-      // Generate initial nonce - send RAW nonce to Google
-      _currentNonce = _generateNonce();
-      _currentHashedNonce =
-          sha256.convert(utf8.encode(_currentNonce!)).toString();
-
       await GoogleSignIn.instance.initialize(
         clientId:
             '30441285456-pkvqkagh3fcv0b6n71t5tpnuda94l8d5.apps.googleusercontent.com',
-        // serverClientId is not supported on web - only works on mobile
-        nonce: _currentNonce, // Send RAW nonce to Google, it will hash it
+        // Web doesn't support nonce parameter - Google handles it internally
       );
 
       GoogleSignIn.instance.authenticationEvents.listen((event) async {
@@ -68,10 +62,10 @@ class _LoginScreenState extends State<LoginScreen> {
             final googleAuth = await user.authentication;
 
             if (googleAuth.idToken != null) {
-              // Send RAW nonce to Supabase, it will hash and compare to token
+              // Don't send nonce on web - Google and Supabase handle it
               final response = await AuthService.signInWithIdToken(
                 idToken: googleAuth.idToken!,
-                nonce: _currentNonce,
+                nonce: null, // Web doesn't use explicit nonce
               );
 
               if (response != null && mounted) {
@@ -79,11 +73,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   MaterialPageRoute(builder: (_) => const DashboardScreen()),
                 );
               }
-
-              // Generate new nonce for next sign-in attempt
-              _currentNonce = _generateNonce();
-              _currentHashedNonce =
-                  sha256.convert(utf8.encode(_currentNonce!)).toString();
             }
           } catch (e) {
             print('Supabase sign-in error: $e');
@@ -93,11 +82,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 _isLoading = false;
               });
             }
-
-            // Generate new nonce for retry attempt
-            _currentNonce = _generateNonce();
-            _currentHashedNonce =
-                sha256.convert(utf8.encode(_currentNonce!)).toString();
           }
         }
       });
