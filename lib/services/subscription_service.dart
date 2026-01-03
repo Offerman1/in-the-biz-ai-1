@@ -27,7 +27,8 @@ class SubscriptionService extends ChangeNotifier {
 
   // RevenueCat API Keys
   final String _apiKeyAndroid = 'goog_kMppRJiBRaqDErscdbnFLUQWVBV';
-  final String _apiKeyIOS = 'goog_kMppRJiBRaqDErscdbnFLUQWVBV'; // Using same key until iOS is set up
+  final String _apiKeyIOS =
+      'goog_kMppRJiBRaqDErscdbnFLUQWVBV'; // Using same key until iOS is set up
 
   Future<void> initialize() async {
     await Purchases.setLogLevel(LogLevel.debug);
