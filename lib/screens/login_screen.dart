@@ -62,10 +62,25 @@ class _LoginScreenState extends State<LoginScreen> {
             final googleAuth = await user.authentication;
 
             if (googleAuth.idToken != null) {
-              // Don't send nonce on web - Google and Supabase handle it
+              // Extract nonce from Google's ID token
+              String? extractedNonce;
+              try {
+                final parts = googleAuth.idToken!.split('.');
+                if (parts.length == 3) {
+                  // Decode the payload (middle part)
+                  final payload = utf8.decode(base64Url.decode(base64Url.normalize(parts[1])));
+                  final claims = json.decode(payload);
+                  extractedNonce = claims['nonce'];
+                  print('Extracted nonce from token: $extractedNonce');
+                }
+              } catch (e) {
+                print('Error extracting nonce: $e');
+              }
+
+              // Send the extracted nonce to Supabase
               final response = await AuthService.signInWithIdToken(
                 idToken: googleAuth.idToken!,
-                nonce: null, // Web doesn't use explicit nonce
+                nonce: extractedNonce, // Use the nonce from Google's token
               );
 
               if (response != null && mounted) {
