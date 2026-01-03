@@ -31,6 +31,7 @@ import 'event_contacts_screen.dart';
 import 'add_edit_contact_screen.dart';
 import 'document_scanner_screen.dart';
 import 'scan_verification_screen.dart';
+import 'paywall_screen.dart';
 import '../widgets/scan_type_menu.dart';
 import '../models/vision_scan.dart';
 import '../services/vision_scanner_service.dart';

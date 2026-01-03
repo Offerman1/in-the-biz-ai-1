@@ -66,9 +66,9 @@ class SubscriptionService extends ChangeNotifier {
 
   Future<bool> purchasePackage(Package package) async {
     try {
-      final customerInfo = await Purchases.purchasePackage(package);
-      _customerInfo = customerInfo;
-      _isPro = customerInfo.entitlements.all['pro']?.isActive ?? false;
+      final purchaseResult = await Purchases.purchasePackage(package);
+      _customerInfo = purchaseResult.customerInfo;
+      _isPro = purchaseResult.customerInfo.entitlements.all['pro']?.isActive ?? false;
       notifyListeners();
       return _isPro;
     } on PlatformException catch (e) {
