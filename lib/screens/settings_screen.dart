@@ -2856,7 +2856,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         onTap: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const AdminPanelScreen()),
+            MaterialPageRoute(builder: (context) => AdminPanelScreen()),
           );
         },
       ),
