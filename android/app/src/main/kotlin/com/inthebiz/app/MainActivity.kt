@@ -1,4 +1,4 @@
-package com.example.in_the_biz_ai
+package com.inthebiz.app
 
 import io.flutter.embedding.android.FlutterActivity
 
