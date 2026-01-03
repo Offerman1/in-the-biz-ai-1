@@ -337,68 +337,60 @@ class HeroCard extends StatelessWidget {
 
 ---
 
-## 🔐 GOOGLE PLAY & REVENUECAT API ACCESS (NEW - January 3, 2026)
+## 🤖 AI VISION FEATURES - UI DESIGN (UPDATED - January 2, 2026)
 
-**We have automated API access to both Google Play Console and RevenueCat.**
+This section defines the UI placement strategy for the AI Vision features.
 
-### Google Play Developer API
+**Consolidated Vision:** The AI Vision features and logic are now consolidated into `docs/AI_VISION_MASTER_BLUEPRINT.md`.
 
-**Service Account:** `revenuecat-play-billing@gen-lang-client-0009693474.iam.gserviceaccount.com`
-**Credentials File:** `play-service-account.json` (in project root)
-**Package Name:** `com.inthebiz.app`
+**Core Principle:** A unified Scan button provides access to all AI-powered scanning functionalities.
 
-**Available Scripts:**
-```cmd
-# Test Google Play API authentication
-node scripts/test-play-auth.mjs
+### 1. ✨ Unified Scan Button
 
-# Create subscription products in Google Play
-node scripts/create-play-products.mjs
+-   **Placement:** Header of Add Shift, Edit Shift, and Shift Details screens.
+    ```
+    │  ← Back    [Title]    [✨ Scan]  │
+    ```
+-   **Action:** Tapping the Scan button opens a bottom sheet menu.
+-   **Icon:** Use ✨ (sparkles) to suggest AI magic.
 
-# Upload new release to Google Play (internal testing track)
-node scripts/upload-release.mjs
+### 2. Scan Options - Bottom Sheet Menu
 
-# Get tester emails from database
-node scripts/get-tester-emails.mjs
-```
+-   **Menu Items:**
+    ```
+    ┌──────────────────────────────────┐
+    │ ✨ Scan Business Card              │
+    │ ✨ Scan BEO (Banquet Event Order)   │
+    │ ✨ Scan Paycheck                  │
+    │ ✨ Scan Invoice                   │
+    └──────────────────────────────────┘
+    ```
+-   **Behavior:**
+    -   Each item triggers the camera, initiating the respective scan.
 
-**What the AI can do automatically:**
-- ✅ Create subscription products in Google Play Console
-- ✅ Upload app bundles (.aab files) to internal testing
-- ✅ Create releases on internal testing track
-- ✅ Test API authentication
-- ✅ List existing subscriptions
-- ✅ Verify service account permissions
-- ✅ Extract tester emails from Supabase database
+### 3. Post-Scan Verification Screen
 
-**IMPORTANT:** Always ASK the user before uploading a release. Do NOT automatically run `upload-release.mjs` without explicit confirmation. The script is available but should only be used when user explicitly requests deployment. The script is available but should only be used when user explicitly requests deployment.
+-   **Purpose:** Display extracted data for confirmation.
+-   **Elements:**
+    -   Image of the scanned document.
+    -   Fields: Job, Client, Date, Hours, Pay Rate, Total Pay
+    -   Button: ✅ Confirm & Save Shift
+    -   Button: 重新扫描 (Rescan) - to retake the scan.
 
-**Requirements:**
-- Service account must have **Admin (all permissions)** at app level in Play Console
-- Payment profile must be set up in Google Play Console
-- App must be uploaded to Play Console (at least to internal testing)
-- App signing key configured in `android/key.properties`
+### 4. Empty State
 
-**Automated Release Workflow:**
-1. Update version in `pubspec.yaml` (e.g., `version: 1.0.0+3`)
-2. Build: `flutter build appbundle --release`
-3. Upload: `node scripts/upload-release.mjs`
-4. Script automatically creates edit, uploads bundle, assigns to track, and commits
+-   **Display:** When no shifts exist.
+-   **Elements:**
+    ```
+    ✨ No Shifts Yet - Start Scanning! ✨
+    ```
+-   **Action:** Tapping this displays the Scan Options menu.
 
-**Adding Testers:**
-- Run `node scripts/get-tester-emails.mjs` to get emails from database
-- Testers must be added manually via Play Console (API doesn't support email lists, only Google Groups)
+### 5. Code Overview
 
-### RevenueCat API
-
-**API Keys stored in `.env`:**
-- `REVENUECAT_SECRET_KEY` - V2 Secret Key (starts with `sk_`)\n- `REVENUECAT_PUBLIC_KEY` - Public SDK key (starts with `goog_`)\n
-**Project Info:**\n- **Project ID:** &#96;proj42034829&#96;\n- **App ID:** &#96;app9cc9915545&#96;\n
-**Available Script:**\n&#96;&#96;&#96;cmd\n# Automatically configure RevenueCat (products, entitlements, offerings)\nnode scripts/setup-revenuecat-complete.mjs\n&#96;&#96;&#96;\n
-**What the AI can do automatically:**\n- ✅ Create products in RevenueCat\n- ✅ Create entitlements\n- ✅ Create offerings and packages\n- ✅ Attach products to entitlements\n- ✅ Configure complete subscription setup\n
-**Current Configuration:**\n- **Products:** &#96;pro_monthly:monthly-plan&#96; ($4.99/mo), &#96;pro_yearly:yearly-plan&#96; ($49.99/yr)\n- **Entitlement:** &#96;pro&#96;\n- **Offering:** &#96;default&#96; with packages &#96;monthly&#96; and &#96;annual&#96;\n
-**When user asks to modify subscriptions:**\n1. Use the appropriate script to make changes via API\n2. Do NOT ask user to manually configure things in dashboards
-3. Both Google Play and RevenueCat can be managed programmatically
+-   **Central Widget:** A single, versatile `HeroCard` widget.
+-   **Integration:** Used across the app for dashboard earnings, shift summaries, and job cards.
+-   **Functionality:** Displays key interactive elements with a dark background and green/blue gradient.
 
 ---
 
@@ -615,25 +607,65 @@ On Windows, configure Docker Desktop to start automatically to ensure the Supaba
 
 ---
 
-## 🤖 AI VISION FEATURES - UI DESIGN (UPDATED - January 2, 2026)
+## 🔐 GOOGLE PLAY & REVENUECAT API ACCESS (NEW - January 3, 2026)
 
-This section defines the UI placement strategy for the AI Vision features.
+**We have automated API access to both Google Play Console and RevenueCat.**
 
-**Consolidated Vision:** The AI Vision features and logic are now consolidated into `docs/AI_VISION_MASTER_BLUEPRINT.md`.
+### Google Play Developer API
 
-**Core Principle:** A unified Scan button provides access to all AI-powered scanning functionalities.
+**Service Account:** `revenuecat-play-billing@gen-lang-client-0009693474.iam.gserviceaccount.com`
+**Credentials File:** `play-service-account.json` (in project root)
+**Package Name:** `com.inthebiz.app`
 
-### 1. ✨ Unified Scan Button
+**Available Scripts:**
+```cmd
+# Test Google Play API authentication
+node scripts/test-play-auth.mjs
 
--   **Placement:** Header of Add Shift, Edit Shift, and Shift Details screens.
-    ```
-    │  ← Back    [Title]    [✨ Scan]  │
-    ```
--   **Action:** Tapping the Scan button opens a bottom sheet menu.
--   **Icon:** Use ✨ (sparkles) to suggest AI magic.
+# Create subscription products in Google Play
+node scripts/create-play-products.mjs
 
-### 2. Scan Options - Bottom Sheet Menu
+# Upload new release to Google Play (internal testing track)
+node scripts/upload-release.mjs
 
--   **Menu Items:**
-    ```
-    ┌──────────────────────────────────┐
+# Get tester emails from database
+node scripts/get-tester-emails.mjs
+```
+
+**What the AI can do automatically:**
+- ✅ Create subscription products in Google Play Console
+- ✅ Upload app bundles (.aab files) to internal testing
+- ✅ Create releases on internal testing track
+- ✅ Test API authentication
+- ✅ List existing subscriptions
+- ✅ Verify service account permissions
+- ✅ Extract tester emails from Supabase database
+
+**IMPORTANT:** Always ASK the user before uploading a release. Do NOT automatically run `upload-release.mjs` without explicit confirmation. The script is available but should only be used when user explicitly requests deployment. The script is available but should only be used when user explicitly requests deployment.
+
+**Requirements:**
+- Service account must have **Admin (all permissions)** at app level in Play Console
+- Payment profile must be set up in Google Play Console
+- App must be uploaded to Play Console (at least to internal testing)
+- App signing key configured in `android/key.properties`
+
+**Automated Release Workflow:**
+1. Update version in `pubspec.yaml` (e.g., `version: 1.0.0+3`)
+2. Build: `flutter build appbundle --release`
+3. Upload: `node scripts/upload-release.mjs`
+4. Script automatically creates edit, uploads bundle, assigns to track, and commits
+
+**Adding Testers:**
+- Run `node scripts/get-tester-emails.mjs` to get emails from database
+- Testers must be added manually via Play Console (API doesn't support email lists, only Google Groups)
+
+### RevenueCat API
+
+**API Keys stored in `.env`:**
+- `REVENUECAT_SECRET_KEY` - V2 Secret Key (starts with `sk_`)\n- `REVENUECAT_PUBLIC_KEY` - Public SDK key (starts with `goog_`)\n
+**Project Info:**\n- **Project ID:** &#96;proj42034829&#96;\n- **App ID:** &#96;app9cc9915545&#96;\n
+**Available Script:**\n&#96;&#96;&#96;cmd\n# Automatically configure RevenueCat (products, entitlements, offerings)\nnode scripts/setup-revenuecat-complete.mjs\n&#96;&#96;&#96;\n
+**What the AI can do automatically:**\n- ✅ Create products in RevenueCat\n- ✅ Create entitlements\n- ✅ Create offerings and packages\n- ✅ Attach products to entitlements\n- ✅ Configure complete subscription setup\n
+**Current Configuration:**\n- **Products:** &#96;pro_monthly:monthly-plan&#96; ($4.99/mo), &#96;pro_yearly:yearly-plan&#96; ($49.99/yr)\n- **Entitlement:** &#96;pro&#96;\n- **Offering:** &#96;default&#96; with packages &#96;monthly&#96; and &#96;annual&#96;\n
+**When user asks to modify subscriptions:**\n1. Use the appropriate script to make changes via API\n2. Do NOT ask user to manually configure things in dashboards
+3. Both Google Play and RevenueCat can be managed programmatically
