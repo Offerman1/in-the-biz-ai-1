@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SubscriptionService extends ChangeNotifier {
   static final SubscriptionService _instance = SubscriptionService._internal();
@@ -9,7 +10,10 @@ class SubscriptionService extends ChangeNotifier {
   SubscriptionService._internal();
 
   bool _isPro = false;
-  bool get isPro => _isPro;
+  bool get isPro => _isPro || _isDebugProMode;
+
+  bool _isDebugProMode = false;
+  bool get isDebugProMode => _isDebugProMode;
 
   CustomerInfo? _customerInfo;
   CustomerInfo? get customerInfo => _customerInfo;
@@ -23,6 +27,10 @@ class SubscriptionService extends ChangeNotifier {
 
   Future<void> initialize() async {
     await Purchases.setLogLevel(LogLevel.debug);
+
+    // Load debug Pro mode setting
+    final prefs = await SharedPreferences.getInstance();
+    _isDebugProMode = prefs.getBool('debug_pro_mode') ?? false;
 
     PurchasesConfiguration? configuration;
     if (Platform.isAndroid) {
@@ -93,4 +101,5 @@ class SubscriptionService extends ChangeNotifier {
       return false;
     }
   }
-}
+
+ 
