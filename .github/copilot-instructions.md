@@ -355,16 +355,18 @@ node scripts/test-play-auth.mjs
 # Create subscription products in Google Play
 node scripts/create-play-products.mjs
 
-# Upload new release to Google Play
+# Upload new release to Google Play (internal testing track)
 node scripts/upload-release.mjs
 ```
 
 **What the AI can do automatically:**
 - ✅ Create subscription products in Google Play Console
-- ✅ Upload new releases to Google Play (internal testing track)
+- ✅ Upload app bundles (.aab files) to internal testing
+- ✅ Create releases on internal testing track
 - ✅ Test API authentication
 - ✅ List existing subscriptions
 - ✅ Verify service account permissions
+- ✅ Extract tester emails from Supabase database
 
 **IMPORTANT:** Always ASK the user before uploading a release. Do NOT automatically run `upload-release.mjs` without explicit confirmation. The script is available but should only be used when user explicitly requests deployment.
 
@@ -372,7 +374,17 @@ node scripts/upload-release.mjs
 - Service account must have **Admin (all permissions)** at app level in Play Console
 - Payment profile must be set up in Google Play Console
 - App must be uploaded to Play Console (at least to internal testing)
-- Google Play Android Developer API must be enabled
+- App signing key configured in `android/key.properties`
+
+**Automated Release Workflow:**
+1. Update version in `pubspec.yaml` (e.g., `version: 1.0.0+3`)
+2. Build: `flutter build appbundle --release`
+3. Upload: `node scripts/upload-release.mjs`
+4. Script automatically creates edit, uploads bundle, assigns to track, and commits
+
+**Adding Testers:**
+- Run `node scripts/get-tester-emails.mjs` to get emails from database
+- Testers must be added manually via Play Console (API doesn't support email lists, only Google Groups)
 
 ### RevenueCat API
 
@@ -695,22 +707,3 @@ This section defines the UI placement strategy for the AI Vision features.
     │  What would you like to scan?    │
     ├──────────────────────────────────┤
     │  🧾 BEO (Event Details)          │
-    │  📊 Server Checkout              │
-    │  💼 Business Card (Contact)      │
-    │  📄 Invoice (Future)             │
-    │  🧾 Receipt (Future)             │
-    │  🧾 Paycheck (New)              │
-    └──────────────────────────────────┘
-    ```
-
-### 3. Scan Actions
-
--   **BEO (Event Details):** Extracts event details and auto-fills the shift form.
-    *   AI should prompt: "Scan another page?" or "Ready to import?"
-    *   Concatenate data from multi-page scans.
--   **Server Checkout:** Extracts financial data and auto-fills the shift form.
-    *   AI should prompt: "Scan another page?" or "Ready to import?"
-    *   Account for variable formats.
-    *   Account for multiple pages in a checkout.
-    *   Start simple, extract what is consistently available, and improve over time.
-    *
