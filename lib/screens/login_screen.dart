@@ -126,7 +126,8 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _signInWithGoogle() async {
     // This should only be called on mobile, never on web
     if (kIsWeb) {
-      print('Error: _signInWithGoogle() called on web - this should not happen');
+      print(
+          'Error: _signInWithGoogle() called on web - this should not happen');
       return;
     }
 
