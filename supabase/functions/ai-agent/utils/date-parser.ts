@@ -1,8 +1,38 @@
 // Date Parser - Converts natural language dates to YYYY-MM-DD format
 export class DateParser {
+  // Store the user's local date for reference (set from the request)
+  private static userLocalDate: Date | null = null;
+
+  /**
+   * Set the user's local date to use as reference for "today", "yesterday", etc.
+   * Call this at the start of each request with the user's local date.
+   * @param localDateStr - The user's local date in YYYY-MM-DD format
+   */
+  static setUserLocalDate(localDateStr: string | null): void {
+    if (localDateStr && /^\d{4}-\d{2}-\d{2}$/.test(localDateStr)) {
+      const [year, month, day] = localDateStr.split('-').map(Number);
+      // Create date at noon to avoid any timezone edge cases
+      this.userLocalDate = new Date(year, month - 1, day, 12, 0, 0);
+      console.log(`[DateParser] Set user local date to: ${localDateStr}`);
+    } else {
+      this.userLocalDate = null;
+    }
+  }
+
+  /**
+   * Get the reference date - user's local date if set, otherwise server time
+   */
+  private static getNow(): Date {
+    if (this.userLocalDate) {
+      // Return a copy to avoid mutations
+      return new Date(this.userLocalDate.getTime());
+    }
+    return new Date();
+  }
+
   static parse(dateStr: string): string {
     const lower = dateStr.toLowerCase().trim();
-    const now = new Date();
+    const now = this.getNow();
 
     // Handle exact formats first
     if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {

@@ -82,7 +82,7 @@ class GoogleCalendarService {
 
       // Initialize GoogleSignIn singleton once
       if (!_initialized) {
-        print('[v1.1.2] Initializing GoogleSignIn...');
+        print('[v1.1.3] Initializing GoogleSignIn...');
         await GoogleSignIn.instance.initialize();
         _initialized = true;
 
@@ -90,49 +90,65 @@ class GoogleCalendarService {
         GoogleSignIn.instance.authenticationEvents.listen((event) {
           if (event is GoogleSignInAuthenticationEventSignIn) {
             _currentUser = event.user;
-            print('[v1.1.2] User signed in via event: ${event.user?.id}');
+            print('[v1.1.3] User signed in via event: ${event.user?.id}');
           } else if (event is GoogleSignInAuthenticationEventSignOut) {
             _currentUser = null;
-            print('[v1.1.2] User signed out');
+            print('[v1.1.3] User signed out');
           }
         });
       }
 
       // Try lightweight auth to get current user
-      print('[v1.1.2] Attempting lightweight authentication...');
+      print('[v1.1.3] Attempting lightweight authentication...');
       final lightweightUser =
           await GoogleSignIn.instance.attemptLightweightAuthentication();
 
       // Wait a bit for authentication event to fire
-      await Future.delayed(const Duration(milliseconds: 1000));
+      await Future.delayed(const Duration(milliseconds: 500));
 
       // Update _currentUser from the authentication result OR from event
       if (lightweightUser != null) {
         _currentUser = lightweightUser;
-        print('[v1.1.2] Got user from lightweight auth: ${lightweightUser.id}');
+        print('[v1.1.3] Got user from lightweight auth: ${lightweightUser.id}');
       } else if (_currentUser != null) {
-        print('[v1.1.2] Got user from event listener: ${_currentUser!.id}');
+        print('[v1.1.3] Got user from event listener: ${_currentUser!.id}');
       } else {
+        // No user from lightweight auth or events - need to authenticate
         print(
-            '[v1.1.2] No user signed in - calendar sync requires Google Sign-In');
-        return false;
+            '[v1.1.3] No lightweight auth - attempting full authentication...');
+
+        if (GoogleSignIn.instance.supportsAuthenticate()) {
+          // Use authenticate() method on platforms that support it
+          final authenticatedUser = await GoogleSignIn.instance.authenticate();
+          _currentUser = authenticatedUser;
+          print(
+              '[v1.1.3] Got user from authenticate(): ${authenticatedUser?.id}');
+        } else {
+          print('[v1.1.3] Platform does not support authenticate()');
+          return false;
+        }
+
+        if (_currentUser == null) {
+          print('[v1.1.3] Authentication failed or was cancelled');
+          return false;
+        }
       }
 
-      print('[v1.1.2] User found, requesting calendar scope authorization...');
+      print('[v1.1.3] User found, requesting calendar scope authorization...');
 
       // Request authorization for calendar scopes from existing user
       // On web, this triggers Google's consent popup for calendar access
       final authorization = await _currentUser!.authorizationClient
           .authorizeScopes(AuthService.calendarScopes);
 
-      print('[v1.1.2] Authorization granted, creating HTTP client...');
+      print('[v1.1.3] Authorization granted, creating HTTP client...');
 
       // Get authenticated HTTP client
       final httpClient = authorization.authClient(
         scopes: AuthService.calendarScopes,
       );
 
-      print('[v1.1.2] Creating CalendarApi...');
+      print('[v1.1.3] Creating CalendarApi...');
       _calendarApi = calendar.CalendarApi(httpClient);
 
       // Save that we have calendar access
@@ -141,8 +157,8 @@ class GoogleCalendarService {
 
       return true;
     } catch (e, stackTrace) {
-      print('[v1.1.2] Error requesting calendar access: $e');
-      print('[v1.1.2] Stack trace: $stackTrace');
+      print('[v1.1.3] Error requesting calendar access: $e');
+      print('[v1.1.3] Stack trace: $stackTrace');
       return false;
     }
   }

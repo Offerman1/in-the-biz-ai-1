@@ -34,8 +34,8 @@ serve(async (req) => {
   }
 
   try {
-    // Parse request
-    const { message, history = [] } = await req.json();
+    // Parse request - including timezone info from client
+    const { message, history = [], timeZoneOffset = 0, timeZoneName = 'UTC', localDate = null } = await req.json();
 
     if (!message) {
       return new Response(
@@ -120,8 +120,26 @@ serve(async (req) => {
     });
 
     // Build system prompt
-    const currentDate = new Date().toISOString().split("T")[0];
-    const currentYear = new Date().getFullYear();
+    // Use the client's local date if provided, otherwise calculate from timezone offset
+    let currentDate: string;
+    let currentYear: number;
+    
+    if (localDate) {
+      // Client sent their local date - use it directly
+      currentDate = localDate;
+      currentYear = parseInt(localDate.split('-')[0]);
+    } else {
+      // Fallback: calculate user's local time from timezone offset
+      const serverNow = new Date();
+      const userLocalTime = new Date(serverNow.getTime() + (timeZoneOffset * 60 * 1000) + (serverNow.getTimezoneOffset() * 60 * 1000));
+      currentDate = userLocalTime.toISOString().split("T")[0];
+      currentYear = userLocalTime.getFullYear();
+    }
+    
+    console.log(`[AI Agent] User timezone: ${timeZoneName}, offset: ${timeZoneOffset} min, local date: ${currentDate}`);
+    
+    // Set the user's local date for the DateParser to use when parsing "today", "yesterday", etc.
+    DateParser.setUserLocalDate(currentDate);
     
     const systemPrompt = `You are "Biz", an intelligent AI assistant for service industry workers who track tips and income.
 

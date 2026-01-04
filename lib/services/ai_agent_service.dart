@@ -29,6 +29,18 @@ class AIAgentService {
         debugPrint('[AI Agent] WARNING: No user session found!');
       }
 
+      // Get the user's local timezone info
+      final now = DateTime.now();
+      final timeZoneOffset = now.timeZoneOffset.inMinutes;
+      final timeZoneName = now.timeZoneName;
+      // Also send the user's current local date in YYYY-MM-DD format
+      final localDate =
+          '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+
+      debugPrint(
+          '[AI Agent] User timezone: $timeZoneName (offset: $timeZoneOffset minutes)');
+      debugPrint('[AI Agent] User local date: $localDate');
+
       // Use the Supabase client SDK to invoke the function
       // This automatically handles authentication headers (Authorization and apikey)
       final response = await Supabase.instance.client.functions.invoke(
@@ -36,6 +48,9 @@ class AIAgentService {
         body: {
           'message': message,
           'history': history,
+          'timeZoneOffset': timeZoneOffset,
+          'timeZoneName': timeZoneName,
+          'localDate': localDate,
         },
       );
 
