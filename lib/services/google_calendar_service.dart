@@ -78,7 +78,7 @@ class GoogleCalendarService {
     }
 
     try {
-      print('[v1.0.5] Starting requestCalendarAccess...');
+      print('[v1.0.6] Starting requestCalendarAccess...');
       // Initialize GoogleSignIn singleton once
       if (!_initialized) {
         await GoogleSignIn.instance.initialize();
@@ -96,29 +96,28 @@ class GoogleCalendarService {
 
       // Authenticate user and get account directly
       // Note: authenticate() never returns null on web, throws on cancellation
-      print('[v1.0.5] About to call authenticate()...');
+      print('[v1.0.6] About to call authenticate()...');
       final account = await GoogleSignIn.instance.authenticate(
         scopeHint: AuthService.calendarScopes,
       );
 
-      print(
-          '[v1.0.5] Authentication successful, account: ${account.displayName}');
+      print('[v1.0.6] Authentication successful, account ID: ${account.id}');
       _currentUser = account;
 
       // Request authorization for calendar scopes
-      print('[v1.0.5] Getting authorizationClient...');
+      print('[v1.0.6] Getting authorizationClient...');
       final authClient = account.authorizationClient;
-      print('[v1.0.5] Got authClient, calling authorizeScopes...');
+      print('[v1.0.6] Got authClient, calling authorizeScopes...');
       final authorization =
           await authClient.authorizeScopes(AuthService.calendarScopes);
 
-      print('[v1.0.5] Authorization received, creating HTTP client...');
+      print('[v1.0.6] Authorization received, creating HTTP client...');
       // Get authenticated HTTP client
       final httpClient = authorization.authClient(
         scopes: AuthService.calendarScopes,
       );
 
-      print('[v1.0.5] Creating CalendarApi...');
+      print('[v1.0.6] Creating CalendarApi...');
       _calendarApi = calendar.CalendarApi(httpClient);
 
       // Save that we have calendar access
@@ -127,8 +126,8 @@ class GoogleCalendarService {
 
       return true;
     } catch (e, stackTrace) {
-      print('[v1.0.5] Error requesting calendar access: $e');
-      print('[v1.0.5] Stack trace: $stackTrace');
+      print('[v1.0.6] Error requesting calendar access: $e');
+      print('[v1.0.6] Stack trace: $stackTrace');
       return false;
     }
   }
