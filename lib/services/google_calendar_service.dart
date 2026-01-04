@@ -78,6 +78,7 @@ class GoogleCalendarService {
     }
 
     try {
+      print('[v1.0.4] Starting requestCalendarAccess...');
       // Initialize GoogleSignIn singleton once
       if (!_initialized) {
         await GoogleSignIn.instance.initialize();
@@ -99,17 +100,22 @@ class GoogleCalendarService {
         scopeHint: AuthService.calendarScopes,
       );
 
+      print(
+          '[v1.0.4] Authentication successful, got account: ${account.email}');
       _currentUser = account;
 
       // Request authorization for calendar scopes
+      print('[v1.0.4] Requesting authorization for calendar scopes...');
       final authorization = await account.authorizationClient
           .authorizeScopes(AuthService.calendarScopes);
 
+      print('[v1.0.4] Authorization received, creating HTTP client...');
       // Get authenticated HTTP client
       final httpClient = authorization.authClient(
         scopes: AuthService.calendarScopes,
       );
 
+      print('[v1.0.4] Creating CalendarApi...');
       _calendarApi = calendar.CalendarApi(httpClient);
 
       // Save that we have calendar access
@@ -118,7 +124,7 @@ class GoogleCalendarService {
 
       return true;
     } catch (e) {
-      print('Error requesting calendar access: $e');
+      print('[v1.0.4] Error requesting calendar access: $e');
       return false;
     }
   }
