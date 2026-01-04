@@ -48,14 +48,20 @@ class GoogleCalendarService {
       }
 
       // Check if we already have authorization for calendar scopes
-      final authorization = await _currentUser!.authorizationClient
-          .authorizationForScopes(AuthService.calendarScopes);
+      final authClient = _currentUser!.authorizationClient;
+      final authorization =
+          await authClient.authorizationForScopes(AuthService.calendarScopes);
 
-      // Get authenticated HTTP client (authorization can be null if not authorized yet)
-      final httpClient = authorization?.authClient(
-            scopes: AuthService.calendarScopes,
-          ) ??
-          (throw Exception('No calendar authorization found'));
+      // If no authorization, user needs to grant calendar access
+      if (authorization == null) {
+        print('No calendar authorization - user needs to grant access');
+        return false;
+      }
+
+      // Get authenticated HTTP client
+      final httpClient = authorization.authClient(
+        scopes: AuthService.calendarScopes,
+      );
 
       _calendarApi = calendar.CalendarApi(httpClient);
       return true;
