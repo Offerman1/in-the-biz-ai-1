@@ -39,7 +39,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _initializeGoogleSignInWeb() async {
-    try:
+    try {
       // Initialize GoogleSignIn (scopes are requested during authorization, not here)
       await GoogleSignIn.instance.initialize(
         clientId:
