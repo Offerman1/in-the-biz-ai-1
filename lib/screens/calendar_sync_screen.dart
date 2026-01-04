@@ -58,14 +58,59 @@ class _CalendarSyncScreenState extends State<CalendarSyncScreen> {
   Future<void> _checkPermissions() async {
     setState(() => _isLoading = true);
 
-    var permissionsGranted = await _deviceCalendarPlugin.hasPermissions();
-    if (permissionsGranted.isSuccess && (permissionsGranted.data ?? false)) {
-      setState(() {
-        _hasPermission = true;
-        _showSetupGuide = false;
-      });
-      await _loadCalendars();
-    } else {
+    // On web, check if we have previously granted Google Calendar access
+    if (kIsWeb) {
+      final prefs = await SharedPreferences.getInstance();
+      final hasGoogleCalendarAccess =
+          prefs.getBool('google_calendar_access') ?? false;
+
+      if (hasGoogleCalendarAccess) {
+        // Try to restore the Google Calendar session
+        _googleCalendarService = GoogleCalendarService();
+        final restored = await _googleCalendarService!.initialize();
+
+        if (restored && _googleCalendarService!.isReady) {
+          print('[v1.1.8] Restored Google Calendar session');
+          setState(() {
+            _hasPermission = true;
+            _showSetupGuide = false;
+          });
+          await _loadGoogleCalendars();
+        } else {
+          // Session expired, need to re-authenticate
+          print(
+              '[v1.1.8] Google Calendar session expired, showing setup guide');
+          setState(() {
+            _hasPermission = false;
+            _isLoading = false;
+          });
+        }
+      } else {
+        setState(() {
+          _hasPermission = false;
+          _isLoading = false;
+        });
+      }
+      return;
+    }
+
+    // Mobile: use device calendar plugin
+    try {
+      var permissionsGranted = await _deviceCalendarPlugin.hasPermissions();
+      if (permissionsGranted.isSuccess && (permissionsGranted.data ?? false)) {
+        setState(() {
+          _hasPermission = true;
+          _showSetupGuide = false;
+        });
+        await _loadCalendars();
+      } else {
+        setState(() {
+          _hasPermission = false;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      print('[CalendarSync] Error checking permissions: $e');
       setState(() {
         _hasPermission = false;
         _isLoading = false;
@@ -1013,7 +1058,7 @@ class _CalendarSyncScreenState extends State<CalendarSyncScreen> {
               shift.date.year == startTime.year &&
               shift.date.month == startTime.month &&
               shift.date.day == startTime.day &&
-              shift.source == 'google_calendar',
+              shift.source == 'calendar_sync',
           orElse: () => Shift(
             id: '',
             date: DateTime(1900),
@@ -1060,7 +1105,7 @@ class _CalendarSyncScreenState extends State<CalendarSyncScreen> {
           creditTips: 0,
           hourlyRate: 0,
           status: isFuture ? 'scheduled' : 'completed',
-          source: 'google_calendar',
+          source: 'calendar_sync', // Must match DB constraint
           calendarEventId: event.id,
           notes: event.description,
           createdAt: DateTime.now(),
