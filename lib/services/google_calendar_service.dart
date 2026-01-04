@@ -71,14 +71,15 @@ class GoogleCalendarService {
     }
   }
 
-  /// Request calendar access (re-authenticate with calendar scopes)
+  /// Request calendar access (authorize calendar scopes for existing user)
   Future<bool> requestCalendarAccess() async {
     if (!kIsWeb) {
       return false;
     }
 
     try {
-      print('[v1.0.8] Starting requestCalendarAccess...');
+      print('[v1.0.9] Starting requestCalendarAccess...');
+
       // Initialize GoogleSignIn singleton once
       if (!_initialized) {
         await GoogleSignIn.instance.initialize();
@@ -94,30 +95,30 @@ class GoogleCalendarService {
         });
       }
 
-      // Authenticate user and get account directly
-      // Note: authenticate() never returns null on web, throws on cancellation
-      print('[v1.0.8] About to call authenticate()...');
-      final account = await GoogleSignIn.instance.authenticate(
-        scopeHint: AuthService.calendarScopes,
-      );
+      // Try lightweight auth to get current user
+      await GoogleSignIn.instance.attemptLightweightAuthentication();
+      await Future.delayed(const Duration(milliseconds: 500));
 
-      print('[v1.0.8] Authentication successful');
-      _currentUser = account;
+      if (_currentUser == null) {
+        print('[v1.0.9] No user signed in');
+        return false;
+      }
 
-      // Request authorization for calendar scopes
-      print('[v1.0.8] Getting authorizationClient...');
-      final authClient = account.authorizationClient;
-      print('[v1.0.8] Got authClient, calling authorizeScopes...');
-      final authorization =
-          await authClient.authorizeScopes(AuthService.calendarScopes);
+      print('[v1.0.9] User found, requesting calendar scope authorization...');
 
-      print('[v1.0.8] Authorization received, creating HTTP client...');
+      // Request authorization for calendar scopes from existing user
+      // On web, this triggers Google's consent popup for calendar access
+      final authorization = await _currentUser!.authorizationClient
+          .authorizeScopes(AuthService.calendarScopes);
+
+      print('[v1.0.9] Authorization granted, creating HTTP client...');
+
       // Get authenticated HTTP client
       final httpClient = authorization.authClient(
         scopes: AuthService.calendarScopes,
       );
 
-      print('[v1.0.8] Creating CalendarApi...');
+      print('[v1.0.9] Creating CalendarApi...');
       _calendarApi = calendar.CalendarApi(httpClient);
 
       // Save that we have calendar access
@@ -126,8 +127,8 @@ class GoogleCalendarService {
 
       return true;
     } catch (e, stackTrace) {
-      print('[v1.0.8] Error requesting calendar access: $e');
-      print('[v1.0.8] Stack trace: $stackTrace');
+      print('[v1.0.9] Error requesting calendar access: $e');
+      print('[v1.0.9] Stack trace: $stackTrace');
       return false;
     }
   }
