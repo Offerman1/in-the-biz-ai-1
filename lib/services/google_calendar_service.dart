@@ -82,11 +82,8 @@ class GoogleCalendarService {
 
       // Initialize GoogleSignIn singleton once
       if (!_initialized) {
-        print('[v1.1.1] Initializing GoogleSignIn with calendar scopes...');
-        await GoogleSignIn.instance.initialize(
-          // Include calendar scopes in initialization
-          scopes: AuthService.calendarScopes,
-        );
+        print('[v1.1.1] Initializing GoogleSignIn...');
+        await GoogleSignIn.instance.initialize();
         _initialized = true;
 
         // Listen to authentication events

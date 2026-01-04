@@ -39,15 +39,13 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _initializeGoogleSignInWeb() async {
-    try {
-      // Initialize with calendar scopes included (optional - user can skip during login)
-      // This prevents re-initialization issues when requesting calendar access later
+    try:
+      // Initialize GoogleSignIn (scopes are requested during authorization, not here)
       await GoogleSignIn.instance.initialize(
         clientId:
             '30441285456-pkvqkagh3fcv0b6n71t5tpnuda94l8d5.apps.googleusercontent.com',
         serverClientId:
             '30441285456-pkvqkagh3fcv0b6n71t5tpnuda94l8d5.apps.googleusercontent.com',
-        scopes: AuthService.calendarScopes, // Include calendar scopes
       );
 
       GoogleSignIn.instance.authenticationEvents.listen((event) async {
