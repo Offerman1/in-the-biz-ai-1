@@ -112,9 +112,12 @@ description: AI rules derived by SpecStory from the project AI interaction histo
 
 ## 🌐 Web Deployment
 
-- **Manual deployment only** (see deploy.bat for steps).
-- Build, copy `/build/web` to root, commit, push to `gh-pages`.
-- Use `deploy.bat` for automation.
+**Single-command deployment (recommended):**
+```cmd
+cd "c:\Users\Brandon 2021\Desktop\In The Biz AI" ; flutter build web --release ; robocopy "build\web" "." *.* /E /XD build .git node_modules android ios lib docs scripts supabase .idea .vscode .github assets web .specstory .dart_tool ; git add . ; git commit -m "Deploy: [Your message]" ; git push origin gh-pages
+```
+
+**See full deployment section below for details and alternatives.**
 
 ---
 
@@ -554,42 +557,37 @@ This removes PowerShell from the profiles entirely, so VS Code can't offer it as
 
 **IMPORTANT:** GitHub Pages serves files from the **ROOT** of the gh-pages branch, NOT from `build/web/` folder.
 
-### MANUAL DEPLOYMENT ONLY (TEMPORARY)
+### SINGLE-COMMAND DEPLOYMENT (RECOMMENDED)
 
-Due to ongoing issues with deployment stability, automated deployment is disabled. Use the following manual process ONLY.
+**Use this one-line command for all web deployments:**
 
-**Source:**
-- Code in the root of the gh-pages branch
-
-**Deployment Steps:**
-
-1.  **Build**: From the project root, build the web app:
-    ```powershell
-    flutter build web --release --base-href=/
-    ```
-2.  **Copy to Root**: Copy the contents of `/build/web` to the root directory, EXCLUDING the `build` directory itself (to avoid infinite loops). Use robocopy with proper exclusions to prevent accidental commits of node_modules, .git folder, etc.:
-
-```powershell
-robocopy "c:\Users\Brandon 2021\Desktop\In The Biz AI\build\web" "c:\Users\Brandon 2021\Desktop\In The Biz AI" *.* /E /XD build /XD .git /XD node_modules /XD android /XD ios /XD lib /XD docs /XD scripts /XD supabase /XD .idea /XD .vscode /XD .github /XD assets /XD web /XD .specstory /XD .dart_tool
+```cmd
+cd "c:\Users\Brandon 2021\Desktop\In The Biz AI" ; flutter build web --release ; robocopy "build\web" "." *.* /E /XD build .git node_modules android ios lib docs scripts supabase .idea .vscode .github assets web .specstory .dart_tool ; git add . ; git commit -m "Deploy: [Your message]" ; git push origin gh-pages
 ```
 
-*Note: Using robocopy is essential to prevent accidentally deleting files in the root directory.*
+**What this command does:**
+1. Navigates to project directory
+2. Builds Flutter web app in release mode
+3. Copies build files from `build/web` to root (excluding source folders)
+4. Stages all changes
+5. Commits with your message
+6. Pushes to gh-pages branch
 
-3.  **Commit and Push**: Commit all the changes and push them to the `gh-pages` branch.
-    - Stage the changes (click the + next to each file in the Source Control panel, or click "+" next to "Changes").
-    - Type a commit message.
-    - Click "Commit".
-    - Click "Sync Changes" (or the push button).
-
-```powershell
-git add *.js *.html *.json .last_build_id flutter_bootstrap.js flutter_service_worker.js canvaskit version.json icons
-git commit -m "Deploy: Web files in root for GitHub Pages"
-git push origin gh-pages
+**Example Usage:**
+```cmd
+cd "c:\Users\Brandon 2021\Desktop\In The Biz AI" ; flutter build web --release ; robocopy "build\web" "." *.* /E /XD build .git node_modules android ios lib docs scripts supabase .idea .vscode .github assets web .specstory .dart_tool ; git add . ; git commit -m "Deploy: Fix UTC timezone in AI agent" ; git push origin gh-pages
 ```
 
-**Deployment Script (deploy.bat):**
+**Why this approach:**
+- ✅ Single command deploys everything
+- ✅ No manual steps required
+- ✅ Consistent deployment process
+- ✅ Less room for error
+- ✅ Fast and efficient
 
-Create a batch file (`deploy.bat`) in the project root directory with the following content:
+**Alternative: Use deploy.bat**
+
+If you prefer, you can still use the `deploy.bat` script in the project root:
 
 ```bat
 @echo off
@@ -629,12 +627,9 @@ echo.
 pause
 ```
 
-**How to Use the Script:**
-
-1.  Double-click `deploy.bat` in File Explorer.
-2.  Alternatively, type `deploy.bat` in the terminal and press Enter.
-
-This script automates the entire deployment process, including building the app, copying the build files to the root directory, committing the changes, and pushing them to the `gh-pages` branch.
+**To use the batch file:**
+- Double-click `deploy.bat` in File Explorer, or
+- Run `deploy.bat` in the terminal
 
 ---
 
