@@ -554,8 +554,19 @@ class DatabaseService {
   }
 
   /// Mark a job as inactive (end a job but keep all data)
-  Future<void> deactivateJob(String jobId) async {
-    await _supabase.from('jobs').update({'is_active': false}).eq('id', jobId);
+  /// [reason] - The EndJobReason enum value (e.g., 'terminated', 'promoted')
+  /// [notes] - Optional user notes about why the job ended
+  Future<void> deactivateJob(
+    String jobId, {
+    String? reason,
+    String? notes,
+  }) async {
+    await _supabase.from('jobs').update({
+      'is_active': false,
+      'end_reason': reason,
+      'end_notes': notes,
+      'ended_at': DateTime.now().toIso8601String(),
+    }).eq('id', jobId);
   }
 
   /// Reactivate an inactive job
@@ -586,6 +597,84 @@ class DatabaseService {
   /// Restore a deleted job and all associated data
   Future<void> restoreJob(String jobId) async {
     await _supabase.rpc('restore_job', params: {'job_uuid': jobId});
+  }
+
+  /// Get shift count for a specific job
+  Future<int> getShiftCountForJob(String jobId) async {
+    final response = await _supabase
+        .from('shifts')
+        .select('id')
+        .eq('job_id', jobId)
+        .isFilter('deleted_at', null);
+
+    return (response as List).length;
+  }
+
+  /// Merge multiple jobs into one target job.
+  /// All shifts from source jobs are reassigned to the target job.
+  /// Source jobs are then deleted (soft delete).
+  Future<void> mergeJobs({
+    required String targetJobId,
+    required List<String> sourceJobIds,
+    String? newName,
+    String? newEmployer,
+    double? newRate,
+  }) async {
+    // 1. Update target job with new details if provided
+    final updates = <String, dynamic>{
+      'updated_at': DateTime.now().toIso8601String(),
+    };
+    if (newName != null && newName.isNotEmpty) {
+      updates['name'] = newName;
+    }
+    if (newEmployer != null) {
+      updates['employer'] = newEmployer;
+    }
+    if (newRate != null) {
+      updates['hourly_rate'] = newRate;
+    }
+
+    await _supabase.from('jobs').update(updates).eq('id', targetJobId);
+
+    // 2. Reassign all shifts from source jobs to target job
+    for (final sourceJobId in sourceJobIds) {
+      await _supabase
+          .from('shifts')
+          .update({
+            'job_id': targetJobId,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('job_id', sourceJobId)
+          .isFilter('deleted_at', null);
+
+      // Also update calendar_title_mappings if they exist
+      try {
+        await _supabase
+            .from('calendar_title_mappings')
+            .update({'job_id': targetJobId}).eq('job_id', sourceJobId);
+      } catch (e) {
+        // Ignore if table doesn't exist or no mappings
+      }
+
+      // Also update goals to point to new job
+      try {
+        await _supabase
+            .from('goals')
+            .update({'job_id': targetJobId})
+            .eq('job_id', sourceJobId)
+            .isFilter('deleted_at', null);
+      } catch (e) {
+        // Ignore if no goals
+      }
+    }
+
+    // 3. Soft delete the source jobs
+    for (final sourceJobId in sourceJobIds) {
+      await _supabase.from('jobs').update({
+        'deleted_at': DateTime.now().toIso8601String(),
+        'is_active': false,
+      }).eq('id', sourceJobId);
+    }
   }
 
   /// Permanently delete old archived items (called automatically or manually)
@@ -1306,5 +1395,109 @@ class DatabaseService {
       print('Auto-export to calendar failed: $e');
       // Don't throw - we don't want to fail the shift save if calendar export fails
     }
+  }
+
+  // ============================================
+  // INVOICES
+  // ============================================
+
+  /// Create a new invoice
+  Future<String> createInvoice(Map<String, dynamic> invoiceData) async {
+    final userId = _supabase.auth.currentUser?.id;
+    if (userId == null) throw Exception('User not logged in');
+
+    final response = await _supabase
+        .from('invoices')
+        .insert({
+          ...invoiceData,
+          'user_id': userId,
+          'created_at': DateTime.now().toIso8601String(),
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .select('id')
+        .single();
+
+    return response['id'] as String;
+  }
+
+  /// Get all invoices for user
+  Future<List<Map<String, dynamic>>> getInvoices({String? shiftId}) async {
+    final userId = _supabase.auth.currentUser?.id;
+    if (userId == null) return [];
+
+    var query = _supabase.from('invoices').select().eq('user_id', userId);
+
+    if (shiftId != null) {
+      query = query.eq('shift_id', shiftId);
+    }
+
+    final response = await query.order('invoice_date', ascending: false);
+    return List<Map<String, dynamic>>.from(response);
+  }
+
+  /// Update invoice
+  Future<void> updateInvoice(
+      String invoiceId, Map<String, dynamic> updates) async {
+    await _supabase.from('invoices').update({
+      ...updates,
+      'updated_at': DateTime.now().toIso8601String(),
+    }).eq('id', invoiceId);
+  }
+
+  /// Delete invoice
+  Future<void> deleteInvoice(String invoiceId) async {
+    await _supabase.from('invoices').delete().eq('id', invoiceId);
+  }
+
+  // ============================================
+  // RECEIPTS
+  // ============================================
+
+  /// Create a new receipt
+  Future<String> createReceipt(Map<String, dynamic> receiptData) async {
+    final userId = _supabase.auth.currentUser?.id;
+    if (userId == null) throw Exception('User not logged in');
+
+    final response = await _supabase
+        .from('receipts')
+        .insert({
+          ...receiptData,
+          'user_id': userId,
+          'created_at': DateTime.now().toIso8601String(),
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .select('id')
+        .single();
+
+    return response['id'] as String;
+  }
+
+  /// Get all receipts for user
+  Future<List<Map<String, dynamic>>> getReceipts({String? shiftId}) async {
+    final userId = _supabase.auth.currentUser?.id;
+    if (userId == null) return [];
+
+    var query = _supabase.from('receipts').select().eq('user_id', userId);
+
+    if (shiftId != null) {
+      query = query.eq('shift_id', shiftId);
+    }
+
+    final response = await query.order('receipt_date', ascending: false);
+    return List<Map<String, dynamic>>.from(response);
+  }
+
+  /// Update receipt
+  Future<void> updateReceipt(
+      String receiptId, Map<String, dynamic> updates) async {
+    await _supabase.from('receipts').update({
+      ...updates,
+      'updated_at': DateTime.now().toIso8601String(),
+    }).eq('id', receiptId);
+  }
+
+  /// Delete receipt
+  Future<void> deleteReceipt(String receiptId) async {
+    await _supabase.from('receipts').delete().eq('id', receiptId);
   }
 }

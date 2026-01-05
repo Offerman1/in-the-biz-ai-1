@@ -8,7 +8,9 @@ enum ScanType {
   businessCard('Business Card (Contact)', '💼',
       'Add contact to Event Team with social media'),
   paycheck('Paycheck', '💵', 'Track W-2 income, taxes, and YTD earnings'),
-  invoice('Invoice (Future)', '📄', 'For freelancers and contractors');
+  invoice(
+      'Invoice', '📄', 'Track client invoices for freelancers and contractors'),
+  receipt('Receipt', '🧾', 'Track expenses and deductions for tax purposes');
 
   final String displayName;
   final String emoji;

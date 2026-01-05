@@ -27,6 +27,10 @@ class JobTemplate {
   final bool showPhotos;
   final bool showNotes;
 
+  // Finance Documents (NEW)
+  final bool showInvoices; // For freelancers/contractors to attach invoices
+  final bool showReceipts; // For expense tracking/deductions
+
   // Industry-specific fields (Salon, Hospitality, Fitness, etc.)
   final bool showServiceType; // Hair cut, color, massage type, etc.
   final bool showSessionType; // PT session vs group class, etc.
@@ -129,6 +133,9 @@ class JobTemplate {
     this.showProjectName = false,
     this.showPhotos = true,
     this.showNotes = true,
+    // Finance Documents
+    this.showInvoices = false,
+    this.showReceipts = false,
     this.showServiceType = false,
     this.showSessionType = false,
     this.showClassSize = false,
@@ -224,6 +231,8 @@ class JobTemplate {
       showProjectName: json['show_project_name'] ?? false,
       showPhotos: json['show_photos'] ?? true,
       showNotes: json['show_notes'] ?? true,
+      showInvoices: json['show_invoices'] ?? false,
+      showReceipts: json['show_receipts'] ?? false,
       showServiceType: json['show_service_type'] ?? false,
       showSessionType: json['show_session_type'] ?? false,
       showClassSize: json['show_class_size'] ?? false,
@@ -317,6 +326,8 @@ class JobTemplate {
       'show_project_name': showProjectName,
       'show_photos': showPhotos,
       'show_notes': showNotes,
+      'show_invoices': showInvoices,
+      'show_receipts': showReceipts,
       'show_service_type': showServiceType,
       'show_session_type': showSessionType,
       'show_class_size': showClassSize,
@@ -448,6 +459,9 @@ class JobTemplate {
       showEventName: false,
       showHostess: false,
       showGuestCount: false,
+      // Finance documents - essential for freelancers
+      showInvoices: true,
+      showReceipts: true,
       // Freelancer-specific fields
       showRevisionsCount: true,
       showClientType: true,
@@ -467,6 +481,8 @@ class JobTemplate {
       showEventName: false,
       showHostess: false,
       showGuestCount: false,
+      // Receipts for expenses (gas, tolls, etc.)
+      showReceipts: true,
       // Rideshare-specific fields
       showRidesCount: true,
       showDeadMiles: true,
@@ -658,6 +674,8 @@ class JobTemplate {
     bool? showProjectName,
     bool? showPhotos,
     bool? showNotes,
+    bool? showInvoices,
+    bool? showReceipts,
     bool? showServiceType,
     bool? showSessionType,
     bool? showClassSize,
@@ -747,6 +765,8 @@ class JobTemplate {
       showProjectName: showProjectName ?? this.showProjectName,
       showPhotos: showPhotos ?? this.showPhotos,
       showNotes: showNotes ?? this.showNotes,
+      showInvoices: showInvoices ?? this.showInvoices,
+      showReceipts: showReceipts ?? this.showReceipts,
       showServiceType: showServiceType ?? this.showServiceType,
       showSessionType: showSessionType ?? this.showSessionType,
       showClassSize: showClassSize ?? this.showClassSize,

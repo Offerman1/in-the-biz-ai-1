@@ -150,6 +150,240 @@ class TaxEstimationService {
     }
     return brackets.last;
   }
+
+  /// Calculate distance to next tax bracket
+  static BracketDistance getDistanceToNextBracket(
+      double income, String filingStatus) {
+    final bracket = getBracketForIncome(income, filingStatus);
+    if (bracket == null) {
+      return BracketDistance(
+        currentBracket: _singleBrackets.last,
+        nextBracket: null,
+        distanceToNext: 0,
+        percentageComplete: 100,
+      );
+    }
+
+    List<TaxBracket> brackets = filingStatus == 'married_joint'
+        ? _marriedJointBrackets
+        : _singleBrackets;
+
+    final currentIndex = brackets.indexOf(bracket);
+    final nextBracket =
+        currentIndex < brackets.length - 1 ? brackets[currentIndex + 1] : null;
+
+    final incomeInBracket = income - bracket.min;
+    final bracketRange = bracket.max - bracket.min;
+    final percentageComplete = bracketRange > 0
+        ? (incomeInBracket / bracketRange * 100).clamp(0.0, 100.0)
+        : 100.0;
+
+    return BracketDistance(
+      currentBracket: bracket,
+      nextBracket: nextBracket,
+      distanceToNext: bracket.max - income,
+      percentageComplete: percentageComplete.toDouble(),
+    );
+  }
+
+  /// Calculate comprehensive tax estimate with paycheck and deduction data
+  static AdvancedTaxEstimate calculateAdvancedTax({
+    required double appTrackedIncome, // From shifts
+    required double w2GrossYTD, // From paychecks
+    required double w2TaxesWithheld, // Federal+State+FICA from paychecks
+    required double invoiceIncome, // 1099 income from invoices
+    required double deductibleExpenses, // From receipts
+    required double mileageDeduction, // From mileage logs
+    required String filingStatus,
+    int dependents = 0,
+  }) {
+    // Total income combines W-2 and 1099 income
+    final totalW2Income = w2GrossYTD;
+    final total1099Income = invoiceIncome;
+    final totalGrossIncome = totalW2Income + total1099Income;
+
+    // Self-employment tax only applies to 1099 income
+    double selfEmploymentTax = 0;
+    double adjustedIncome = totalGrossIncome;
+
+    if (total1099Income > 0) {
+      selfEmploymentTax = total1099Income * _selfEmploymentRate;
+      // Can deduct half of SE tax from income
+      adjustedIncome -= selfEmploymentTax * _selfEmploymentDeduction;
+    }
+
+    // Total deductions
+    final totalDeductions = deductibleExpenses + mileageDeduction;
+
+    // Standard deduction
+    final standardDeduction = _standardDeductions[filingStatus] ?? 14600;
+
+    // Taxable income (subtract both standard deduction and business deductions for 1099)
+    double taxableIncome = adjustedIncome - standardDeduction - totalDeductions;
+    if (taxableIncome < 0) taxableIncome = 0;
+
+    // Get tax brackets based on filing status
+    List<TaxBracket> brackets = filingStatus == 'married_joint'
+        ? _marriedJointBrackets
+        : _singleBrackets;
+
+    // Calculate federal tax
+    double federalTax = 0;
+    for (var bracket in brackets) {
+      if (taxableIncome > bracket.min) {
+        double amountInBracket =
+            (taxableIncome > bracket.max ? bracket.max : taxableIncome) -
+                bracket.min;
+        if (amountInBracket > 0) {
+          federalTax += amountInBracket * bracket.rate;
+        }
+      }
+    }
+
+    // Dependent credits
+    final dependentCredit = dependents * 2000.0;
+    federalTax -= dependentCredit;
+    if (federalTax < 0) federalTax = 0;
+
+    // Total estimated tax liability
+    final totalEstimatedTax = federalTax + selfEmploymentTax;
+
+    // Calculate amount still owed vs already withheld
+    final taxStillOwed = totalEstimatedTax - w2TaxesWithheld;
+
+    // Bracket tracking
+    final bracketInfo = getDistanceToNextBracket(taxableIncome, filingStatus);
+
+    // Year-end projection (if we continue at this pace)
+    final now = DateTime.now();
+    final dayOfYear = now.difference(DateTime(now.year, 1, 1)).inDays + 1;
+    final projectedYearEndIncome =
+        dayOfYear > 0 ? totalGrossIncome / dayOfYear * 365 : totalGrossIncome;
+    final projectedBracket = getBracketForIncome(
+        projectedYearEndIncome - standardDeduction - totalDeductions,
+        filingStatus);
+
+    // Savings from deductions
+    final deductionSavings = totalDeductions * bracketInfo.currentBracket.rate;
+
+    return AdvancedTaxEstimate(
+      // Income breakdown
+      w2Income: totalW2Income,
+      income1099: total1099Income,
+      totalGrossIncome: totalGrossIncome,
+      taxableIncome: taxableIncome,
+
+      // Deductions
+      standardDeduction: standardDeduction,
+      businessDeductions: totalDeductions,
+      deductionTaxSavings: deductionSavings,
+
+      // Tax calculations
+      federalTax: federalTax,
+      selfEmploymentTax: selfEmploymentTax,
+      totalEstimatedTax: totalEstimatedTax,
+
+      // Already paid
+      taxesAlreadyWithheld: w2TaxesWithheld,
+      taxStillOwed: taxStillOwed,
+
+      // Bracket info
+      currentBracket: bracketInfo.currentBracket,
+      distanceToNextBracket: bracketInfo.distanceToNext,
+      bracketProgress: bracketInfo.percentageComplete,
+
+      // Projections
+      projectedYearEndIncome: projectedYearEndIncome,
+      projectedBracket: projectedBracket,
+
+      // Rates
+      effectiveRate:
+          totalGrossIncome > 0 ? totalEstimatedTax / totalGrossIncome : 0,
+      marginalRate: bracketInfo.currentBracket.rate,
+    );
+  }
+}
+
+/// Distance to next tax bracket calculation
+class BracketDistance {
+  final TaxBracket currentBracket;
+  final TaxBracket? nextBracket;
+  final double distanceToNext;
+  final double percentageComplete;
+
+  BracketDistance({
+    required this.currentBracket,
+    this.nextBracket,
+    required this.distanceToNext,
+    required this.percentageComplete,
+  });
+}
+
+/// Advanced tax estimate with full income/deduction breakdown
+class AdvancedTaxEstimate {
+  // Income
+  final double w2Income;
+  final double income1099;
+  final double totalGrossIncome;
+  final double taxableIncome;
+
+  // Deductions
+  final double standardDeduction;
+  final double businessDeductions;
+  final double deductionTaxSavings;
+
+  // Taxes
+  final double federalTax;
+  final double selfEmploymentTax;
+  final double totalEstimatedTax;
+
+  // Withholdings
+  final double taxesAlreadyWithheld;
+  final double taxStillOwed;
+
+  // Bracket info
+  final TaxBracket currentBracket;
+  final double distanceToNextBracket;
+  final double bracketProgress;
+
+  // Projections
+  final double projectedYearEndIncome;
+  final TaxBracket? projectedBracket;
+
+  // Rates
+  final double effectiveRate;
+  final double marginalRate;
+
+  AdvancedTaxEstimate({
+    required this.w2Income,
+    required this.income1099,
+    required this.totalGrossIncome,
+    required this.taxableIncome,
+    required this.standardDeduction,
+    required this.businessDeductions,
+    required this.deductionTaxSavings,
+    required this.federalTax,
+    required this.selfEmploymentTax,
+    required this.totalEstimatedTax,
+    required this.taxesAlreadyWithheld,
+    required this.taxStillOwed,
+    required this.currentBracket,
+    required this.distanceToNextBracket,
+    required this.bracketProgress,
+    required this.projectedYearEndIncome,
+    this.projectedBracket,
+    required this.effectiveRate,
+    required this.marginalRate,
+  });
+
+  String get effectiveRatePercent =>
+      '${(effectiveRate * 100).toStringAsFixed(1)}%';
+  String get marginalRatePercent =>
+      '${(marginalRate * 100).toStringAsFixed(0)}%';
+
+  bool get owesMoney => taxStillOwed > 0;
+  bool get willMoveUpBracket =>
+      projectedBracket != null && projectedBracket!.rate > currentBracket.rate;
 }
 
 class TaxBracket {

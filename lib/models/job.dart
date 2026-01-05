@@ -1,4 +1,5 @@
 import 'job_template.dart';
+import 'end_job_reason.dart';
 
 class Job {
   final String id;
@@ -15,6 +16,9 @@ class Job {
   final DateTime? updatedAt;
   final double? defaultTipoutPercent; // NEW: Default tip out %
   final String? tipoutDescription; // NEW: Who gets tipped out
+  final String? endReason; // Why the job ended (dropdown value)
+  final String? endNotes; // User's notes about why job ended
+  final DateTime? endedAt; // When the job was ended
 
   Job({
     required this.id,
@@ -31,6 +35,9 @@ class Job {
     this.updatedAt,
     this.defaultTipoutPercent,
     this.tipoutDescription,
+    this.endReason,
+    this.endNotes,
+    this.endedAt,
   }) : template = template ?? JobTemplate();
 
   factory Job.fromSupabase(Map<String, dynamic> map) {
@@ -55,6 +62,11 @@ class Job {
           : null,
       defaultTipoutPercent: (map['default_tipout_percent'] as num?)?.toDouble(),
       tipoutDescription: map['tipout_description'] as String?,
+      endReason: map['end_reason'] as String?,
+      endNotes: map['end_notes'] as String?,
+      endedAt: map['ended_at'] != null
+          ? DateTime.parse(map['ended_at'] as String)
+          : null,
     );
   }
 
@@ -94,6 +106,9 @@ class Job {
     JobTemplate? template,
     double? defaultTipoutPercent,
     String? tipoutDescription,
+    String? endReason,
+    String? endNotes,
+    DateTime? endedAt,
   }) {
     return Job(
       id: id ?? this.id,
@@ -110,6 +125,12 @@ class Job {
       updatedAt: DateTime.now(),
       defaultTipoutPercent: defaultTipoutPercent ?? this.defaultTipoutPercent,
       tipoutDescription: tipoutDescription ?? this.tipoutDescription,
+      endReason: endReason ?? this.endReason,
+      endNotes: endNotes ?? this.endNotes,
+      endedAt: endedAt ?? this.endedAt,
     );
   }
+
+  /// Get the EndJobReason enum from the stored value
+  EndJobReason? get endReasonEnum => EndJobReason.fromValue(endReason);
 }

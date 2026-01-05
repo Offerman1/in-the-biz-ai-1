@@ -5,12 +5,17 @@ import 'package:file_picker/file_picker.dart';
 import 'package:csv/csv.dart';
 import 'package:excel/excel.dart' as excel_pkg;
 import 'package:provider/provider.dart';
+import 'package:uuid/uuid.dart';
 import '../services/api_service.dart';
 import '../services/database_service.dart';
+import '../services/subscription_service.dart';
 import '../providers/shift_provider.dart';
 import '../theme/app_theme.dart';
 import '../models/shift.dart';
+import '../models/job.dart';
+import '../models/job_template.dart';
 import 'dashboard_screen.dart';
+import 'job_grouping_screen.dart';
 
 class ImportScreen extends StatefulWidget {
   final bool isFirstImport;
@@ -30,6 +35,9 @@ class _ImportScreenState extends State<ImportScreen> {
   int _currentStep = 0; // 0 = upload, 1 = preview, 2 = importing, 3 = success
   String? _preSelectedJobId; // User can pre-select job before import
   List<Map<String, dynamic>> _existingJobs = []; // User's existing jobs
+  Map<String, String> _jobMapping =
+      {}; // Mapping from detected names to job IDs
+  List<Job> _createdJobs = []; // Jobs created from grouping screen
 
   @override
   void initState() {
@@ -84,9 +92,12 @@ class _ImportScreenState extends State<ImportScreen> {
   }
 
   Future<bool> _checkProStatus() async {
-    // TODO: Implement Pro status check
-    // For now, return false (all users are free tier)
-    return false;
+    try {
+      final subscriptionService = SubscriptionService();
+      return subscriptionService.isPro;
+    } catch (e) {
+      return false;
+    }
   }
 
   Future<bool> _showImportAd() async {
@@ -251,10 +262,15 @@ class _ImportScreenState extends State<ImportScreen> {
         _isLoading = false;
       });
 
-      // Check if AI found too many jobs (likely party names instead)
+      // Check if AI found multiple jobs - offer to organize them
       final detectedJobs = _aiAnalysis!['detected_jobs'] as List?;
-      if (detectedJobs != null && detectedJobs.length > 10) {
-        await _showTooManyJobsDialog(detectedJobs);
+      if (detectedJobs != null && detectedJobs.length > 1) {
+        // For 2-10 jobs, offer grouping. For >10, show stronger warning
+        if (detectedJobs.length > 10) {
+          await _showTooManyJobsDialog(detectedJobs);
+        } else {
+          await _showMultipleJobsDialog(detectedJobs);
+        }
       }
 
       // Check for ambiguous mappings that need user input
@@ -323,11 +339,19 @@ class _ImportScreenState extends State<ImportScreen> {
             throw Exception('Invalid date format');
           }
 
+          // Determine job ID - use mapping if available, otherwise fall back to detected name
+          String? jobId = shiftData['job_name']?.toString();
+          if (jobId != null &&
+              _jobMapping.isNotEmpty &&
+              _jobMapping.containsKey(jobId)) {
+            jobId = _jobMapping[jobId];
+          }
+
           // Create shift object
           final shift = Shift(
             id: '', // Will be generated
             date: shiftDate,
-            jobId: shiftData['job_name']?.toString(),
+            jobId: jobId,
             hourlyRate: _parseDouble(shiftData['hourly_rate']) ?? 0.0,
             hoursWorked: _parseDouble(shiftData['hours_worked']) ?? 0.0,
             cashTips: _parseDouble(shiftData['cash_tips']) ?? 0.0,
@@ -473,99 +497,248 @@ class _ImportScreenState extends State<ImportScreen> {
     required List<Map<String, dynamic>> suggestions,
     required List<dynamic> samples,
   }) async {
+    // All available shift fields that can be mapped
+    final allFields = {
+      'date': 'Shift Date',
+      'job_name': 'Job/Employer Name',
+      'hourly_rate': 'Hourly Rate',
+      'hours_worked': 'Hours Worked',
+      'start_time': 'Start Time',
+      'end_time': 'End Time',
+      'cash_tips': 'Cash Tips',
+      'credit_tips': 'Credit Tips',
+      'event_name': 'Event/Party Name',
+      'location': 'Location',
+      'notes': 'Notes',
+      'commission': 'Commission',
+      'mileage': 'Mileage',
+      'sales_amount': 'Sales Amount',
+      'tipout_percent': 'Tipout Percentage',
+      'guest_count': 'Guest Count',
+      'flat_rate': 'Flat Rate/Total Earnings',
+      'overtime_hours': 'Overtime Hours',
+      'client_name': 'Client Name',
+      'project_name': 'Project Name',
+      'hostess': 'Hostess Name',
+      'unmapped': 'Skip This Field',
+    };
+
+    String? selectedField = currentMapping;
+
     return showDialog<String>(
       context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.cardBackground,
-        title: Row(
-          children: [
-            Icon(Icons.help_outline, color: AppTheme.accentBlue),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                'How should we map "$columnName"?',
-                style: AppTheme.titleMedium,
-              ),
-            ),
-          ],
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+      barrierDismissible: true,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          backgroundColor: AppTheme.cardBackground,
+          title: Row(
             children: [
-              Text(
-                'Sample values from your file:',
-                style: AppTheme.labelSmall.copyWith(color: AppTheme.textMuted),
-              ),
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppTheme.darkBackground,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: samples.take(3).map((sample) {
-                    return Text(
-                      '• ${sample.toString()}',
-                      style:
-                          AppTheme.labelSmall.copyWith(fontFamily: 'monospace'),
-                    );
-                  }).toList(),
+              Icon(Icons.compare_arrows, color: AppTheme.accentBlue),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Map "$columnName"',
+                  style: AppTheme.titleMedium,
                 ),
               ),
-              const SizedBox(height: 16),
-              Text(
-                'Choose where this data should go:',
-                style: AppTheme.labelSmall.copyWith(color: AppTheme.textMuted),
-              ),
-              const SizedBox(height: 12),
-              ...suggestions.map((suggestion) {
-                final field = suggestion['field'] as String;
-                final reason = suggestion['reason'] as String;
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: () => Navigator.pop(context, field),
-                      borderRadius: BorderRadius.circular(8),
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: AppTheme.primaryGreen.withOpacity(0.3),
-                          ),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              field == 'unmapped'
-                                  ? 'Skip this field'
-                                  : field.replaceAll('_', ' ').toUpperCase(),
-                              style: AppTheme.bodyMedium
-                                  .copyWith(fontWeight: FontWeight.bold),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              reason,
-                              style: AppTheme.labelSmall
-                                  .copyWith(color: AppTheme.textMuted),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              }),
             ],
           ),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Sample values
+                  Text(
+                    'Sample values:',
+                    style:
+                        AppTheme.labelSmall.copyWith(color: AppTheme.textMuted),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppTheme.darkBackground,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: samples.take(3).map((sample) {
+                        return Text(
+                          '• ${sample.toString()}',
+                          style: AppTheme.labelSmall
+                              .copyWith(fontFamily: 'monospace'),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // AI Suggestions (if any)
+                  if (suggestions.isNotEmpty) ...[
+                    Text(
+                      'AI Suggestions:',
+                      style: AppTheme.bodyMedium.copyWith(
+                        color: AppTheme.primaryGreen,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    ...suggestions.map((suggestion) {
+                      final field = suggestion['field'] as String;
+                      final reason = suggestion['reason'] as String;
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: () {
+                              setState(() => selectedField = field);
+                            },
+                            borderRadius: BorderRadius.circular(8),
+                            child: Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: selectedField == field
+                                    ? AppTheme.primaryGreen.withOpacity(0.2)
+                                    : Colors.transparent,
+                                border: Border.all(
+                                  color: selectedField == field
+                                      ? AppTheme.primaryGreen
+                                      : AppTheme.primaryGreen.withOpacity(0.3),
+                                  width: selectedField == field ? 2 : 1,
+                                ),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                children: [
+                                  Radio<String>(
+                                    value: field,
+                                    groupValue: selectedField,
+                                    onChanged: (value) {
+                                      setState(() => selectedField = value);
+                                    },
+                                    activeColor: AppTheme.primaryGreen,
+                                  ),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          allFields[field] ?? field,
+                                          style: AppTheme.bodyMedium.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        Text(
+                                          reason,
+                                          style: AppTheme.labelSmall.copyWith(
+                                            color: AppTheme.textMuted,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
+                    const SizedBox(height: 16),
+                    Divider(color: AppTheme.textMuted.withOpacity(0.3)),
+                    const SizedBox(height: 16),
+                  ],
+
+                  // All Available Fields
+                  Text(
+                    'All Available Fields:',
+                    style: AppTheme.bodyMedium.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  ...allFields.entries.map((entry) {
+                    final field = entry.key;
+                    final label = entry.value;
+
+                    // Skip if already shown in suggestions
+                    if (suggestions.any((s) => s['field'] == field)) {
+                      return const SizedBox.shrink();
+                    }
+
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () {
+                            setState(() => selectedField = field);
+                          },
+                          borderRadius: BorderRadius.circular(8),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: selectedField == field
+                                  ? AppTheme.primaryGreen.withOpacity(0.2)
+                                  : Colors.transparent,
+                              border: Border.all(
+                                color: selectedField == field
+                                    ? AppTheme.primaryGreen
+                                    : AppTheme.textMuted.withOpacity(0.3),
+                                width: selectedField == field ? 2 : 1,
+                              ),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              children: [
+                                Radio<String>(
+                                  value: field,
+                                  groupValue: selectedField,
+                                  onChanged: (value) {
+                                    setState(() => selectedField = value);
+                                  },
+                                  activeColor: AppTheme.primaryGreen,
+                                ),
+                                Expanded(
+                                  child: Text(
+                                    label,
+                                    style: AppTheme.bodyMedium,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  }),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child:
+                  Text('Cancel', style: TextStyle(color: AppTheme.textMuted)),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, selectedField),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryGreen,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Confirm Mapping'),
+            ),
+          ],
         ),
       ),
     );
@@ -692,15 +865,32 @@ class _ImportScreenState extends State<ImportScreen> {
               if (jobName.isNotEmpty) {
                 // Create job in database
                 try {
-                  // TODO: Create job with proper structure
-                  // For now, just close dialog
+                  final db = DatabaseService();
+                  final userId = db.supabase.auth.currentUser?.id;
+
+                  if (userId == null) {
+                    throw Exception('User not logged in');
+                  }
+
+                  // Create the job with default template
+                  final newJob = Job(
+                    id: const Uuid().v4(),
+                    userId: userId,
+                    name: jobName,
+                    hourlyRate: 15.0, // Default rate, user can update later
+                    template: JobTemplate(),
+                    isDefault: false,
+                  );
+
+                  await db.createJob(newJob);
+
                   Navigator.pop(context);
 
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Job "$jobName" will be created'),
-                        backgroundColor: AppTheme.primaryGreen,
+                        content: Text('Job "$jobName" created successfully!'),
+                        backgroundColor: AppTheme.successColor,
                       ),
                     );
                   }
@@ -732,7 +922,7 @@ class _ImportScreenState extends State<ImportScreen> {
   Future<void> _showTooManyJobsDialog(List<dynamic> detectedJobs) async {
     if (!mounted) return;
 
-    await showDialog(
+    final result = await showDialog<String>(
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
@@ -743,7 +933,7 @@ class _ImportScreenState extends State<ImportScreen> {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                'Too Many Jobs Detected',
+                'Multiple Job Names Detected',
                 style:
                     AppTheme.titleMedium.copyWith(color: AppTheme.accentOrange),
               ),
@@ -756,7 +946,7 @@ class _ImportScreenState extends State<ImportScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'I found ${detectedJobs.length} different "job" names in your file, but most users only have 1-5 jobs (employers).',
+                'I found ${detectedJobs.length} different "job" names in your file.',
                 style: AppTheme.bodyMedium,
               ),
               const SizedBox(height: 16),
@@ -795,9 +985,9 @@ class _ImportScreenState extends State<ImportScreen> {
               ],
               const SizedBox(height: 16),
               Text(
-                'Are these actually event/party names instead of employer names?',
+                'How would you like to organize these?',
                 style: AppTheme.bodyMedium.copyWith(
-                  color: AppTheme.accentOrange,
+                  color: AppTheme.primaryGreen,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -806,34 +996,168 @@ class _ImportScreenState extends State<ImportScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () {
-              // Remap these as event names instead
-              if (_aiAnalysis != null) {
-                final mappings =
-                    _aiAnalysis!['mappings'] as Map<String, dynamic>;
-                for (final entry in mappings.entries) {
-                  final mapping = entry.value as Map<String, dynamic>;
-                  if (mapping['maps_to'] == 'job_name') {
-                    mapping['maps_to'] = 'event_name';
-                  }
-                }
-              }
-              Navigator.pop(context);
-            },
-            child: Text('Yes, Treat as Event Names',
-                style: TextStyle(color: AppTheme.adaptiveTextColor)),
+            onPressed: () => Navigator.pop(context, 'event_names'),
+            child: Text('Treat as Event Names',
+                style: TextStyle(color: AppTheme.textMuted)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, 'group_jobs'),
+            child: Text('Group Into Jobs',
+                style: TextStyle(color: AppTheme.accentBlue)),
           ),
           ElevatedButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(context, 'keep_all'),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.primaryGreen,
               foregroundColor: Colors.white,
             ),
-            child: const Text('No, Keep as Jobs'),
+            child: const Text('Keep All as Separate Jobs'),
           ),
         ],
       ),
     );
+
+    if (result == 'event_names') {
+      // Remap these as event names instead
+      if (_aiAnalysis != null) {
+        final mappings = _aiAnalysis!['mappings'] as Map<String, dynamic>;
+        for (final entry in mappings.entries) {
+          final mapping = entry.value as Map<String, dynamic>;
+          if (mapping['maps_to'] == 'job_name') {
+            mapping['maps_to'] = 'event_name';
+          }
+        }
+      }
+    } else if (result == 'group_jobs' && mounted) {
+      // Navigate to JobGroupingScreen to let user organize jobs
+      await _showJobGroupingScreen(
+          detectedJobs.map((j) => j.toString()).toList());
+    }
+    // 'keep_all' - do nothing, keep as separate jobs
+  }
+
+  /// Show JobGroupingScreen to let user organize/group jobs
+  Future<void> _showJobGroupingScreen(List<String> jobTitles) async {
+    // Convert to the format JobGroupingScreen expects
+    final calendarTitles =
+        jobTitles.map((t) => {'title': t, 'count': 1}).toList();
+
+    final groupingResult = await Navigator.push<Map<String, dynamic>>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => JobGroupingScreen(
+          calendarTitles: calendarTitles,
+        ),
+      ),
+    );
+
+    if (groupingResult != null && groupingResult.isNotEmpty && mounted) {
+      // Extract jobs and mapping from grouping result
+      final List<Job> jobs = groupingResult['jobs'] as List<Job>? ?? [];
+      final Map<String, String> mapping =
+          groupingResult['mapping'] as Map<String, String>? ?? {};
+
+      // Store the job mapping for use during import
+      _jobMapping = mapping;
+      _createdJobs = jobs;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+              'Organized ${jobTitles.length} items into ${jobs.length} job(s)!'),
+          backgroundColor: AppTheme.successColor,
+        ),
+      );
+    }
+  }
+
+  /// Show dialog when multiple jobs detected (2-10)
+  Future<void> _showMultipleJobsDialog(List<dynamic> detectedJobs) async {
+    if (!mounted) return;
+
+    final result = await showDialog<String>(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.cardBackground,
+        title: Row(
+          children: [
+            Icon(Icons.work_outline, color: AppTheme.accentBlue, size: 28),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                '${detectedJobs.length} Jobs Found',
+                style: AppTheme.titleMedium,
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'I detected ${detectedJobs.length} different job names in your file:',
+              style: AppTheme.bodyMedium,
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppTheme.darkBackground,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: detectedJobs.take(5).map((job) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Text(
+                      '• ${job.toString()}',
+                      style: AppTheme.labelSmall,
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+            if (detectedJobs.length > 5) ...[
+              const SizedBox(height: 4),
+              Text(
+                '...and ${detectedJobs.length - 5} more',
+                style: AppTheme.labelSmall.copyWith(color: AppTheme.textMuted),
+              ),
+            ],
+            const SizedBox(height: 16),
+            Text(
+              'Would you like to group or organize these?',
+              style:
+                  AppTheme.bodyMedium.copyWith(color: AppTheme.textSecondary),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, 'keep_all'),
+            child:
+                Text('Keep as Is', style: TextStyle(color: AppTheme.textMuted)),
+          ),
+          ElevatedButton.icon(
+            onPressed: () => Navigator.pop(context, 'group_jobs'),
+            icon: const Icon(Icons.folder_outlined, size: 18),
+            label: const Text('Organize Jobs'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primaryGreen,
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (result == 'group_jobs' && mounted) {
+      await _showJobGroupingScreen(
+          detectedJobs.map((j) => j.toString()).toList());
+    }
   }
 
   double? _parseDouble(dynamic value) {
@@ -1155,50 +1479,98 @@ class _ImportScreenState extends State<ImportScreen> {
 
               return Container(
                 margin: const EdgeInsets.only(bottom: 8),
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppTheme.cardBackground,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: _getConfidenceColor(confidence).withOpacity(0.3),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 8,
-                      height: 40,
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () async {
+                      // Allow user to manually change mapping
+                      final newMapping = await _showMappingDialog(
+                        columnName: entry.key,
+                        currentMapping: mapsTo,
+                        suggestions: (mapping['user_suggestions'] as List?)
+                                ?.cast<Map<String, dynamic>>() ??
+                            [],
+                        samples: _allRows
+                            .take(3)
+                            .map((row) {
+                              final index = _headers.indexOf(entry.key);
+                              return index >= 0 && index < row.length
+                                  ? row[index]
+                                  : null;
+                            })
+                            .where((v) => v != null)
+                            .toList(),
+                      );
+
+                      if (newMapping != null && mounted) {
+                        setState(() {
+                          mappings[entry.key]['maps_to'] = newMapping;
+                          mappings[entry.key]['confidence'] = 100.0;
+                        });
+                      }
+                    },
+                    borderRadius: BorderRadius.circular(8),
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: _getConfidenceColor(confidence),
-                        borderRadius: BorderRadius.circular(4),
+                        color: AppTheme.cardBackground,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color:
+                              _getConfidenceColor(confidence).withOpacity(0.3),
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      child: Row(
                         children: [
-                          Text(
-                            entry.key,
-                            style: AppTheme.bodyMedium
-                                .copyWith(fontWeight: FontWeight.bold),
+                          Container(
+                            width: 8,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: _getConfidenceColor(confidence),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
                           ),
-                          Text(
-                            mapsTo == 'unmapped' ? 'Not mapped' : '→ $mapsTo',
-                            style: AppTheme.labelSmall
-                                .copyWith(color: AppTheme.textMuted),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  entry.key,
+                                  style: AppTheme.bodyMedium
+                                      .copyWith(fontWeight: FontWeight.bold),
+                                ),
+                                Text(
+                                  mapsTo == 'unmapped'
+                                      ? 'Not mapped (tap to map)'
+                                      : '→ $mapsTo (tap to change)',
+                                  style: AppTheme.labelSmall
+                                      .copyWith(color: AppTheme.textMuted),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                '${confidence.toInt()}%',
+                                style: AppTheme.labelSmall.copyWith(
+                                  color: _getConfidenceColor(confidence),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Icon(
+                                Icons.edit,
+                                size: 16,
+                                color: AppTheme.textMuted,
+                              ),
+                            ],
                           ),
                         ],
                       ),
                     ),
-                    Text(
-                      '${confidence.toInt()}%',
-                      style: AppTheme.labelSmall.copyWith(
-                        color: _getConfidenceColor(confidence),
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               );
             }),

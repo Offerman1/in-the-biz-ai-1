@@ -699,4 +699,346 @@ ${data['period']} Summary:
 📅 Shifts: ${data['shiftCount']}
 ''';
   }
+
+  // ============================================
+  // INVOICE QUERIES
+  // ============================================
+
+  /// Get all invoices for the user
+  Future<List<Map<String, dynamic>>> getInvoices() async {
+    final userId = _db.supabase.auth.currentUser?.id;
+    if (userId == null) return [];
+
+    final response = await _db.supabase
+        .from('invoices')
+        .select()
+        .eq('user_id', userId)
+        .order('invoice_date', ascending: false);
+
+    return List<Map<String, dynamic>>.from(response);
+  }
+
+  /// Get invoices by client name
+  Future<List<Map<String, dynamic>>> getInvoicesByClient(
+      String clientName) async {
+    final userId = _db.supabase.auth.currentUser?.id;
+    if (userId == null) return [];
+
+    final response = await _db.supabase
+        .from('invoices')
+        .select()
+        .eq('user_id', userId)
+        .ilike('client_name', '%$clientName%')
+        .order('invoice_date', ascending: false);
+
+    return List<Map<String, dynamic>>.from(response);
+  }
+
+  /// Get total invoice amount for a period
+  Future<Map<String, dynamic>> getInvoiceTotals(
+      {String period = 'year'}) async {
+    final userId = _db.supabase.auth.currentUser?.id;
+    if (userId == null)
+      return {'total': 0, 'count': 0, 'paid': 0, 'pending': 0};
+
+    final now = DateTime.now();
+    DateTime startDate;
+    switch (period) {
+      case 'month':
+        startDate = DateTime(now.year, now.month, 1);
+        break;
+      case 'year':
+      default:
+        startDate = DateTime(now.year, 1, 1);
+    }
+
+    final response = await _db.supabase
+        .from('invoices')
+        .select()
+        .eq('user_id', userId)
+        .gte('invoice_date', startDate.toIso8601String().split('T')[0]);
+
+    final invoices = List<Map<String, dynamic>>.from(response);
+    final total = invoices.fold<double>(
+        0, (sum, i) => sum + (i['total_amount'] as num? ?? 0).toDouble());
+    final paid = invoices.where((i) => i['status'] == 'paid').fold<double>(
+        0, (sum, i) => sum + (i['total_amount'] as num? ?? 0).toDouble());
+    final pending = total - paid;
+
+    return {
+      'total': total,
+      'paid': paid,
+      'pending': pending,
+      'count': invoices.length,
+      'period': period,
+    };
+  }
+
+  // ============================================
+  // RECEIPT QUERIES
+  // ============================================
+
+  /// Get all receipts for the user
+  Future<List<Map<String, dynamic>>> getReceipts() async {
+    final userId = _db.supabase.auth.currentUser?.id;
+    if (userId == null) return [];
+
+    final response = await _db.supabase
+        .from('receipts')
+        .select()
+        .eq('user_id', userId)
+        .order('receipt_date', ascending: false);
+
+    return List<Map<String, dynamic>>.from(response);
+  }
+
+  /// Get receipts by expense category
+  Future<List<Map<String, dynamic>>> getReceiptsByCategory(
+      String category) async {
+    final userId = _db.supabase.auth.currentUser?.id;
+    if (userId == null) return [];
+
+    final response = await _db.supabase
+        .from('receipts')
+        .select()
+        .eq('user_id', userId)
+        .eq('expense_category', category)
+        .order('receipt_date', ascending: false);
+
+    return List<Map<String, dynamic>>.from(response);
+  }
+
+  /// Get receipts by vendor
+  Future<List<Map<String, dynamic>>> getReceiptsByVendor(String vendor) async {
+    final userId = _db.supabase.auth.currentUser?.id;
+    if (userId == null) return [];
+
+    final response = await _db.supabase
+        .from('receipts')
+        .select()
+        .eq('user_id', userId)
+        .ilike('vendor_name', '%$vendor%')
+        .order('receipt_date', ascending: false);
+
+    return List<Map<String, dynamic>>.from(response);
+  }
+
+  /// Get total expenses for a period
+  Future<Map<String, dynamic>> getExpenseTotals(
+      {String period = 'year'}) async {
+    final userId = _db.supabase.auth.currentUser?.id;
+    if (userId == null) return {'total': 0, 'deductible': 0, 'count': 0};
+
+    final now = DateTime.now();
+    DateTime startDate;
+    switch (period) {
+      case 'month':
+        startDate = DateTime(now.year, now.month, 1);
+        break;
+      case 'year':
+      default:
+        startDate = DateTime(now.year, 1, 1);
+    }
+
+    final response = await _db.supabase
+        .from('receipts')
+        .select()
+        .eq('user_id', userId)
+        .gte('receipt_date', startDate.toIso8601String().split('T')[0]);
+
+    final receipts = List<Map<String, dynamic>>.from(response);
+    final total = receipts.fold<double>(
+        0, (sum, r) => sum + (r['total_amount'] as num? ?? 0).toDouble());
+    final deductible = receipts
+        .where((r) => r['is_tax_deductible'] == true)
+        .fold<double>(
+            0, (sum, r) => sum + (r['total_amount'] as num? ?? 0).toDouble());
+
+    // Group by category
+    final byCategory = <String, double>{};
+    for (final r in receipts) {
+      final category = r['expense_category'] as String? ?? 'Other';
+      byCategory[category] = (byCategory[category] ?? 0) +
+          (r['total_amount'] as num? ?? 0).toDouble();
+    }
+
+    return {
+      'total': total,
+      'deductible': deductible,
+      'count': receipts.length,
+      'byCategory': byCategory,
+      'period': period,
+    };
+  }
+
+  /// Get tax deductible expenses summary
+  Future<Map<String, dynamic>> getTaxDeductibleExpenses() async {
+    final userId = _db.supabase.auth.currentUser?.id;
+    if (userId == null) return {'total': 0, 'categories': {}};
+
+    final now = DateTime.now();
+    final yearStart = DateTime(now.year, 1, 1);
+
+    final response = await _db.supabase
+        .from('receipts')
+        .select()
+        .eq('user_id', userId)
+        .eq('is_tax_deductible', true)
+        .gte('receipt_date', yearStart.toIso8601String().split('T')[0]);
+
+    final receipts = List<Map<String, dynamic>>.from(response);
+    final total = receipts.fold<double>(
+        0, (sum, r) => sum + (r['total_amount'] as num? ?? 0).toDouble());
+
+    // Group by Schedule C category
+    final byQuickbooksCategory = <String, double>{};
+    for (final r in receipts) {
+      final category = r['quickbooks_category'] as String? ?? 'Other Expenses';
+      byQuickbooksCategory[category] = (byQuickbooksCategory[category] ?? 0) +
+          (r['total_amount'] as num? ?? 0).toDouble();
+    }
+
+    return {
+      'total': total,
+      'count': receipts.length,
+      'categories': byQuickbooksCategory,
+      'year': now.year,
+    };
+  }
+
+  // ============================================
+  // PAYCHECK QUERIES
+  // ============================================
+
+  /// Get all paychecks for the user
+  Future<List<Map<String, dynamic>>> getPaychecks() async {
+    final userId = _db.supabase.auth.currentUser?.id;
+    if (userId == null) return [];
+
+    final response = await _db.supabase
+        .from('paychecks')
+        .select()
+        .eq('user_id', userId)
+        .order('pay_period_end', ascending: false);
+
+    return List<Map<String, dynamic>>.from(response);
+  }
+
+  /// Get YTD paycheck totals
+  Future<Map<String, dynamic>> getPaycheckYTDTotals() async {
+    final userId = _db.supabase.auth.currentUser?.id;
+    if (userId == null)
+      return {
+        'ytdGross': 0,
+        'ytdFederalTax': 0,
+        'ytdStateTax': 0,
+        'ytdFica': 0,
+        'ytdMedicare': 0,
+        'ytdNet': 0,
+        'count': 0
+      };
+
+    final now = DateTime.now();
+    final yearStart = DateTime(now.year, 1, 1);
+
+    final response = await _db.supabase
+        .from('paychecks')
+        .select()
+        .eq('user_id', userId)
+        .gte('pay_period_start', yearStart.toIso8601String().split('T')[0])
+        .order('pay_period_end', ascending: false)
+        .limit(1);
+
+    final paychecks = List<Map<String, dynamic>>.from(response);
+
+    if (paychecks.isEmpty) {
+      return {
+        'ytdGross': 0,
+        'ytdFederalTax': 0,
+        'ytdStateTax': 0,
+        'ytdFica': 0,
+        'ytdMedicare': 0,
+        'ytdNet': 0,
+        'count': 0
+      };
+    }
+
+    // Most recent paycheck should have YTD data
+    final latest = paychecks.first;
+    final ytdGross = (latest['ytd_gross'] as num?)?.toDouble() ?? 0;
+    final ytdFederal = (latest['ytd_federal_tax'] as num?)?.toDouble() ?? 0;
+    final ytdState = (latest['ytd_state_tax'] as num?)?.toDouble() ?? 0;
+    final ytdFica = (latest['ytd_fica'] as num?)?.toDouble() ?? 0;
+    final ytdMedicare = (latest['ytd_medicare'] as num?)?.toDouble() ?? 0;
+
+    return {
+      'ytdGross': ytdGross,
+      'ytdFederalTax': ytdFederal,
+      'ytdStateTax': ytdState,
+      'ytdFica': ytdFica,
+      'ytdMedicare': ytdMedicare,
+      'ytdTotalTaxes': ytdFederal + ytdState + ytdFica + ytdMedicare,
+      'ytdNet': ytdGross - (ytdFederal + ytdState + ytdFica + ytdMedicare),
+      'year': now.year,
+    };
+  }
+
+  /// Get Reality Check summary (compare app-tracked vs paycheck income)
+  Future<Map<String, dynamic>> getRealityCheckSummary() async {
+    final userId = _db.supabase.auth.currentUser?.id;
+    if (userId == null) return {'hasGaps': false, 'totalGap': 0, 'gapCount': 0};
+
+    final now = DateTime.now();
+    final yearStart = DateTime(now.year, 1, 1);
+
+    final response = await _db.supabase
+        .from('paychecks')
+        .select()
+        .eq('user_id', userId)
+        .gte('pay_period_start', yearStart.toIso8601String().split('T')[0]);
+
+    final paychecks = List<Map<String, dynamic>>.from(response);
+
+    double totalGap = 0;
+    int gapCount = 0;
+
+    for (final p in paychecks) {
+      final gap = (p['unreported_gap'] as num?)?.toDouble() ?? 0;
+      if (gap.abs() > 50) {
+        // $50 threshold
+        totalGap += gap;
+        gapCount++;
+      }
+    }
+
+    return {
+      'hasGaps': gapCount > 0,
+      'totalGap': totalGap,
+      'gapCount': gapCount,
+      'paycheckCount': paychecks.length,
+      'year': now.year,
+    };
+  }
+
+  // ============================================
+  // COMBINED FINANCIAL SUMMARY
+  // ============================================
+
+  /// Get comprehensive financial summary for AI context
+  Future<Map<String, dynamic>> getFinancialSummary() async {
+    final invoiceTotals = await getInvoiceTotals();
+    final expenseTotals = await getExpenseTotals();
+    final paycheckYTD = await getPaycheckYTDTotals();
+    final deductibles = await getTaxDeductibleExpenses();
+    final realityCheck = await getRealityCheckSummary();
+
+    return {
+      'invoices': invoiceTotals,
+      'expenses': expenseTotals,
+      'paychecks': paycheckYTD,
+      'deductibles': deductibles,
+      'realityCheck': realityCheck,
+      'timestamp': DateTime.now().toIso8601String(),
+    };
+  }
 }

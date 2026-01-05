@@ -110,6 +110,11 @@ class ShiftAttachment {
     return 'file';
   }
 
+  // Get public URL for the attachment
+  // Note: This requires the Supabase client instance, so we'll create a helper method in DatabaseService
+  // For now, return the file path which can be used to generate URL
+  String get storagePath => filePath;
+
   // Convert from database map
   factory ShiftAttachment.fromMap(Map<String, dynamic> map) {
     return ShiftAttachment(

@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -114,7 +113,17 @@ class AIAgentService {
 
   /// Clear chat history
   Future<void> clearHistory() async {
-    // TODO: If we store chat history in database, clear it here
-    debugPrint('[AI Agent] Chat history cleared (local)');
+    try {
+      final userId = Supabase.instance.client.auth.currentUser?.id;
+      if (userId != null) {
+        await Supabase.instance.client
+            .from('chat_messages')
+            .delete()
+            .eq('user_id', userId);
+      }
+      debugPrint('[AI Agent] Chat history cleared');
+    } catch (e) {
+      debugPrint('[AI Agent] Chat history cleared (local only - $e)');
+    }
   }
 }

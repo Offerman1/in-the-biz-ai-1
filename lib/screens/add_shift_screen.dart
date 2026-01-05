@@ -10,6 +10,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:gal/gal.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show FileOptions;
 import '../models/shift.dart';
 import '../models/job.dart';
 import '../models/job_template.dart';
@@ -34,6 +35,7 @@ import 'document_scanner_screen.dart';
 import 'scan_verification_screen.dart';
 import 'paywall_screen.dart';
 import '../widgets/scan_type_menu.dart';
+import '../widgets/document_preview_widget.dart';
 import '../models/vision_scan.dart';
 import '../services/vision_scanner_service.dart';
 
@@ -1220,6 +1222,9 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
         case ScanType.invoice:
           await _processInvoiceScan(session);
           break;
+        case ScanType.receipt:
+          await _processReceiptScan(session);
+          break;
       }
     } catch (e) {
       if (mounted) {
@@ -1542,6 +1547,70 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Invoice scan failed: $e'),
+            backgroundColor: AppTheme.dangerColor,
+          ),
+        );
+      }
+    }
+  }
+
+  /// Process receipt scan - Track expenses and deductions
+  Future<void> _processReceiptScan(DocumentScanSession session) async {
+    try {
+      final userId = _db.supabase.auth.currentUser!.id;
+      final result = await _visionScanner.analyzeReceipt(
+        session.imagePaths,
+        userId,
+        shiftId: widget.existingShift?.id,
+      );
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).clearSnackBars();
+
+      // Show verification screen
+      final confirmed = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ScanVerificationScreen(
+            scanType: ScanType.receipt,
+            extractedData: result['data'] as Map<String, dynamic>,
+            confidenceScores:
+                result['data']['ai_confidence_scores'] as Map<String, dynamic>?,
+            onConfirm: (data) async {
+              // Receipt already saved by Edge Function
+            },
+          ),
+        ),
+      );
+
+      if (confirmed == true && mounted) {
+        final category = result['data']['expense_category'] as String?;
+        final amount = result['data']['total_amount'] as num?;
+        final deductibleAmount =
+            result['deduction_summary']?['deductible_amount'] as num?;
+
+        String message = 'Receipt saved!';
+        if (category != null && amount != null) {
+          message = 'Receipt saved: \$${amount.toStringAsFixed(2)} ($category)';
+          if (deductibleAmount != null && deductibleAmount != amount) {
+            message += ' - \$${deductibleAmount.toStringAsFixed(2)} deductible';
+          }
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message),
+            backgroundColor: AppTheme.successColor,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).clearSnackBars();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Receipt scan failed: $e'),
             backgroundColor: AppTheme.dangerColor,
           ),
         );
@@ -2012,6 +2081,26 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
               key: ValueKey('event_team_section'),
               padding: const EdgeInsets.only(bottom: 16),
               child: _buildEventTeamSection(),
+            ));
+          }
+          break;
+
+        case 'invoices_section':
+          if (_template!.showInvoices) {
+            widgets.add(Padding(
+              key: ValueKey('invoices_section'),
+              padding: const EdgeInsets.only(bottom: 16),
+              child: _buildInvoicesSection(),
+            ));
+          }
+          break;
+
+        case 'receipts_section':
+          if (_template!.showReceipts) {
+            widgets.add(Padding(
+              key: ValueKey('receipts_section'),
+              padding: const EdgeInsets.only(bottom: 16),
+              child: _buildReceiptsSection(),
             ));
           }
           break;
@@ -4221,55 +4310,6 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
     );
   }
 
-  Widget _buildAIChatBar() {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppTheme.cardBackground,
-        border: Border(
-          top: BorderSide(
-            color: AppTheme.primaryGreen.withOpacity(0.3),
-            width: 1,
-          ),
-        ),
-      ),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Icon(Icons.auto_awesome, color: AppTheme.primaryGreen, size: 24),
-              const SizedBox(width: 12),
-              Expanded(
-                child: TextField(
-                  maxLines: null,
-                  minLines: 1,
-                  decoration: InputDecoration(
-                    hintText: 'Ask AI to help fill out this shift...',
-                    hintStyle:
-                        AppTheme.bodyMedium.copyWith(color: AppTheme.textMuted),
-                    border: InputBorder.none,
-                    isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                  style: AppTheme.bodyMedium,
-                  onSubmitted: (value) {
-                    // TODO: Implement AI chat functionality
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('AI chat coming soon!')),
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(width: 12),
-              Icon(Icons.send, color: AppTheme.primaryGreen, size: 20),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildPhotoThumbnails() {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -5144,7 +5184,48 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
               separatorBuilder: (_, __) => const SizedBox(height: 8),
               itemBuilder: (context, index) {
                 final attachment = _attachments[index];
-                return _buildAttachmentTile(attachment);
+                return Row(
+                  children: [
+                    SizedBox(
+                      width: 100,
+                      height: 80,
+                      child: DocumentPreviewWidget(
+                        attachment: attachment,
+                        showFileName: false,
+                        showFileSize: false,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            attachment.fileName,
+                            style: AppTheme.bodyMedium.copyWith(
+                              fontWeight: FontWeight.w500,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${attachment.extension.toUpperCase()} • ${attachment.formattedSize}',
+                            style: AppTheme.labelSmall.copyWith(
+                              color: AppTheme.textMuted,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.delete,
+                          color: AppTheme.dangerColor, size: 20),
+                      onPressed: () => _deleteAttachment(attachment),
+                      tooltip: 'Delete',
+                    ),
+                  ],
+                );
               },
             ),
         ],
@@ -5153,6 +5234,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
   }
 
   Widget _buildAttachmentTile(ShiftAttachment attachment) {
+    // OLD CODE - No longer used, replaced by DocumentPreviewWidget
     IconData fileIcon;
     Color iconColor;
 
@@ -5240,6 +5322,940 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  // ============================================
+  // INVOICES & RECEIPTS SECTIONS
+  // ============================================
+
+  /// Build the Invoices section (for freelancers/contractors)
+  Widget _buildInvoicesSection() {
+    return CollapsibleSection(
+      title: 'Invoices',
+      icon: Icons.receipt_long,
+      accentColor: AppTheme.accentBlue,
+      initiallyExpanded: false,
+      children: [
+        // Action buttons row
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: () => _handleScanTypeSelected(ScanType.invoice),
+                icon: Icon(Icons.document_scanner, size: 18),
+                label: Text('Scan'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppTheme.accentBlue,
+                  side: BorderSide(color: AppTheme.accentBlue.withOpacity(0.5)),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: _pickInvoiceFile,
+                icon: Icon(Icons.upload_file, size: 18),
+                label: Text('Upload'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppTheme.accentPurple,
+                  side:
+                      BorderSide(color: AppTheme.accentPurple.withOpacity(0.5)),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: _showManualInvoiceForm,
+                icon: Icon(Icons.edit_note, size: 18),
+                label: Text('Manual'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppTheme.primaryGreen,
+                  side:
+                      BorderSide(color: AppTheme.primaryGreen.withOpacity(0.5)),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        // Invoice list (placeholder)
+        Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: AppTheme.cardBackgroundLight.withOpacity(0.3),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: AppTheme.textMuted.withOpacity(0.2),
+              style: BorderStyle.solid,
+            ),
+          ),
+          child: Column(
+            children: [
+              Icon(Icons.receipt_long, color: AppTheme.textMuted, size: 32),
+              const SizedBox(height: 8),
+              Text(
+                'No invoices attached',
+                style: AppTheme.bodyMedium.copyWith(color: AppTheme.textMuted),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Scan, upload, or add manually',
+                style: AppTheme.bodySmall.copyWith(color: AppTheme.textMuted),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Build the Receipts section (for expense tracking)
+  Widget _buildReceiptsSection() {
+    return CollapsibleSection(
+      title: 'Receipts & Expenses',
+      icon: Icons.receipt,
+      accentColor: AppTheme.accentOrange,
+      initiallyExpanded: false,
+      children: [
+        // Action buttons row
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: () => _handleScanTypeSelected(ScanType.receipt),
+                icon: Icon(Icons.document_scanner, size: 18),
+                label: Text('Scan'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppTheme.accentOrange,
+                  side:
+                      BorderSide(color: AppTheme.accentOrange.withOpacity(0.5)),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: _pickReceiptFile,
+                icon: Icon(Icons.upload_file, size: 18),
+                label: Text('Upload'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppTheme.accentPurple,
+                  side:
+                      BorderSide(color: AppTheme.accentPurple.withOpacity(0.5)),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: _showManualReceiptForm,
+                icon: Icon(Icons.edit_note, size: 18),
+                label: Text('Manual'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppTheme.primaryGreen,
+                  side:
+                      BorderSide(color: AppTheme.primaryGreen.withOpacity(0.5)),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        // Receipt list (placeholder)
+        Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: AppTheme.cardBackgroundLight.withOpacity(0.3),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: AppTheme.textMuted.withOpacity(0.2),
+              style: BorderStyle.solid,
+            ),
+          ),
+          child: Column(
+            children: [
+              Icon(Icons.receipt, color: AppTheme.textMuted, size: 32),
+              const SizedBox(height: 8),
+              Text(
+                'No receipts attached',
+                style: AppTheme.bodyMedium.copyWith(color: AppTheme.textMuted),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Track expenses for tax deductions',
+                style: AppTheme.bodySmall.copyWith(color: AppTheme.textMuted),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Pick and upload invoice file
+  Future<void> _pickInvoiceFile() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf', 'png', 'jpg', 'jpeg'],
+        allowMultiple: false,
+      );
+
+      if (result != null && result.files.isNotEmpty) {
+        final file = result.files.first;
+
+        // Show loading
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation(Colors.white),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Text('Uploading invoice...'),
+              ],
+            ),
+            backgroundColor: AppTheme.accentBlue,
+            duration: const Duration(seconds: 10),
+          ),
+        );
+
+        // Upload to Supabase storage
+        final userId = _db.supabase.auth.currentUser!.id;
+        final fileName =
+            '${DateTime.now().millisecondsSinceEpoch}_${file.name}';
+        final storagePath = '$userId/invoices/$fileName';
+
+        await _db.supabase.storage.from('documents').uploadBinary(
+              storagePath,
+              file.bytes!,
+              fileOptions: FileOptions(
+                  contentType: _getContentType(file.extension ?? '')),
+            );
+
+        final publicUrl =
+            _db.supabase.storage.from('documents').getPublicUrl(storagePath);
+
+        // Create invoice record
+        await _db.createInvoice({
+          'shift_id': widget.existingShift?.id,
+          'invoice_number': 'UPLOAD-${DateTime.now().millisecondsSinceEpoch}',
+          'client_name': 'Uploaded Invoice',
+          'total_amount': 0, // User can update later
+          'invoice_date': DateTime.now().toIso8601String().split('T')[0],
+          'status': 'draft',
+          'image_urls': [publicUrl],
+        });
+
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Invoice uploaded! Edit to add details.'),
+              backgroundColor: AppTheme.successColor,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error uploading invoice: $e'),
+            backgroundColor: AppTheme.dangerColor,
+          ),
+        );
+      }
+    }
+  }
+
+  /// Pick and upload receipt file
+  Future<void> _pickReceiptFile() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf', 'png', 'jpg', 'jpeg'],
+        allowMultiple: false,
+      );
+
+      if (result != null && result.files.isNotEmpty) {
+        final file = result.files.first;
+
+        // Show loading
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation(Colors.white),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Text('Uploading receipt...'),
+              ],
+            ),
+            backgroundColor: AppTheme.accentOrange,
+            duration: const Duration(seconds: 10),
+          ),
+        );
+
+        // Upload to Supabase storage
+        final userId = _db.supabase.auth.currentUser!.id;
+        final fileName =
+            '${DateTime.now().millisecondsSinceEpoch}_${file.name}';
+        final storagePath = '$userId/receipts/$fileName';
+
+        await _db.supabase.storage.from('documents').uploadBinary(
+              storagePath,
+              file.bytes!,
+              fileOptions: FileOptions(
+                  contentType: _getContentType(file.extension ?? '')),
+            );
+
+        final publicUrl =
+            _db.supabase.storage.from('documents').getPublicUrl(storagePath);
+
+        // Create receipt record
+        await _db.createReceipt({
+          'shift_id': widget.existingShift?.id,
+          'vendor_name': file.name.split('.').first,
+          'total_amount': 0, // User can update later
+          'receipt_date': DateTime.now().toIso8601String().split('T')[0],
+          'expense_category': 'other',
+          'is_tax_deductible': true,
+          'image_urls': [publicUrl],
+        });
+
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Receipt uploaded! Edit to add details.'),
+              backgroundColor: AppTheme.successColor,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error uploading receipt: $e'),
+            backgroundColor: AppTheme.dangerColor,
+          ),
+        );
+      }
+    }
+  }
+
+  /// Get content type for file extension
+  String _getContentType(String extension) {
+    switch (extension.toLowerCase()) {
+      case 'pdf':
+        return 'application/pdf';
+      case 'png':
+        return 'image/png';
+      case 'jpg':
+      case 'jpeg':
+        return 'image/jpeg';
+      default:
+        return 'application/octet-stream';
+    }
+  }
+
+  /// Show manual invoice entry form
+  void _showManualInvoiceForm() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _ManualInvoiceForm(
+        onSave: (invoiceData) async {
+          Navigator.pop(context);
+          try {
+            // Add shift_id if editing an existing shift
+            if (widget.existingShift != null) {
+              invoiceData['shift_id'] = widget.existingShift!.id;
+            }
+            await _db.createInvoice(invoiceData);
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Invoice added!'),
+                  backgroundColor: AppTheme.successColor,
+                ),
+              );
+            }
+          } catch (e) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Error saving invoice: $e'),
+                  backgroundColor: AppTheme.dangerColor,
+                ),
+              );
+            }
+          }
+        },
+      ),
+    );
+  }
+
+  /// Show manual receipt entry form
+  void _showManualReceiptForm() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _ManualReceiptForm(
+        onSave: (receiptData) async {
+          Navigator.pop(context);
+          try {
+            // Add shift_id if editing an existing shift
+            if (widget.existingShift != null) {
+              receiptData['shift_id'] = widget.existingShift!.id;
+            }
+            await _db.createReceipt(receiptData);
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Receipt added!'),
+                  backgroundColor: AppTheme.successColor,
+                ),
+              );
+            }
+          } catch (e) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Error saving receipt: $e'),
+                  backgroundColor: AppTheme.dangerColor,
+                ),
+              );
+            }
+          }
+        },
+      ),
+    );
+  }
+}
+
+// ============================================
+// MANUAL ENTRY FORM WIDGETS
+// ============================================
+
+/// Manual Invoice Entry Form
+class _ManualInvoiceForm extends StatefulWidget {
+  final Function(Map<String, dynamic>) onSave;
+
+  const _ManualInvoiceForm({required this.onSave});
+
+  @override
+  State<_ManualInvoiceForm> createState() => _ManualInvoiceFormState();
+}
+
+class _ManualInvoiceFormState extends State<_ManualInvoiceForm> {
+  final _formKey = GlobalKey<FormState>();
+  final _invoiceNumberController = TextEditingController();
+  final _clientNameController = TextEditingController();
+  final _clientEmailController = TextEditingController();
+  final _amountController = TextEditingController();
+  final _descriptionController = TextEditingController();
+  DateTime _invoiceDate = DateTime.now();
+  DateTime? _dueDate;
+  String _status = 'draft';
+
+  @override
+  void dispose() {
+    _invoiceNumberController.dispose();
+    _clientNameController.dispose();
+    _clientEmailController.dispose();
+    _amountController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.85,
+      decoration: BoxDecoration(
+        color: AppTheme.darkBackground,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: Column(
+        children: [
+          // Handle bar
+          Container(
+            margin: const EdgeInsets.only(top: 12),
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: AppTheme.textMuted,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          // Header
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Add Invoice', style: AppTheme.titleLarge),
+                IconButton(
+                  icon: Icon(Icons.close, color: AppTheme.textMuted),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+          // Form
+          Expanded(
+            child: Form(
+              key: _formKey,
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  // Invoice Number
+                  TextFormField(
+                    controller: _invoiceNumberController,
+                    decoration: InputDecoration(
+                      labelText: 'Invoice Number',
+                      hintText: 'INV-001',
+                      prefixIcon: Icon(Icons.tag, color: AppTheme.accentBlue),
+                    ),
+                    style: AppTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 16),
+                  // Client Name
+                  TextFormField(
+                    controller: _clientNameController,
+                    decoration: InputDecoration(
+                      labelText: 'Client Name *',
+                      hintText: 'Acme Corp',
+                      prefixIcon:
+                          Icon(Icons.business, color: AppTheme.accentBlue),
+                    ),
+                    style: AppTheme.bodyMedium,
+                    validator: (v) => v?.isEmpty ?? true ? 'Required' : null,
+                  ),
+                  const SizedBox(height: 16),
+                  // Client Email
+                  TextFormField(
+                    controller: _clientEmailController,
+                    decoration: InputDecoration(
+                      labelText: 'Client Email',
+                      hintText: 'client@example.com',
+                      prefixIcon: Icon(Icons.email, color: AppTheme.accentBlue),
+                    ),
+                    style: AppTheme.bodyMedium,
+                    keyboardType: TextInputType.emailAddress,
+                  ),
+                  const SizedBox(height: 16),
+                  // Amount
+                  TextFormField(
+                    controller: _amountController,
+                    decoration: InputDecoration(
+                      labelText: 'Total Amount *',
+                      hintText: '0.00',
+                      prefixIcon: Icon(Icons.attach_money,
+                          color: AppTheme.primaryGreen),
+                    ),
+                    style: AppTheme.bodyMedium,
+                    keyboardType:
+                        TextInputType.numberWithOptions(decimal: true),
+                    validator: (v) => v?.isEmpty ?? true ? 'Required' : null,
+                  ),
+                  const SizedBox(height: 16),
+                  // Description
+                  TextFormField(
+                    controller: _descriptionController,
+                    decoration: InputDecoration(
+                      labelText: 'Description',
+                      hintText: 'Services rendered...',
+                      prefixIcon:
+                          Icon(Icons.description, color: AppTheme.textMuted),
+                    ),
+                    style: AppTheme.bodyMedium,
+                    maxLines: 3,
+                  ),
+                  const SizedBox(height: 16),
+                  // Invoice Date
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading:
+                        Icon(Icons.calendar_today, color: AppTheme.accentBlue),
+                    title: Text('Invoice Date', style: AppTheme.bodyMedium),
+                    subtitle: Text(
+                      '${_invoiceDate.month}/${_invoiceDate.day}/${_invoiceDate.year}',
+                      style: AppTheme.bodySmall
+                          .copyWith(color: AppTheme.textMuted),
+                    ),
+                    onTap: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: _invoiceDate,
+                        firstDate: DateTime(2020),
+                        lastDate: DateTime(2030),
+                      );
+                      if (picked != null) setState(() => _invoiceDate = picked);
+                    },
+                  ),
+                  // Due Date
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(Icons.event, color: AppTheme.accentOrange),
+                    title: Text('Due Date', style: AppTheme.bodyMedium),
+                    subtitle: Text(
+                      _dueDate != null
+                          ? '${_dueDate!.month}/${_dueDate!.day}/${_dueDate!.year}'
+                          : 'Not set',
+                      style: AppTheme.bodySmall
+                          .copyWith(color: AppTheme.textMuted),
+                    ),
+                    onTap: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate:
+                            _dueDate ?? DateTime.now().add(Duration(days: 30)),
+                        firstDate: DateTime(2020),
+                        lastDate: DateTime(2030),
+                      );
+                      if (picked != null) setState(() => _dueDate = picked);
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  // Status
+                  DropdownButtonFormField<String>(
+                    value: _status,
+                    decoration: InputDecoration(
+                      labelText: 'Status',
+                      prefixIcon:
+                          Icon(Icons.flag, color: AppTheme.accentPurple),
+                    ),
+                    items: [
+                      DropdownMenuItem(value: 'draft', child: Text('Draft')),
+                      DropdownMenuItem(value: 'sent', child: Text('Sent')),
+                      DropdownMenuItem(value: 'paid', child: Text('Paid')),
+                      DropdownMenuItem(
+                          value: 'overdue', child: Text('Overdue')),
+                    ],
+                    onChanged: (v) => setState(() => _status = v ?? 'draft'),
+                  ),
+                  const SizedBox(height: 32),
+                  // Save button
+                  ElevatedButton(
+                    onPressed: () {
+                      if (_formKey.currentState?.validate() ?? false) {
+                        widget.onSave({
+                          'invoice_number': _invoiceNumberController.text,
+                          'client_name': _clientNameController.text,
+                          'client_email': _clientEmailController.text,
+                          'total_amount':
+                              double.tryParse(_amountController.text) ?? 0,
+                          'description': _descriptionController.text,
+                          'invoice_date': _invoiceDate.toIso8601String(),
+                          'due_date': _dueDate?.toIso8601String(),
+                          'status': _status,
+                        });
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.accentBlue,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text('Save Invoice',
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Manual Receipt Entry Form
+class _ManualReceiptForm extends StatefulWidget {
+  final Function(Map<String, dynamic>) onSave;
+
+  const _ManualReceiptForm({required this.onSave});
+
+  @override
+  State<_ManualReceiptForm> createState() => _ManualReceiptFormState();
+}
+
+class _ManualReceiptFormState extends State<_ManualReceiptForm> {
+  final _formKey = GlobalKey<FormState>();
+  final _vendorNameController = TextEditingController();
+  final _amountController = TextEditingController();
+  final _taxController = TextEditingController();
+  final _notesController = TextEditingController();
+  DateTime _receiptDate = DateTime.now();
+  String _expenseCategory = 'supplies';
+  bool _isTaxDeductible = true;
+  String _paymentMethod = 'credit_card';
+
+  static const List<Map<String, String>> _expenseCategories = [
+    {'value': 'supplies', 'label': 'Supplies & Materials'},
+    {'value': 'equipment', 'label': 'Equipment'},
+    {'value': 'travel', 'label': 'Travel & Transportation'},
+    {'value': 'meals', 'label': 'Meals & Entertainment'},
+    {'value': 'fuel', 'label': 'Fuel & Gas'},
+    {'value': 'parking', 'label': 'Parking & Tolls'},
+    {'value': 'utilities', 'label': 'Utilities'},
+    {'value': 'software', 'label': 'Software & Subscriptions'},
+    {'value': 'office', 'label': 'Office Expenses'},
+    {'value': 'professional', 'label': 'Professional Services'},
+    {'value': 'other', 'label': 'Other'},
+  ];
+
+  @override
+  void dispose() {
+    _vendorNameController.dispose();
+    _amountController.dispose();
+    _taxController.dispose();
+    _notesController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.85,
+      decoration: BoxDecoration(
+        color: AppTheme.darkBackground,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: Column(
+        children: [
+          // Handle bar
+          Container(
+            margin: const EdgeInsets.only(top: 12),
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: AppTheme.textMuted,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          // Header
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Add Receipt', style: AppTheme.titleLarge),
+                IconButton(
+                  icon: Icon(Icons.close, color: AppTheme.textMuted),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+          // Form
+          Expanded(
+            child: Form(
+              key: _formKey,
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  // Vendor Name
+                  TextFormField(
+                    controller: _vendorNameController,
+                    decoration: InputDecoration(
+                      labelText: 'Vendor/Store Name *',
+                      hintText: 'Home Depot',
+                      prefixIcon:
+                          Icon(Icons.store, color: AppTheme.accentOrange),
+                    ),
+                    style: AppTheme.bodyMedium,
+                    validator: (v) => v?.isEmpty ?? true ? 'Required' : null,
+                  ),
+                  const SizedBox(height: 16),
+                  // Amount
+                  TextFormField(
+                    controller: _amountController,
+                    decoration: InputDecoration(
+                      labelText: 'Total Amount *',
+                      hintText: '0.00',
+                      prefixIcon: Icon(Icons.attach_money,
+                          color: AppTheme.primaryGreen),
+                    ),
+                    style: AppTheme.bodyMedium,
+                    keyboardType:
+                        TextInputType.numberWithOptions(decimal: true),
+                    validator: (v) => v?.isEmpty ?? true ? 'Required' : null,
+                  ),
+                  const SizedBox(height: 16),
+                  // Tax Amount
+                  TextFormField(
+                    controller: _taxController,
+                    decoration: InputDecoration(
+                      labelText: 'Tax Amount',
+                      hintText: '0.00',
+                      prefixIcon:
+                          Icon(Icons.calculate, color: AppTheme.textMuted),
+                    ),
+                    style: AppTheme.bodyMedium,
+                    keyboardType:
+                        TextInputType.numberWithOptions(decimal: true),
+                  ),
+                  const SizedBox(height: 16),
+                  // Expense Category
+                  DropdownButtonFormField<String>(
+                    value: _expenseCategory,
+                    decoration: InputDecoration(
+                      labelText: 'Expense Category',
+                      prefixIcon:
+                          Icon(Icons.category, color: AppTheme.accentPurple),
+                    ),
+                    items: _expenseCategories
+                        .map((c) => DropdownMenuItem(
+                              value: c['value'],
+                              child: Text(c['label']!),
+                            ))
+                        .toList(),
+                    onChanged: (v) =>
+                        setState(() => _expenseCategory = v ?? 'supplies'),
+                  ),
+                  const SizedBox(height: 16),
+                  // Payment Method
+                  DropdownButtonFormField<String>(
+                    value: _paymentMethod,
+                    decoration: InputDecoration(
+                      labelText: 'Payment Method',
+                      prefixIcon:
+                          Icon(Icons.payment, color: AppTheme.accentBlue),
+                    ),
+                    items: [
+                      DropdownMenuItem(value: 'cash', child: Text('Cash')),
+                      DropdownMenuItem(
+                          value: 'credit_card', child: Text('Credit Card')),
+                      DropdownMenuItem(
+                          value: 'debit_card', child: Text('Debit Card')),
+                      DropdownMenuItem(value: 'check', child: Text('Check')),
+                      DropdownMenuItem(value: 'other', child: Text('Other')),
+                    ],
+                    onChanged: (v) =>
+                        setState(() => _paymentMethod = v ?? 'credit_card'),
+                  ),
+                  const SizedBox(height: 16),
+                  // Receipt Date
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(Icons.calendar_today,
+                        color: AppTheme.accentOrange),
+                    title: Text('Receipt Date', style: AppTheme.bodyMedium),
+                    subtitle: Text(
+                      '${_receiptDate.month}/${_receiptDate.day}/${_receiptDate.year}',
+                      style: AppTheme.bodySmall
+                          .copyWith(color: AppTheme.textMuted),
+                    ),
+                    onTap: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: _receiptDate,
+                        firstDate: DateTime(2020),
+                        lastDate: DateTime.now(),
+                      );
+                      if (picked != null) setState(() => _receiptDate = picked);
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  // Tax Deductible Toggle
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text('Tax Deductible', style: AppTheme.bodyMedium),
+                    subtitle: Text(
+                      _isTaxDeductible
+                          ? 'Will be included in tax deductions'
+                          : 'Personal expense',
+                      style: AppTheme.bodySmall
+                          .copyWith(color: AppTheme.textMuted),
+                    ),
+                    value: _isTaxDeductible,
+                    onChanged: (v) => setState(() => _isTaxDeductible = v),
+                    activeColor: AppTheme.primaryGreen,
+                  ),
+                  const SizedBox(height: 16),
+                  // Notes
+                  TextFormField(
+                    controller: _notesController,
+                    decoration: InputDecoration(
+                      labelText: 'Notes',
+                      hintText: 'What was this for?',
+                      prefixIcon: Icon(Icons.note, color: AppTheme.textMuted),
+                    ),
+                    style: AppTheme.bodyMedium,
+                    maxLines: 2,
+                  ),
+                  const SizedBox(height: 32),
+                  // Save button
+                  ElevatedButton(
+                    onPressed: () {
+                      if (_formKey.currentState?.validate() ?? false) {
+                        widget.onSave({
+                          'vendor_name': _vendorNameController.text,
+                          'total_amount':
+                              double.tryParse(_amountController.text) ?? 0,
+                          'tax_amount':
+                              double.tryParse(_taxController.text) ?? 0,
+                          'expense_category': _expenseCategory,
+                          'payment_method': _paymentMethod,
+                          'receipt_date': _receiptDate.toIso8601String(),
+                          'is_tax_deductible': _isTaxDeductible,
+                          'notes': _notesController.text,
+                        });
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.accentOrange,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text('Save Receipt',
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

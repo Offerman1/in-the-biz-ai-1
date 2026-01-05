@@ -1316,10 +1316,31 @@ class _ShiftDetailScreenState extends State<ShiftDetailScreen>
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () {
-              // TODO: Delete shift
-              Navigator.pop(context);
-              Navigator.pop(context);
+            onPressed: () async {
+              try {
+                await _dbService.deleteShift(_editableShift.id);
+                if (mounted) {
+                  Navigator.pop(context); // Close dialog
+                  Navigator.pop(
+                      context, true); // Return to previous screen with result
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Shift deleted'),
+                      backgroundColor: AppTheme.successColor,
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  Navigator.pop(context); // Close dialog
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Error deleting shift: $e'),
+                      backgroundColor: AppTheme.dangerColor,
+                    ),
+                  );
+                }
+              }
             },
             style: TextButton.styleFrom(foregroundColor: AppTheme.accentRed),
             child: const Text('Delete'),

@@ -385,6 +385,8 @@ class _ScanVerificationScreenState extends State<ScanVerificationScreen> {
         return _buildBusinessCardFields();
       case ScanType.invoice:
         return _buildInvoiceFields();
+      case ScanType.receipt:
+        return _buildReceiptFields();
     }
   }
 
@@ -469,6 +471,22 @@ class _ScanVerificationScreenState extends State<ScanVerificationScreen> {
       _buildFieldRow('Total Amount', 'total_amount', suffix: ' USD'),
       _buildFieldRow('Payment Terms', 'payment_terms'),
       _buildFieldRow('QuickBooks Category', 'quickbooks_category'),
+    ];
+  }
+
+  List<Widget> _buildReceiptFields() {
+    return [
+      _buildFieldRow('Vendor Name', 'vendor_name'),
+      _buildFieldRow('Receipt Date', 'receipt_date'),
+      _buildFieldRow('Receipt Number', 'receipt_number'),
+      _buildFieldRow('Subtotal', 'subtotal', suffix: ' USD'),
+      _buildFieldRow('Tax', 'tax_amount', suffix: ' USD'),
+      _buildFieldRow('Tip', 'tip_amount', suffix: ' USD'),
+      _buildFieldRow('Total Amount', 'total_amount', suffix: ' USD'),
+      _buildFieldRow('Payment Method', 'payment_method'),
+      _buildFieldRow('Expense Category', 'expense_category'),
+      _buildFieldRow('QuickBooks Category', 'quickbooks_category'),
+      _buildFieldRow('Tax Deductible', 'is_tax_deductible'),
     ];
   }
 }

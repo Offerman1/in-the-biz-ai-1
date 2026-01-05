@@ -14,6 +14,8 @@ class FieldOrderProvider extends ChangeNotifier {
     'documentation_section',
     'attachments_section',
     'event_team_section',
+    'invoices_section',
+    'receipts_section',
   ];
 
   // Default order for Shift Details screen
@@ -26,6 +28,8 @@ class FieldOrderProvider extends ChangeNotifier {
     'photos_section',
     'attachments_section',
     'event_team_section',
+    'invoices_section',
+    'receipts_section',
   ];
 
   List<String> _formFieldOrder = [..._defaultFormOrder];

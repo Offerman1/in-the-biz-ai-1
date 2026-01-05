@@ -960,38 +960,127 @@ export class ShiftExecutor {
   }
 
   private async attachPhotoToShift(args: any) {
-    const { shiftDate, photoId } = args;
+    const { shiftDate, photoId, photoUrl } = args;
 
-    // TODO: Implement photo attachment logic
-    // This requires photos table structure
+    try {
+      // Get the shift for this date
+      const { data: shift, error: shiftError } = await this.supabase
+        .from("shifts")
+        .select("id")
+        .eq("user_id", this.userId)
+        .eq("date", shiftDate)
+        .single();
 
-    return {
-      success: true,
-      message: "Photo attachment feature coming soon",
-    };
+      if (shiftError || !shift) {
+        throw new Error(`No shift found on ${shiftDate}`);
+      }
+
+      // Insert into shift_attachments table
+      const { error: attachError } = await this.supabase
+        .from("shift_attachments")
+        .insert({
+          shift_id: shift.id,
+          user_id: this.userId,
+          file_url: photoUrl || photoId,
+          file_type: "image",
+          created_at: new Date().toISOString(),
+        });
+
+      if (attachError) throw attachError;
+
+      return {
+        success: true,
+        message: `Photo attached to shift on ${shiftDate}`,
+      };
+    } catch (e: any) {
+      return {
+        success: false,
+        message: `Error attaching photo: ${e.message}`,
+      };
+    }
   }
 
   private async removePhotoFromShift(args: any) {
     const { shiftDate, photoId } = args;
 
-    // TODO: Implement photo removal logic
+    try {
+      // Get the shift for this date
+      const { data: shift, error: shiftError } = await this.supabase
+        .from("shifts")
+        .select("id")
+        .eq("user_id", this.userId)
+        .eq("date", shiftDate)
+        .single();
 
-    return {
-      success: true,
-      message: "Photo removal feature coming soon",
-    };
+      if (shiftError || !shift) {
+        throw new Error(`No shift found on ${shiftDate}`);
+      }
+
+      // Delete from shift_attachments table
+      const { error: deleteError } = await this.supabase
+        .from("shift_attachments")
+        .delete()
+        .eq("shift_id", shift.id)
+        .eq("id", photoId);
+
+      if (deleteError) throw deleteError;
+
+      return {
+        success: true,
+        message: `Photo removed from shift on ${shiftDate}`,
+      };
+    } catch (e: any) {
+      return {
+        success: false,
+        message: `Error removing photo: ${e.message}`,
+      };
+    }
   }
 
   private async getShiftPhotos(args: any) {
     const { shiftDate } = args;
 
-    // TODO: Query photos table
+    try {
+      // Get the shift for this date
+      const { data: shift, error: shiftError } = await this.supabase
+        .from("shifts")
+        .select("id")
+        .eq("user_id", this.userId)
+        .eq("date", shiftDate)
+        .single();
 
-    return {
-      success: true,
-      photos: [],
-      message: "Photo retrieval feature coming soon",
-    };
+      if (shiftError || !shift) {
+        return {
+          success: true,
+          photos: [],
+          message: `No shift found on ${shiftDate}`,
+        };
+      }
+
+      // Get attachments for this shift
+      const { data: attachments, error: attachError } = await this.supabase
+        .from("shift_attachments")
+        .select("id, file_url, file_type, created_at")
+        .eq("shift_id", shift.id)
+        .eq("file_type", "image");
+
+      if (attachError) throw attachError;
+
+      return {
+        success: true,
+        photos: attachments || [],
+        count: attachments?.length || 0,
+        message: attachments?.length 
+          ? `Found ${attachments.length} photo(s) for shift on ${shiftDate}`
+          : `No photos attached to shift on ${shiftDate}`,
+      };
+    } catch (e: any) {
+      return {
+        success: false,
+        photos: [],
+        message: `Error getting photos: ${e.message}`,
+      };
+    }
   }
 
   private async calculateShiftTotal(args: any) {

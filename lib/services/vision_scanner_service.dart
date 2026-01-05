@@ -166,8 +166,9 @@ class VisionScannerService {
   /// Analyze invoice
   Future<Map<String, dynamic>> analyzeInvoice(
     List<String> imagePaths,
-    String userId,
-  ) async {
+    String userId, {
+    String? shiftId,
+  }) async {
     final base64Images = await getBase64Images(imagePaths);
 
     final response = await _supabase.functions.invoke(
@@ -175,11 +176,36 @@ class VisionScannerService {
       body: {
         'images': base64Images,
         'userId': userId,
+        'shiftId': shiftId,
       },
     );
 
     if (response.status != 200) {
       throw Exception('Invoice analysis failed: ${response.data}');
+    }
+
+    return response.data as Map<String, dynamic>;
+  }
+
+  /// Analyze receipt for expense tracking
+  Future<Map<String, dynamic>> analyzeReceipt(
+    List<String> imagePaths,
+    String userId, {
+    String? shiftId,
+  }) async {
+    final base64Images = await getBase64Images(imagePaths);
+
+    final response = await _supabase.functions.invoke(
+      'analyze-receipt',
+      body: {
+        'images': base64Images,
+        'userId': userId,
+        'shiftId': shiftId,
+      },
+    );
+
+    if (response.status != 200) {
+      throw Exception('Receipt analysis failed: ${response.data}');
     }
 
     return response.data as Map<String, dynamic>;
@@ -198,6 +224,8 @@ class VisionScannerService {
         return 'business-card-scans';
       case ScanType.invoice:
         return 'invoice-scans';
+      case ScanType.receipt:
+        return 'receipt-scans';
     }
   }
 

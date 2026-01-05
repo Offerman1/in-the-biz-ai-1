@@ -18,6 +18,8 @@ import '../services/database_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/hero_card.dart';
 import '../widgets/navigation_wrapper.dart';
+import '../widgets/document_preview_widget.dart';
+import 'full_screen_document_viewer.dart';
 import 'package:intl/intl.dart';
 
 class SingleShiftDetailScreen extends StatefulWidget {
@@ -1597,7 +1599,7 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
                   Widget? detailWidget;
                   if (shift.startTime != null && shift.endTime != null) {
                     detailWidget = Text(
-                      '${shift.startTime} - ${shift.endTime}',
+                      '${_formatTime(shift.startTime)} - ${_formatTime(shift.endTime)}',
                       style: AppTheme.labelSmall.copyWith(
                         color: AppTheme.textSecondary,
                         fontSize: 11,
@@ -3045,7 +3047,48 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
               separatorBuilder: (_, __) => const SizedBox(height: 8),
               itemBuilder: (context, index) {
                 final attachment = _attachments[index];
-                return _buildAttachmentTile(attachment);
+                return Row(
+                  children: [
+                    SizedBox(
+                      width: 100,
+                      height: 80,
+                      child: DocumentPreviewWidget(
+                        attachment: attachment,
+                        showFileName: false,
+                        showFileSize: false,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            attachment.fileName,
+                            style: AppTheme.bodyMedium.copyWith(
+                              fontWeight: FontWeight.w500,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${attachment.extension.toUpperCase()} • ${attachment.formattedSize}',
+                            style: AppTheme.labelSmall.copyWith(
+                              color: AppTheme.textMuted,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.delete,
+                          color: AppTheme.dangerColor, size: 20),
+                      onPressed: () => _deleteAttachment(attachment),
+                      tooltip: 'Delete',
+                    ),
+                  ],
+                );
               },
             ),
         ],
@@ -3054,6 +3097,7 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
   }
 
   Widget _buildAttachmentTile(ShiftAttachment attachment) {
+    // DEPRECATED: Now using DocumentPreviewWidget directly in ListView
     IconData fileIcon;
     Color iconColor;
 

@@ -3,9 +3,10 @@ import 'package:provider/provider.dart';
 import '../providers/shift_provider.dart';
 import '../theme/app_theme.dart';
 import '../widgets/checkout_analytics_tab.dart';
+import '../widgets/paychecks_tab.dart';
 import 'stats_screen.dart';
 
-/// Wrapper for Stats Screen that adds Checkout Analytics as a tab
+/// Wrapper for Stats Screen that adds Checkout Analytics and Paychecks as tabs
 class StatsWithCheckoutTab extends StatefulWidget {
   const StatsWithCheckoutTab({super.key});
 
@@ -20,7 +21,7 @@ class _StatsWithCheckoutTabState extends State<StatsWithCheckoutTab>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
   }
 
   @override
@@ -47,7 +48,8 @@ class _StatsWithCheckoutTabState extends State<StatsWithCheckoutTab>
           unselectedLabelColor: AppTheme.textSecondary,
           tabs: const [
             Tab(text: 'Overview'),
-            Tab(text: 'Checkout Analytics'),
+            Tab(text: 'Checkouts'),
+            Tab(text: 'Paychecks'),
           ],
         ),
       ),
@@ -59,6 +61,9 @@ class _StatsWithCheckoutTabState extends State<StatsWithCheckoutTab>
 
           // Checkout Analytics Tab
           const CheckoutAnalyticsTab(),
+
+          // Paychecks Tab
+          const PaychecksTab(),
         ],
       ),
     );

@@ -1,0 +1,144 @@
+Currency System Implementation - Phases
+Phase 1: Foundation (30 min)
+Goal: Set up currency management infrastructure
+
+Tasks:
+
+✅ Create CurrencyProvider class (lib/providers/currency_provider.dart)
+
+Load user's currency preference from database
+Store current currency in memory
+Provide formatting methods
+Notify listeners on currency change
+✅ Add CurrencyProvider to main.dart
+
+Register with MultiProvider
+Initialize on app startup
+✅ Create exchange rate service (lib/services/exchange_rate_service.dart)
+
+Fetch rates from free API (exchangerate-api.com)
+Cache rates locally (valid for 24 hours)
+Fallback to cached rates if API fails
+Deliverables:
+
+currency_provider.dart
+exchange_rate_service.dart
+Updated main.dart
+Phase 2: Input Conversion (45 min)
+Goal: Convert user input from display currency → USD before saving
+
+Tasks:
+
+✅ Update Add Shift Screen
+
+Wrap in Consumer<CurrencyProvider>
+Convert all money inputs before saving
+Show currency symbol in input hints
+✅ Update Edit Shift Screen
+
+Same conversions as Add Shift
+✅ Update CSV/Excel Import
+
+Detect currency in imported data
+Convert to USD before saving
+Affected Files:
+
+add_shift_screen.dart
+shift_detail_screen.dart
+import_screen.dart
+Phase 3: Display Conversion (60 min)
+Goal: Convert USD → display currency when showing data
+
+Tasks:
+
+✅ Update Dashboard screen
+
+Convert all earnings displays
+Update hero card totals
+Update charts
+✅ Update Calendar screen
+
+Convert daily/weekly/monthly totals
+Update shift cards
+✅ Update Stats screen
+
+Convert all financial displays
+Update charts and graphs
+✅ Update Shift Detail/Edit screens
+
+Convert when loading existing shift
+Show in current currency
+Affected Files (~15 files):
+
+dashboard_screen.dart
+better_calendar_screen.dart
+stats_screen.dart
+shift_detail_screen.dart
+single_shift_detail_screen.dart
+all_shifts_screen.dart
+paychecks_tab.dart
+checkout_analytics_tab.dart
+All other screens that display money
+Phase 4: Currency Selector Integration (15 min)
+Goal: Make currency selector actually work
+
+Tasks:
+
+✅ Update Settings screen
+
+Call CurrencyProvider.setCurrency() on selection
+Trigger app-wide refresh
+Save to database
+✅ Show currency symbol in selector
+
+Display current selection prominently
+Affected Files:
+
+settings_screen.dart
+Phase 5: Edge Cases & Polish (30 min)
+Goal: Handle offline, errors, and UX polish
+
+Tasks:
+
+✅ Offline handling
+
+Use cached exchange rates
+Show indicator if rates are stale
+✅ Error handling
+
+Graceful fallback if API fails
+User-friendly error messages
+✅ Loading states
+
+Show spinner while fetching rates
+Smooth transitions on currency change
+✅ Settings persistence
+
+Ensure currency survives app restart
+Load rates on startup
+Total Estimated Time: 3 hours
+API Selection:
+Recommended: exchangerate-api.com
+
+✅ Free tier: 1,500 requests/month (plenty for this use case)
+✅ No credit card required
+✅ Simple REST API
+✅ Returns all rates in one call
+✅ Updates daily
+Alternative: fixer.io (backup if first one has issues)
+
+Migration Strategy:
+For existing users with data:
+
+All existing shifts stay as-is (assume they're in USD)
+When user first selects a non-USD currency:
+Show one-time dialog: "Your existing shifts will be converted from USD to [currency]. Continue?"
+Going forward, everything auto-converts
+No data loss - just displaying differently!
+
+Implementation Order:
+Phase 1 (Foundation) - Must be first
+Phase 4 (Settings) - Do early for testing
+Phase 2 (Input) - Before Phase 3
+Phase 3 (Display) - Biggest phase, do incrementally
+Phase 5 (Polish) - Last, after testing

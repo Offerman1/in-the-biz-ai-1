@@ -1,0 +1,65 @@
+🎯 FINAL BUILD PLAN - READY TO EXECUTE
+✅ CONFIRMED: We Have All Database Infrastructure:
+✅ Shifts table - has calendar_event_id column (for calendar sync tracking)
+✅ Shift_attachments table - ready for document previews
+✅ Calendar deletion services - GoogleCalendarService.deleteCalendarEvent() exists
+✅ Shift model - has all necessary fields (jobId, date, totalIncome, etc.)
+✅ NO DATABASE MIGRATIONS NEEDED - we can start building immediately!
+🚀 BUILD SEQUENCE (Logical Dependency Order):
+PHASE 1: Document Preview System (5-6 hours)
+Why first: Independent feature, doesn't affect bulk operations
+
+Create DocumentPreviewWidget (thumbnails for images/PDFs)
+Create FullScreenDocumentViewer
+Update ShiftAttachment model with preview helpers
+Update attachment tiles in Add/Edit/Details screens
+Add open_filex package to pubspec.yaml
+Create AllDocumentsScreen for Settings
+Link BEO attachments in Event Portfolio
+PHASE 2: All Shifts Screen Foundation (3-4 hours)
+Why second: Must exist before adding bulk features
+
+Add "Select" toggle button in AppBar
+Add collapsible filter bar (Date, Sort dropdowns)
+Add search bar
+Implement filter logic (date range, sorting)
+Implement search logic (all fields except dollar amounts)
+Save filter state (remember user preferences)
+PHASE 3: Selection Mode (2-3 hours)
+Why third: Required for bulk actions
+
+Add _isSelectionMode state
+Add checkboxes to shift cards (shown when in selection mode)
+Track selected shifts (Set<String> of shift IDs)
+Smart selection text ("5/22 selected", "Select All", "Deselect All")
+Select All / Deselect All functionality
+PHASE 4: Bulk Actions Bar (2 hours)
+Why fourth: Now that selection works, add action UI
+
+Bulk actions dropdown button (appears when items selected)
+Bottom sheet with all bulk actions
+Action buttons: Delete, Export, Change Job, Adjust Pay, Edit Fields, Move Date
+PHASE 5: Delete Action (2-3 hours)
+Why fifth: Most critical bulk action
+
+Delete confirmation dialog
+Calendar sync options (app only vs. both)
+Execute deletion from database
+Delete from calendar (if selected)
+Update UI after deletion
+Show success message
+PHASE 6: Export Action (2-3 hours)
+Export selected shifts to CSV
+Export selected shifts to PDF
+File save/share functionality
+Success confirmation
+PHASE 7: Other Bulk Actions (4-5 hours)
+Change Job: Preview screen → apply
+Move Date: Date picker → update shifts
+Adjust Pay: Input dialog → apply formula
+Batch Edit Fields: Multi-field form → apply
+PHASE 8: Settings Integration (1 hour)
+Add "SHIFTS" section in settings
+Add "Bulk Edit Shifts" tile
+Link to All Shifts screen in selection mode
+📋 TOTAL ESTIMATED TIME: 22-27 hours

@@ -51,6 +51,10 @@ class _AddJobScreenState extends State<AddJobScreen> {
   bool _showSales = false;
   bool _showEventCost = false;
 
+  // Finance Documents - for freelancers/contractors
+  bool _showInvoices = false;
+  bool _showReceipts = false;
+
   // Rideshare-specific fields
   bool? _showRidesCount;
   bool? _showDeadMiles;
@@ -171,6 +175,8 @@ class _AddJobScreenState extends State<AddJobScreen> {
     _showMileage = template.showMileage;
     _showPhotos = template.showPhotos;
     _showNotes = template.showNotes;
+    _showInvoices = template.showInvoices;
+    _showReceipts = template.showReceipts;
     _tracksOvertime = template.tracksOvertime;
     _overtimeMultiplier = template.overtimeMultiplier;
   }
@@ -234,6 +240,8 @@ class _AddJobScreenState extends State<AddJobScreen> {
     _showMileage = template.showMileage;
     _showPhotos = template.showPhotos;
     _showNotes = template.showNotes;
+    _showInvoices = template.showInvoices;
+    _showReceipts = template.showReceipts;
     _tracksOvertime = template.tracksOvertime;
     _overtimeMultiplier = template.overtimeMultiplier;
 
@@ -339,6 +347,8 @@ class _AddJobScreenState extends State<AddJobScreen> {
       showMileage: _showMileage,
       showPhotos: _showPhotos,
       showNotes: _showNotes,
+      showInvoices: _showInvoices,
+      showReceipts: _showReceipts,
       tracksOvertime: _tracksOvertime,
       overtimeMultiplier: _overtimeMultiplier,
     );
@@ -347,22 +357,12 @@ class _AddJobScreenState extends State<AddJobScreen> {
   Future<void> _saveJob() async {
     if (!_formKey.currentState!.validate()) return;
 
-    if (_selectedIndustry == null ||
-        _selectedIndustry == '+ Add Custom Industry') {
+    // Use the text from the text field, which might be edited
+    final jobName = _jobTitleController.text.trim();
+    if (jobName.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Please select an industry'),
-          backgroundColor: AppTheme.accentRed,
-        ),
-      );
-      return;
-    }
-
-    if (_selectedJobTitle == null ||
-        _selectedJobTitle == '+ Add Custom Job Title') {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Please select a job title'),
+          content: Text('Please enter a job name'),
           backgroundColor: AppTheme.accentRed,
         ),
       );
@@ -389,7 +389,7 @@ class _AddJobScreenState extends State<AddJobScreen> {
         final job = Job(
           id: widget.existingJob!.id,
           userId: user.id,
-          name: _selectedJobTitle!,
+          name: jobName,
           employer: _employerController.text.trim().isNotEmpty
               ? _employerController.text.trim()
               : null,
@@ -439,7 +439,7 @@ class _AddJobScreenState extends State<AddJobScreen> {
         id: widget.existingJob?.id ??
             '', // Database generates UUID for new jobs
         userId: user.id,
-        name: _selectedJobTitle!,
+        name: jobName,
         employer: _employerController.text.trim().isNotEmpty
             ? _employerController.text.trim()
             : null,
@@ -568,7 +568,56 @@ class _AddJobScreenState extends State<AddJobScreen> {
             _buildSectionHeader('Basic Information'),
             const SizedBox(height: 16),
 
-            // Industry Dropdown (FIRST)
+            // Job Name (FIRST - editable)
+            Text(
+              'Job Name',
+              style: AppTheme.labelMedium.copyWith(
+                color: AppTheme.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            ValueListenableBuilder<TextEditingValue>(
+              valueListenable: _jobTitleController,
+              builder: (context, value, child) {
+                return TextFormField(
+                  controller: _jobTitleController,
+                  style: AppTheme.bodyLarge.copyWith(
+                    color: value.text.isEmpty
+                        ? AppTheme.textMuted
+                        : AppTheme.textPrimary,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: 'Enter job name',
+                    hintStyle: AppTheme.bodyLarge.copyWith(
+                      color: AppTheme.textMuted,
+                    ),
+                    prefixIcon: Icon(Icons.work, color: AppTheme.primaryGreen),
+                    filled: true,
+                    fillColor: AppTheme.cardBackground,
+                    border: OutlineInputBorder(
+                      borderRadius:
+                          BorderRadius.circular(AppTheme.radiusMedium),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Please enter a job name';
+                    }
+                    return null;
+                  },
+                  onChanged: (text) {
+                    setState(() {
+                      _selectedJobTitle = text.trim();
+                    });
+                  },
+                );
+              },
+            ),
+
+            const SizedBox(height: 16),
+
+            // Industry Dropdown (SECOND)
             DropdownButtonFormField<String>(
               value: _selectedIndustry,
               decoration: InputDecoration(
@@ -618,17 +667,14 @@ class _AddJobScreenState extends State<AddJobScreen> {
                 } else {
                   setState(() {
                     _selectedIndustry = value;
-                    _selectedJobTitle =
-                        null; // Reset job title when industry changes
+                    // Don't reset job name - user may have edited it
                     // Update template settings based on industry
                     _applyIndustryTemplate(value);
                   });
                 }
               },
               validator: (value) {
-                if (value == null || value == '+ Add Custom Industry') {
-                  return 'Please select an industry';
-                }
+                // Industry is optional
                 return null;
               },
             ),
@@ -660,7 +706,7 @@ class _AddJobScreenState extends State<AddJobScreen> {
                     onSelected: (selected) {
                       setState(() {
                         _selectedJobTitle = jobTitle;
-                        // Reapply template to ensure it's set for this job
+                        _jobTitleController.text = jobTitle;
                         _applyIndustryTemplate(_selectedIndustry);
                       });
                     },
@@ -1290,6 +1336,24 @@ class _AddJobScreenState extends State<AddJobScreen> {
             'Add shift notes',
             _showNotes,
             (value) => setState(() => _showNotes = value),
+          ),
+        ],
+      ),
+      'finance': _buildTemplateSection(
+        title: '💰 Finance Documents',
+        icon: Icons.receipt_long,
+        children: [
+          _buildTemplateToggle(
+            'Invoices',
+            'Attach invoices to shifts (for contractors)',
+            _showInvoices,
+            (value) => setState(() => _showInvoices = value),
+          ),
+          _buildTemplateToggle(
+            'Receipts & Expenses',
+            'Track receipts for tax deductions',
+            _showReceipts,
+            (value) => setState(() => _showReceipts = value),
           ),
         ],
       ),

@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:device_calendar/device_calendar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
+import 'package:file_picker/file_picker.dart';
 import '../theme/app_theme.dart';
 import '../services/database_service.dart';
 import '../services/auth_service.dart';
@@ -15,6 +16,7 @@ import '../models/shift.dart';
 import 'dashboard_screen.dart';
 import 'onboarding_import_welcome_screen.dart';
 import 'calendar_sync_screen.dart';
+import 'job_grouping_screen.dart';
 
 /// Onboarding screen that can be used for first-time setup or adding new jobs
 class OnboardingScreen extends StatefulWidget {
@@ -648,11 +650,199 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     }
   }
 
-  void _startCsvImport() {
-    // TODO: Implement CSV import
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('CSV import coming soon!')),
-    );
+  void _startCsvImport() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['csv'],
+        allowMultiple: false,
+      );
+
+      if (result != null && result.files.isNotEmpty) {
+        final file = result.files.first;
+
+        // Show loading dialog
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => Center(
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: AppTheme.cardBackground,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(color: AppTheme.primaryGreen),
+                  const SizedBox(height: 16),
+                  Text('Parsing CSV...', style: AppTheme.bodyMedium),
+                ],
+              ),
+            ),
+          ),
+        );
+
+        // Parse CSV
+        String csvContent;
+        if (file.bytes != null) {
+          csvContent = utf8.decode(file.bytes!);
+        } else {
+          throw Exception('Could not read file');
+        }
+
+        final lines = csvContent.split('\n');
+        if (lines.isEmpty) {
+          throw Exception('CSV file is empty');
+        }
+
+        // Parse header
+        final headers =
+            lines[0].split(',').map((h) => h.trim().toLowerCase()).toList();
+
+        // Find column indices
+        final dateIdx = headers.indexWhere((h) => h.contains('date'));
+        final jobIdx = headers.indexWhere((h) =>
+            h.contains('job') || h.contains('title') || h.contains('position'));
+        final hoursIdx = headers.indexWhere((h) => h.contains('hour'));
+        final tipsIdx = headers.indexWhere((h) => h.contains('tip'));
+        final wageIdx = headers.indexWhere((h) =>
+            h.contains('wage') || h.contains('pay') || h.contains('earning'));
+
+        if (dateIdx == -1) {
+          throw Exception('CSV must have a date column');
+        }
+
+        // Parse rows and extract unique job titles
+        final uniqueJobTitles = <String>[];
+        final parsedShifts = <Map<String, dynamic>>[];
+
+        for (var i = 1; i < lines.length; i++) {
+          final line = lines[i].trim();
+          if (line.isEmpty) continue;
+
+          final values = line.split(',');
+          if (values.length <= dateIdx) continue;
+
+          final jobTitle = jobIdx >= 0 && values.length > jobIdx
+              ? values[jobIdx].trim()
+              : 'Imported Job';
+
+          final cleanJobTitle = jobTitle.isEmpty ? 'Imported Job' : jobTitle;
+
+          if (!uniqueJobTitles.contains(cleanJobTitle)) {
+            uniqueJobTitles.add(cleanJobTitle);
+          }
+
+          parsedShifts.add({
+            'date': values[dateIdx].trim(),
+            'job': cleanJobTitle,
+            'hours': hoursIdx >= 0 && values.length > hoursIdx
+                ? double.tryParse(values[hoursIdx].trim()) ?? 0
+                : 0,
+            'tips': tipsIdx >= 0 && values.length > tipsIdx
+                ? double.tryParse(values[tipsIdx].trim()) ?? 0
+                : 0,
+            'wages': wageIdx >= 0 && values.length > wageIdx
+                ? double.tryParse(values[wageIdx].trim()) ?? 0
+                : 0,
+          });
+        }
+
+        // Close loading dialog
+        if (mounted) Navigator.pop(context);
+
+        if (parsedShifts.isEmpty) {
+          throw Exception('No valid shifts found in CSV');
+        }
+
+        // Convert job titles to the format JobGroupingScreen expects
+        // Count occurrences of each job title
+        final jobCounts = <String, int>{};
+        for (final shift in parsedShifts) {
+          final job = shift['job'] as String;
+          jobCounts[job] = (jobCounts[job] ?? 0) + 1;
+        }
+        final calendarTitles = jobCounts.entries
+            .map((e) => {'title': e.key, 'count': e.value})
+            .toList();
+
+        // Navigate to JobGroupingScreen to let user organize jobs
+        if (mounted) {
+          final groupingResult = await Navigator.push<Map<String, dynamic>>(
+            context,
+            MaterialPageRoute(
+              builder: (context) => JobGroupingScreen(
+                calendarTitles: calendarTitles,
+              ),
+            ),
+          );
+
+          if (groupingResult != null && groupingResult.isNotEmpty) {
+            // Extract jobs and mapping from grouping result
+            final List<Job> jobs = groupingResult['jobs'] as List<Job>? ?? [];
+            final Map<String, String> mapping =
+                groupingResult['mapping'] as Map<String, String>? ?? {};
+
+            // Store the mapping and jobs
+            setState(() {
+              _importedJobs = mapping;
+
+              // Convert parsed shifts to event format for later import
+              _importedEvents = parsedShifts
+                  .map((s) => {
+                        'title': s['job'],
+                        'start': DateTime.tryParse(s['date']) ?? DateTime.now(),
+                        'end': DateTime.tryParse(s['date']) ?? DateTime.now(),
+                        'hours': s['hours'],
+                        'tips': s['tips'],
+                        'wages': s['wages'],
+                      })
+                  .toList();
+
+              // Populate _selectedJobs with the created jobs
+              for (final job in jobs) {
+                _selectedJobs[job.name] = JobEntry(
+                  hourlyRate: job.hourlyRate,
+                  template: job.template ?? JobTemplate(),
+                  employer: job.employer,
+                );
+              }
+            });
+
+            // Show success message
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                      'Ready to import ${parsedShifts.length} shifts into ${jobs.length} job(s)!'),
+                  backgroundColor: AppTheme.successColor,
+                ),
+              );
+
+              // Jump to template customization page
+              _pageController.jumpToPage(4);
+              setState(() => _currentPage = 4);
+            }
+          }
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        // Try to close loading dialog if it's open
+        try {
+          Navigator.pop(context);
+        } catch (_) {}
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error importing CSV: $e'),
+            backgroundColor: AppTheme.dangerColor,
+          ),
+        );
+      }
+    }
   }
 
   void _skipImport() {
@@ -1603,6 +1793,26 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             template.showNotes,
             (value) =>
                 _updateTemplate(jobName, template.copyWith(showNotes: value)),
+          ),
+        ],
+      ),
+      'finance': _buildTemplateSection(
+        title: '💰 Finance Documents',
+        icon: Icons.receipt_long,
+        children: [
+          _buildTemplateToggle(
+            'Invoices',
+            'Attach invoices to shifts (for contractors)',
+            template.showInvoices,
+            (value) => _updateTemplate(
+                jobName, template.copyWith(showInvoices: value)),
+          ),
+          _buildTemplateToggle(
+            'Receipts & Expenses',
+            'Track receipts for tax deductions',
+            template.showReceipts,
+            (value) => _updateTemplate(
+                jobName, template.copyWith(showReceipts: value)),
           ),
         ],
       ),

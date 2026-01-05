@@ -13,9 +13,11 @@ import '../services/calendar_sync_service.dart';
 import '../services/google_calendar_service.dart';
 import '../theme/app_theme.dart';
 import '../models/job.dart';
+import '../models/end_job_reason.dart';
 import '../widgets/hero_card.dart';
 import '../widgets/navigation_wrapper.dart';
 import '../widgets/field_order_settings.dart';
+import '../constants/currencies.dart';
 import 'goals_screen.dart';
 import 'login_screen.dart';
 import 'calendar_sync_screen.dart';
@@ -25,10 +27,14 @@ import 'onboarding_screen.dart';
 import 'import_screen.dart';
 import 'notification_settings_screen.dart';
 import 'job_grouping_screen.dart';
+import 'merge_jobs_screen.dart';
 import 'appearance_settings_screen.dart';
 import 'event_contacts_screen.dart';
 import 'event_portfolio_screen.dart';
+import 'invoices_receipts_screen.dart';
 import 'admin_panel_screen.dart';
+import 'all_documents_screen.dart';
+import 'all_shifts_screen.dart';
 import '../services/subscription_service.dart';
 import '../services/quickbooks_service.dart';
 import 'paywall_screen.dart';
@@ -54,6 +60,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _isAutoSyncEnabled = false; // Calendar auto-sync toggle
   bool _isQuickBooksConnected = false; // QuickBooks connection status
   String? _qbCompanyName; // QuickBooks company name
+  String _selectedCurrency = 'USD'; // Selected currency code
 
   final List<String> _states = [
     'AL',
@@ -113,6 +120,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
     super.initState();
     _loadData();
     _loadAutoSyncPreference();
+    _loadCurrencyPreference();
+  }
+
+  Future<void> _loadCurrencyPreference() async {
+    try {
+      final settings = await _db.getUserSettings();
+      setState(() {
+        _selectedCurrency = settings['currency'] ?? 'USD';
+      });
+    } catch (e) {
+      // Default to USD if error
+    }
+  }
+
+  Future<void> _setCurrencyPreference(String currencyCode) async {
+    await _db.updateUserSettings({'currency': currencyCode});
+    setState(() {
+      _selectedCurrency = currencyCode;
+    });
   }
 
   Future<void> _loadAutoSyncPreference() async {
@@ -258,6 +284,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  Future<void> _mergeJobs() async {
+    // Get only active jobs
+    final activeJobs = _jobs.where((j) => j['is_active'] == true).toList();
+
+    if (activeJobs.length < 2) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('You need at least 2 jobs to merge'),
+          backgroundColor: AppTheme.accentYellow,
+        ),
+      );
+      return;
+    }
+
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MergeJobsScreen(jobs: activeJobs),
+      ),
+    );
+
+    // Reload data if merge was successful
+    if (result == true && mounted) {
+      _loadData();
+      // Also refresh shifts
+      final provider = Provider.of<ShiftProvider>(context, listen: false);
+      await provider.loadShifts();
+    }
+  }
+
   Future<void> _signOut() async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -371,6 +427,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                   const SizedBox(height: 24),
 
+                  // Invoices & Receipts Section
+                  _buildSectionHeader('INVOICES & RECEIPTS'),
+                  const SizedBox(height: 12),
+                  _buildInvoicesReceiptsTile(),
+
+                  const SizedBox(height: 24),
+
                   // Notifications Section (moved up)
                   _buildSectionHeader('NOTIFICATIONS'),
                   const SizedBox(height: 12),
@@ -382,6 +445,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   _buildSectionHeader('APPEARANCE'),
                   const SizedBox(height: 12),
                   _buildAppearanceTile(),
+
+                  const SizedBox(height: 24),
+
+                  // Currency Section
+                  _buildSectionHeader('CURRENCY'),
+                  const SizedBox(height: 12),
+                  _buildCurrencyTile(),
+
+                  const SizedBox(height: 24),
+
+                  // Shifts Section
+                  _buildSectionHeader('SHIFTS'),
+                  const SizedBox(height: 12),
+                  _buildDocumentsTile(),
+                  const SizedBox(height: 8),
+                  _buildBulkEditShiftsTile(),
 
                   const SizedBox(height: 24),
 
@@ -571,18 +650,38 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ],
               ),
-              TextButton.icon(
-                onPressed: _addJob,
-                icon: const Icon(Icons.add, size: 18),
-                label: Text('Add Job',
-                    style: AppTheme.bodyMedium.copyWith(
-                      color: AppTheme.adaptiveTextColor,
-                    )),
-                style: TextButton.styleFrom(
-                  foregroundColor: AppTheme.primaryGreen,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Merge Jobs button (only show if 2+ jobs)
+                  if (_jobs.where((j) => j['is_active'] == true).length >= 2)
+                    TextButton.icon(
+                      onPressed: _mergeJobs,
+                      icon: const Icon(Icons.merge_type, size: 18),
+                      label: Text('Merge',
+                          style: AppTheme.bodyMedium.copyWith(
+                            color: AppTheme.adaptiveTextColor,
+                          )),
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppTheme.accentBlue,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 8),
+                      ),
+                    ),
+                  TextButton.icon(
+                    onPressed: _addJob,
+                    icon: const Icon(Icons.add, size: 18),
+                    label: Text('Add Job',
+                        style: AppTheme.bodyMedium.copyWith(
+                          color: AppTheme.adaptiveTextColor,
+                        )),
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppTheme.primaryGreen,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -885,6 +984,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               _confirmEndJob(job);
                             } else if (value == 'archive') {
                               _confirmDeleteJob(job);
+                            } else if (value == 'delete_permanent') {
+                              _confirmPermanentDeleteJob(job);
                             } else if (value == 'default') {
                               await _db.setDefaultJob(job['id']);
                               _loadData();
@@ -924,6 +1025,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   const SizedBox(width: 12),
                                   Text('Archive Job',
                                       style: AppTheme.bodyMedium),
+                                ],
+                              ),
+                            ),
+                            const PopupMenuDivider(),
+                            PopupMenuItem(
+                              value: 'delete_permanent',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.delete_forever,
+                                      color: AppTheme.dangerColor, size: 18),
+                                  const SizedBox(width: 12),
+                                  Text('Delete Permanently',
+                                      style: TextStyle(
+                                          color: AppTheme.dangerColor)),
                                 ],
                               ),
                             ),
@@ -1278,6 +1393,102 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  Widget _buildInvoicesReceiptsTile() {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackground,
+        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+      ),
+      child: ListTile(
+        leading: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: AppTheme.accentBlue.withOpacity(0.15),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(Icons.receipt_long, color: AppTheme.accentBlue),
+        ),
+        title: Text('Invoices & Receipts', style: AppTheme.bodyMedium),
+        subtitle: Text('Track income and expenses', style: AppTheme.bodyMedium),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const InvoicesReceiptsScreen(),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildDocumentsTile() {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackground,
+        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+      ),
+      child: ListTile(
+        leading: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: AppTheme.accentPurple.withOpacity(0.15),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(Icons.folder, color: AppTheme.accentPurple),
+        ),
+        title: Text('All Documents', style: AppTheme.bodyMedium),
+        subtitle: Text('View all attached files', style: AppTheme.bodyMedium),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const AllDocumentsScreen(),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildBulkEditShiftsTile() {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackground,
+        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+      ),
+      child: ListTile(
+        leading: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: AppTheme.accentOrange.withOpacity(0.15),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(Icons.checklist, color: AppTheme.accentOrange),
+        ),
+        title: Text('Bulk Edit Shifts', style: AppTheme.bodyMedium),
+        subtitle: Text('Filter, select & manage multiple shifts',
+            style: AppTheme.bodyMedium),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const AllShiftsScreen(
+                  // Pass a flag to indicate we want bulk edit mode
+                  ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   Widget _buildTaxEstimation() {
     final shiftProvider = Provider.of<ShiftProvider>(context);
     final yearlyIncome = shiftProvider.shifts
@@ -1503,6 +1714,189 @@ class _SettingsScreenState extends State<SettingsScreen> {
           style: AppTheme.labelSmall.copyWith(color: AppTheme.textMuted),
         ),
         trailing: Icon(Icons.chevron_right, color: AppTheme.textMuted),
+      ),
+    );
+  }
+
+  Widget _buildCurrencyTile() {
+    final currency = Currencies.getByCode(_selectedCurrency) ?? Currencies.usd;
+
+    return Opacity(
+      opacity: 0.6, // Dim to show it's not active yet
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppTheme.cardBackground,
+          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+        ),
+        child: ListTile(
+          onTap: () {
+            // Show coming soon message instead of opening picker
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Text(
+                    '🚧 Currency conversion coming soon! Stay tuned.'),
+                backgroundColor: AppTheme.accentBlue,
+                duration: const Duration(seconds: 2),
+              ),
+            );
+          },
+          leading: Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: AppTheme.accentBlue.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Center(
+              child: Text(
+                currency.symbol,
+                style: TextStyle(
+                  color: AppTheme.accentBlue,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+          title: Row(
+            children: [
+              Text('Currency', style: AppTheme.bodyMedium),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: AppTheme.accentOrange.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(
+                    color: AppTheme.accentOrange.withOpacity(0.5),
+                    width: 1,
+                  ),
+                ),
+                child: Text(
+                  'COMING SOON',
+                  style: AppTheme.labelSmall.copyWith(
+                    color: AppTheme.accentOrange,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 9,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          subtitle: Text(
+            'Multi-currency support',
+            style: AppTheme.labelSmall.copyWith(color: AppTheme.textMuted),
+          ),
+          trailing:
+              Icon(Icons.lock_outline, color: AppTheme.textMuted, size: 20),
+        ),
+      ),
+    );
+  }
+
+  void _showCurrencyPicker() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.7,
+        decoration: BoxDecoration(
+          color: AppTheme.darkBackground,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          children: [
+            // Handle bar
+            Container(
+              margin: const EdgeInsets.only(top: 12),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppTheme.textMuted,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            // Header
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Select Currency', style: AppTheme.titleLarge),
+                  IconButton(
+                    icon: Icon(Icons.close, color: AppTheme.textMuted),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1),
+            // Currency list
+            Expanded(
+              child: ListView.builder(
+                itemCount: Currencies.all.length,
+                itemBuilder: (context, index) {
+                  final currency = Currencies.all[index];
+                  final isSelected = currency.code == _selectedCurrency;
+
+                  return ListTile(
+                    leading: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? AppTheme.primaryGreen.withOpacity(0.15)
+                            : AppTheme.cardBackground,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Center(
+                        child: Text(
+                          currency.symbol,
+                          style: TextStyle(
+                            color: isSelected
+                                ? AppTheme.primaryGreen
+                                : AppTheme.textSecondary,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                    title: Text(
+                      currency.name,
+                      style: AppTheme.bodyMedium.copyWith(
+                        color: isSelected
+                            ? AppTheme.primaryGreen
+                            : AppTheme.textPrimary,
+                        fontWeight:
+                            isSelected ? FontWeight.bold : FontWeight.normal,
+                      ),
+                    ),
+                    subtitle: Text(
+                      currency.code,
+                      style: AppTheme.labelSmall
+                          .copyWith(color: AppTheme.textMuted),
+                    ),
+                    trailing: isSelected
+                        ? Icon(Icons.check_circle, color: AppTheme.primaryGreen)
+                        : null,
+                    onTap: () {
+                      _setCurrencyPreference(currency.code);
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Currency changed to ${currency.name}'),
+                          backgroundColor: AppTheme.successColor,
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1739,81 +2133,201 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _confirmEndJob(Map<String, dynamic> job) async {
-    final confirmed = await showDialog<bool>(
+    EndJobReason? selectedReason;
+    final notesController = TextEditingController();
+
+    final result = await showDialog<Map<String, dynamic>?>(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.cardBackground,
-        title: Text('End Job?', style: AppTheme.titleMedium),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Mark "${job['name']}" as ended?',
-              style: AppTheme.bodyMedium,
-            ),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppTheme.accentOrange.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: AppTheme.accentOrange.withOpacity(0.3),
-                  width: 1,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          backgroundColor: AppTheme.cardBackground,
+          title: Text('End Job?', style: AppTheme.titleMedium),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Mark "${job['name']}" as ended?',
+                  style: AppTheme.bodyMedium,
                 ),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.info_outline,
-                    color: AppTheme.accentOrange,
-                    size: 20,
+                const SizedBox(height: 16),
+
+                // Info box
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppTheme.accentOrange.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: AppTheme.accentOrange.withOpacity(0.3),
+                      width: 1,
+                    ),
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'This job will be removed from your active job list, but all historical shifts and statistics will remain.',
-                      style: AppTheme.labelSmall.copyWith(
-                        color: AppTheme.textSecondary,
-                        fontWeight: FontWeight.w600,
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.info_outline,
+                        color: AppTheme.accentOrange,
+                        size: 20,
                       ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'This job will be removed from your active list, but all historical data will remain.',
+                          style: AppTheme.labelSmall.copyWith(
+                            color: AppTheme.textSecondary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // Reason dropdown
+                Text(
+                  'Reason for Ending Job',
+                  style: AppTheme.bodySmall.copyWith(
+                    color: AppTheme.textSecondary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: AppTheme.cardBackgroundLight,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: AppTheme.textMuted.withOpacity(0.3),
+                    ),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<EndJobReason>(
+                      value: selectedReason,
+                      hint: Text(
+                        'Select a reason...',
+                        style: AppTheme.bodySmall.copyWith(
+                          color: AppTheme.textMuted,
+                        ),
+                      ),
+                      isExpanded: true,
+                      dropdownColor: AppTheme.cardBackground,
+                      icon: Icon(Icons.arrow_drop_down,
+                          color: AppTheme.textSecondary),
+                      items: EndJobReason.dropdownValues.map((reason) {
+                        return DropdownMenuItem<EndJobReason>(
+                          value: reason,
+                          child: Text(
+                            reason.displayName,
+                            style: AppTheme.bodySmall,
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setDialogState(() {
+                          selectedReason = value;
+                        });
+                      },
+                    ),
+                  ),
+                ),
+
+                // Description hint when reason is selected
+                if (selectedReason != null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    selectedReason!.description,
+                    style: AppTheme.labelSmall.copyWith(
+                      color: AppTheme.textMuted,
+                      fontStyle: FontStyle.italic,
                     ),
                   ),
                 ],
-              ),
+
+                const SizedBox(height: 20),
+
+                // Notes text field
+                Text(
+                  'Additional Notes (Optional)',
+                  style: AppTheme.bodySmall.copyWith(
+                    color: AppTheme.textSecondary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: notesController,
+                  maxLines: 4,
+                  style: AppTheme.bodySmall,
+                  decoration: InputDecoration(
+                    hintText: 'Add any details about why you left this job...',
+                    hintStyle: AppTheme.bodySmall.copyWith(
+                      color: AppTheme.textMuted,
+                    ),
+                    filled: true,
+                    fillColor: AppTheme.cardBackgroundLight,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(
+                        color: AppTheme.textMuted.withOpacity(0.3),
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(
+                        color: AppTheme.textMuted.withOpacity(0.3),
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(
+                        color: AppTheme.primaryGreen,
+                      ),
+                    ),
+                    contentPadding: const EdgeInsets.all(12),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 12),
-            Text(
-              'Perfect for promotions, job changes, or when you stop working a gig.',
-              style: AppTheme.labelSmall.copyWith(
-                color: AppTheme.textSecondary,
-                fontStyle: FontStyle.italic,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, null),
+              child: Text('Cancel',
+                  style: TextStyle(color: AppTheme.textSecondary)),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context, {
+                  'confirmed': true,
+                  'reason': selectedReason?.value,
+                  'notes': notesController.text.trim(),
+                });
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.accentOrange,
+                foregroundColor: Colors.white,
               ),
+              child: Text('End Job', style: AppTheme.bodyMedium),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child:
-                Text('Cancel', style: TextStyle(color: AppTheme.textSecondary)),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.accentOrange,
-              foregroundColor: Colors.white,
-            ),
-            child: Text('End Job', style: AppTheme.bodyMedium),
-          ),
-        ],
       ),
     );
 
-    if (confirmed == true) {
+    // Clean up controller
+    notesController.dispose();
+
+    if (result != null && result['confirmed'] == true) {
       try {
-        await _db.deactivateJob(job['id']);
+        await _db.deactivateJob(
+          job['id'],
+          reason: result['reason'],
+          notes: result['notes']?.isNotEmpty == true ? result['notes'] : null,
+        );
 
         // Reload shifts and jobs
         if (mounted) {
@@ -1837,6 +2351,160 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Error ending job: $e'),
+              backgroundColor: AppTheme.accentRed,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _confirmPermanentDeleteJob(Map<String, dynamic> job) async {
+    // Count shifts for this job
+    final shiftProvider = Provider.of<ShiftProvider>(context, listen: false);
+    final jobShifts =
+        shiftProvider.shifts.where((s) => s.jobId == job['id']).toList();
+    final shiftCount = jobShifts.length;
+    final totalEarnings =
+        jobShifts.fold<double>(0, (sum, s) => sum + s.totalIncome);
+
+    bool deleteShifts = false;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          backgroundColor: AppTheme.cardBackground,
+          title: Row(
+            children: [
+              Icon(Icons.warning_amber_rounded,
+                  color: AppTheme.dangerColor, size: 28),
+              const SizedBox(width: 8),
+              Text('Delete Permanently?',
+                  style: AppTheme.titleMedium
+                      .copyWith(color: AppTheme.dangerColor)),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppTheme.dangerColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border:
+                      Border.all(color: AppTheme.dangerColor.withOpacity(0.3)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'This will PERMANENTLY delete "${job['name']}"',
+                      style: AppTheme.bodyMedium
+                          .copyWith(fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '⚠️ This action CANNOT be undone!',
+                      style: AppTheme.labelSmall.copyWith(
+                        color: AppTheme.dangerColor,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (shiftCount > 0) ...[
+                const SizedBox(height: 16),
+                Text(
+                  'This job has $shiftCount shifts (${currencyFormat.format(totalEarnings)} earnings)',
+                  style: AppTheme.bodyMedium,
+                ),
+                const SizedBox(height: 12),
+                CheckboxListTile(
+                  value: deleteShifts,
+                  onChanged: (value) =>
+                      setDialogState(() => deleteShifts = value ?? false),
+                  title: Text('Also delete all shifts',
+                      style: AppTheme.bodyMedium),
+                  subtitle: Text(
+                    deleteShifts
+                        ? 'All $shiftCount shifts will be permanently deleted'
+                        : 'Shifts will be kept but unassigned from this job',
+                    style:
+                        AppTheme.labelSmall.copyWith(color: AppTheme.textMuted),
+                  ),
+                  activeColor: AppTheme.dangerColor,
+                  contentPadding: EdgeInsets.zero,
+                  controlAffinity: ListTileControlAffinity.leading,
+                ),
+              ],
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text('Cancel',
+                  style: TextStyle(color: AppTheme.textSecondary)),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.dangerColor,
+                foregroundColor: Colors.white,
+              ),
+              child: Text('Delete Forever'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        if (deleteShifts) {
+          // Delete all shifts for this job first
+          for (final shift in jobShifts) {
+            await _db.deleteShift(shift.id);
+          }
+        } else if (shiftCount > 0) {
+          // Unassign shifts from this job (set job_id to null)
+          for (final shift in jobShifts) {
+            await _db.supabase
+                .from('shifts')
+                .update({'job_id': null}).eq('id', shift.id);
+          }
+        }
+
+        // Permanently delete the job (hard delete)
+        await _db.supabase.from('jobs').delete().eq('id', job['id']);
+
+        // Reload data
+        if (mounted) {
+          await Provider.of<ShiftProvider>(context, listen: false).loadShifts();
+        }
+
+        if (mounted) {
+          String message = 'Job "${job['name']}" permanently deleted';
+          if (deleteShifts && shiftCount > 0) {
+            message += ' along with $shiftCount shifts';
+          }
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(message),
+              backgroundColor: AppTheme.dangerColor,
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
+        _loadData();
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error deleting job: $e'),
               backgroundColor: AppTheme.accentRed,
             ),
           );
