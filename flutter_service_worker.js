@@ -32,7 +32,7 @@ const RESOURCES = {"assets/AssetManifest.bin": "f6ec71c5a69ac0a809a271da0291e20f
 "eula.html": "c338340f24b5dc7ada2375d0516a810d",
 "favicon.png": "e6bdaa9d8a1c6923d20b9a70906c0f3d",
 "flutter.js": "24bc71911b75b5f8135c949e27a2984e",
-"flutter_bootstrap.js": "59e9c8b24a67486bf396381ec5a653c3",
+"flutter_bootstrap.js": "e215b87c1f5745d99aecb7459f9237f9",
 "icons/Icon-192.png": "580b043989b3135d5f2a3eb8c95d8913",
 "icons/Icon-512.png": "3736d87ceafb7b94a0f2b68f779b2779",
 "icons/Icon-maskable-192.png": "580b043989b3135d5f2a3eb8c95d8913",
