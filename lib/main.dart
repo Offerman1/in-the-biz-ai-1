@@ -15,6 +15,7 @@ import 'package:in_the_biz_ai/services/notification_service.dart';
 import 'package:in_the_biz_ai/services/ad_service.dart';
 import 'package:in_the_biz_ai/services/subscription_service.dart';
 import 'package:in_the_biz_ai/utils/run_migrations.dart';
+import 'package:in_the_biz_ai/theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -114,29 +115,32 @@ class ResponsiveWebLayout extends StatelessWidget {
         }
 
         // On desktop, constrain content width to 1200px and center it
-        // This leaves space for ads on both sides
-        return Row(
-          children: [
-            // Left spacer (for future ad placement)
-            Expanded(
-              child: Container(
-                color: Colors.transparent,
-                // Future: Add vertical banner ads here
+        // Side spaces match the app's background color
+        return Container(
+          color: AppTheme.darkBackground, // Match app background
+          child: Row(
+            children: [
+              // Left spacer (for future ad placement)
+              Expanded(
+                child: Container(
+                  color: AppTheme.darkBackground,
+                  // Future: Add vertical banner ads here
+                ),
               ),
-            ),
-            // Main content (constrained to 1200px)
-            SizedBox(
-              width: 1200,
-              child: child,
-            ),
-            // Right spacer (for future ad placement)
-            Expanded(
-              child: Container(
-                color: Colors.transparent,
-                // Future: Add vertical banner ads here
+              // Main content (constrained to 1200px)
+              SizedBox(
+                width: 1200,
+                child: child,
               ),
-            ),
-          ],
+              // Right spacer (for future ad placement)
+              Expanded(
+                child: Container(
+                  color: AppTheme.darkBackground,
+                  // Future: Add vertical banner ads here
+                ),
+              ),
+            ],
+          ),
         );
       },
     );
