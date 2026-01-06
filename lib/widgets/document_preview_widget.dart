@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:url_launcher/url_launcher.dart';
 import '../models/shift_attachment.dart';
 import '../services/database_service.dart';
 import '../theme/app_theme.dart';
-import '../screens/full_screen_document_viewer.dart';
-import 'package:open_filex/open_filex.dart';
 
 /// Universal document preview widget
 /// - Images: Shows thumbnail preview
-/// - PDFs: Shows first page preview
-/// - Excel/Word/Other: Shows file type icon
+/// - PDFs/Excel/Word/Other: Shows file type icon, opens in native app
 class DocumentPreviewWidget extends StatefulWidget {
   final ShiftAttachment attachment;
   final double height;
@@ -161,8 +159,7 @@ class _DocumentPreviewWidgetState extends State<DocumentPreviewWidget> {
       );
     }
 
-    // PDFs - show first page preview (for now, use icon)
-    // TODO: Implement PDF first-page thumbnail generation
+    // PDFs - show icon (opens in native app on tap)
     if (widget.attachment.isPdf) {
       return _buildIconPreview(Icons.picture_as_pdf, AppTheme.accentRed);
     }
@@ -218,25 +215,19 @@ class _DocumentPreviewWidgetState extends State<DocumentPreviewWidget> {
   }
 
   Future<void> _handleTap(BuildContext context) async {
-    // Images and PDFs - open in full-screen viewer
-    if (widget.attachment.isImage || widget.attachment.isPdf) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => FullScreenDocumentViewer(
-            attachment: widget.attachment,
-          ),
-        ),
-      );
-      return;
-    }
-
-    // Excel, Word, and other files - open in native app
+    // All files open in native app (saves bandwidth, uses phone's cache)
     if (!kIsWeb) {
       try {
-        // Download file to temp location if it's a URL
-        final filePath = widget.attachment.storagePath;
-        await OpenFilex.open(filePath);
+        // Get signed URL from Supabase
+        final url = await _db.getAttachmentUrl(widget.attachment.storagePath);
+
+        // Open URL in native app (browser will handle PDF, image viewer, etc.)
+        final uri = Uri.parse(url);
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        } else {
+          throw 'Could not open file';
+        }
       } catch (e) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -249,13 +240,19 @@ class _DocumentPreviewWidgetState extends State<DocumentPreviewWidget> {
       }
     } else {
       // Web - open in new tab
-      // TODO: Implement web file opening
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('File download not yet implemented for web'),
-          ),
-        );
+      try {
+        final url = await _db.getAttachmentUrl(widget.attachment.storagePath);
+        final uri = Uri.parse(url);
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Could not open file: $e'),
+              backgroundColor: AppTheme.dangerColor,
+            ),
+          );
+        }
       }
     }
   }

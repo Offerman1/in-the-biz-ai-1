@@ -4,7 +4,6 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../providers/shift_provider.dart';
-import '../providers/theme_provider.dart';
 import '../services/database_service.dart';
 import '../services/tax_service.dart';
 import '../services/auth_service.dart';
@@ -58,8 +57,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _isJobsSectionExpanded = false; // MY JOBS collapsed by default
   bool _isTaxSectionExpanded = false; // TAX ESTIMATION collapsed by default
   bool _isAutoSyncEnabled = false; // Calendar auto-sync toggle
-  bool _isQuickBooksConnected = false; // QuickBooks connection status
-  String? _qbCompanyName; // QuickBooks company name
   String _selectedCurrency = 'USD'; // Selected currency code
 
   final List<String> _states = [
@@ -1685,8 +1682,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildAppearanceTile() {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-
     return Container(
       decoration: BoxDecoration(
         color: AppTheme.cardBackground,
@@ -1794,6 +1789,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  // ignore: unused_element - Coming Soon feature
   void _showCurrencyPicker() {
     showModalBottomSheet(
       context: context,
@@ -3339,9 +3335,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Navigator.pop(context); // Close loading
 
                 if (success) {
-                  setState(() {
-                    _isQuickBooksConnected = true;
-                  });
+                  setState(() {}); // Trigger rebuild to refresh FutureBuilder
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: const Text('✓ Connected to QuickBooks'),
@@ -3430,10 +3424,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (confirm == true) {
       await QuickBooksService.disconnect();
       if (mounted) {
-        setState(() {
-          _isQuickBooksConnected = false;
-          _qbCompanyName = null;
-        });
+        setState(() {}); // Trigger rebuild to refresh FutureBuilder
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Disconnected from QuickBooks')),
         );

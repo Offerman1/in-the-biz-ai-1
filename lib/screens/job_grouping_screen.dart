@@ -22,12 +22,9 @@ class _JobGroupingScreenState extends State<JobGroupingScreen> {
   final Set<String> _selectedTitles = {};
   final List<Map<String, dynamic>> _groups =
       []; // {name: String, titles: List<String>, job: Job?}
-  bool _isCreatingGroup = false;
 
   @override
   Widget build(BuildContext context) {
-    final isTablet = MediaQuery.of(context).size.width > 600;
-
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
       appBar: AppBar(

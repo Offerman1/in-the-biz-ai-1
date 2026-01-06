@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'dart:convert';
-import 'dart:math';
-import 'package:crypto/crypto.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../services/auth_service.dart';
 import '../theme/app_theme.dart';
@@ -27,8 +24,6 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
   bool _isSignUp = false;
   String? _errorMessage;
-  String? _currentNonce;
-  String? _currentHashedNonce;
 
   @override
   void initState() {
@@ -90,15 +85,6 @@ class _LoginScreenState extends State<LoginScreen> {
     } catch (e) {
       print('Failed to initialize Google Sign-In: $e');
     }
-  }
-
-  /// Generate a random nonce string
-  String _generateNonce([int length = 32]) {
-    const charset =
-        '0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._';
-    final random = Random.secure();
-    return List.generate(length, (_) => charset[random.nextInt(charset.length)])
-        .join();
   }
 
   @override

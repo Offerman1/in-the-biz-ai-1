@@ -74,12 +74,51 @@ class _InvoicesReceiptsScreenState extends State<InvoicesReceiptsScreen>
     }
   }
 
-  // Calculate totals
+  // Calculate totals based on filtered data
+  List<Invoice> get _filteredInvoices {
+    return _invoices.where((invoice) {
+      // Apply period filter
+      if (!_isInSelectedPeriod(invoice.invoiceDate)) return false;
+      return true;
+    }).toList();
+  }
+
+  List<Receipt> get _filteredReceipts {
+    return _receipts.where((receipt) {
+      // Apply period filter
+      if (!_isInSelectedPeriod(receipt.receiptDate)) return false;
+      // Apply category filter
+      if (_selectedCategory != null && _selectedCategory != 'All') {
+        if (receipt.expenseCategory != _selectedCategory) return false;
+      }
+      return true;
+    }).toList();
+  }
+
+  bool _isInSelectedPeriod(DateTime date) {
+    final now = DateTime.now();
+    switch (_selectedPeriod) {
+      case 'This Week':
+        final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
+        final startOfWeekMidnight =
+            DateTime(startOfWeek.year, startOfWeek.month, startOfWeek.day);
+        return date.isAfter(startOfWeekMidnight) ||
+            date.isAtSameMomentAs(startOfWeekMidnight);
+      case 'This Month':
+        return date.year == now.year && date.month == now.month;
+      case 'This Year':
+        return date.year == now.year;
+      case 'All Time':
+      default:
+        return true;
+    }
+  }
+
   double get _totalInvoiceAmount =>
-      _invoices.fold(0, (sum, i) => sum + i.totalAmount);
+      _filteredInvoices.fold(0, (sum, i) => sum + i.totalAmount);
   double get _totalReceiptAmount =>
-      _receipts.fold(0, (sum, r) => sum + r.totalAmount);
-  double get _totalDeductibleAmount => _receipts
+      _filteredReceipts.fold(0, (sum, r) => sum + r.totalAmount);
+  double get _totalDeductibleAmount => _filteredReceipts
       .where((r) => r.isTaxDeductible)
       .fold(0, (sum, r) => sum + r.totalAmount);
 
@@ -100,9 +139,11 @@ class _InvoicesReceiptsScreenState extends State<InvoicesReceiptsScreen>
           labelColor: AppTheme.primaryGreen,
           unselectedLabelColor: AppTheme.textSecondary,
           tabs: [
-            Tab(text: 'All (${_invoices.length + _receipts.length})'),
-            Tab(text: 'Invoices (${_invoices.length})'),
-            Tab(text: 'Receipts (${_receipts.length})'),
+            Tab(
+                text:
+                    'All (${_filteredInvoices.length + _filteredReceipts.length})'),
+            Tab(text: 'Invoices (${_filteredInvoices.length})'),
+            Tab(text: 'Receipts (${_filteredReceipts.length})'),
           ],
         ),
       ),
@@ -111,6 +152,9 @@ class _InvoicesReceiptsScreenState extends State<InvoicesReceiptsScreen>
               child: CircularProgressIndicator(color: AppTheme.primaryGreen))
           : Column(
               children: [
+                // Filter bar
+                _buildFilterBar(),
+
                 // Summary cards
                 _buildSummaryCards(),
 
@@ -127,6 +171,101 @@ class _InvoicesReceiptsScreenState extends State<InvoicesReceiptsScreen>
                 ),
               ],
             ),
+    );
+  }
+
+  Widget _buildFilterBar() {
+    final periods = ['All Time', 'This Week', 'This Month', 'This Year'];
+    final categories = [
+      'All',
+      'Materials',
+      'Equipment',
+      'Travel',
+      'Meals',
+      'Supplies',
+      'Marketing',
+      'Utilities',
+      'Other'
+    ];
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackground,
+        border: Border(
+          bottom: BorderSide(color: AppTheme.textMuted.withOpacity(0.2)),
+        ),
+      ),
+      child: Row(
+        children: [
+          // Period filter
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                color: AppTheme.darkBackground,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppTheme.textMuted.withOpacity(0.3)),
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  value: _selectedPeriod,
+                  isExpanded: true,
+                  dropdownColor: AppTheme.cardBackground,
+                  style:
+                      AppTheme.bodyMedium.copyWith(color: AppTheme.textPrimary),
+                  icon: Icon(Icons.keyboard_arrow_down,
+                      color: AppTheme.textSecondary),
+                  items: periods
+                      .map((period) => DropdownMenuItem(
+                            value: period,
+                            child: Text(period),
+                          ))
+                      .toList(),
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() => _selectedPeriod = value);
+                    }
+                  },
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          // Category filter (for receipts)
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                color: AppTheme.darkBackground,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppTheme.textMuted.withOpacity(0.3)),
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  value: _selectedCategory ?? 'All',
+                  isExpanded: true,
+                  dropdownColor: AppTheme.cardBackground,
+                  style:
+                      AppTheme.bodyMedium.copyWith(color: AppTheme.textPrimary),
+                  icon: Icon(Icons.keyboard_arrow_down,
+                      color: AppTheme.textSecondary),
+                  items: categories
+                      .map((cat) => DropdownMenuItem(
+                            value: cat,
+                            child: Text(cat),
+                          ))
+                      .toList(),
+                  onChanged: (value) {
+                    setState(() =>
+                        _selectedCategory = value == 'All' ? null : value);
+                  },
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -198,7 +337,7 @@ class _InvoicesReceiptsScreenState extends State<InvoicesReceiptsScreen>
   Widget _buildAllTab() {
     final allItems = <_DocumentItem>[];
 
-    for (final invoice in _invoices) {
+    for (final invoice in _filteredInvoices) {
       allItems.add(_DocumentItem(
         type: 'invoice',
         date: invoice.invoiceDate,
@@ -210,7 +349,7 @@ class _InvoicesReceiptsScreenState extends State<InvoicesReceiptsScreen>
       ));
     }
 
-    for (final receipt in _receipts) {
+    for (final receipt in _filteredReceipts) {
       allItems.add(_DocumentItem(
         type: 'receipt',
         date: receipt.receiptDate,
@@ -238,16 +377,16 @@ class _InvoicesReceiptsScreenState extends State<InvoicesReceiptsScreen>
   }
 
   Widget _buildInvoicesTab() {
-    if (_invoices.isEmpty) {
+    if (_filteredInvoices.isEmpty) {
       return _buildEmptyState(
           'No invoices yet', 'Scan an invoice to track client payments.');
     }
 
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      itemCount: _invoices.length,
+      itemCount: _filteredInvoices.length,
       itemBuilder: (context, index) {
-        final invoice = _invoices[index];
+        final invoice = _filteredInvoices[index];
         return _buildDocumentCard(_DocumentItem(
           type: 'invoice',
           date: invoice.invoiceDate,
@@ -262,16 +401,16 @@ class _InvoicesReceiptsScreenState extends State<InvoicesReceiptsScreen>
   }
 
   Widget _buildReceiptsTab() {
-    if (_receipts.isEmpty) {
+    if (_filteredReceipts.isEmpty) {
       return _buildEmptyState('No receipts yet',
           'Scan a receipt to track expenses and deductions.');
     }
 
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      itemCount: _receipts.length,
+      itemCount: _filteredReceipts.length,
       itemBuilder: (context, index) {
-        final receipt = _receipts[index];
+        final receipt = _filteredReceipts[index];
         return _buildDocumentCard(_DocumentItem(
           type: 'receipt',
           date: receipt.receiptDate,

@@ -19,7 +19,6 @@ import '../theme/app_theme.dart';
 import '../widgets/hero_card.dart';
 import '../widgets/navigation_wrapper.dart';
 import '../widgets/document_preview_widget.dart';
-import 'full_screen_document_viewer.dart';
 import 'package:intl/intl.dart';
 
 class SingleShiftDetailScreen extends StatefulWidget {
@@ -1381,9 +1380,6 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
   }
 
   Widget _buildCombinedHeroCard() {
-    final baseEarnings = effectiveHourlyRate * shift.hoursWorked;
-    final totalTips = shift.cashTips + shift.creditTips;
-
     return HeroCard(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 16), // Reduced padding
       borderRadius: AppTheme.radiusLarge,
@@ -1652,67 +1648,6 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
 
                   return rows;
                 }(),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHeroStat(String label, String value) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          label,
-          style: AppTheme.labelSmall.copyWith(
-            color: AppTheme.textSecondary,
-            fontSize: 11,
-          ),
-        ),
-        const SizedBox(height: 4),
-        FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Text(
-            value,
-            style: AppTheme.titleMedium.copyWith(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildEarningsHeroCard() {
-    return HeroCard(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-      borderRadius: AppTheme.radiusLarge,
-      child: Column(
-        children: [
-          Text(
-            'Total Earnings',
-            style: AppTheme.labelSmall.copyWith(
-              color: AppTheme.textSecondary,
-              letterSpacing: 1,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '\$${effectiveTotalIncome.toStringAsFixed(2)}',
-            style: TextStyle(
-              color: AppTheme.primaryGreen,
-              fontSize: 40,
-              fontWeight: FontWeight.bold,
-              height: 1.1,
-              shadows: [
-                Shadow(
-                  color: Colors.black.withOpacity(0.4),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
               ],
             ),
           ),
@@ -2259,71 +2194,6 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
     );
   }
 
-  Widget _buildDateHeader() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: AppTheme.greenGradient,
-        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.calendar_today, color: Colors.black, size: 28),
-          const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                DateFormat('EEEE').format(shift.date),
-                style: const TextStyle(
-                  color: Colors.black87,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              Text(
-                DateFormat('MMMM d, y').format(shift.date),
-                style: const TextStyle(
-                  color: Colors.black,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEarningsCard() {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: AppTheme.cardBackground,
-        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-        border: Border.all(color: AppTheme.cardBackgroundLight),
-      ),
-      child: Column(
-        children: [
-          Text(
-            'Total Earnings',
-            style: AppTheme.labelLarge.copyWith(color: AppTheme.textSecondary),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '\$${effectiveTotalIncome.toStringAsFixed(2)}',
-            style: AppTheme.headlineLarge.copyWith(
-              color: AppTheme.primaryGreen,
-              fontSize: 48,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildBreakdownCard() {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -2402,7 +2272,7 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
         Text(
           isCurrency
               ? '\$${amount.toStringAsFixed(2)}'
-              : '${amount.toStringAsFixed(1)}${suffix ?? ''}',
+              : '${amount.toStringAsFixed(1)}$suffix',
           style: AppTheme.titleMedium,
         ),
       ],
@@ -2484,59 +2354,6 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
                 ),
         ),
       ],
-    );
-  }
-
-  Widget _buildHoursCard() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppTheme.cardBackground,
-        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-        border: Border.all(color: AppTheme.cardBackgroundLight),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppTheme.accentPurple.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
-            ),
-            child: Icon(
-              Icons.access_time,
-              color: AppTheme.accentPurple,
-              size: 28,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Hours Worked', style: AppTheme.bodyMedium),
-                const SizedBox(height: 4),
-                Text(
-                  '${shift.hoursWorked.toStringAsFixed(1)} hrs',
-                  style: AppTheme.headlineSmall.copyWith(
-                    color: AppTheme.accentPurple,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text('Rate', style: AppTheme.labelSmall),
-              Text(
-                '\$${effectiveHourlyRate.toStringAsFixed(2)}/hr',
-                style: AppTheme.bodyLarge,
-              ),
-            ],
-          ),
-        ],
-      ),
     );
   }
 
@@ -2672,40 +2489,6 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildEventDetailsCard() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppTheme.cardBackground,
-        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-        border: Border.all(color: AppTheme.cardBackgroundLight),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.celebration, color: AppTheme.accentYellow, size: 20),
-              const SizedBox(width: 8),
-              Text('Event Details', style: AppTheme.titleMedium),
-            ],
-          ),
-          const SizedBox(height: 16),
-          if (shift.eventName != null) ...[
-            _buildInfoRow('Event Name', shift.eventName!),
-            const SizedBox(height: 12),
-          ],
-          if (shift.hostess != null) ...[
-            _buildInfoRow('Hostess', shift.hostess!),
-            const SizedBox(height: 12),
-          ],
-          if (shift.guestCount != null)
-            _buildInfoRow('Guest Count', '${shift.guestCount} guests'),
-        ],
       ),
     );
   }
@@ -3081,155 +2864,67 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
                         ],
                       ),
                     ),
-                    IconButton(
-                      icon: Icon(Icons.delete,
-                          color: AppTheme.dangerColor, size: 20),
-                      onPressed: () => _deleteAttachment(attachment),
-                      tooltip: 'Delete',
+                    // Attachment actions menu
+                    PopupMenuButton<String>(
+                      icon: Icon(Icons.more_vert,
+                          color: AppTheme.textSecondary, size: 20),
+                      color: AppTheme.cardBackground,
+                      onSelected: (value) {
+                        switch (value) {
+                          case 'open':
+                            _openAttachment(attachment);
+                            break;
+                          case 'share':
+                            _shareAttachment(attachment);
+                            break;
+                          case 'delete':
+                            _deleteAttachment(attachment);
+                            break;
+                        }
+                      },
+                      itemBuilder: (context) => [
+                        PopupMenuItem(
+                          value: 'open',
+                          child: Row(
+                            children: [
+                              Icon(Icons.open_in_new,
+                                  color: AppTheme.textPrimary, size: 18),
+                              const SizedBox(width: 12),
+                              Text('Open in App', style: AppTheme.bodyMedium),
+                            ],
+                          ),
+                        ),
+                        PopupMenuItem(
+                          value: 'share',
+                          child: Row(
+                            children: [
+                              Icon(Icons.share,
+                                  color: AppTheme.textPrimary, size: 18),
+                              const SizedBox(width: 12),
+                              Text('Share', style: AppTheme.bodyMedium),
+                            ],
+                          ),
+                        ),
+                        PopupMenuItem(
+                          value: 'delete',
+                          child: Row(
+                            children: [
+                              Icon(Icons.delete,
+                                  color: AppTheme.dangerColor, size: 18),
+                              const SizedBox(width: 12),
+                              Text('Delete',
+                                  style: AppTheme.bodyMedium
+                                      .copyWith(color: AppTheme.dangerColor)),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 );
               },
             ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildAttachmentTile(ShiftAttachment attachment) {
-    // DEPRECATED: Now using DocumentPreviewWidget directly in ListView
-    IconData fileIcon;
-    Color iconColor;
-
-    // Determine icon and color based on file type
-    if (attachment.isPdf) {
-      fileIcon = Icons.picture_as_pdf;
-      iconColor = AppTheme.accentRed;
-    } else if (attachment.isImage) {
-      fileIcon = Icons.image;
-      iconColor = AppTheme.accentPurple;
-    } else if (attachment.isVideo) {
-      fileIcon = Icons.videocam;
-      iconColor = AppTheme.accentOrange;
-    } else if (attachment.isDocument) {
-      fileIcon = Icons.description;
-      iconColor = AppTheme.accentBlue;
-    } else if (attachment.isSpreadsheet) {
-      fileIcon = Icons.table_chart;
-      iconColor = AppTheme.primaryGreen;
-    } else {
-      fileIcon = Icons.insert_drive_file;
-      iconColor = AppTheme.textMuted;
-    }
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () => _openAttachment(attachment),
-        borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: AppTheme.cardBackgroundLight.withOpacity(0.3),
-            borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
-            border: Border.all(
-              color: iconColor.withOpacity(0.3),
-              width: 1,
-            ),
-          ),
-          child: Row(
-            children: [
-              // File icon
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: iconColor.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(fileIcon, color: iconColor, size: 24),
-              ),
-              const SizedBox(width: 12),
-              // File info
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      attachment.fileName,
-                      style: AppTheme.bodyMedium.copyWith(
-                        fontWeight: FontWeight.w500,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '${attachment.extension.toUpperCase()} • ${attachment.formattedSize}',
-                      style: AppTheme.labelSmall.copyWith(
-                        color: AppTheme.textMuted,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // Actions
-              PopupMenuButton<String>(
-                icon: Icon(Icons.more_vert, color: AppTheme.textMuted),
-                color: AppTheme.cardBackgroundLight,
-                onSelected: (value) {
-                  switch (value) {
-                    case 'open':
-                      _openAttachment(attachment);
-                      break;
-                    case 'share':
-                      _shareAttachment(attachment);
-                      break;
-                    case 'delete':
-                      _deleteAttachment(attachment);
-                      break;
-                  }
-                },
-                itemBuilder: (context) => [
-                  PopupMenuItem(
-                    value: 'open',
-                    child: Row(
-                      children: [
-                        Icon(Icons.open_in_new,
-                            color: AppTheme.textPrimary, size: 18),
-                        const SizedBox(width: 12),
-                        Text('Open', style: AppTheme.bodyMedium),
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: 'share',
-                    child: Row(
-                      children: [
-                        Icon(Icons.share,
-                            color: AppTheme.textPrimary, size: 18),
-                        const SizedBox(width: 12),
-                        Text('Share', style: AppTheme.bodyMedium),
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: 'delete',
-                    child: Row(
-                      children: [
-                        Icon(Icons.delete,
-                            color: AppTheme.dangerColor, size: 18),
-                        const SizedBox(width: 12),
-                        Text('Delete',
-                            style: AppTheme.bodyMedium
-                                .copyWith(color: AppTheme.dangerColor)),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

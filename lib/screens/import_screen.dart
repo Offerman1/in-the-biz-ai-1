@@ -37,7 +37,6 @@ class _ImportScreenState extends State<ImportScreen> {
   List<Map<String, dynamic>> _existingJobs = []; // User's existing jobs
   Map<String, String> _jobMapping =
       {}; // Mapping from detected names to job IDs
-  List<Job> _createdJobs = []; // Jobs created from grouping screen
 
   @override
   void initState() {
@@ -1059,7 +1058,6 @@ class _ImportScreenState extends State<ImportScreen> {
 
       // Store the job mapping for use during import
       _jobMapping = mapping;
-      _createdJobs = jobs;
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

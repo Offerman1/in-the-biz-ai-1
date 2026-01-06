@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 /// Stub implementation for non-web platforms
 Uri getCurrentUri() {
   // On mobile, we don't have web URLs

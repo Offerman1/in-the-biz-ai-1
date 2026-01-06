@@ -1,0 +1,668 @@
+User: When we attach a document like a PDF or a doc file or any of these into. The. Import section of the Add shift or Edit shift. It does attach it and it gives a little thumbnail saying whether it was a PDF or a doc file or whatever. But is it possible for that thumbnail to show a preview of the document and then when you click it for it to expand a preview of the document? Like if I scanned a beo. Or if I took an image of the beo and I attached it. To a shift. Shouldn't I be able to click on that and view the whole BEO? If I put PDF and I see the thumbnail, shouldn't I be able to see in quick? Small image of the PDF in the thumbnail and when I click it, shouldn't it expand to be? Almost full screen view of that. What do you think? Discuss this with me. What are the difficulties? What are the?
+
+GitHub Copilot: I absolutely love this idea! You're right - the current system just shows generic file type icons, which isn't very helpful when you want to quickly verify what document you attached. Let me break down what we'd need to implement and the challenges:
+
+## 🎯 What You're Asking For
+
+1. **Thumbnail Preview**: Show a small preview of the actual document content (not just a PDF/DOC icon)
+2. **Full-Screen Viewer**: Tap the thumbnail to open a full-screen preview
+3. **Multi-Format Support**: Handle images (JPG, PNG), PDFs, and potentially DOCs
+
+## ✅ The Easy Parts
+
+**Images (JPG, PNG, etc.):**
+- **Thumbnail**: Super easy - Flutter can display images natively
+- **Full-Screen**: Also easy - just show the image in a dialog/modal
+- **Already works**: If you attach a photo, we can show it immediately
+
+**PDFs:**
+- **Thumbnail**: We can generate a preview of the first page
+- **Full-Screen**: We can show the full PDF in a viewer
+- **Package Available**: `flutter_pdfview` or `syncfusion_flutter_pdfviewer`
+
+## ⚠️ The Challenges
+
+### 1. **File Storage Location**
+Right now, where are these files stored when you attach them?
+- Are they uploaded to Supabase Storage immediately?
+- Or kept locally until the shift is saved?
+
+**Why it matters**: We need the file to be accessible to generate previews.
+
+### 2. **PDF Rendering Performance**
+- Generating PDF thumbnails takes processing power
+- Large PDFs (50+ pages) could be slow to preview
+- **Solution**: Only render the first page for thumbnails
+
+### 3. **DOC/DOCX Files**
+This is the **hardest part**:
+- Flutter doesn't have native DOC support
+- We'd need to either:
+  - **Option A**: Convert DOC to PDF server-side (requires backend processing)
+  - **Option B**: Show a "DOC file - tap to download" message
+  - **Option C**: Extract text and show preview of text content
+
+### 4. **Storage & Bandwidth**
+- If we generate thumbnails, do we store them separately?
+- Or generate them on-the-fly each time? (slower but saves space)
+
+### 5. **Platform Differences**
+- **iOS**: PDF preview works great natively
+- **Android**: Might need third-party libraries
+- **Web**: Browser can handle most formats natively
+
+## 💡 My Recommended Approach
+
+**Phase 1 - Quick Win (Images & PDFs)**
+```dart
+// Image files - show actual thumbnail
+if (file.isImage) {
+  return Image.network(file.url, fit: BoxFit.cover);
+}
+
+// PDF files - show first page preview
+if (file.isPDF) {
+  return PdfPreviewThumbnail(pdfUrl: file.url);
+}
+
+// Other files - show current icon
+return FileTypeIcon(fileType: file.extension);
+```
+
+**Phase 2 - Full-Screen Viewer**
+```dart
+onTap: () {
+  Navigator.push(context, MaterialPageRoute(
+    builder: (_) => DocumentViewer(
+      fileUrl: file.url,
+      fileType: file.extension,
+    ),
+  ));
+}
+```
+
+**Phase 3 - DOC Support (if really needed)**
+- Most people use phone camera → Images (already works!)
+- PDFs are second most common
+- DOC files are rare - maybe just show "Download to view"?
+
+## 🤔 Questions for You
+
+1. **What file types do you actually use most?**
+   - BEOs: Are these usually photos or PDFs?
+   - Paychecks: Photos or PDFs?
+   - Invoices: Photos or PDFs?
+
+2. **Do you need to view multiple pages?**
+   - Or is the first page usually enough to recognize the document?
+
+3. **Current workflow:**
+   - When you attach a document now, is it uploaded to Supabase immediately?
+   - Or only when you save the shift?
+
+4. **Storage concerns:**
+   - Are you okay with generating previews on-the-fly (slightly slower)?
+   - Or should we pre-generate and store thumbnails (takes more space)?
+
+## 💪 My Honest Assessment
+
+**Difficulty Level:**
+- Images: ⭐ (Very Easy)
+- PDFs: ⭐⭐ (Easy-Medium)
+- DOCs: ⭐⭐⭐⭐ (Hard - might not be worth it)
+
+**Implementation Time:**
+- Image previews: ~1 hour
+- PDF previews: ~3-4 hours (testing on all platforms)
+- Full-screen viewer: ~2 hours
+- DOC support: ~8-10 hours (and might still be clunky)
+
+**My Recommendation:** Start with images and PDFs (90% of use cases), skip DOCs for now unless you absolutely need them.
+
+What do you think? Should we tackle this? And what file types are you actually using most when you attach documents?
+
+User: Yeah, BE, OS are usually Photos or PDFS. You're correct. Same thing for paychecks, invoices. Obviously you should be able to include Excel spreadsheets. For things like guest lists and such. The first page is enough to recognize the document and if the document PDF maybe has more than 5 pages to it. Your preview would just show you the first 5PAGES maybe and then say download. To view the whole document. You have to double check, but I think it is uploaded to super base when the shift is saved. I believe you need to double check that. I'm OK with generating previews on the family because it's slightly slower, but I think it would cost me less. What do you think about these answers? Do you have opinions on them?
+
+GitHub Copilot: Your answers are **super practical** - I love it! Let me address each point:
+
+## 📸 Photos/PDFs First - Perfect!
+This is the **sweet spot**. Most BEOs, paychecks, and invoices are either:
+- Photos taken with phone camera (easiest to preview)
+- PDFs (doable with libraries)
+
+So we can deliver 95% of the value without the complex DOC/DOCX headache.
+
+## 📊 Excel Spreadsheets - Let Me Challenge You Here
+
+**Quick question:** When you attach an Excel file, what do you actually need to see?
+- Just verify "yep, that's the guest list" ✅
+- Or actually **read the data** in the spreadsheet?
+
+**The reality:**
+- Excel preview on mobile is **really hard** (formatting breaks, formulas don't render, etc.)
+- Even Google Sheets struggles with this on mobile
+
+**My suggestion:** 
+- Show a generic "📊 Excel File" icon with the filename
+- Tap to download/open in Excel app
+- **OR** - if you just need to verify guest lists, consider having users export to **PDF** first (most Excel → PDF is one button)
+
+**Is that acceptable?** Or do you really need to see the Excel preview?
+
+## 📄 5-Page Preview Limit - SMART!
+
+I **love** this approach:
+```
+Page 1 [preview]
+Page 2 [preview]  
+Page 3 [preview]
+Page 4 [preview]
+Page 5 [preview]
+... 47 more pages
+[📥 Download Full PDF]
+```
+
+**Why this is brilliant:**
+- Prevents loading 50-page contracts that lag the app
+- You can still verify "yep, that's the right document"
+- Keeps the app snappy
+
+**Implementation note:** We should add a loading indicator while generating those 5 previews.
+
+## 💾 Upload Timing - Let Me Check
+
+Let me investigate when files are actually uploaded to Supabase... 
+
+Searched for regex `supabase.*storage.*upload|uploadFile|StorageService` (`**/lib/**/*.dart`), 9 results
+
+Searched for regex `file.*attach|document.*attach|import.*document` (`**/lib/screens/add_shift_screen.dart`), 2 results
+
+Let me check the actual upload flow: 
+
+Read [](file:///c%3A/Users/Brandon%202021/Desktop/In%20The%20Biz%20AI/lib/screens/add_shift_screen.dart#4934-4934), lines 4934 to 5020
+
+Aha! I found the issue:
+
+## ⚠️ **Current Problem: Files Only Upload for EXISTING Shifts**
+
+Look at line 4935:
+```dart
+if (widget.existingShift == null) return;
+```
+
+**This means:**
+- ✅ **Edit Shift Screen**: Files upload immediately (shift already exists in database)
+- ❌ **Add Shift Screen**: Files **don't upload at all** until you save the shift!
+
+**Why this is problematic for previews:**
+- If the file isn't uploaded to Supabase, we can't generate a preview URL
+- The file is just sitting in the device's temporary storage
+- We'd need to keep the File object in memory to show previews
+
+## 💡 My Recommended Fix
+
+**Option 1: Upload Files Immediately (Even on Add Shift)**
+```dart
+// When user attaches file on Add Shift screen:
+1. Upload to Supabase immediately (temp location)
+2. Generate preview
+3. If user cancels, delete orphaned files (cleanup job)
+```
+
+**Pros:**
+- Clean preview system (files are always in Supabase)
+- Consistent behavior between Add/Edit screens
+
+**Cons:**
+- Creates "orphaned" files if user cancels
+- Needs cleanup job
+
+**Option 2: Keep Files in Memory Until Save**
+```dart
+// Store the File object locally:
+_attachedFiles = []; // List<File>
+
+// When rendering preview:
+if (file is from Supabase) {
+  return Image.network(file.url);
+} else {
+  return Image.file(file.localFile); // From memory
+}
+```
+
+**Pros:**
+- No orphaned files
+- No extra uploads
+
+**Cons:**
+- More complex code
+- Different behavior for Add vs Edit
+
+## 🎯 On-the-Fly Generation - You're Right!
+
+**Storage costs:**
+- Storing thumbnails separately: ~100KB per thumbnail
+- If you have 1,000 shifts with attachments = 100MB extra storage
+- Supabase charges: ~$0.021/GB/month = basically **free** for thumbnails
+
+**BUT generating on-the-fly:**
+- No extra storage cost
+- Slightly slower (1-2 seconds to generate PDF preview)
+- **Better for your use case** since you won't view every attachment every day
+
+**My recommendation:** On-the-fly with caching
+```dart
+// First time viewing: Generate preview (2 seconds)
+// Cache in device memory for current session
+// Next time you view same document today: Instant (from cache)
+// Tomorrow: Generate again (2 seconds)
+```
+
+## 🤔 My Counter-Proposal on Excel
+
+Since Excel preview is really hard and most guest lists are probably **small** (< 100 people), what if:
+
+**Alternative 1:** Just show filename + icon (no preview)
+```
+📊 Guest_List.xlsx
+123 KB
+[Tap to Download]
+```
+
+**Alternative 2:** Ask users to export to PDF before attaching
+- Excel → "Save As" → PDF (one button)
+- Now we can preview it like any other PDF
+
+**Alternative 3:** Show first sheet as image (requires server-side conversion - complex)
+
+**Which approach do you prefer for Excel files?**
+
+---
+
+## ✅ So Here's What I Propose We Build:
+
+**Phase 1: Image & PDF Previews (Start Here)**
+- ✅ Thumbnail previews for images (JPG, PNG, HEIC)
+- ✅ First-page thumbnail for PDFs
+- ✅ Tap to open full-screen viewer
+- ✅ For PDFs: Show first 5 pages, then "Download to view all"
+- ✅ On-the-fly generation with session caching
+
+**Phase 2: Fix Upload Flow (Important)**
+- ✅ Make Add Shift screen upload files immediately (like Edit screen)
+- ✅ Add cleanup job for orphaned files
+
+**Phase 3: Excel Support (If Needed)**
+- Decide: Icon-only, or require PDF export, or server conversion?
+
+**Estimated time:**
+- Phase 1: ~4-5 hours
+- Phase 2: ~2 hours  
+- Phase 3: TBD based on your preference
+
+Sound good? Should we start with Phase 1?
+
+User: For the Excel support, I agree that it can be just an Excel icon and when the user clicks it. The phone can open it up. Not our app.  What do you think? Same thing for like a doc file, wouldn't the phone be able to open it? Not our app. So when the user would hit download, the phone would automatically open it up for viewing.
+
+GitHub Copilot: **YES! That's PERFECT!** 🎯
+
+You're 100% right - this is the **smartest approach**:
+
+## 📱 Let the Native Apps Handle It
+
+**When user taps Excel/Word/etc:**
+```dart
+// Our app just says: "Hey phone, open this file!"
+await OpenFile.open(filePath);
+
+// iOS: Opens in Numbers/Excel/Pages
+// Android: Opens in Google Sheets/Docs/Excel/WPS Office
+// Whatever they have installed handles it
+```
+
+**Why this is brilliant:**
+- ✅ **Zero complexity** - we don't need to render Excel/Word
+- ✅ **Native experience** - users see files in their preferred app
+- ✅ **Full functionality** - they can scroll, zoom, edit (if needed)
+- ✅ **No performance hit** - we're not loading heavy files in our app
+- ✅ **Works for ANY file type** - even ones we haven't planned for (ZIP, TXT, CSV, etc.)
+
+## 🎨 Here's The UX Flow:
+
+**Thumbnail Display:**
+```
+┌─────────────────────────┐
+│  📄  BEO_Jan5.pdf       │  ← Shows first page preview
+│  [thumbnail image]      │
+│  2.3 MB • 8 pages       │
+└─────────────────────────┘
+
+┌─────────────────────────┐
+│  📊  Guest_List.xlsx    │  ← Just shows Excel icon
+│  [Excel icon]           │
+│  145 KB                 │
+└─────────────────────────┘
+
+┌─────────────────────────┐
+│  📷  Paycheck.jpg       │  ← Shows actual image preview
+│  [image thumbnail]      │
+│  1.8 MB                 │
+└─────────────────────────┘
+
+┌─────────────────────────┐
+│  📝  Contract.docx      │  ← Shows Word icon
+│  [Word icon]            │
+│  456 KB                 │
+└─────────────────────────┘
+```
+
+**When User Taps:**
+
+**Images & PDFs (in-app viewer):**
+```
+Tap → Full-screen preview in our app
+      [View all 5 pages] 
+      [Share] [Download]
+```
+
+**Excel/Word/Other (external app):**
+```
+Tap → "Opening in Excel..." 
+      → Phone opens Excel app
+      → User views/edits there
+```
+
+## 🛠️ Implementation Simplicity
+
+**For preview thumbnails:**
+- ✅ **Images**: Show actual preview
+- ✅ **PDFs**: Generate first-page preview
+- ✅ **Everything else**: Show file type icon (📊📝📄📁)
+
+**For opening files:**
+- ✅ **Images/PDFs**: Open in our custom viewer
+- ✅ **Everything else**: `await OpenFilePicker.open(file.path)`
+
+This means we can support **literally any file type** without writing custom code for each one!
+
+## 📦 Package Needed
+
+We'll use: `open_filex` package
+```yaml
+dependencies:
+  open_filex: ^4.4.0  # Opens any file in native app
+```
+
+## ⚡ Updated Plan
+
+**Phase 1: Smart Preview System (4-5 hours)**
+- ✅ Image files → Show actual thumbnail + full-screen viewer
+- ✅ PDF files → Show first-page thumbnail + 5-page viewer
+- ✅ Excel/Word/Other → Show file icon + open in native app
+- ✅ Generic file type detection (by extension)
+
+**Phase 2: Fix Upload Flow (2 hours)**
+- ✅ Add Shift screen uploads immediately
+- ✅ Orphaned file cleanup
+
+**Phase 3: Polish (1 hour)**
+- ✅ Loading states while generating previews
+- ✅ Error handling for corrupted files
+- ✅ File size warnings (e.g., "This PDF is 50MB, may take time to load")
+
+---
+
+## 🚀 Ready to Build This?
+
+I think this approach is **perfect** because:
+1. Simple for us to implement
+2. Familiar for users (they already know how to use Excel/Word)
+3. Works for any file type (even ones we haven't thought of)
+4. Focuses our effort on what matters: **image and PDF previews**
+
+Want me to start implementing Phase 1? I'll create:
+1. `DocumentPreviewWidget` - smart thumbnail generator
+2. `FullScreenDocumentViewer` - for images/PDFs
+3. Updated attachment list to use new previews
+
+Should I proceed? 🎯
+
+User: Yes, please. So this preview would be available, I believe, in the shift screens  And from. The particular settings screens that are necessary from the event contacts, such as. Event portfolio which has Beos, invoices and receipts. these are already in our settings screen so maybe in the settings section Maybe there should also be a docs section that. Shows all the uploaded documents in a filterable view. And which shifts it's been attached to.  Please check what's in my settings screen already and discuss.
+
+GitHub Copilot: Excellent idea! Let me check what's currently in the Settings screen and see where document management fits. 
+
+Read [](file:///c%3A/Users/Brandon%202021/Desktop/In%20The%20Biz%20AI/lib/screens/settings_screen.dart#1-1), lines 1 to 200
+
+Searched for regex `Event Contacts|Event Portfolio|Invoices|BEO|Document|_buildSettingsTile|ListTile.*title` (`**/lib/screens/settings_screen.dart`), 14 results
+
+Read [](file:///c%3A/Users/Brandon%202021/Desktop/In%20The%20Biz%20AI/lib/screens/settings_screen.dart#380-380), lines 380 to 450
+
+Perfect! Now let me check the Event Portfolio and Invoices & Receipts screens to understand what's already there: 
+
+Read [](file:///c%3A/Users/Brandon%202021/Desktop/In%20The%20Biz%20AI/lib/screens/event_portfolio_screen.dart#1-1), lines 1 to 100
+
+Read [](file:///c%3A/Users/Brandon%202021/Desktop/In%20The%20Biz%20AI/lib/screens/invoices_receipts_screen.dart#1-1), lines 1 to 100
+
+Now let me check what attachments look like currently: 
+
+Searched for regex `_buildAttachment|attachment.*widget|GridView.*attachment` (`**/lib/screens/add_shift_screen.dart`), 5 results
+
+Read [](file:///c%3A/Users/Brandon%202021/Desktop/In%20The%20Biz%20AI/lib/screens/add_shift_screen.dart#5194-5194), lines 5194 to 5350
+
+Perfect! Now I have a complete picture. Let me discuss the structure:
+
+---
+
+## 📋 Current Settings Structure Analysis
+
+**Already in Settings:**
+
+### 1. **EVENT CONTACTS Section**
+- ✅ Event Contacts (list of clients/vendors)
+- ✅ Event Portfolio (past BEO events with photos)
+
+### 2. **INVOICES & RECEIPTS Section**
+- ✅ Invoices & Receipts screen (3 tabs: Overview, Invoices, Receipts)
+- Shows totals, categories, dates
+- Filterable by period
+
+### 3. **Current Attachment System**
+- Lives in individual shift screens (Add/Edit/Details)
+- Shows file icon, name, size, extension
+- NO preview currently - just icons
+
+---
+
+## 💡 My Proposed Structure
+
+I see **two excellent options** for organizing documents:
+
+### **Option A: Add "Documents" Section to Settings** (My Recommendation)
+
+```
+SETTINGS
+├── MY JOBS (existing)
+├── EVENT CONTACTS (existing)
+│   ├── Event Contacts
+│   └── Event Portfolio (BEOs with photos)
+├── INVOICES & RECEIPTS (existing)
+│   └── Invoices & Receipts screen
+├── 📁 DOCUMENTS (NEW!)
+│   └── All Documents (filterable view)
+└── NOTIFICATIONS (existing)
+    └── ...
+```
+
+**Benefits:**
+- Clear separation: BEOs → Event Portfolio, Invoices/Receipts → their section, **General Docs** → Documents
+- Easy to find all attachments in one place
+- Doesn't clutter existing sections
+
+### **Option B: Add to Existing Sections**
+
+```
+SETTINGS
+├── EVENT CONTACTS
+│   ├── Event Contacts
+│   ├── Event Portfolio (BEOs)
+│   └── Documents (NEW - shows only BEO attachments)
+├── INVOICES & RECEIPTS
+│   ├── Invoices & Receipts
+│   └── Documents (NEW - shows only invoice/receipt attachments)
+```
+
+**Benefits:**
+- Documents live where they're categorized
+- More contextual
+
+**Drawbacks:**
+- Duplicates "Documents" tile in multiple sections
+- Harder to see ALL documents at once
+
+---
+
+## 🎯 My Recommendation: **Option A + Smart Filtering**
+
+Create a **unified "Documents" section** in Settings with:
+
+### **Documents Screen Features:**
+
+```dart
+┌─────────────────────────────────────────┐
+│  ← Back         All Documents           │
+├─────────────────────────────────────────┤
+│                                         │
+│  [All] [BEOs] [Invoices] [Receipts]   │ ← Filter tabs
+│  [Paychecks] [Other]                   │
+│                                         │
+│  ┌───────────────────────────────────┐ │
+│  │ 📄 BEO_Wedding_Jan5.pdf          │ │ ← Preview thumbnail
+│  │ [Preview image]                   │ │
+│  │ 2.3 MB • 8 pages                  │ │
+│  │ Attached to: Johnson Wedding      │ │ ← Which shift
+│  │ Jan 5, 2026                       │ │
+│  └───────────────────────────────────┘ │
+│                                         │
+│  ┌───────────────────────────────────┐ │
+│  │ 📊 Guest_List.xlsx                │ │
+│  │ [Excel icon]                      │ │
+│  │ 145 KB                            │ │
+│  │ Attached to: Corporate Event      │ │
+│  │ Jan 3, 2026                       │ │
+│  └───────────────────────────────────┘ │
+│                                         │
+│  ┌───────────────────────────────────┐ │
+│  │ 📷 Paycheck_Dec.jpg               │ │
+│  │ [Photo preview]                   │ │
+│  │ 1.8 MB                            │ │
+│  │ Attached to: Holiday Shift        │ │
+│  │ Dec 31, 2025                      │ │
+│  └───────────────────────────────────┘ │
+│                                         │
+└─────────────────────────────────────────┘
+```
+
+### **Features:**
+
+1. **Filter by Type:**
+   - All, BEOs, Invoices, Receipts, Paychecks, Other
+
+2. **Filter by Date:**
+   - Today, This Week, This Month, This Year, All Time
+
+3. **Search:**
+   - Search by filename or shift name
+
+4. **Sort:**
+   - By Date, By Shift, By Size, By Type
+
+5. **Tap Actions:**
+   - **Images/PDFs:** Open full-screen preview
+   - **Excel/Word/Other:** Open in native app
+   - Long-press: Share, Delete, Rename
+
+6. **Shift Link:**
+   - Tap shift name → Jump to that shift's details
+
+---
+
+## 🔄 Where Previews Appear
+
+**Documents will have previews in 3 places:**
+
+### 1. **Shift Screens** (Add/Edit/Details)
+```
+Attachments Section:
+┌─────────────────────────────┐
+│ 📄 BEO_Jan5.pdf            │ ← Thumbnail preview
+│ [Preview image]             │
+│ 2.3 MB • 8 pages            │
+│ [Tap to view full-screen]   │
+└─────────────────────────────┘
+```
+
+### 2. **Documents Screen (Settings)**
+```
+All Documents:
+[Shows ALL attachments from ALL shifts]
+- Filter by type
+- Filter by shift
+- Search
+```
+
+### 3. **Event Portfolio** (existing)
+```
+BEO Events:
+[Already shows event photos]
+- Could add "View Attached BEO" button
+- Opens BEO PDF preview
+```
+
+---
+
+## 📝 Implementation Plan
+
+Here's what I'll build:
+
+### **Phase 1: Document Preview System (4-5 hours)**
+1. ✅ Create `DocumentPreviewWidget` - generates thumbnails
+2. ✅ Create `FullScreenDocumentViewer` - opens images/PDFs
+3. ✅ Update shift attachment tiles to show previews
+4. ✅ Add `open_filex` package for Excel/Word opening
+
+### **Phase 2: Documents Screen (3-4 hours)**
+1. ✅ Create `AllDocumentsScreen` in Settings
+2. ✅ Add filter tabs (All, BEOs, Invoices, etc.)
+3. ✅ Show shift name for each document
+4. ✅ Add search and sort functionality
+5. ✅ Tap document → open preview/native app
+6. ✅ Tap shift name → jump to shift details
+
+### **Phase 3: Fix Upload Flow (2 hours)**
+1. ✅ Make Add Shift screen upload immediately
+2. ✅ Add orphaned file cleanup
+
+### **Phase 4: Polish (1-2 hours)**
+1. ✅ Loading states
+2. ✅ Error handling
+3. ✅ Empty states
+4. ✅ File size warnings
+
+---
+
+## 🤔 Questions for You:
+
+1. **Do you like Option A** (unified "Documents" section in Settings)?
+   - Or would you prefer documents split into Event Contacts and Invoices sections?
+
+2. **Should Event Portfolio** also link to BEO attachments?
+   - e.g., "View BEO Document" button on each event card?
+
+3. **Should we add bulk actions?**
+   - Select multiple documents → Delete, Share, Export to ZIP?
+
+4. **Priority order:**
+   - Do you want previews in shift screens first, or the full Documents screen first?
+
+
+Made changes.

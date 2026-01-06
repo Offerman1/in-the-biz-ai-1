@@ -633,7 +633,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         for (final job in jobs) {
           _selectedJobs[job.name] = JobEntry(
             hourlyRate: job.hourlyRate,
-            template: job.template ?? JobTemplate(),
+            template: job.template,
             employer: job.employer,
           );
         }
@@ -805,7 +805,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               for (final job in jobs) {
                 _selectedJobs[job.name] = JobEntry(
                   hourlyRate: job.hourlyRate,
-                  template: job.template ?? JobTemplate(),
+                  template: job.template,
                   employer: job.employer,
                 );
               }

@@ -162,8 +162,7 @@ class DatabaseService {
 
       print('💾 [DB] Insert successful, response received');
       print('💾 [DB] Response type: ${response.runtimeType}');
-      print(
-          '💾 [DB] Response keys: ${response is Map ? response.keys.toList() : 'not a map'}');
+      print('💾 [DB] Response keys: ${response.keys.toList()}');
 
       final savedShift = Shift.fromSupabase(response);
       print('💾 [DB] Shift parsed successfully: ${savedShift.id}');

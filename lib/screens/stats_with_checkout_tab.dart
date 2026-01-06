@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../providers/shift_provider.dart';
 import '../theme/app_theme.dart';
 import '../widgets/checkout_analytics_tab.dart';
 import '../widgets/paychecks_tab.dart';

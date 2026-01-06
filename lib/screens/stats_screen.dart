@@ -87,7 +87,6 @@ class _StatsScreenState extends State<StatsScreen> {
     final filteredShifts = _filterShiftsByPeriod(shifts);
 
     // Calculate totals for filtered period
-    final now = DateTime.now();
     final periodTotal =
         filteredShifts.fold(0.0, (sum, s) => sum + s.totalIncome);
     final periodHours =
