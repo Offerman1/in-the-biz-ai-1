@@ -10,7 +10,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:gal/gal.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' show FileOptions;
+import 'package:supabase_flutter/supabase_flutter.dart'
+    show FileOptions, FunctionException;
 import '../models/shift.dart';
 import '../models/job.dart';
 import '../models/job_template.dart';
@@ -26,6 +27,8 @@ import '../theme/app_theme.dart';
 import '../widgets/collapsible_section.dart';
 import '../widgets/hero_card.dart';
 import '../widgets/navigation_wrapper.dart';
+import '../widgets/add_field_picker.dart';
+import '../models/field_definition.dart';
 import 'onboarding_screen.dart';
 import 'add_job_screen.dart';
 import 'settings_screen.dart';
@@ -44,6 +47,7 @@ class AddShiftScreen extends StatefulWidget {
   final String? aiAnalysis;
   final Uint8List? imageBytes;
   final DateTime? preselectedDate;
+  final Map<String, dynamic>? prefilledCheckoutData;
 
   const AddShiftScreen({
     super.key,
@@ -51,6 +55,7 @@ class AddShiftScreen extends StatefulWidget {
     this.aiAnalysis,
     this.imageBytes,
     this.preselectedDate,
+    this.prefilledCheckoutData,
   });
 
   @override
@@ -77,6 +82,8 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
   final _hostessController = TextEditingController();
   final _guestCountController = TextEditingController();
   final _locationController = TextEditingController();
+  final _sectionController =
+      TextEditingController(); // NEW: Section/area worked
   final _clientNameController = TextEditingController();
   final _projectNameController = TextEditingController();
   final _mileageController = TextEditingController();
@@ -222,6 +229,14 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
   bool _isRecurring = false;
   List<int> _selectedWeekdays = []; // 1=Mon, 7=Sun
 
+  // Custom field values (key -> value)
+  final Map<String, dynamic> _customFieldValues = {};
+  // Custom field controllers (key -> TextEditingController)
+  final Map<String, TextEditingController> _customFieldControllers = {};
+
+  // Linked checkout ID (from server checkout scan)
+  String? _checkoutId;
+
   @override
   void initState() {
     super.initState();
@@ -235,6 +250,43 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
     }
     if (widget.aiAnalysis != null) {
       _parseAiAnalysis();
+    }
+    if (widget.prefilledCheckoutData != null) {
+      _applyCheckoutData();
+    }
+  }
+
+  /// Apply checkout data to pre-fill form fields
+  void _applyCheckoutData() {
+    final data = widget.prefilledCheckoutData!;
+
+    if (data['cashTips'] != null && data['cashTips'] != 0.0) {
+      _cashTipsController.text = data['cashTips'].toString();
+    }
+    if (data['creditTips'] != null && data['creditTips'] != 0.0) {
+      _creditTipsController.text = data['creditTips'].toString();
+    }
+    if (data['hoursWorked'] != null && data['hoursWorked'] != 0.0) {
+      _hoursWorkedController.text = data['hoursWorked'].toString();
+    }
+    if (data['salesAmount'] != null && data['salesAmount'] != 0.0) {
+      _salesAmountController.text = data['salesAmount'].toString();
+    }
+    if (data['additionalTipout'] != null && data['additionalTipout'] != 0.0) {
+      _additionalTipoutController.text = data['additionalTipout'].toString();
+    }
+    if (data['guestCount'] != null) {
+      _guestCountController.text = data['guestCount'].toString();
+    }
+    if (data['section'] != null && data['section'].toString().isNotEmpty) {
+      _sectionController.text = data['section'].toString();
+    }
+    if (data['notes'] != null && data['notes'].toString().isNotEmpty) {
+      _notesController.text = data['notes'].toString();
+    }
+    // Store checkout ID for linking
+    if (data['checkoutId'] != null) {
+      _checkoutId = data['checkoutId'].toString();
     }
   }
 
@@ -325,6 +377,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
     _hostessController.text = shift.hostess ?? '';
     _guestCountController.text = shift.guestCount?.toString() ?? '';
     _locationController.text = shift.location ?? '';
+    _sectionController.text = shift.section ?? '';
     _clientNameController.text = shift.clientName ?? '';
     _projectNameController.text = shift.projectName ?? '';
     _mileageController.text = (shift.mileage ?? 0).toString();
@@ -491,6 +544,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
     _hostessController.dispose();
     _guestCountController.dispose();
     _locationController.dispose();
+    _sectionController.dispose();
     _clientNameController.dispose();
     _projectNameController.dispose();
     _mileageController.dispose();
@@ -579,6 +633,11 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
     _tableSectionController.dispose();
     _cashSalesController.dispose();
     _cardSalesController.dispose();
+    // Custom Fields
+    for (final controller in _customFieldControllers.values) {
+      controller.dispose();
+    }
+    _customFieldControllers.clear();
     super.dispose();
   }
 
@@ -740,6 +799,10 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
         location: _locationController.text.trim().isNotEmpty
             ? _locationController.text.trim()
             : null,
+        section: _sectionController.text.trim().isNotEmpty
+            ? _sectionController.text.trim()
+            : null,
+        checkoutId: _checkoutId,
         clientName: _clientNameController.text.trim().isNotEmpty
             ? _clientNameController.text.trim()
             : null,
@@ -1129,9 +1192,18 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
 
   /// Handle completed scan session - process images with AI
   Future<void> _handleScanComplete(DocumentScanSession session) async {
-    // Show loading indicator
-    if (!mounted) return;
+    print('🎯 _handleScanComplete CALLED!');
+    print('🎯 Session scan type: ${session.scanType}');
+    print('🎯 Session page count: ${session.pageCount}');
+    print('🎯 Session image paths: ${session.imagePaths}');
 
+    // Show loading indicator
+    if (!mounted) {
+      print('🎯 Widget not mounted, returning early');
+      return;
+    }
+
+    print('🎯 Showing processing snackbar...');
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -1155,6 +1227,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
     );
 
     try {
+      print('🎯 Routing to handler for ${session.scanType}...');
       // Route to appropriate handler based on scan type
       switch (session.scanType) {
         case ScanType.beo:
@@ -1267,13 +1340,21 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
 
   /// Process server checkout scan - Extract financial data
   Future<void> _processCheckoutScan(DocumentScanSession session) async {
+    final userId = _db.supabase.auth.currentUser!.id;
+
     try {
-      final userId = _db.supabase.auth.currentUser!.id;
+      print('💳 _processCheckoutScan started');
+      print('💳 User ID: $userId');
+      print(
+          '💳 Calling analyzeCheckout with ${session.imagePaths.length} images');
+
       final result = await _visionScanner.analyzeCheckout(
         session.imagePaths,
         userId,
         shiftId: widget.existingShift?.id,
       );
+
+      print('💳 analyzeCheckout completed successfully');
 
       if (!mounted) return;
 
@@ -1319,13 +1400,242 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
           ),
         );
       }
-    } catch (e) {
+    } on FunctionException catch (e) {
+      print(
+          '💳 FunctionException in _processCheckoutScan: ${e.status} - ${e.details}');
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).clearSnackBars();
+
+      // Check if it's a duplicate (409 Conflict)
+      if (e.status == 409 && e.details != null) {
+        final details = e.details as Map<String, dynamic>;
+        final existingCheckout =
+            details['existingCheckout'] as Map<String, dynamic>?;
+        final extractedData = details['extractedData'] as Map<String, dynamic>?;
+
+        if (existingCheckout != null && extractedData != null) {
+          // Show duplicate dialog with options
+          final action = await showDialog<String>(
+            context: context,
+            builder: (context) => AlertDialog(
+              backgroundColor: AppTheme.cardBackground,
+              title: Text(
+                '⚠️ Duplicate Checkout Detected',
+                style:
+                    AppTheme.titleMedium.copyWith(color: AppTheme.textPrimary),
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'A checkout with the same financial data was already recorded:',
+                    style: AppTheme.bodyMedium
+                        .copyWith(color: AppTheme.textSecondary),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    '• Date: ${existingCheckout['checkout_date']}',
+                    style: AppTheme.bodyMedium
+                        .copyWith(color: AppTheme.textPrimary),
+                  ),
+                  Text(
+                    '• Gross Sales: \$${existingCheckout['gross_sales']?.toStringAsFixed(2) ?? '0.00'}',
+                    style: AppTheme.bodyMedium
+                        .copyWith(color: AppTheme.textPrimary),
+                  ),
+                  Text(
+                    '• Net Tips: \$${existingCheckout['net_tips']?.toStringAsFixed(2) ?? '0.00'}',
+                    style: AppTheme.bodyMedium
+                        .copyWith(color: AppTheme.textPrimary),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'What would you like to do?',
+                    style: AppTheme.bodyMedium.copyWith(
+                      color: AppTheme.textSecondary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, 'cancel'),
+                  child: Text('Cancel',
+                      style: TextStyle(color: AppTheme.textMuted)),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(context, 'edit'),
+                  child: Text('Edit Existing',
+                      style: TextStyle(color: AppTheme.accentBlue)),
+                ),
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(context, 'new'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primaryGreen,
+                    foregroundColor: Colors.black,
+                  ),
+                  child: const Text('Save as New'),
+                ),
+              ],
+            ),
+          );
+
+          if (action == 'edit') {
+            // Navigate to verification screen with existing checkout data
+            await Navigator.push<bool>(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ScanVerificationScreen(
+                  scanType: ScanType.checkout,
+                  extractedData: extractedData,
+                  confidenceScores: extractedData['ai_confidence_scores']
+                      as Map<String, dynamic>?,
+                  existingCheckoutId: existingCheckout['id'],
+                  onConfirm: (data) async {
+                    // Update existing checkout in database
+                    try {
+                      await _db.supabase.from('server_checkouts').update({
+                        ...data,
+                        'updated_at': DateTime.now().toIso8601String(),
+                      }).eq('id', existingCheckout['id']);
+
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content:
+                                const Text('Checkout updated successfully!'),
+                            backgroundColor: AppTheme.successColor,
+                          ),
+                        );
+                      }
+                    } catch (e) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Failed to update checkout: $e'),
+                            backgroundColor: AppTheme.dangerColor,
+                          ),
+                        );
+                      }
+                    }
+                  },
+                ),
+              ),
+            );
+          } else if (action == 'new') {
+            // Force save as new checkout (with forceNew flag to bypass duplicate check)
+            try {
+              final result = await _visionScanner.analyzeCheckout(
+                session.imagePaths,
+                userId,
+                shiftId: widget.existingShift?.id,
+                forceNew: true, // This will bypass duplicate check
+              );
+
+              if (!mounted) return;
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: const Text('New checkout saved successfully!'),
+                  backgroundColor: AppTheme.successColor,
+                ),
+              );
+
+              // Show verification screen
+              await Navigator.push<bool>(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ScanVerificationScreen(
+                    scanType: ScanType.checkout,
+                    extractedData: result['data'] as Map<String, dynamic>,
+                    confidenceScores: result['data']['ai_confidence_scores']
+                        as Map<String, dynamic>?,
+                    onConfirm: (data) async {
+                      // Pre-fill shift form with checkout data
+                      setState(() {
+                        if (data['total_sales'] != null) {
+                          _salesAmountController.text =
+                              data['total_sales'].toString();
+                        }
+                        if (data['gross_tips'] != null) {
+                          _creditTipsController.text =
+                              data['gross_tips'].toString();
+                        }
+                        if (data['tipout_amount'] != null) {
+                          _additionalTipoutController.text =
+                              data['tipout_amount'].toString();
+                        }
+                        if (data['tipout_percentage'] != null) {
+                          _tipoutPercentController.text =
+                              data['tipout_percentage'].toString();
+                        }
+                      });
+                    },
+                  ),
+                ),
+              );
+            } catch (e) {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Failed to save new checkout: $e'),
+                    backgroundColor: AppTheme.dangerColor,
+                  ),
+                );
+              }
+            }
+          }
+          return;
+        }
+      }
+
+      // Handle other FunctionException errors
+      String errorMessage =
+          'Checkout scan failed: ${e.details?['message'] ?? e.reasonPhrase}';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(errorMessage),
+          backgroundColor: AppTheme.dangerColor,
+          duration: const Duration(seconds: 5),
+        ),
+      );
+    } catch (e, stackTrace) {
+      print('💳 ERROR in _processCheckoutScan: $e');
+      print('💳 Stack trace: $stackTrace');
+
       if (mounted) {
         ScaffoldMessenger.of(context).clearSnackBars();
+
+        // Check for JWT/auth errors
+        String errorMessage = 'Checkout scan failed: $e';
+        if (e.toString().contains('JWT') || e.toString().contains('401')) {
+          errorMessage = '🔐 Session expired. Please log out and log back in.';
+        }
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Checkout scan failed: $e'),
+            content: Text(errorMessage),
             backgroundColor: AppTheme.dangerColor,
+            duration: const Duration(seconds: 5),
+            action: e.toString().contains('JWT') || e.toString().contains('401')
+                ? SnackBarAction(
+                    label: 'Log Out',
+                    textColor: Colors.white,
+                    onPressed: () async {
+                      await _db.supabase.auth.signOut();
+                      if (mounted) {
+                        Navigator.of(context).pushNamedAndRemoveUntil(
+                          '/login',
+                          (route) => false,
+                        );
+                      }
+                    },
+                  )
+                : null,
           ),
         );
       }
@@ -1848,6 +2158,17 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
                     children: _buildOrderedSections(
                         fieldOrderProvider.formFieldOrder),
                   ),
+
+                  // Custom Fields Section (user-added fields)
+                  if (_template != null &&
+                      _template!.customFields.isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    _buildCustomFieldsSection(),
+                  ],
+
+                  // Add Field Button
+                  const SizedBox(height: 16),
+                  _buildAddFieldButton(),
                 ],
               );
             },
@@ -2058,6 +2379,387 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
     }
 
     return widgets;
+  }
+
+  /// Build custom fields section (user-added fields)
+  Widget _buildCustomFieldsSection() {
+    final customFields = _template?.customFields ?? [];
+    if (customFields.isEmpty) return const SizedBox.shrink();
+
+    // Sort by order
+    final sortedFields = List<CustomField>.from(customFields)
+      ..sort((a, b) => a.order.compareTo(b.order));
+
+    return Column(
+      children: sortedFields.map((customField) {
+        final fieldDef = FieldRegistry.getField(customField.key);
+        if (fieldDef == null) return const SizedBox.shrink();
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: _buildCustomFieldWidget(customField, fieldDef),
+        );
+      }).toList(),
+    );
+  }
+
+  /// Build a single custom field widget
+  Widget _buildCustomFieldWidget(
+      CustomField customField, FieldDefinition fieldDef) {
+    // Get or create controller for this field
+    if (!_customFieldControllers.containsKey(customField.key)) {
+      _customFieldControllers[customField.key] = TextEditingController();
+    }
+    final controller = _customFieldControllers[customField.key]!;
+
+    return CollapsibleSection(
+      title: fieldDef.label,
+      icon: fieldDef.icon ?? Icons.text_fields,
+      accentColor: customField.deductFromEarnings
+          ? AppTheme.accentOrange
+          : AppTheme.primaryGreen,
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Deduction toggle (if applicable)
+          if (fieldDef.canDeduct) ...[
+            GestureDetector(
+              onTap: () => _toggleDeduction(customField),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: customField.deductFromEarnings
+                      ? AppTheme.accentOrange.withOpacity(0.2)
+                      : AppTheme.textMuted.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      customField.deductFromEarnings
+                          ? Icons.remove_circle
+                          : Icons.remove_circle_outline,
+                      size: 14,
+                      color: customField.deductFromEarnings
+                          ? AppTheme.accentOrange
+                          : AppTheme.textMuted,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      customField.deductFromEarnings ? 'Deducting' : 'Deduct',
+                      style: AppTheme.labelSmall.copyWith(
+                        color: customField.deductFromEarnings
+                            ? AppTheme.accentOrange
+                            : AppTheme.textMuted,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+          ],
+          // Delete button
+          IconButton(
+            icon: Icon(Icons.delete_outline,
+                color: AppTheme.dangerColor, size: 20),
+            onPressed: () => _removeCustomField(customField),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+          ),
+        ],
+      ),
+      children: [
+        _buildCustomFieldInput(fieldDef, controller),
+      ],
+    );
+  }
+
+  /// Build the input widget based on field type
+  Widget _buildCustomFieldInput(
+      FieldDefinition fieldDef, TextEditingController controller) {
+    switch (fieldDef.type) {
+      case FieldType.currency:
+        return TextFormField(
+          controller: controller,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          style: AppTheme.bodyMedium,
+          decoration: InputDecoration(
+            hintText: fieldDef.hintText ?? 'Enter amount',
+            prefixText: '\$ ',
+            filled: true,
+            fillColor: AppTheme.cardBackgroundLight,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+              borderSide: BorderSide.none,
+            ),
+          ),
+        );
+
+      case FieldType.number:
+        return TextFormField(
+          controller: controller,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          style: AppTheme.bodyMedium,
+          decoration: InputDecoration(
+            hintText: fieldDef.hintText ?? 'Enter number',
+            filled: true,
+            fillColor: AppTheme.cardBackgroundLight,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+              borderSide: BorderSide.none,
+            ),
+          ),
+        );
+
+      case FieldType.integer:
+        return TextFormField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          style: AppTheme.bodyMedium,
+          decoration: InputDecoration(
+            hintText: fieldDef.hintText ?? 'Enter count',
+            filled: true,
+            fillColor: AppTheme.cardBackgroundLight,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+              borderSide: BorderSide.none,
+            ),
+          ),
+        );
+
+      case FieldType.percentage:
+        return TextFormField(
+          controller: controller,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          style: AppTheme.bodyMedium,
+          decoration: InputDecoration(
+            hintText: fieldDef.hintText ?? 'Enter percentage',
+            suffixText: '%',
+            filled: true,
+            fillColor: AppTheme.cardBackgroundLight,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+              borderSide: BorderSide.none,
+            ),
+          ),
+        );
+
+      case FieldType.text:
+      default:
+        return TextFormField(
+          controller: controller,
+          style: AppTheme.bodyMedium,
+          decoration: InputDecoration(
+            hintText: fieldDef.hintText ?? 'Enter value',
+            filled: true,
+            fillColor: AppTheme.cardBackgroundLight,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+              borderSide: BorderSide.none,
+            ),
+          ),
+        );
+    }
+  }
+
+  /// Build the Add Field button
+  Widget _buildAddFieldButton() {
+    return OutlinedButton.icon(
+      onPressed: _showAddFieldPicker,
+      icon: Icon(Icons.add, color: AppTheme.primaryGreen),
+      label: Text(
+        'Add Field',
+        style: TextStyle(color: AppTheme.primaryGreen),
+      ),
+      style: OutlinedButton.styleFrom(
+        side: BorderSide(color: AppTheme.primaryGreen.withOpacity(0.5)),
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+        ),
+      ),
+    );
+  }
+
+  /// Show the Add Field picker
+  void _showAddFieldPicker() {
+    final alreadyAddedKeys =
+        _template?.customFields.map((f) => f.key).toList() ?? [];
+
+    AddFieldPicker.show(
+      context,
+      alreadyAddedKeys: alreadyAddedKeys,
+      onFieldSelected: (fieldDef, deductFromEarnings) async {
+        await _addCustomField(fieldDef, deductFromEarnings);
+      },
+    );
+  }
+
+  /// Add a custom field to the template
+  Future<void> _addCustomField(
+      FieldDefinition fieldDef, bool deductFromEarnings) async {
+    if (_selectedJob == null || _template == null) return;
+
+    final newField = CustomField(
+      key: fieldDef.key,
+      enabled: true,
+      deductFromEarnings: deductFromEarnings,
+      order: _template!.customFields.length,
+    );
+
+    final updatedCustomFields = [..._template!.customFields, newField];
+    final updatedTemplate =
+        _template!.copyWith(customFields: updatedCustomFields);
+
+    // Update the job with new template
+    final updatedJob = _selectedJob!.copyWith(template: updatedTemplate);
+
+    try {
+      await _db.updateJob(updatedJob);
+
+      setState(() {
+        _template = updatedTemplate;
+        // Update the job in the list
+        final index = _userJobs.indexWhere((j) => j.id == _selectedJob!.id);
+        if (index >= 0) {
+          _userJobs[index] = updatedJob;
+        }
+        _selectedJob = updatedJob;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${fieldDef.label} added'),
+            backgroundColor: AppTheme.successColor,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to add field: $e'),
+            backgroundColor: AppTheme.dangerColor,
+          ),
+        );
+      }
+    }
+  }
+
+  /// Remove a custom field from the template
+  Future<void> _removeCustomField(CustomField customField) async {
+    final fieldDef = FieldRegistry.getField(customField.key);
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.cardBackground,
+        title: Text(
+          'Remove ${fieldDef?.label ?? customField.key}?',
+          style: AppTheme.titleMedium.copyWith(color: AppTheme.textPrimary),
+        ),
+        content: Text(
+          'This will remove this field from future shifts.\n\nData from past shifts will NOT be deleted.',
+          style: AppTheme.bodyMedium.copyWith(color: AppTheme.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('Cancel', style: TextStyle(color: AppTheme.textMuted)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.dangerColor,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Remove Field'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    if (_selectedJob == null || _template == null) return;
+
+    final updatedCustomFields =
+        _template!.customFields.where((f) => f.key != customField.key).toList();
+    final updatedTemplate =
+        _template!.copyWith(customFields: updatedCustomFields);
+
+    final updatedJob = _selectedJob!.copyWith(template: updatedTemplate);
+
+    try {
+      await _db.updateJob(updatedJob);
+
+      // Clean up controller
+      _customFieldControllers[customField.key]?.dispose();
+      _customFieldControllers.remove(customField.key);
+      _customFieldValues.remove(customField.key);
+
+      setState(() {
+        _template = updatedTemplate;
+        final index = _userJobs.indexWhere((j) => j.id == _selectedJob!.id);
+        if (index >= 0) {
+          _userJobs[index] = updatedJob;
+        }
+        _selectedJob = updatedJob;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${fieldDef?.label ?? customField.key} removed'),
+            backgroundColor: AppTheme.successColor,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to remove field: $e'),
+            backgroundColor: AppTheme.dangerColor,
+          ),
+        );
+      }
+    }
+  }
+
+  /// Toggle deduction for a custom field
+  Future<void> _toggleDeduction(CustomField customField) async {
+    if (_selectedJob == null || _template == null) return;
+
+    final updatedCustomFields = _template!.customFields.map((f) {
+      if (f.key == customField.key) {
+        return f.copyWith(deductFromEarnings: !f.deductFromEarnings);
+      }
+      return f;
+    }).toList();
+
+    final updatedTemplate =
+        _template!.copyWith(customFields: updatedCustomFields);
+    final updatedJob = _selectedJob!.copyWith(template: updatedTemplate);
+
+    try {
+      await _db.updateJob(updatedJob);
+
+      setState(() {
+        _template = updatedTemplate;
+        final index = _userJobs.indexWhere((j) => j.id == _selectedJob!.id);
+        if (index >= 0) {
+          _userJobs[index] = updatedJob;
+        }
+        _selectedJob = updatedJob;
+      });
+    } catch (e) {
+      // Silently fail - user can try again
+    }
   }
 
   Widget _buildHeroStat(String label, String value) {
@@ -3092,6 +3794,21 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
           ),
           const SizedBox(height: 12),
         ],
+        // Section field (Main Dining, Bar, Patio, etc.) - for restaurant/hospitality jobs
+        TextFormField(
+          controller: _sectionController,
+          style: AppTheme.bodyMedium,
+          decoration: InputDecoration(
+            hintText: 'Section or area (e.g., Main Dining, Bar, Patio)',
+            filled: true,
+            fillColor: AppTheme.cardBackgroundLight,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+              borderSide: BorderSide.none,
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
         if (_template!.showClientName) ...[
           TextFormField(
             controller: _clientNameController,

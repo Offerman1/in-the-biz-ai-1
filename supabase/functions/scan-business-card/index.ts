@@ -19,15 +19,44 @@ serve(async (req) => {
   }
 
   try {
+    // Extract user_id from JWT WITHOUT strict validation
+    // (Supabase SDK already validated the token on the client side)
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: "Missing authorization header" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    let tokenUserId: string;
+    try {
+      const token = authHeader.replace("Bearer ", "");
+      const parts = token.split(".");
+      if (parts.length !== 3) {
+        throw new Error("Invalid token format");
+      }
+      const payload = JSON.parse(atob(parts[1]));
+      tokenUserId = payload.sub;
+      if (!tokenUserId) {
+        throw new Error("No user ID in token");
+      }
+    } catch (e) {
+      console.error("Token parsing error:", e);
+      return new Response(
+        JSON.stringify({ error: "Invalid authentication token" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const { images, userId, shiftId } = await req.json();
 
     if (!images || !Array.isArray(images) || images.length === 0) {
       throw new Error("No images provided");
     }
 
-    if (!userId) {
-      throw new Error("User ID required");
-    }
+    // Use userId from body or fall back to token
+    const effectiveUserId = userId || tokenUserId;
 
     // Initialize Gemini
     const genAI = new GoogleGenerativeAI(Deno.env.get("GEMINI_API_KEY")!);

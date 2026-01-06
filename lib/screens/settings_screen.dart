@@ -15,7 +15,6 @@ import '../models/job.dart';
 import '../models/end_job_reason.dart';
 import '../widgets/hero_card.dart';
 import '../widgets/navigation_wrapper.dart';
-import '../widgets/field_order_settings.dart';
 import '../constants/currencies.dart';
 import 'goals_screen.dart';
 import 'login_screen.dart';
@@ -53,9 +52,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Map<String, dynamic>? _taxEstimate;
   bool _isLoading = true;
   String _selectedState = 'FL';
+  String? _selectedTaxJobId; // null = "All Jobs", otherwise specific job ID
   bool _isEndedJobsExpanded = false; // Collapsed by default
   bool _isJobsSectionExpanded = false; // MY JOBS collapsed by default
-  bool _isTaxSectionExpanded = false; // TAX ESTIMATION collapsed by default
   bool _isAutoSyncEnabled = false; // Calendar auto-sync toggle
   String _selectedCurrency = 'USD'; // Selected currency code
 
@@ -169,7 +168,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   void _calculateTax() {
     final shiftProvider = Provider.of<ShiftProvider>(context, listen: false);
-    final yearlyIncome = shiftProvider.shifts
+
+    // Filter shifts by selected job if specified
+    final filteredShifts = _selectedTaxJobId == null
+        ? shiftProvider.shifts
+        : shiftProvider.shifts.where((s) => s.jobId == _selectedTaxJobId);
+
+    final yearlyIncome = filteredShifts
         .where((s) => s.date.year == DateTime.now().year)
         .fold(0.0, (sum, s) => sum + s.totalIncome);
 
@@ -179,6 +184,80 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
 
     setState(() => _taxEstimate = estimate);
+  }
+
+  void _showJobSelectionDialog(List<Map<String, dynamic>> activeJobs) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppTheme.cardBackground,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle bar
+            Container(
+              margin: const EdgeInsets.only(top: 12),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppTheme.textMuted,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text('Select Job', style: AppTheme.titleLarge),
+            ),
+            const Divider(height: 1),
+            // Job list
+            ...activeJobs.map((job) {
+              final isSelected = _selectedTaxJobId == job['id'];
+              return ListTile(
+                leading: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? AppTheme.primaryGreen.withOpacity(0.15)
+                        : AppTheme.cardBackgroundLight,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.work,
+                    color:
+                        isSelected ? AppTheme.primaryGreen : AppTheme.textMuted,
+                  ),
+                ),
+                title: Text(
+                  job['name'] ?? 'Unknown',
+                  style: AppTheme.bodyMedium.copyWith(
+                    color: isSelected
+                        ? AppTheme.primaryGreen
+                        : AppTheme.textPrimary,
+                    fontWeight:
+                        isSelected ? FontWeight.bold : FontWeight.normal,
+                  ),
+                ),
+                trailing: isSelected
+                    ? Icon(Icons.check_circle, color: AppTheme.primaryGreen)
+                    : null,
+                onTap: () {
+                  setState(() {
+                    _selectedTaxJobId = job['id'];
+                  });
+                  _calculateTax();
+                  Navigator.pop(context);
+                },
+              );
+            }).toList(),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _addJob() async {
@@ -348,189 +427,510 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     return NavigationWrapper(
       currentTabIndex: null,
-      child: Scaffold(
-        backgroundColor: AppTheme.darkBackground,
-        appBar: AppBar(
+      child: DefaultTabController(
+        length: 4,
+        child: Scaffold(
           backgroundColor: AppTheme.darkBackground,
-          title: Text('Settings',
-              style: AppTheme.titleLarge
-                  .copyWith(color: AppTheme.adaptiveTextColor)),
-          actions: [
-            IconButton(
-              icon: Icon(Icons.refresh),
-              tooltip: 'Refresh Data',
-              onPressed: () async {
-                setState(() => _isLoading = true);
+          appBar: AppBar(
+            backgroundColor: AppTheme.darkBackground,
+            title: Text('Settings',
+                style: AppTheme.titleLarge
+                    .copyWith(color: AppTheme.adaptiveTextColor)),
+            actions: [
+              IconButton(
+                icon: Icon(Icons.refresh),
+                tooltip: 'Refresh Data',
+                onPressed: () async {
+                  setState(() => _isLoading = true);
 
-                // Refresh shift provider data
-                final shiftProvider =
-                    Provider.of<ShiftProvider>(context, listen: false);
-                await shiftProvider.loadShifts();
+                  // Refresh shift provider data
+                  final shiftProvider =
+                      Provider.of<ShiftProvider>(context, listen: false);
+                  await shiftProvider.loadShifts();
 
-                // Reload local data
-                await _loadData();
+                  // Reload local data
+                  await _loadData();
 
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Data refreshed'),
-                      backgroundColor: AppTheme.primaryGreen,
-                      duration: Duration(seconds: 2),
-                    ),
-                  );
-                }
-              },
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Data refreshed'),
+                        backgroundColor: AppTheme.primaryGreen,
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  }
+                },
+              ),
+            ],
+            bottom: TabBar(
+              isScrollable: false,
+              indicatorColor: AppTheme.primaryGreen,
+              labelColor: AppTheme.primaryGreen,
+              unselectedLabelColor: AppTheme.textMuted,
+              indicatorSize: TabBarIndicatorSize.label,
+              labelPadding: EdgeInsets.zero,
+              labelStyle: AppTheme.labelSmall.copyWith(
+                fontWeight: FontWeight.bold,
+                fontSize: 11,
+              ),
+              unselectedLabelStyle: AppTheme.labelSmall.copyWith(
+                fontSize: 11,
+              ),
+              tabs: [
+                Tab(icon: Icon(Icons.settings, size: 16), text: 'General'),
+                Tab(icon: Icon(Icons.work, size: 16), text: 'Jobs & Data'),
+                Tab(
+                    icon: Icon(Icons.folder, size: 16),
+                    text: 'Docs & Contacts'),
+                Tab(icon: Icon(Icons.account_balance, size: 16), text: 'Taxes'),
+              ],
             ),
-          ],
+          ),
+          body: _isLoading
+              ? Center(
+                  child:
+                      CircularProgressIndicator(color: AppTheme.primaryGreen))
+              : TabBarView(
+                  children: [
+                    _buildGeneralTab(),
+                    _buildJobsAndDataTab(),
+                    _buildDocsAndContactsTab(),
+                    _buildTaxesTab(),
+                  ],
+                ),
         ),
-        body: _isLoading
-            ? Center(
-                child: CircularProgressIndicator(color: AppTheme.primaryGreen))
-            : ListView(
-                padding: const EdgeInsets.all(16),
+      ), // Close DefaultTabController
+    ); // Close NavigationWrapper
+  }
+
+  // Tab 1: General Settings
+  Widget _buildGeneralTab() {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        // Pro Banner - only show on mobile (subscriptions not available on web)
+        if (!kIsWeb)
+          Consumer<SubscriptionService>(
+            builder: (context, subscriptionService, child) {
+              if (subscriptionService.isPro) return const SizedBox.shrink();
+              return Column(
                 children: [
-                  // Pro Banner - only show on mobile (subscriptions not available on web)
-                  if (!kIsWeb)
-                    Consumer<SubscriptionService>(
-                      builder: (context, subscriptionService, child) {
-                        if (subscriptionService.isPro)
-                          return const SizedBox.shrink();
-                        return Column(
-                          children: [
-                            _buildProBanner(),
-                            const SizedBox(height: 24),
-                          ],
-                        );
-                      },
+                  _buildProBanner(),
+                  const SizedBox(height: 24),
+                ],
+              );
+            },
+          ),
+
+        // Appearance Section
+        _buildSectionHeader('APPEARANCE'),
+        const SizedBox(height: 12),
+        _buildAppearanceTile(),
+
+        const SizedBox(height: 24),
+
+        // Currency Section
+        _buildSectionHeader('CURRENCY'),
+        const SizedBox(height: 12),
+        _buildCurrencyTile(),
+
+        const SizedBox(height: 24),
+
+        // Notifications Section
+        _buildSectionHeader('NOTIFICATIONS'),
+        const SizedBox(height: 12),
+        _buildNotificationsTile(),
+
+        const SizedBox(height: 24),
+
+        // Admin / Debug Section
+        if (kDebugMode) ...[
+          _buildSectionHeader('ADMIN / DEBUG'),
+          const SizedBox(height: 12),
+          _buildAdminPanelTile(),
+          const SizedBox(height: 8),
+          _buildDebugProToggle(),
+          const SizedBox(height: 24),
+        ],
+
+        // Account Section
+        _buildSectionHeader('ACCOUNT'),
+        const SizedBox(height: 12),
+        _buildAccountSection(),
+
+        const SizedBox(height: 40),
+      ],
+    );
+  }
+
+  // Tab 2: Jobs & Data (merged Jobs + Integrations)
+  Widget _buildJobsAndDataTab() {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        // Jobs Section - Collapsible
+        _buildSectionHeader('MY JOBS'),
+        const SizedBox(height: 12),
+        _buildJobsTile(),
+        if (_isJobsSectionExpanded) ...[
+          const SizedBox(height: 12),
+          _buildJobsHeroSection(),
+        ],
+
+        const SizedBox(height: 24),
+
+        // Shifts Section
+        _buildSectionHeader('SHIFTS'),
+        const SizedBox(height: 12),
+        _buildBulkEditShiftsTile(),
+
+        const SizedBox(height: 24),
+
+        // Goals Section
+        _buildSectionHeader('GOALS'),
+        const SizedBox(height: 12),
+        _buildGoalsTile(),
+
+        const SizedBox(height: 24),
+
+        // QuickBooks Integration Section
+        _buildSectionHeader('QUICKBOOKS'),
+        const SizedBox(height: 12),
+        _buildQuickBooksSection(),
+
+        const SizedBox(height: 24),
+
+        // Calendar Sync Section
+        _buildSectionHeader('CALENDAR SYNC'),
+        const SizedBox(height: 12),
+        _buildScheduleSyncTile(),
+        const SizedBox(height: 8),
+        _buildCalendarExportSection(),
+        const SizedBox(height: 8),
+        _buildJobGroupingTile(),
+
+        const SizedBox(height: 24),
+
+        // Import Data Section
+        _buildSectionHeader('DATA IMPORT'),
+        const SizedBox(height: 12),
+        _buildImportDataTile(),
+
+        const SizedBox(height: 40),
+      ],
+    );
+  }
+
+  // Tab 3: Taxes (with job filter)
+  Widget _buildTaxesTab() {
+    final activeJobs = _jobs.where((j) => j['is_active'] == true).toList();
+    final shiftProvider = Provider.of<ShiftProvider>(context);
+
+    // Filter shifts by selected job if specified
+    final filteredShifts = _selectedTaxJobId == null
+        ? shiftProvider.shifts
+        : shiftProvider.shifts.where((s) => s.jobId == _selectedTaxJobId);
+
+    final yearlyIncome = filteredShifts
+        .where((s) => s.date.year == DateTime.now().year)
+        .fold(0.0, (sum, s) => sum + s.totalIncome);
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        // Single unified card with filters and tax estimation
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: AppTheme.cardBackground,
+            borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header with icon
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryGreen.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-
-                  // Jobs Section - Collapsible
-                  _buildSectionHeader('MY JOBS'),
-                  const SizedBox(height: 12),
-                  _buildJobsTile(),
-                  if (_isJobsSectionExpanded) ...[
-                    const SizedBox(height: 12),
-                    _buildJobsHeroSection(),
-                  ],
-
-                  const SizedBox(height: 24),
-
-                  // Event Contacts Section (moved up)
-                  _buildSectionHeader('EVENT CONTACTS'),
-                  const SizedBox(height: 12),
-                  _buildContactsDirectoryTile(),
-                  const SizedBox(height: 12),
-                  _buildEventPortfolioTile(),
-
-                  const SizedBox(height: 24),
-
-                  // Invoices & Receipts Section
-                  _buildSectionHeader('INVOICES & RECEIPTS'),
-                  const SizedBox(height: 12),
-                  _buildInvoicesReceiptsTile(),
-
-                  const SizedBox(height: 24),
-
-                  // Notifications Section (moved up)
-                  _buildSectionHeader('NOTIFICATIONS'),
-                  const SizedBox(height: 12),
-                  _buildNotificationsTile(),
-
-                  const SizedBox(height: 24),
-
-                  // Appearance Section (moved up)
-                  _buildSectionHeader('APPEARANCE'),
-                  const SizedBox(height: 12),
-                  _buildAppearanceTile(),
-
-                  const SizedBox(height: 24),
-
-                  // Currency Section
-                  _buildSectionHeader('CURRENCY'),
-                  const SizedBox(height: 12),
-                  _buildCurrencyTile(),
-
-                  const SizedBox(height: 24),
-
-                  // Shifts Section
-                  _buildSectionHeader('SHIFTS'),
-                  const SizedBox(height: 12),
-                  _buildDocumentsTile(),
-                  const SizedBox(height: 8),
-                  _buildBulkEditShiftsTile(),
-
-                  const SizedBox(height: 24),
-
-                  // Shift Layout Section
-                  _buildSectionHeader('SHIFT LAYOUT'),
-                  const SizedBox(height: 12),
-                  const FieldOrderSettings(),
-
-                  const SizedBox(height: 24),
-
-                  // Import Data Section
-                  _buildSectionHeader('DATA IMPORT'),
-                  const SizedBox(height: 12),
-                  _buildImportDataTile(),
-
-                  const SizedBox(height: 24),
-
-                  // Schedule Sync Section (moved down)
-                  _buildSectionHeader('SCHEDULE SYNC'),
-                  const SizedBox(height: 12),
-                  _buildScheduleSyncTile(),
-                  const SizedBox(height: 8),
-                  _buildCalendarExportSection(),
-                  const SizedBox(height: 8),
-                  _buildJobGroupingTile(),
-
-                  const SizedBox(height: 24),
-
-                  // Goals Section
-                  _buildSectionHeader('GOALS'),
-                  const SizedBox(height: 12),
-                  _buildGoalsTile(),
-
-                  const SizedBox(height: 24),
-
-                  // Tax Estimation Section
-                  _buildSectionHeader('TAX ESTIMATION'),
-                  const SizedBox(height: 12),
-                  _buildTaxEstimationTile(),
-                  if (_isTaxSectionExpanded) ...[
-                    const SizedBox(height: 12),
-                    _buildTaxEstimation(),
-                  ],
-
-                  const SizedBox(height: 24),
-
-                  // QuickBooks Integration Section
-                  _buildSectionHeader('QUICKBOOKS'),
-                  const SizedBox(height: 12),
-                  _buildQuickBooksSection(),
-
-                  const SizedBox(height: 24),
-
-                  // Admin / Debug Section
-                  if (kDebugMode) ...[
-                    _buildSectionHeader('ADMIN / DEBUG'),
-                    const SizedBox(height: 12),
-                    _buildAdminPanelTile(),
-                    const SizedBox(height: 8),
-                    _buildDebugProToggle(),
-                    const SizedBox(height: 24),
-                  ],
-
-                  // Account Section
-                  _buildSectionHeader('ACCOUNT'),
-                  const SizedBox(height: 12),
-                  _buildAccountSection(),
-
-                  const SizedBox(height: 40),
+                    child: Icon(
+                      Icons.account_balance,
+                      color: AppTheme.primaryGreen,
+                      size: 28,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'TAX ESTIMATION',
+                          style: AppTheme.labelSmall.copyWith(
+                            letterSpacing: 1.5,
+                            color: AppTheme.primaryGreen,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${DateTime.now().year}',
+                          style: AppTheme.titleLarge,
+                        ),
+                      ],
+                    ),
+                  ),
+                  // State selector
+                  DropdownButton<String>(
+                    value: _selectedState,
+                    dropdownColor: AppTheme.cardBackgroundLight,
+                    style: AppTheme.bodyMedium,
+                    iconEnabledColor: AppTheme.textPrimary,
+                    underline: const SizedBox(),
+                    items: _states
+                        .map((s) => DropdownMenuItem(
+                              value: s,
+                              child: Text(s, style: AppTheme.bodyMedium),
+                            ))
+                        .toList(),
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() => _selectedState = value);
+                        _calculateTax();
+                      }
+                    },
+                  ),
                 ],
               ),
-      ), // Close NavigationWrapper child Scaffold
-    ); // Close NavigationWrapper
+
+              const SizedBox(height: 20),
+
+              // Filter chips
+              Text(
+                'Filter by Job:',
+                style: AppTheme.labelSmall.copyWith(color: AppTheme.textMuted),
+              ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  // All Jobs chip (always visible)
+                  FilterChip(
+                    selected: _selectedTaxJobId == null,
+                    label: Text('All Jobs'),
+                    onSelected: (selected) {
+                      setState(() {
+                        _selectedTaxJobId = null;
+                      });
+                      _calculateTax();
+                    },
+                    backgroundColor: AppTheme.cardBackgroundLight,
+                    selectedColor: AppTheme.primaryGreen.withOpacity(0.2),
+                    checkmarkColor: AppTheme.primaryGreen,
+                    labelStyle: AppTheme.bodyMedium.copyWith(
+                      color: _selectedTaxJobId == null
+                          ? AppTheme.primaryGreen
+                          : AppTheme.textSecondary,
+                      fontWeight: _selectedTaxJobId == null
+                          ? FontWeight.bold
+                          : FontWeight.normal,
+                    ),
+                  ),
+                  // Show individual job chips OR dropdown based on count
+                  if (activeJobs.length == 1)
+                    // Single job - show as chip
+                    FilterChip(
+                      selected: _selectedTaxJobId == activeJobs[0]['id'],
+                      label: Text(activeJobs[0]['name'] ?? 'Unknown'),
+                      onSelected: (selected) {
+                        setState(() {
+                          _selectedTaxJobId = activeJobs[0]['id'];
+                        });
+                        _calculateTax();
+                      },
+                      backgroundColor: AppTheme.cardBackgroundLight,
+                      selectedColor: AppTheme.primaryGreen.withOpacity(0.2),
+                      checkmarkColor: AppTheme.primaryGreen,
+                      labelStyle: AppTheme.bodyMedium.copyWith(
+                        color: _selectedTaxJobId == activeJobs[0]['id']
+                            ? AppTheme.primaryGreen
+                            : AppTheme.textSecondary,
+                        fontWeight: _selectedTaxJobId == activeJobs[0]['id']
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                      ),
+                    )
+                  else if (activeJobs.length > 1)
+                    // Multiple jobs - show dropdown
+                    InkWell(
+                      onTap: () => _showJobSelectionDialog(activeJobs),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: _selectedTaxJobId != null
+                              ? AppTheme.primaryGreen.withOpacity(0.2)
+                              : AppTheme.cardBackgroundLight,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: _selectedTaxJobId != null
+                                ? AppTheme.primaryGreen
+                                : AppTheme.cardBackgroundLight,
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (_selectedTaxJobId != null)
+                              Icon(Icons.check,
+                                  color: AppTheme.primaryGreen, size: 18),
+                            if (_selectedTaxJobId != null)
+                              const SizedBox(width: 4),
+                            Text(
+                              _selectedTaxJobId == null
+                                  ? 'Select Job'
+                                  : activeJobs.firstWhere(
+                                          (j) => j['id'] == _selectedTaxJobId,
+                                          orElse: () =>
+                                              {'name': 'Unknown'})['name'] ??
+                                      'Unknown',
+                              style: AppTheme.bodyMedium.copyWith(
+                                color: _selectedTaxJobId != null
+                                    ? AppTheme.primaryGreen
+                                    : AppTheme.textSecondary,
+                                fontWeight: _selectedTaxJobId != null
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Icon(
+                              Icons.arrow_drop_down,
+                              color: _selectedTaxJobId != null
+                                  ? AppTheme.primaryGreen
+                                  : AppTheme.textMuted,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+
+              Divider(height: 32, color: AppTheme.cardBackgroundLight),
+
+              // Tax calculation content
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('YTD Income', style: AppTheme.bodyMedium),
+                  Text(currencyFormat.format(yearlyIncome),
+                      style: AppTheme.titleMedium),
+                ],
+              ),
+              Divider(height: 24, color: AppTheme.cardBackgroundLight),
+              if (_taxEstimate != null) ...[
+                _buildTaxRow('Federal Tax', _taxEstimate!['federal']),
+                _buildTaxRow(
+                    'State Tax ($_selectedState)', _taxEstimate!['state']),
+                _buildTaxRow(
+                    'Social Security', _taxEstimate!['socialSecurity']),
+                _buildTaxRow('Medicare', _taxEstimate!['medicare']),
+                Divider(height: 24, color: AppTheme.cardBackgroundLight),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Total Estimated Tax', style: AppTheme.titleMedium),
+                    Text(
+                      currencyFormat.format(_taxEstimate!['total']),
+                      style: AppTheme.titleMedium
+                          .copyWith(color: AppTheme.accentRed),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Effective Rate', style: AppTheme.bodyMedium),
+                    Text(
+                      '${((_taxEstimate!['effectiveRate'] ?? 0) * 100).toStringAsFixed(1)}%',
+                      style: AppTheme.bodyMedium,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppTheme.accentBlue.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.info_outline,
+                          color: AppTheme.accentBlue, size: 20),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'Set aside ${currencyFormat.format((_taxEstimate!['total'] ?? 0) / 12)}/month for taxes',
+                          style: AppTheme.labelSmall
+                              .copyWith(color: AppTheme.accentBlue),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 40),
+      ],
+    );
+  }
+
+  // Tab 4: Docs & Contacts (merged Documents + Contacts)
+  Widget _buildDocsAndContactsTab() {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        // All Documents Section
+        _buildSectionHeader('ALL DOCUMENTS'),
+        const SizedBox(height: 12),
+        _buildDocumentsTile(),
+
+        const SizedBox(height: 24),
+
+        // Invoices & Receipts Section
+        _buildSectionHeader('INVOICES & RECEIPTS'),
+        const SizedBox(height: 12),
+        _buildInvoicesReceiptsTile(),
+
+        const SizedBox(height: 24),
+
+        // Event Portfolio Section
+        _buildSectionHeader('EVENT PORTFOLIO'),
+        const SizedBox(height: 12),
+        _buildEventPortfolioTile(),
+
+        const SizedBox(height: 24),
+
+        // Event Contacts Section
+        _buildSectionHeader('EVENT CONTACTS'),
+        const SizedBox(height: 12),
+        _buildContactsDirectoryTile(),
+
+        const SizedBox(height: 40),
+      ],
+    );
   }
 
   Widget _buildProBanner() {
@@ -1317,7 +1717,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         title: Text('Income Goals', style: AppTheme.bodyMedium),
         subtitle: Text('Set and track your earnings targets',
             style: AppTheme.bodyMedium),
-        trailing: const Icon(Icons.chevron_right),
+        trailing: Icon(Icons.chevron_right, color: AppTheme.textMuted),
         onTap: () {
           Navigator.push(
             context,
@@ -1347,7 +1747,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         title: Text('Event Contacts', style: AppTheme.bodyMedium),
         subtitle:
             Text('Vendors, DJs, planners & more', style: AppTheme.bodyMedium),
-        trailing: const Icon(Icons.chevron_right),
+        trailing: Icon(Icons.chevron_right, color: AppTheme.textMuted),
         onTap: () {
           Navigator.push(
             context,
@@ -1377,7 +1777,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         title: Text('Event Portfolio', style: AppTheme.bodyMedium),
         subtitle:
             Text('Past BEO events with photos', style: AppTheme.bodyMedium),
-        trailing: const Icon(Icons.chevron_right),
+        trailing: Icon(Icons.chevron_right, color: AppTheme.textMuted),
         onTap: () {
           Navigator.push(
             context,
@@ -1408,7 +1808,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         title: Text('Invoices & Receipts', style: AppTheme.bodyMedium),
         subtitle: Text('Track income and expenses', style: AppTheme.bodyMedium),
-        trailing: const Icon(Icons.chevron_right),
+        trailing: Icon(Icons.chevron_right, color: AppTheme.textMuted),
         onTap: () {
           Navigator.push(
             context,
@@ -1439,7 +1839,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         title: Text('All Documents', style: AppTheme.bodyMedium),
         subtitle: Text('View all attached files', style: AppTheme.bodyMedium),
-        trailing: const Icon(Icons.chevron_right),
+        trailing: Icon(Icons.chevron_right, color: AppTheme.textMuted),
         onTap: () {
           Navigator.push(
             context,
@@ -1471,7 +1871,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         title: Text('Bulk Edit Shifts', style: AppTheme.bodyMedium),
         subtitle: Text('Filter, select & manage multiple shifts',
             style: AppTheme.bodyMedium),
-        trailing: const Icon(Icons.chevron_right),
+        trailing: Icon(Icons.chevron_right, color: AppTheme.textMuted),
         onTap: () {
           Navigator.push(
             context,
@@ -1482,113 +1882,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           );
         },
-      ),
-    );
-  }
-
-  Widget _buildTaxEstimation() {
-    final shiftProvider = Provider.of<ShiftProvider>(context);
-    final yearlyIncome = shiftProvider.shifts
-        .where((s) => s.date.year == DateTime.now().year)
-        .fold(0.0, (sum, s) => sum + s.totalIncome);
-
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppTheme.cardBackground,
-        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('${DateTime.now().year} ESTIMATED TAXES',
-                  style: AppTheme.labelSmall),
-              DropdownButton<String>(
-                value: _selectedState,
-                dropdownColor: AppTheme.cardBackgroundLight,
-                style: AppTheme.bodyMedium,
-                iconEnabledColor: AppTheme.textPrimary,
-                underline: const SizedBox(),
-                items: _states
-                    .map((s) => DropdownMenuItem(
-                          value: s,
-                          child: Text(s, style: AppTheme.bodyMedium),
-                        ))
-                    .toList(),
-                onChanged: (value) {
-                  if (value != null) {
-                    setState(() => _selectedState = value);
-                    _calculateTax();
-                  }
-                },
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('YTD Income', style: AppTheme.bodyMedium),
-              Text(currencyFormat.format(yearlyIncome),
-                  style: AppTheme.titleMedium),
-            ],
-          ),
-          Divider(height: 24, color: AppTheme.cardBackgroundLight),
-          if (_taxEstimate != null) ...[
-            _buildTaxRow('Federal Tax', _taxEstimate!['federal']),
-            _buildTaxRow('State Tax ($_selectedState)', _taxEstimate!['state']),
-            _buildTaxRow('Social Security', _taxEstimate!['socialSecurity']),
-            _buildTaxRow('Medicare', _taxEstimate!['medicare']),
-            Divider(height: 24, color: AppTheme.cardBackgroundLight),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('Total Estimated Tax', style: AppTheme.titleMedium),
-                Text(
-                  currencyFormat.format(_taxEstimate!['total']),
-                  style:
-                      AppTheme.titleMedium.copyWith(color: AppTheme.accentRed),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('Effective Rate', style: AppTheme.bodyMedium),
-                Text(
-                  '${((_taxEstimate!['effectiveRate'] ?? 0) * 100).toStringAsFixed(1)}%',
-                  style: AppTheme.bodyMedium,
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppTheme.accentBlue.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.info_outline,
-                      color: AppTheme.accentBlue, size: 20),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'Set aside ${currencyFormat.format((_taxEstimate!['total'] ?? 0) / 12)}/month for taxes',
-                      style: AppTheme.labelSmall
-                          .copyWith(color: AppTheme.accentBlue),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ],
       ),
     );
   }
@@ -1636,45 +1929,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         trailing: Icon(
           _isJobsSectionExpanded ? Icons.expand_less : Icons.chevron_right,
-          color: AppTheme.textMuted,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTaxEstimationTile() {
-    final shiftProvider = Provider.of<ShiftProvider>(context);
-    final yearlyIncome = shiftProvider.shifts
-        .where((s) => s.date.year == DateTime.now().year)
-        .fold(0.0, (sum, s) => sum + s.totalIncome);
-
-    return Container(
-      decoration: BoxDecoration(
-        color: AppTheme.cardBackground,
-        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-      ),
-      child: ListTile(
-        onTap: () {
-          setState(() {
-            _isTaxSectionExpanded = !_isTaxSectionExpanded;
-          });
-        },
-        leading: Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: AppTheme.accentRed.withOpacity(0.15),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(Icons.account_balance, color: AppTheme.accentRed),
-        ),
-        title: Text('Tax Estimation', style: AppTheme.bodyMedium),
-        subtitle: Text(
-          'YTD Income: ${currencyFormat.format(yearlyIncome)}',
-          style: AppTheme.labelSmall.copyWith(color: AppTheme.textMuted),
-        ),
-        trailing: Icon(
-          _isTaxSectionExpanded ? Icons.expand_less : Icons.chevron_right,
           color: AppTheme.textMuted,
         ),
       ),

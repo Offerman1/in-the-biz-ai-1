@@ -25,151 +25,36 @@ class _DocumentScannerScreenState extends State<DocumentScannerScreen> {
   final ImagePicker _picker = ImagePicker();
   final List<String> _capturedImages = [];
   bool _isCapturing = false;
-  bool _hasShownSourceSelector = false;
-
-  @override
-  void initState() {
-    super.initState();
-    // Show source selection when screen loads
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!_hasShownSourceSelector) {
-        _hasShownSourceSelector = true;
-        _showImageSourceSelector();
-      }
-    });
-  }
-
-  /// Show bottom sheet to choose between Camera or Gallery
-  void _showImageSourceSelector() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isDismissible: true,
-      builder: (context) => Container(
-        decoration: BoxDecoration(
-          color: AppTheme.cardBackground,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        padding: const EdgeInsets.all(24),
-        child: SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Handle bar
-              Container(
-                margin: const EdgeInsets.only(bottom: 16),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AppTheme.textMuted.withOpacity(0.5),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-
-              Text(
-                'Add ${widget.scanType.displayName}',
-                style: AppTheme.titleMedium.copyWith(
-                  color: AppTheme.textPrimary,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Choose how to add your document',
-                style: AppTheme.bodyMedium.copyWith(
-                  color: AppTheme.textSecondary,
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // Take Photo option
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    _captureImage();
-                  },
-                  icon: const Icon(Icons.camera_alt, size: 24),
-                  label: const Text('Take Photo'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primaryGreen,
-                    foregroundColor: Colors.black,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    textStyle: AppTheme.bodyLarge.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              // Upload from Gallery option
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    _pickMultipleImages();
-                  },
-                  icon: const Icon(Icons.photo_library, size: 24),
-                  label: const Text('Upload from Gallery'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppTheme.primaryGreen,
-                    side: BorderSide(color: AppTheme.primaryGreen),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    textStyle: AppTheme.bodyLarge.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-
-              // Helpful hint
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: Text(
-                  '💡 Tip: You can upload multiple pages at once from your gallery',
-                  style: AppTheme.bodySmall.copyWith(
-                    color: AppTheme.textMuted,
-                    fontStyle: FontStyle.italic,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    ).then((_) {
-      // If user dismisses without selecting anything and no images captured, go back
-      if (_capturedImages.isEmpty && mounted) {
-        Navigator.pop(context);
-      }
-    });
-  }
 
   /// Pick multiple images from gallery (like attaching to email)
   Future<void> _pickMultipleImages() async {
-    if (_isCapturing) return;
+    print('🖼️ _pickMultipleImages called');
+    if (_isCapturing) {
+      print('🖼️ Already capturing, returning');
+      return;
+    }
 
     setState(() => _isCapturing = true);
 
     try {
+      print('🖼️ Opening image picker...');
       final List<XFile> images = await _picker.pickMultiImage(
         imageQuality: 85,
         maxWidth: 2000,
         maxHeight: 2000,
       );
 
+      print('🖼️ Picker returned ${images.length} images');
+
       if (images.isNotEmpty) {
         setState(() {
           for (final image in images) {
             _capturedImages.add(image.path);
+            print('🖼️ Added image: ${image.path}');
           }
         });
+
+        print('🖼️ Total images now: ${_capturedImages.length}');
 
         // Show success message
         if (mounted) {
@@ -181,14 +66,21 @@ class _DocumentScannerScreenState extends State<DocumentScannerScreen> {
               duration: const Duration(seconds: 2),
             ),
           );
+
+          // Show "add more or finish" prompt
+          print('🖼️ About to show add more prompt...');
+          await Future.delayed(const Duration(milliseconds: 300));
+          _showAddMorePrompt();
         }
       } else {
+        print('🖼️ No images selected');
         // User cancelled - if no images captured, go back
         if (_capturedImages.isEmpty && mounted) {
           Navigator.pop(context);
         }
       }
     } catch (e) {
+      print('🖼️ ERROR: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -251,6 +143,9 @@ class _DocumentScannerScreenState extends State<DocumentScannerScreen> {
 
   /// Show prompt to add more pages (camera or gallery)
   void _showAddMorePrompt() {
+    print('📋 _showAddMorePrompt called');
+    print('📋 Current images count: ${_capturedImages.length}');
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -334,6 +229,7 @@ class _DocumentScannerScreenState extends State<DocumentScannerScreen> {
                 width: double.infinity,
                 child: TextButton.icon(
                   onPressed: () {
+                    print('✅ Finish button tapped!');
                     Navigator.pop(context);
                     _finishScanning();
                   },
@@ -355,17 +251,27 @@ class _DocumentScannerScreenState extends State<DocumentScannerScreen> {
   }
 
   void _finishScanning() {
+    print('🔍 _finishScanning called');
+    print('🔍 _capturedImages.length: ${_capturedImages.length}');
+
     if (_capturedImages.isEmpty) {
+      print('🔍 No images, popping');
       Navigator.pop(context);
       return;
     }
+
+    print('🔍 Creating session with ${_capturedImages.length} images');
+    print('🔍 Scan type: ${widget.scanType}');
+    print('🔍 Image paths: $_capturedImages');
 
     final session = DocumentScanSession(
       scanType: widget.scanType,
       imagePaths: _capturedImages,
     );
 
+    print('🔍 Calling onScanComplete callback...');
     widget.onScanComplete(session);
+    print('🔍 Callback called, now popping screen');
     Navigator.pop(context); // Return to previous screen
   }
 

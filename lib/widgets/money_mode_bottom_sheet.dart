@@ -81,6 +81,12 @@ class MoneyModeBottomSheet extends StatelessWidget {
               icon: Icons.schedule,
               isSelected: currentMode == MoneyDisplayMode.hourlyOnly.name,
             ),
+            _buildModeOption(
+              context,
+              mode: MoneyDisplayMode.netEarnings,
+              icon: Icons.savings,
+              isSelected: currentMode == MoneyDisplayMode.netEarnings.name,
+            ),
 
             const SizedBox(height: 20),
           ],

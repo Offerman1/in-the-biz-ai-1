@@ -382,6 +382,23 @@ class DatabaseService {
     return (response as List).map((e) => Shift.fromSupabase(e)).toList();
   }
 
+  /// Get shifts for a specific date
+  Future<List<Shift>> getShiftsForDate(DateTime date) async {
+    final userId = _supabase.auth.currentUser?.id;
+    if (userId == null) return [];
+
+    final dateStr = _formatDateLocal(date);
+
+    final response = await _supabase
+        .from('shifts')
+        .select()
+        .eq('user_id', userId)
+        .eq('date', dateStr)
+        .order('created_at', ascending: false);
+
+    return (response as List).map((e) => Shift.fromSupabase(e)).toList();
+  }
+
   // ============================================
   // PHOTOS
   // ============================================

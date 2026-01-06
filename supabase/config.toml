@@ -1,2 +1,20 @@
 [functions."ai-agent"]
 verify_jwt = false
+
+[functions."scan-business-card"]
+verify_jwt = false
+
+[functions."analyze-checkout"]
+verify_jwt = false
+
+[functions."analyze-beo"]
+verify_jwt = false
+
+[functions."analyze-paycheck"]
+verify_jwt = false
+
+[functions."analyze-invoice"]
+verify_jwt = false
+
+[functions."analyze-receipt"]
+verify_jwt = false

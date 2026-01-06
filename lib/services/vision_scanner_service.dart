@@ -98,6 +98,7 @@ class VisionScannerService {
     List<String> imagePaths,
     String userId, {
     String? shiftId,
+    bool forceNew = false,
   }) async {
     final base64Images = await getBase64Images(imagePaths);
 
@@ -107,6 +108,7 @@ class VisionScannerService {
         'images': base64Images,
         'userId': userId,
         'shiftId': shiftId,
+        'forceNew': forceNew,
       },
     );
 

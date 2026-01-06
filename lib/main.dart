@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:in_the_biz_ai/screens/dashboard_screen.dart';
@@ -59,6 +60,13 @@ void main() async {
     await SubscriptionService().initialize();
   }
 
+  // Configure system UI for edge-to-edge mode (Android)
+  if (!kIsWeb) {
+    SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.edgeToEdge,
+    );
+  }
+
   // Run database migrations
   await runMigrations();
 
@@ -84,6 +92,13 @@ class InTheBizApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
+        // Update system UI whenever theme changes (non-web only)
+        if (!kIsWeb) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            themeProvider.updateSystemUI();
+          });
+        }
+
         return MaterialApp(
           title: 'In The Biz AI',
           debugShowCheckedModeBanner: false,

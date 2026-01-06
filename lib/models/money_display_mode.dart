@@ -11,6 +11,9 @@ enum MoneyDisplayMode {
 
   /// Hourly Only: Base hourly pay only
   hourlyOnly,
+
+  /// Net Earnings: Take home pay minus custom field deductions (fuel, tolls, etc.)
+  netEarnings,
 }
 
 extension MoneyDisplayModeExtension on MoneyDisplayMode {
@@ -24,6 +27,8 @@ extension MoneyDisplayModeExtension on MoneyDisplayMode {
         return 'Tips Only';
       case MoneyDisplayMode.hourlyOnly:
         return 'Hourly Only';
+      case MoneyDisplayMode.netEarnings:
+        return 'Net Earnings';
     }
   }
 
@@ -37,6 +42,8 @@ extension MoneyDisplayModeExtension on MoneyDisplayMode {
         return 'Tips - Tip Outs';
       case MoneyDisplayMode.hourlyOnly:
         return 'Base Pay Only';
+      case MoneyDisplayMode.netEarnings:
+        return 'After Deductions (fuel, tolls, etc.)';
     }
   }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../models/shift.dart';
@@ -52,66 +53,76 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isGradient = themeProvider.backgroundMode == 'gradient';
+    final isLightBg = themeProvider.isLightBackground;
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: Stack(
-        children: [
-          // Background layers (respects SafeArea to avoid covering status bar icons)
-          SafeArea(
-            bottom: false,
-            child: RepaintBoundary(
-              child: ParticleBackground(
-                enabled: themeProvider.particleEffects,
-                particleColor: AppTheme.primaryGreen,
-                child: AnimatedGradientBackground(
-                  enabled: themeProvider.animatedGradients,
-                  baseColor: AppTheme.darkBackground,
-                  isGradient: isGradient,
-                  gradientColor1: themeProvider.gradientColor1,
-                  gradientColor2: themeProvider.gradientColor2,
-                  child: Container(), // Just the background
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: isLightBg ? Brightness.dark : Brightness.light,
+        statusBarBrightness: isLightBg ? Brightness.light : Brightness.dark,
+        systemNavigationBarColor:
+            isLightBg ? AppTheme.darkBackground : Colors.black,
+        systemNavigationBarIconBrightness:
+            isLightBg ? Brightness.dark : Brightness.light,
+      ),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Stack(
+          children: [
+            // Background layers (extends under status bar for edge-to-edge)
+            Positioned.fill(
+              child: RepaintBoundary(
+                child: ParticleBackground(
+                  enabled: themeProvider.particleEffects,
+                  particleColor: AppTheme.primaryGreen,
+                  child: AnimatedGradientBackground(
+                    enabled: themeProvider.animatedGradients,
+                    baseColor: AppTheme.darkBackground,
+                    isGradient: isGradient,
+                    gradientColor1: themeProvider.gradientColor1,
+                    gradientColor2: themeProvider.gradientColor2,
+                    child: Container(), // Just the background
+                  ),
                 ),
               ),
             ),
-          ),
-          // Content layer (with SafeArea)
-          SafeArea(
-            bottom: false,
-            child: RepaintBoundary(
-              child: IndexedStack(
-                index: _selectedIndex,
-                children: _screens,
+            // Content layer (with SafeArea to avoid status bar)
+            SafeArea(
+              child: RepaintBoundary(
+                child: IndexedStack(
+                  index: _selectedIndex,
+                  children: _screens,
+                ),
               ),
-            ),
-          ),
-        ],
-      ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: AppTheme.navBarBackground,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.3),
-              blurRadius: 10,
-              offset: const Offset(0, -2),
             ),
           ],
         ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildNavItem(0, Icons.home_outlined, Icons.home, 'Home'),
-                _buildNavItem(1, Icons.calendar_today_outlined,
-                    Icons.calendar_today, 'Calendar'),
-                _buildNavItem(
-                    2, Icons.auto_awesome_outlined, Icons.auto_awesome, 'Chat'),
-                _buildNavItem(
-                    3, Icons.bar_chart_outlined, Icons.bar_chart, 'Stats'),
-              ],
+        bottomNavigationBar: Container(
+          decoration: BoxDecoration(
+            color: AppTheme.navBarBackground,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.3),
+                blurRadius: 10,
+                offset: const Offset(0, -2),
+              ),
+            ],
+          ),
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _buildNavItem(0, Icons.home_outlined, Icons.home, 'Home'),
+                  _buildNavItem(1, Icons.calendar_today_outlined,
+                      Icons.calendar_today, 'Calendar'),
+                  _buildNavItem(2, Icons.auto_awesome_outlined,
+                      Icons.auto_awesome, 'Chat'),
+                  _buildNavItem(
+                      3, Icons.bar_chart_outlined, Icons.bar_chart, 'Stats'),
+                ],
+              ),
             ),
           ),
         ),

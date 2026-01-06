@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:gal/gal.dart';
 import 'package:provider/provider.dart';
-import '../services/api_service.dart';
 import '../services/ai_agent_service.dart';
 import '../services/ai_actions_service.dart';
 import '../services/database_service.dart';
+import '../services/vision_scanner_service.dart';
 import '../theme/app_theme.dart';
-import '../models/shift.dart';
 import '../providers/shift_provider.dart';
 import '../widgets/animated_logo.dart';
+import '../widgets/scan_type_menu.dart';
+import '../models/vision_scan.dart';
+import 'document_scanner_screen.dart';
+import 'scan_verification_screen.dart';
 import 'package:intl/intl.dart';
 
 class AssistantScreen extends StatefulWidget {
@@ -26,9 +27,9 @@ class _AssistantScreenState extends State<AssistantScreen> {
   bool _isLoading = false;
   String _loadingMessage = '';
   final ScrollController _scrollController = ScrollController();
-  final ImagePicker _picker = ImagePicker();
   final AIActionsService _aiActions = AIActionsService();
   final DatabaseService _db = DatabaseService();
+  final VisionScannerService _visionScanner = VisionScannerService();
   String _userContext = '';
 
   @override
@@ -244,703 +245,141 @@ class _AssistantScreenState extends State<AssistantScreen> {
     });
   }
 
-  void _showAttachmentOptions() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppTheme.cardBackground,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AppTheme.textMuted,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Text('Add Attachment', style: AppTheme.titleMedium),
-              const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _buildAttachmentOption(
-                    icon: Icons.camera_alt,
-                    label: 'Camera',
-                    color: AppTheme.primaryGreen,
-                    onTap: () {
-                      Navigator.pop(context);
-                      _takePhoto();
-                    },
-                  ),
-                  _buildAttachmentOption(
-                    icon: Icons.photo_library,
-                    label: 'Gallery',
-                    color: AppTheme.accentBlue,
-                    onTap: () {
-                      Navigator.pop(context);
-                      _pickFromGallery();
-                    },
-                  ),
-                  _buildAttachmentOption(
-                    icon: Icons.videocam,
-                    label: 'Video',
-                    color: AppTheme.accentPurple,
-                    onTap: () {
-                      Navigator.pop(context);
-                      _recordVideo();
-                    },
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-            ],
-          ),
+  // ============================================================================
+  // UNIFIED AI VISION SCANNER SYSTEM (Same as Add Shift Screen)
+  // ============================================================================
+
+  /// Show the scan type menu (same menu as Add Shift screen)
+  void _showScanMenu() {
+    showScanTypeMenu(context, _handleScanTypeSelected);
+  }
+
+  /// Handle scan type selection - navigate to document scanner
+  void _handleScanTypeSelected(ScanType scanType) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DocumentScannerScreen(
+          scanType: scanType,
+          onScanComplete: _handleScanComplete,
         ),
       ),
     );
   }
 
-  Widget _buildAttachmentOption({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        children: [
-          Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.15),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: color, size: 28),
-          ),
-          const SizedBox(height: 8),
-          Text(label, style: AppTheme.labelSmall),
-        ],
-      ),
-    );
-  }
+  /// Handle completed scan session - process images with AI
+  Future<void> _handleScanComplete(DocumentScanSession session) async {
+    if (!mounted) return;
 
-  Future<void> _takePhoto() async {
-    final XFile? photo = await _picker.pickImage(source: ImageSource.camera);
-    if (photo != null) {
-      // Save to phone gallery immediately
-      final bytes = await photo.readAsBytes();
-      await Gal.putImageBytes(bytes);
-      _showPhotoTypeDialog(photo);
-    }
-  }
-
-  Future<void> _pickFromGallery() async {
-    final XFile? photo = await _picker.pickImage(source: ImageSource.gallery);
-    if (photo != null) {
-      _showPhotoTypeDialog(photo);
-    }
-  }
-
-  Future<void> _recordVideo() async {
-    final XFile? video = await _picker.pickVideo(source: ImageSource.camera);
-    if (video != null) {
-      // Save to phone gallery immediately
-      await Gal.putVideo(video.path);
-      setState(() {
-        _messages.add(ChatMessage(
-          text: "📹 Video saved to gallery",
-          isUser: true,
-          timestamp: DateTime.now(),
-        ));
-        _messages.add(ChatMessage(
-          text:
-              "Got it! I saved the video. Videos aren't analyzed by AI, but they're attached to your shift records.",
-          isUser: false,
-          timestamp: DateTime.now(),
-        ));
-      });
-      _scrollToBottom();
-    }
-  }
-
-  void _showPhotoTypeDialog(XFile photo) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.cardBackground,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-        ),
-        title: Row(
-          children: [
-            Icon(Icons.image, color: AppTheme.primaryGreen),
-            const SizedBox(width: 12),
-            const Text('What is this image?'),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildPhotoOption(
-              title: 'Scan for Tips/Income',
-              subtitle: 'Receipt, BEO, or Paycheck',
-              icon: Icons.document_scanner,
-              color: AppTheme.primaryGreen,
-              onTap: () {
-                Navigator.pop(context);
-                _analyzeImage(photo);
-              },
-            ),
-            const SizedBox(height: 12),
-            _buildPhotoOption(
-              title: 'Add to Gallery',
-              subtitle: 'Event photos, memories',
-              icon: Icons.photo_library,
-              color: AppTheme.accentBlue,
-              onTap: () {
-                Navigator.pop(context);
-                _saveToGallery(photo);
-              },
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancel', style: TextStyle(color: AppTheme.textMuted)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPhotoOption({
-    required String title,
-    required String subtitle,
-    required IconData icon,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-          border: Border.all(color: color.withOpacity(0.3)),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
-              ),
-              child: Icon(icon, color: color),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: AppTheme.titleMedium),
-                  Text(subtitle, style: AppTheme.labelSmall),
-                ],
-              ),
-            ),
-            Icon(Icons.arrow_forward_ios, size: 16, color: AppTheme.textMuted),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _analyzeImage(XFile photo) async {
+    // Add message to chat showing scan is processing
     setState(() {
       _messages.add(ChatMessage(
-        text: "📷 Analyzing image...",
+        text: "📷 Scanning ${session.scanType.displayName}...",
         isUser: true,
         timestamp: DateTime.now(),
-        imagePath: photo.path,
       ));
       _isLoading = true;
+      _loadingMessage =
+          'Processing ${session.pageCount} page${session.pageCount == 1 ? '' : 's'} with AI...';
     });
     _scrollToBottom();
 
     try {
-      final bytes = await photo.readAsBytes();
+      final userId = _db.supabase.auth.currentUser!.id;
+      Map<String, dynamic> result;
 
-      final result = await ApiService.analyzeImage(bytes);
-
-      if (mounted) {
-        _showReviewScreen(result, photo.path);
+      // Route to appropriate handler based on scan type
+      switch (session.scanType) {
+        case ScanType.beo:
+          result = await _visionScanner.analyzeBEO(session.imagePaths, userId);
+          break;
+        case ScanType.checkout:
+          result =
+              await _visionScanner.analyzeCheckout(session.imagePaths, userId);
+          break;
+        case ScanType.businessCard:
+          result =
+              await _visionScanner.scanBusinessCard(session.imagePaths, userId);
+          break;
+        case ScanType.paycheck:
+          result =
+              await _visionScanner.analyzePaycheck(session.imagePaths, userId);
+          break;
+        case ScanType.invoice:
+          result =
+              await _visionScanner.analyzeInvoice(session.imagePaths, userId);
+          break;
+        case ScanType.receipt:
+          result =
+              await _visionScanner.analyzeReceipt(session.imagePaths, userId);
+          break;
       }
-    } catch (e) {
+
+      if (!mounted) return;
+
       setState(() {
-        _messages.add(ChatMessage(
-          text:
-              "Sorry, I couldn't analyze that image. Please try again with a clearer photo.",
-          isUser: false,
-          timestamp: DateTime.now(),
-        ));
         _isLoading = false;
+        _loadingMessage = '';
       });
-    }
-    _scrollToBottom();
-  }
 
-  void _showReviewScreen(Map<String, dynamic> data, String imagePath) {
-    setState(() => _isLoading = false);
-
-    // Create editable controllers with extracted data
-    final dateController = TextEditingController(
-        text: data['date']?.toString() ??
-            DateFormat('yyyy-MM-dd').format(DateTime.now()));
-    final cashTipsController =
-        TextEditingController(text: data['cashTips']?.toString() ?? '0.00');
-    final creditTipsController =
-        TextEditingController(text: data['creditTips']?.toString() ?? '0.00');
-    final hourlyRateController =
-        TextEditingController(text: data['hourlyRate']?.toString() ?? '0.00');
-    final hoursWorkedController =
-        TextEditingController(text: data['hoursWorked']?.toString() ?? '0.0');
-    final eventNameController =
-        TextEditingController(text: data['eventName']?.toString() ?? '');
-    final notesController =
-        TextEditingController(text: data['notes']?.toString() ?? '');
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: AppTheme.cardBackground,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => StatefulBuilder(
-        builder: (context, setModalState) => DraggableScrollableSheet(
-          initialChildSize: 0.9,
-          minChildSize: 0.5,
-          maxChildSize: 0.95,
-          expand: false,
-          builder: (context, scrollController) => SingleChildScrollView(
-            controller: scrollController,
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Handle bar
-                Center(
-                  child: Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: AppTheme.textMuted,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-
-                // Header
-                Row(
-                  children: [
-                    Icon(Icons.auto_fix_high,
-                        color: AppTheme.primaryGreen, size: 28),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('AI Extracted Data',
-                              style: AppTheme.headlineSmall),
-                          Text('Review and edit before saving',
-                              style: AppTheme.labelSmall),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-
-                // Confidence indicator
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppTheme.primaryGreen.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                        color: AppTheme.primaryGreen.withOpacity(0.3)),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.check_circle,
-                          color: AppTheme.primaryGreen, size: 20),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Data extracted successfully! Please verify.',
-                        style: AppTheme.labelSmall
-                            .copyWith(color: AppTheme.primaryGreen),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 24),
-
-                // Event Name (if detected)
-                if (data['eventName'] != null ||
-                    eventNameController.text.isNotEmpty) ...[
-                  _buildEditableReviewField(
-                    label: 'Event / Party Name',
-                    controller: eventNameController,
-                    icon: Icons.celebration,
-                    color: AppTheme.accentPurple,
-                  ),
-                  const SizedBox(height: 16),
-                ],
-
-                // Date
-                _buildEditableReviewField(
-                  label: 'Date',
-                  controller: dateController,
-                  icon: Icons.calendar_today,
-                  color: AppTheme.accentBlue,
-                  hint: 'YYYY-MM-DD',
-                ),
-                const SizedBox(height: 16),
-
-                // Tips Row
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildEditableReviewField(
-                        label: 'Cash Tips',
-                        controller: cashTipsController,
-                        icon: Icons.money,
-                        color: AppTheme.primaryGreen,
-                        prefix: '\$',
-                        keyboardType: TextInputType.number,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildEditableReviewField(
-                        label: 'Credit Tips',
-                        controller: creditTipsController,
-                        icon: Icons.credit_card,
-                        color: AppTheme.accentBlue,
-                        prefix: '\$',
-                        keyboardType: TextInputType.number,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-
-                // Hours Row
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildEditableReviewField(
-                        label: 'Hourly Rate',
-                        controller: hourlyRateController,
-                        icon: Icons.attach_money,
-                        color: AppTheme.accentYellow,
-                        prefix: '\$',
-                        keyboardType: TextInputType.number,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildEditableReviewField(
-                        label: 'Hours Worked',
-                        controller: hoursWorkedController,
-                        icon: Icons.access_time,
-                        color: AppTheme.accentYellow,
-                        suffix: 'hrs',
-                        keyboardType: TextInputType.number,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-
-                // Notes
-                _buildEditableReviewField(
-                  label: 'Notes',
-                  controller: notesController,
-                  icon: Icons.notes,
-                  color: AppTheme.textMuted,
-                  maxLines: 3,
-                ),
-                const SizedBox(height: 24),
-
-                // Total Preview
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    gradient: AppTheme.greenGradient,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Estimated Total',
-                        style: TextStyle(
-                          color: Colors.black87,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      Text(
-                        '\$${_calculateTotal(cashTipsController.text, creditTipsController.text, hourlyRateController.text, hoursWorkedController.text).toStringAsFixed(2)}',
-                        style: const TextStyle(
-                          color: Colors.black,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 24),
-
-                // Action Buttons
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () {
-                          Navigator.pop(context);
-                          setState(() {
-                            _messages.add(ChatMessage(
-                              text:
-                                  "No problem! Discarded the scan. You can try again or enter manually.",
-                              isUser: false,
-                              timestamp: DateTime.now(),
-                            ));
-                          });
-                        },
-                        icon: const Icon(Icons.close),
-                        label: const Text('Discard'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: AppTheme.textSecondary,
-                          side: BorderSide(color: AppTheme.cardBackgroundLight),
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      flex: 2,
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          Navigator.pop(context);
-                          _saveShiftFromReview(
-                            date: dateController.text,
-                            cashTips: cashTipsController.text,
-                            creditTips: creditTipsController.text,
-                            hourlyRate: hourlyRateController.text,
-                            hoursWorked: hoursWorkedController.text,
-                            eventName: eventNameController.text,
-                            notes: notesController.text,
-                          );
-                        },
-                        icon: const Icon(Icons.check),
-                        label: const Text('Save Shift'),
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 40),
-              ],
-            ),
+      // Navigate to verification screen
+      final confirmed = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ScanVerificationScreen(
+            scanType: session.scanType,
+            extractedData: result['data'] as Map<String, dynamic>,
+            confidenceScores:
+                result['data']['ai_confidence_scores'] as Map<String, dynamic>?,
+            onConfirm: (data) async {
+              // Show success message in chat
+              Navigator.pop(context, true);
+            },
           ),
         ),
-      ),
-    );
-  }
-
-  double _calculateTotal(
-      String cash, String credit, String rate, String hours) {
-    final cashVal = double.tryParse(cash) ?? 0;
-    final creditVal = double.tryParse(credit) ?? 0;
-    final rateVal = double.tryParse(rate) ?? 0;
-    final hoursVal = double.tryParse(hours) ?? 0;
-    return cashVal + creditVal + (rateVal * hoursVal);
-  }
-
-  Widget _buildEditableReviewField({
-    required String label,
-    required TextEditingController controller,
-    required IconData icon,
-    required Color color,
-    String? hint,
-    String? prefix,
-    String? suffix,
-    TextInputType keyboardType = TextInputType.text,
-    int maxLines = 1,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(icon, size: 16, color: color),
-            const SizedBox(width: 6),
-            Text(label, style: AppTheme.labelSmall.copyWith(color: color)),
-          ],
-        ),
-        const SizedBox(height: 6),
-        TextField(
-          controller: controller,
-          keyboardType: keyboardType,
-          maxLines: maxLines,
-          style: AppTheme.bodyLarge,
-          decoration: InputDecoration(
-            hintText: hint,
-            prefixText: prefix,
-            suffixText: suffix,
-            filled: true,
-            fillColor: AppTheme.darkBackground,
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide.none,
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: color, width: 2),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  /// Save shift from review screen with edited values
-  void _saveShiftFromReview({
-    required String date,
-    required String cashTips,
-    required String creditTips,
-    required String hourlyRate,
-    required String hoursWorked,
-    required String eventName,
-    required String notes,
-  }) async {
-    try {
-      final cashVal = _parseDouble(cashTips);
-      final creditVal = _parseDouble(creditTips);
-      final rateVal = _parseDouble(hourlyRate);
-      final hoursVal = _parseDouble(hoursWorked);
-      final total = cashVal + creditVal + (rateVal * hoursVal);
-
-      final shift = Shift(
-        id: '', // Will be generated
-        date: _parseDate(date) ?? DateTime.now(),
-        cashTips: cashVal,
-        creditTips: creditVal,
-        hourlyRate: rateVal,
-        hoursWorked: hoursVal,
-        eventName: eventName.isNotEmpty ? eventName : null,
-        notes: notes.isNotEmpty ? notes : null,
       );
 
-      final provider = Provider.of<ShiftProvider>(context, listen: false);
-      final savedShift = await provider.addShift(shift);
-
-      if (savedShift != null) {
+      if (confirmed == true && mounted) {
         setState(() {
           _messages.add(ChatMessage(
-            text: "✅ Shift saved successfully!\n\n"
-                "${eventName.isNotEmpty ? '🎉 Event: $eventName\n' : ''}"
-                "💵 Cash Tips: \$${cashVal.toStringAsFixed(2)}\n"
-                "💳 Credit Tips: \$${creditVal.toStringAsFixed(2)}\n"
-                "⏱️ Hours: ${hoursVal.toStringAsFixed(1)} @ \$${rateVal.toStringAsFixed(2)}/hr\n"
-                "━━━━━━━━━━━━━━━━━━━\n"
-                "💰 Total: \$${total.toStringAsFixed(2)}\n\n"
-                "View it in your Calendar!",
+            text:
+                "✅ ${session.scanType.displayName} scanned successfully! The data has been saved.",
             isUser: false,
             timestamp: DateTime.now(),
           ));
         });
-      } else {
-        throw Exception('Failed to save shift');
+        await _saveChatMessage(
+          "✅ ${session.scanType.displayName} scanned successfully! The data has been saved.",
+          false,
+        );
+
+        // Refresh shifts
+        final shiftProvider =
+            Provider.of<ShiftProvider>(context, listen: false);
+        await shiftProvider.loadShifts();
+      } else if (mounted) {
+        setState(() {
+          _messages.add(ChatMessage(
+            text: "Scan cancelled. You can try again anytime!",
+            isUser: false,
+            timestamp: DateTime.now(),
+          ));
+        });
       }
     } catch (e) {
-      setState(() {
-        _messages.add(ChatMessage(
-          text:
-              "❌ Failed to save shift: ${e.toString()}\n\nPlease try again or enter manually.",
-          isUser: false,
-          timestamp: DateTime.now(),
-        ));
-      });
-    }
-    _scrollToBottom();
-  }
-
-  // Helper to parse date from various formats
-  DateTime? _parseDate(dynamic dateStr) {
-    if (dateStr == null) return null;
-    if (dateStr is DateTime) return dateStr;
-
-    try {
-      // Try parsing common formats
-      if (dateStr.toString().toLowerCase() == 'today') {
-        return DateTime.now();
+      if (mounted) {
+        setState(() {
+          _messages.add(ChatMessage(
+            text:
+                "❌ Scan failed: ${e.toString()}\n\nPlease try again with a clearer photo.",
+            isUser: false,
+            timestamp: DateTime.now(),
+          ));
+          _isLoading = false;
+          _loadingMessage = '';
+        });
       }
-      return DateTime.parse(dateStr.toString());
-    } catch (e) {
-      return null;
     }
-  }
-
-  // Helper to parse numbers safely
-  double _parseDouble(dynamic value) {
-    if (value == null) return 0.0;
-    if (value is double) return value;
-    if (value is int) return value.toDouble();
-
-    try {
-      // Remove currency symbols and parse
-      final cleaned = value.toString().replaceAll(RegExp(r'[^\d.]'), '');
-      return double.parse(cleaned);
-    } catch (e) {
-      return 0.0;
-    }
-  }
-
-  void _saveToGallery(XFile photo) {
-    setState(() {
-      _messages.add(ChatMessage(
-        text: "📸 Photo added to gallery",
-        isUser: true,
-        timestamp: DateTime.now(),
-        imagePath: photo.path,
-      ));
-      _messages.add(ChatMessage(
-        text: "Photo saved! You can view it in your shift details.",
-        isUser: false,
-        timestamp: DateTime.now(),
-      ));
-    });
     _scrollToBottom();
   }
 
@@ -1095,44 +534,30 @@ class _AssistantScreenState extends State<AssistantScreen> {
               child: SafeArea(
                 child: Row(
                   children: [
+                    // Scan button - same as Add Shift screen
                     GestureDetector(
-                      onTap: _showAttachmentOptions,
+                      onTap: _showScanMenu,
                       child: Container(
-                        width: 40,
-                        height: 40,
+                        width: 44,
+                        height: 44,
                         decoration: BoxDecoration(
-                          color: AppTheme.cardBackgroundLight.withOpacity(0.9),
+                          gradient: AppTheme.greenGradient,
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
+                              color: AppTheme.primaryGreen.withOpacity(0.3),
                               blurRadius: 8,
                               offset: const Offset(0, 2),
                             ),
                           ],
                         ),
-                        child: Icon(Icons.add, color: AppTheme.textSecondary),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    GestureDetector(
-                      onTap: _takePhoto,
-                      child: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: AppTheme.cardBackgroundLight.withOpacity(0.9),
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
+                        child: Icon(
+                          Icons.auto_awesome,
+                          color: AppTheme.primaryGreen.computeLuminance() > 0.5
+                              ? Colors.black87
+                              : Colors.white,
+                          size: 22,
                         ),
-                        child: Icon(Icons.camera_alt,
-                            color: AppTheme.textSecondary),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -1155,8 +580,7 @@ class _AssistantScreenState extends State<AssistantScreen> {
                           maxLines: null,
                           minLines: 1,
                           decoration: InputDecoration(
-                            hintText:
-                                'Ask me about earnings, goals, or scan a photo...',
+                            hintText: 'Ask me about earnings, goals, shifts...',
                             hintStyle: AppTheme.bodyMedium.copyWith(
                               color: AppTheme.textMuted.withOpacity(0.5),
                             ),
@@ -1196,7 +620,11 @@ class _AssistantScreenState extends State<AssistantScreen> {
                         ),
                         child: Icon(
                           Icons.send,
-                          color: _isLoading ? AppTheme.textMuted : Colors.black,
+                          color: _isLoading
+                              ? AppTheme.textMuted
+                              : (AppTheme.primaryGreen.computeLuminance() > 0.5
+                                  ? Colors.black87
+                                  : Colors.white),
                           size: 20,
                         ),
                       ),
@@ -1272,7 +700,11 @@ class _AssistantScreenState extends State<AssistantScreen> {
               child: Text(
                 message.text,
                 style: TextStyle(
-                  color: message.isUser ? Colors.black : AppTheme.textPrimary,
+                  color: message.isUser
+                      ? (AppTheme.primaryGreen.computeLuminance() > 0.5
+                          ? Colors.black87
+                          : Colors.white)
+                      : AppTheme.textPrimary,
                   fontSize: 15,
                 ),
               ),

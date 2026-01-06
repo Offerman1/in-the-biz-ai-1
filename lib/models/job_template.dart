@@ -1,3 +1,5 @@
+import 'field_definition.dart';
+
 /// Defines which fields should be visible/hidden for a specific job's shift entry
 class JobTemplate {
   // Pay structure
@@ -115,6 +117,9 @@ class JobTemplate {
   // Restaurant additional
   final bool showTableSection; // Which station/section
 
+  // Custom fields added by user
+  final List<CustomField> customFields;
+
   JobTemplate({
     this.payStructure = PayStructure.hourly,
     this.flatRateAmount,
@@ -206,6 +211,8 @@ class JobTemplate {
     this.showBillableHours = false,
     // Restaurant additional
     this.showTableSection = false,
+    // Custom fields
+    this.customFields = const [],
   });
 
   /// Create from Supabase JSONB field
@@ -303,6 +310,11 @@ class JobTemplate {
       showBillableHours: json['show_billable_hours'] ?? false,
       // Restaurant additional
       showTableSection: json['show_table_section'] ?? false,
+      // Custom fields
+      customFields: (json['custom_fields'] as List<dynamic>?)
+              ?.map((e) => CustomField.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
     );
   }
 
@@ -398,6 +410,8 @@ class JobTemplate {
       'show_billable_hours': showBillableHours,
       // Restaurant additional
       'show_table_section': showTableSection,
+      // Custom fields
+      'custom_fields': customFields.map((f) => f.toJson()).toList(),
     };
   }
 
@@ -746,6 +760,8 @@ class JobTemplate {
     bool? showBillableHours,
     // Restaurant additional
     bool? showTableSection,
+    // Custom fields
+    List<CustomField>? customFields,
   }) {
     return JobTemplate(
       payStructure: payStructure ?? this.payStructure,
@@ -841,6 +857,8 @@ class JobTemplate {
       showBillableHours: showBillableHours ?? this.showBillableHours,
       // Restaurant additional
       showTableSection: showTableSection ?? this.showTableSection,
+      // Custom fields
+      customFields: customFields ?? this.customFields,
     );
   }
 }

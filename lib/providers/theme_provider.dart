@@ -80,16 +80,29 @@ class ThemeProvider extends ChangeNotifier {
 
   // Update system status bar based on background
   void updateSystemUI() {
+    // First, ensure the system UI is visible (edge-to-edge mode)
+    SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.edgeToEdge,
+    );
+
+    // Then set the overlay style
     SystemChrome.setSystemUIOverlayStyle(
       SystemUiOverlayStyle(
-        // Use semi-transparent background on light themes so icons are visible
-        statusBarColor: isLightBackground
-            ? Colors.white.withOpacity(0.9)
-            : Colors.transparent,
+        // Transparent status bar for edge-to-edge display
+        statusBarColor: Colors.transparent,
+        // Dark icons on light backgrounds, light icons on dark backgrounds
         statusBarIconBrightness:
             isLightBackground ? Brightness.dark : Brightness.light,
+        // For iOS - opposite of icon brightness
         statusBarBrightness:
             isLightBackground ? Brightness.light : Brightness.dark,
+        // Also update navigation bar for Android
+        systemNavigationBarColor: isLightBackground
+            ? darkBackground // Use the current background color
+            : Colors.black,
+        systemNavigationBarIconBrightness:
+            isLightBackground ? Brightness.dark : Brightness.light,
+        systemNavigationBarDividerColor: Colors.transparent,
       ),
     );
   }

@@ -39,6 +39,8 @@ class Shift {
   final double? additionalTipout; // Extra cash given (e.g., $20 to dishwasher)
   final String? additionalTipoutNote; // Who received it (e.g., "Dishwasher")
   final double? eventCost; // Total cost of event (DJs, event planners)
+  final String? section; // Section/area worked (Main Dining, Bar, Patio, etc.)
+  final String? checkoutId; // Links to server_checkouts table
 
   // Future shift fields (NEW)
   final String status; // 'scheduled' or 'completed'
@@ -191,6 +193,8 @@ class Shift {
     this.additionalTipout,
     this.additionalTipoutNote,
     this.eventCost,
+    this.section,
+    this.checkoutId,
     this.status = 'completed',
     this.source = 'manual',
     this.isRecurring = false,
@@ -356,6 +360,8 @@ class Shift {
     double? additionalTipout,
     String? additionalTipoutNote,
     double? eventCost,
+    String? section,
+    String? checkoutId,
     String? status,
     String? source,
     bool? isRecurring,
@@ -471,6 +477,8 @@ class Shift {
       additionalTipout: additionalTipout ?? this.additionalTipout,
       additionalTipoutNote: additionalTipoutNote ?? this.additionalTipoutNote,
       eventCost: eventCost ?? this.eventCost,
+      section: section ?? this.section,
+      checkoutId: checkoutId ?? this.checkoutId,
       status: status ?? this.status,
       source: source ?? this.source,
       isRecurring: isRecurring ?? this.isRecurring,
@@ -594,6 +602,8 @@ class Shift {
       'additionalTipout': additionalTipout,
       'additionalTipoutNote': additionalTipoutNote,
       'eventCost': eventCost,
+      'section': section,
+      'checkoutId': checkoutId,
       'status': status,
       'source': source,
       'isRecurring': isRecurring,
@@ -713,6 +723,8 @@ class Shift {
       additionalTipout: map['additionalTipout']?.toDouble(),
       additionalTipoutNote: map['additionalTipoutNote'],
       eventCost: map['eventCost']?.toDouble(),
+      section: map['section'],
+      checkoutId: map['checkoutId'],
       status: map['status'] ?? 'completed',
       source: map['source'] ?? 'manual',
       isRecurring: map['isRecurring'] ?? false,
@@ -832,6 +844,8 @@ class Shift {
       additionalTipout: map['additional_tipout']?.toDouble(),
       additionalTipoutNote: map['additional_tipout_note'],
       eventCost: map['event_cost']?.toDouble(),
+      section: map['section'],
+      checkoutId: map['checkout_id'],
       status: map['status'] ?? 'completed',
       source: map['source'] ?? 'manual',
       isRecurring: map['is_recurring'] ?? false,
@@ -954,6 +968,8 @@ class Shift {
       'additional_tipout': additionalTipout,
       'additional_tipout_note': additionalTipoutNote,
       'event_cost': eventCost,
+      'section': section,
+      'checkout_id': checkoutId,
       'status': status,
       'source': source,
       'is_recurring': isRecurring,
