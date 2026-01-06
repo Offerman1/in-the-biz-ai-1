@@ -15,10 +15,29 @@ import 'package:in_the_biz_ai/services/notification_service.dart';
 import 'package:in_the_biz_ai/services/ad_service.dart';
 import 'package:in_the_biz_ai/services/subscription_service.dart';
 import 'package:in_the_biz_ai/utils/run_migrations.dart';
-import 'package:in_the_biz_ai/theme/app_theme.dart';
+import 'dart:developer' as developer;
+
+// App version - update this when deploying (matches pubspec.yaml)
+const String appVersion = '1.1.0+7';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Log app version to console (web only)
+  if (kIsWeb) {
+    developer.log('🚀 In The Biz AI - Version: $appVersion', name: 'App');
+    // Also log to browser console
+    // ignore: avoid_print
+    print('═══════════════════════════════════════════');
+    // ignore: avoid_print
+    print('🚀 In The Biz AI');
+    // ignore: avoid_print
+    print('📦 Version: $appVersion');
+    // ignore: avoid_print
+    print('⏰ Deployed: ${DateTime.now().toIso8601String()}');
+    // ignore: avoid_print
+    print('═══════════════════════════════════════════');
+  }
 
   // Initialize Supabase
   await Supabase.initialize(

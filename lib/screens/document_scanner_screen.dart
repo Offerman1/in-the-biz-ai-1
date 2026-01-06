@@ -6,6 +6,7 @@ import '../models/vision_scan.dart';
 
 /// Multi-page document scanning screen
 /// Allows users to capture multiple pages of a document before processing
+/// Supports BOTH camera capture AND gallery/photo library upload
 class DocumentScannerScreen extends StatefulWidget {
   final ScanType scanType;
   final Function(DocumentScanSession) onScanComplete;
@@ -24,62 +25,22 @@ class _DocumentScannerScreenState extends State<DocumentScannerScreen> {
   final ImagePicker _picker = ImagePicker();
   final List<String> _capturedImages = [];
   bool _isCapturing = false;
+  bool _hasShownSourceSelector = false;
 
   @override
   void initState() {
     super.initState();
-    // Automatically open camera when screen loads
+    // Show source selection when screen loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _captureImage();
+      if (!_hasShownSourceSelector) {
+        _hasShownSourceSelector = true;
+        _showImageSourceSelector();
+      }
     });
   }
 
-  Future<void> _captureImage() async {
-    if (_isCapturing) return;
-
-    setState(() => _isCapturing = true);
-
-    try {
-      final XFile? image = await _picker.pickImage(
-        source: ImageSource.camera,
-        imageQuality: 85,
-        maxWidth: 2000,
-        maxHeight: 2000,
-      );
-
-      if (image != null) {
-        setState(() {
-          _capturedImages.add(image.path);
-        });
-
-        // Show "Scan another page?" prompt after a short delay
-        if (mounted) {
-          await Future.delayed(const Duration(milliseconds: 300));
-          _showScanAnotherPrompt();
-        }
-      } else {
-        // User cancelled camera - if no images captured, go back
-        if (_capturedImages.isEmpty && mounted) {
-          Navigator.pop(context);
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to capture image: $e'),
-            backgroundColor: AppTheme.dangerColor,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isCapturing = false);
-      }
-    }
-  }
-
-  void _showScanAnotherPrompt() {
+  /// Show bottom sheet to choose between Camera or Gallery
+  void _showImageSourceSelector() {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -106,24 +67,31 @@ class _DocumentScannerScreenState extends State<DocumentScannerScreen> {
               ),
 
               Text(
-                'Page ${_capturedImages.length} captured',
+                'Add ${widget.scanType.displayName}',
                 style: AppTheme.titleMedium.copyWith(
                   color: AppTheme.textPrimary,
                   fontWeight: FontWeight.bold,
                 ),
               ),
+              const SizedBox(height: 8),
+              Text(
+                'Choose how to add your document',
+                style: AppTheme.bodyMedium.copyWith(
+                  color: AppTheme.textSecondary,
+                ),
+              ),
               const SizedBox(height: 24),
 
-              // Scan another page button
+              // Take Photo option
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   onPressed: () {
-                    Navigator.pop(context); // Close bottom sheet
-                    _captureImage(); // Open camera again
+                    Navigator.pop(context);
+                    _captureImage();
                   },
-                  icon: const Icon(Icons.camera_alt),
-                  label: const Text('Scan Another Page'),
+                  icon: const Icon(Icons.camera_alt, size: 24),
+                  label: const Text('Take Photo'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.primaryGreen,
                     foregroundColor: Colors.black,
@@ -136,16 +104,16 @@ class _DocumentScannerScreenState extends State<DocumentScannerScreen> {
               ),
               const SizedBox(height: 12),
 
-              // Finish scanning button
+              // Upload from Gallery option
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
                   onPressed: () {
-                    Navigator.pop(context); // Close bottom sheet
-                    _finishScanning();
+                    Navigator.pop(context);
+                    _pickMultipleImages();
                   },
-                  icon: const Icon(Icons.check_circle),
-                  label: const Text('Finish & Process'),
+                  icon: const Icon(Icons.photo_library, size: 24),
+                  label: const Text('Upload from Gallery'),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppTheme.primaryGreen,
                     side: BorderSide(color: AppTheme.primaryGreen),
@@ -153,6 +121,229 @@ class _DocumentScannerScreenState extends State<DocumentScannerScreen> {
                     textStyle: AppTheme.bodyLarge.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+
+              // Helpful hint
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Text(
+                  '💡 Tip: You can upload multiple pages at once from your gallery',
+                  style: AppTheme.bodySmall.copyWith(
+                    color: AppTheme.textMuted,
+                    fontStyle: FontStyle.italic,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ).then((_) {
+      // If user dismisses without selecting anything and no images captured, go back
+      if (_capturedImages.isEmpty && mounted) {
+        Navigator.pop(context);
+      }
+    });
+  }
+
+  /// Pick multiple images from gallery (like attaching to email)
+  Future<void> _pickMultipleImages() async {
+    if (_isCapturing) return;
+
+    setState(() => _isCapturing = true);
+
+    try {
+      final List<XFile> images = await _picker.pickMultiImage(
+        imageQuality: 85,
+        maxWidth: 2000,
+        maxHeight: 2000,
+      );
+
+      if (images.isNotEmpty) {
+        setState(() {
+          for (final image in images) {
+            _capturedImages.add(image.path);
+          }
+        });
+
+        // Show success message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                  '${images.length} image${images.length == 1 ? '' : 's'} added'),
+              backgroundColor: AppTheme.primaryGreen.withOpacity(0.9),
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
+      } else {
+        // User cancelled - if no images captured, go back
+        if (_capturedImages.isEmpty && mounted) {
+          Navigator.pop(context);
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to pick images: $e'),
+            backgroundColor: AppTheme.dangerColor,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isCapturing = false);
+      }
+    }
+  }
+
+  Future<void> _captureImage() async {
+    if (_isCapturing) return;
+
+    setState(() => _isCapturing = true);
+
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.camera,
+        imageQuality: 85,
+        maxWidth: 2000,
+        maxHeight: 2000,
+      );
+
+      if (image != null) {
+        setState(() {
+          _capturedImages.add(image.path);
+        });
+
+        // Show "Scan another page?" prompt after a short delay
+        if (mounted) {
+          await Future.delayed(const Duration(milliseconds: 300));
+          _showAddMorePrompt();
+        }
+      } else {
+        // User cancelled camera - if no images captured, go back
+        if (_capturedImages.isEmpty && mounted) {
+          Navigator.pop(context);
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to capture image: $e'),
+            backgroundColor: AppTheme.dangerColor,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isCapturing = false);
+      }
+    }
+  }
+
+  /// Show prompt to add more pages (camera or gallery)
+  void _showAddMorePrompt() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isDismissible: true,
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          color: AppTheme.cardBackground,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        padding: const EdgeInsets.all(24),
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Handle bar
+              Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppTheme.textMuted.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+
+              Text(
+                '${_capturedImages.length} page${_capturedImages.length == 1 ? '' : 's'} added',
+                style: AppTheme.titleMedium.copyWith(
+                  color: AppTheme.textPrimary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Take another photo
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _captureImage();
+                  },
+                  icon: const Icon(Icons.camera_alt),
+                  label: const Text('Take Another Photo'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primaryGreen,
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    textStyle: AppTheme.bodyLarge.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // Upload more from gallery
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _pickMultipleImages();
+                  },
+                  icon: const Icon(Icons.photo_library),
+                  label: const Text('Add More from Gallery'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppTheme.primaryGreen,
+                    side: BorderSide(color: AppTheme.primaryGreen),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    textStyle: AppTheme.bodyLarge.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // Finish scanning button
+              SizedBox(
+                width: double.infinity,
+                child: TextButton.icon(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _finishScanning();
+                  },
+                  icon: Icon(Icons.check_circle, color: AppTheme.textSecondary),
+                  label: Text(
+                    'Finish & Process',
+                    style: TextStyle(color: AppTheme.textSecondary),
+                  ),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
                 ),
               ),
@@ -219,16 +410,56 @@ class _DocumentScannerScreenState extends State<DocumentScannerScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
-                    Icons.camera_alt,
+                    Icons.document_scanner,
                     size: 64,
                     color: AppTheme.textMuted,
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Capturing first page...',
+                    'No pages added yet',
                     style: AppTheme.bodyLarge.copyWith(
                       color: AppTheme.textSecondary,
                     ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Take a photo or upload from gallery',
+                    style: AppTheme.bodySmall.copyWith(
+                      color: AppTheme.textMuted,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ElevatedButton.icon(
+                        onPressed: _captureImage,
+                        icon: const Icon(Icons.camera_alt),
+                        label: const Text('Camera'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.primaryGreen,
+                          foregroundColor: Colors.black,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 12,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      OutlinedButton.icon(
+                        onPressed: _pickMultipleImages,
+                        icon: const Icon(Icons.photo_library),
+                        label: const Text('Gallery'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppTheme.primaryGreen,
+                          side: BorderSide(color: AppTheme.primaryGreen),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 12,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -251,14 +482,14 @@ class _DocumentScannerScreenState extends State<DocumentScannerScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              '${_capturedImages.length} page${_capturedImages.length == 1 ? '' : 's'} captured',
+                              '${_capturedImages.length} page${_capturedImages.length == 1 ? '' : 's'} added',
                               style: AppTheme.titleMedium.copyWith(
                                 color: AppTheme.textPrimary,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                             Text(
-                              'Tap "Scan Another Page" or "Finish"',
+                              'Add more pages or tap "Finish" to process',
                               style: AppTheme.bodySmall.copyWith(
                                 color: AppTheme.textSecondary,
                               ),
@@ -362,26 +593,51 @@ class _DocumentScannerScreenState extends State<DocumentScannerScreen> {
                     ],
                   ),
                   child: SafeArea(
-                    child: Row(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: _captureImage,
-                            icon: const Icon(Icons.add_a_photo),
-                            label: const Text('Add Page'),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: AppTheme.primaryGreen,
-                              side: BorderSide(color: AppTheme.primaryGreen),
-                              padding: const EdgeInsets.symmetric(vertical: 16),
+                        // Camera and Gallery row
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton.icon(
+                                onPressed: _captureImage,
+                                icon: const Icon(Icons.camera_alt, size: 20),
+                                label: const Text('Camera'),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: AppTheme.primaryGreen,
+                                  side:
+                                      BorderSide(color: AppTheme.primaryGreen),
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 14),
+                                ),
+                              ),
                             ),
-                          ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: OutlinedButton.icon(
+                                onPressed: _pickMultipleImages,
+                                icon: const Icon(Icons.photo_library, size: 20),
+                                label: const Text('Gallery'),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: AppTheme.primaryGreen,
+                                  side:
+                                      BorderSide(color: AppTheme.primaryGreen),
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 14),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
+                        const SizedBox(height: 12),
+                        // Finish button (full width)
+                        SizedBox(
+                          width: double.infinity,
                           child: ElevatedButton.icon(
                             onPressed: _finishScanning,
                             icon: const Icon(Icons.check_circle),
-                            label: const Text('Finish'),
+                            label: const Text('Finish & Process'),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppTheme.primaryGreen,
                               foregroundColor: Colors.black,

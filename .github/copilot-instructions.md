@@ -19,6 +19,35 @@ description: AI rules derived by SpecStory from the project AI interaction histo
 
 **These instructions are automatically applied to every Copilot chat session.**  
 
+---
+
+## 🚨 CRITICAL WEB DEPLOYMENT RULE - READ THIS FIRST 🚨
+
+**WHENEVER YOU MAKE CHANGES TO ANY DART FILE (lib/main.dart, lib/screens/*, lib/widgets/*, etc.):**
+
+**YOU MUST RUN THE FULL BUILD AND DEPLOY COMMAND IMMEDIATELY:**
+
+```cmd
+cd "c:\Users\Brandon 2021\Desktop\In The Biz AI" & flutter build web --release & robocopy "build\web" "." *.* /E /XD build .git node_modules android ios lib docs scripts supabase .idea .vscode .github assets web .specstory .dart_tool & git add . & git commit -m "Deploy: [your message]" & git push origin gh-pages
+```
+
+**WHY THIS IS CRITICAL:**
+- Editing `lib/main.dart` does NOT update the website
+- The website serves `main.dart.js` from the ROOT, not from `lib/`
+- `flutter build web` compiles Dart → JavaScript in `build/web/`
+- `robocopy` copies `build/web/` → ROOT (where GitHub Pages serves from)
+- Without these steps, changes are NEVER deployed
+
+**DO NOT:**
+- ❌ Just edit `lib/main.dart` and stop
+- ❌ Say "the code is updated" without deploying
+- ❌ Forget to copy build files to root
+- ❌ Wait for the user to ask - DEPLOY IMMEDIATELY after code changes
+
+**ALWAYS:**
+- ✅ Build AND deploy in the SAME action
+- ✅ Run the full command every single time
+- ✅ Tell the user deployment is complete and wait 5-10 mins for GitHub Pages
 
 ---
 

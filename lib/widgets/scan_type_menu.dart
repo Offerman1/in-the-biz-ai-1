@@ -3,6 +3,7 @@ import '../theme/app_theme.dart';
 import '../models/vision_scan.dart';
 
 /// Bottom sheet menu for selecting what type of document to scan
+/// Users can scan with camera OR upload from gallery after selecting
 class ScanTypeMenu extends StatelessWidget {
   final Function(ScanType) onScanTypeSelected;
 
@@ -36,12 +37,23 @@ class ScanTypeMenu extends StatelessWidget {
             // Title
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-              child: Text(
-                'What would you like to scan?',
-                style: AppTheme.titleMedium.copyWith(
-                  color: AppTheme.textPrimary,
-                  fontWeight: FontWeight.bold,
-                ),
+              child: Column(
+                children: [
+                  Text(
+                    'What would you like to scan?',
+                    style: AppTheme.titleMedium.copyWith(
+                      color: AppTheme.textPrimary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '📷 Take a photo or 📁 upload from gallery',
+                    style: AppTheme.bodySmall.copyWith(
+                      color: AppTheme.textSecondary,
+                    ),
+                  ),
+                ],
               ),
             ),
 
