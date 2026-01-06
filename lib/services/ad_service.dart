@@ -48,6 +48,28 @@ class AdService {
     return '';
   }
 
+  String get bannerAdUnitId {
+    if (!_isMobilePlatform) return '';
+
+    if (kDebugMode) {
+      // Use test IDs in debug mode to avoid invalid traffic
+      if (Platform.isAndroid) {
+        return 'ca-app-pub-3940256099942544/6300978111'; // Google Test Banner ID
+      } else if (Platform.isIOS) {
+        return 'ca-app-pub-3940256099942544/2934735716'; // Google Test Banner ID
+      }
+    }
+
+    // Real Ad Unit IDs for production
+    // TODO: Create dedicated banner ad units in AdMob console
+    if (Platform.isAndroid) {
+      return 'ca-app-pub-1150666051629225/8744568210'; // Android Banner Ad
+    } else if (Platform.isIOS) {
+      return 'ca-app-pub-1150666051629225/5222279697'; // iOS Banner Ad
+    }
+    return '';
+  }
+
   Future<void> initialize() async {
     if (!_isMobilePlatform) {
       debugPrint('Ads not supported on web platform - skipping initialization');

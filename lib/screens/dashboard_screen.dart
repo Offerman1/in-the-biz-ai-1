@@ -375,7 +375,6 @@ class _HomeScreenState extends State<_HomeScreen> {
     final periodTotal = stats['total'] as double;
     final previousTotal = stats['previousTotal'] as double;
     final percentChange = stats['percentChange'] as double;
-    final periodLabel = stats['label'] as String;
     final periodShifts = stats['shifts'] as List<Shift>;
 
     // Calculate tip breakdown

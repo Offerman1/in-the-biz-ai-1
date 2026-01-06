@@ -1989,33 +1989,6 @@ class _CalendarSyncScreenState extends State<CalendarSyncScreen> {
     });
   }
 
-  /// Show job grouping screen if there are 3+ unique calendar titles
-  Future<void> _showJobGroupingIfNeeded(List<Shift> shifts) async {
-    final titleService = CalendarTitleService();
-    final calendarTitles = titleService.extractCalendarTitles(shifts);
-
-    // Only show grouping if 3+ unique titles (skip if just 1-2 jobs)
-    if (calendarTitles.length >= 3) {
-      final groups = await Navigator.push<List<Map<String, dynamic>>>(
-        context,
-        MaterialPageRoute(
-          builder: (context) => JobGroupingScreen(
-            calendarTitles: calendarTitles,
-          ),
-        ),
-      );
-
-      // Save the groups if user created any
-      if (groups != null && groups.isNotEmpty) {
-        await titleService.saveJobGroups(groups);
-
-        // Update shifts with the new job mappings
-        final provider = Provider.of<ShiftProvider>(context, listen: false);
-        await provider.loadShifts();
-      }
-    }
-  }
-
   /// Auto-clean all shift titles in the database
   /// Removes duplicate consecutive words from event names
   /// Only processes shifts that haven't been cleaned yet

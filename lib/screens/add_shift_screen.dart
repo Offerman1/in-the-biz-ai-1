@@ -1110,56 +1110,6 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
     }
   }
 
-  Future<void> _showAttachmentMenu() async {
-    // Get the position of the button to show menu near it
-    final RenderBox? overlay =
-        Overlay.of(context).context.findRenderObject() as RenderBox?;
-
-    await showMenu(
-      context: context,
-      position: RelativeRect.fromLTRB(
-        MediaQuery.of(context).size.width - 250, // Right side
-        kToolbarHeight + 10, // Just below the app bar
-        10,
-        0,
-      ),
-      color: AppTheme.cardBackground,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-      ),
-      items: [
-        PopupMenuItem(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-            leading: Icon(Icons.photo_library, color: AppTheme.primaryGreen),
-            title: Text('Pick from Gallery', style: AppTheme.bodyMedium),
-            onTap: () {
-              Navigator.pop(context);
-              _pickImageFromGallery();
-            },
-          ),
-        ),
-        PopupMenuItem(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-            leading: Icon(Icons.insert_drive_file, color: AppTheme.accentBlue),
-            title: Text('Choose File', style: AppTheme.bodyMedium),
-            subtitle: Text(
-              'PDF, Word, Excel, images, videos, etc.',
-              style: AppTheme.labelSmall.copyWith(color: AppTheme.textMuted),
-            ),
-            onTap: () {
-              Navigator.pop(context);
-              _pickFile();
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
   // ============================================================================
   // UNIFIED AI VISION SCANNER SYSTEM
   // ============================================================================
@@ -2599,41 +2549,6 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
             : AppTheme.textMuted.withOpacity(0.3),
       ),
     );
-  }
-
-  List<Widget> _buildDynamicSections() {
-    final sections = <Widget>[];
-
-    // Earnings Section
-    if (_template!.showTips || _template!.showCommission) {
-      sections.add(_buildEarningsSection());
-      sections.add(const SizedBox(height: 16));
-    }
-
-    // Event Details Section
-    if (_template!.showEventName ||
-        _template!.showHostess ||
-        _template!.showGuestCount) {
-      sections.add(_buildEventDetailsSection());
-      sections.add(const SizedBox(height: 16));
-    }
-
-    // Work Details Section
-    if (_template!.showLocation ||
-        _template!.showClientName ||
-        _template!.showProjectName ||
-        _template!.showMileage) {
-      sections.add(_buildWorkDetailsSection());
-      sections.add(const SizedBox(height: 16));
-    }
-
-    // Documentation Section
-    if (_template!.showNotes || _template!.showPhotos) {
-      sections.add(_buildDocumentationSection());
-      sections.add(const SizedBox(height: 16));
-    }
-
-    return sections;
   }
 
   Widget _buildEarningsSection() {
@@ -4892,15 +4807,13 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    if (contact.role != null) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        contact.role!.displayName,
-                        style: AppTheme.labelSmall.copyWith(
-                          color: AppTheme.textMuted,
-                        ),
+                    const SizedBox(height: 2),
+                    Text(
+                      contact.role.displayName,
+                      style: AppTheme.labelSmall.copyWith(
+                        color: AppTheme.textMuted,
                       ),
-                    ],
+                    ),
                   ],
                 ),
               ),
@@ -5229,99 +5142,6 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
               },
             ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildAttachmentTile(ShiftAttachment attachment) {
-    // OLD CODE - No longer used, replaced by DocumentPreviewWidget
-    IconData fileIcon;
-    Color iconColor;
-
-    // Determine icon and color based on file type
-    if (attachment.isPdf) {
-      fileIcon = Icons.picture_as_pdf;
-      iconColor = AppTheme.accentRed;
-    } else if (attachment.isImage) {
-      fileIcon = Icons.image;
-      iconColor = AppTheme.accentPurple;
-    } else if (attachment.isVideo) {
-      fileIcon = Icons.videocam;
-      iconColor = AppTheme.accentOrange;
-    } else if (attachment.isDocument) {
-      fileIcon = Icons.description;
-      iconColor = AppTheme.accentBlue;
-    } else if (attachment.isSpreadsheet) {
-      fileIcon = Icons.table_chart;
-      iconColor = AppTheme.primaryGreen;
-    } else {
-      fileIcon = Icons.insert_drive_file;
-      iconColor = AppTheme.textMuted;
-    }
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () {
-          // Open attachment (you can implement _openAttachment if needed)
-        },
-        borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: AppTheme.cardBackgroundLight.withOpacity(0.3),
-            borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
-            border: Border.all(
-              color: iconColor.withOpacity(0.3),
-              width: 1,
-            ),
-          ),
-          child: Row(
-            children: [
-              // File icon
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: iconColor.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(fileIcon, color: iconColor, size: 24),
-              ),
-              const SizedBox(width: 12),
-              // File info
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      attachment.fileName,
-                      style: AppTheme.bodyMedium.copyWith(
-                        fontWeight: FontWeight.w500,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '${attachment.extension.toUpperCase()} • ${attachment.formattedSize}',
-                      style: AppTheme.labelSmall.copyWith(
-                        color: AppTheme.textMuted,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // Delete button
-              IconButton(
-                icon: Icon(Icons.delete, color: AppTheme.dangerColor, size: 20),
-                onPressed: () => _deleteAttachment(attachment),
-                tooltip: 'Delete',
-                constraints: const BoxConstraints(),
-                padding: const EdgeInsets.all(8),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

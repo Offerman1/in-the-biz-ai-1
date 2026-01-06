@@ -516,8 +516,22 @@ class _AllShiftsScreenState extends State<AllShiftsScreen> {
       ),
       child: Row(
         children: [
+          if (_isProcessingBulk)
+            Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppTheme.primaryGreen,
+                ),
+              ),
+            ),
           Text(
-            '${_selectedShiftIds.length} selected',
+            _isProcessingBulk
+                ? 'Processing...'
+                : '${_selectedShiftIds.length} selected',
             style: AppTheme.bodyMedium.copyWith(
               fontWeight: FontWeight.w600,
               color: AppTheme.primaryGreen,
@@ -525,104 +539,115 @@ class _AllShiftsScreenState extends State<AllShiftsScreen> {
           ),
           const Spacer(),
           // Bulk Actions Dropdown
-          PopupMenuButton<String>(
-            onSelected: (value) {
-              switch (value) {
-                case 'delete':
-                  _showDeleteConfirmation();
-                  break;
-                case 'export':
-                  _showExportOptions();
-                  break;
-                case 'change_job':
-                  _showChangeJobDialog();
-                  break;
-                case 'move_date':
-                  _showMoveDateDialog();
-                  break;
-                case 'adjust_pay':
-                  _showAdjustPayDialog();
-                  break;
-              }
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              decoration: BoxDecoration(
-                color: AppTheme.primaryGreen,
-                borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.flash_on, color: Colors.white, size: 18),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Actions',
-                    style: AppTheme.bodyMedium.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
+          IgnorePointer(
+            ignoring: _isProcessingBulk,
+            child: Opacity(
+              opacity: _isProcessingBulk ? 0.5 : 1.0,
+              child: PopupMenuButton<String>(
+                onSelected: (value) {
+                  switch (value) {
+                    case 'delete':
+                      _showDeleteConfirmation();
+                      break;
+                    case 'export':
+                      _showExportOptions();
+                      break;
+                    case 'change_job':
+                      _showChangeJobDialog();
+                      break;
+                    case 'move_date':
+                      _showMoveDateDialog();
+                      break;
+                    case 'adjust_pay':
+                      _showAdjustPayDialog();
+                      break;
+                  }
+                },
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryGreen,
+                    borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.flash_on, color: Colors.white, size: 18),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Actions',
+                        style: AppTheme.bodyMedium.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Icon(Icons.arrow_drop_down,
+                          color: Colors.white, size: 20),
+                    ],
+                  ),
+                ),
+                itemBuilder: (context) => [
+                  PopupMenuItem<String>(
+                    value: 'delete',
+                    child: Row(
+                      children: [
+                        Icon(Icons.delete,
+                            color: AppTheme.dangerColor, size: 20),
+                        const SizedBox(width: 12),
+                        Text('Delete',
+                            style: TextStyle(color: AppTheme.dangerColor)),
+                      ],
                     ),
                   ),
-                  const SizedBox(width: 4),
-                  Icon(Icons.arrow_drop_down, color: Colors.white, size: 20),
+                  PopupMenuItem<String>(
+                    value: 'export',
+                    child: Row(
+                      children: [
+                        Icon(Icons.download,
+                            color: AppTheme.accentBlue, size: 20),
+                        const SizedBox(width: 12),
+                        Text('Export'),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem<String>(
+                    value: 'change_job',
+                    child: Row(
+                      children: [
+                        Icon(Icons.work,
+                            color: AppTheme.accentPurple, size: 20),
+                        const SizedBox(width: 12),
+                        Text('Change Job'),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem<String>(
+                    value: 'move_date',
+                    child: Row(
+                      children: [
+                        Icon(Icons.calendar_today,
+                            color: AppTheme.accentOrange, size: 20),
+                        const SizedBox(width: 12),
+                        Text('Move Date'),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem<String>(
+                    value: 'adjust_pay',
+                    child: Row(
+                      children: [
+                        Icon(Icons.attach_money,
+                            color: AppTheme.primaryGreen, size: 20),
+                        const SizedBox(width: 12),
+                        Text('Adjust Pay'),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),
-            itemBuilder: (context) => [
-              PopupMenuItem<String>(
-                value: 'delete',
-                child: Row(
-                  children: [
-                    Icon(Icons.delete, color: AppTheme.dangerColor, size: 20),
-                    const SizedBox(width: 12),
-                    Text('Delete',
-                        style: TextStyle(color: AppTheme.dangerColor)),
-                  ],
-                ),
-              ),
-              PopupMenuItem<String>(
-                value: 'export',
-                child: Row(
-                  children: [
-                    Icon(Icons.download, color: AppTheme.accentBlue, size: 20),
-                    const SizedBox(width: 12),
-                    Text('Export'),
-                  ],
-                ),
-              ),
-              PopupMenuItem<String>(
-                value: 'change_job',
-                child: Row(
-                  children: [
-                    Icon(Icons.work, color: AppTheme.accentPurple, size: 20),
-                    const SizedBox(width: 12),
-                    Text('Change Job'),
-                  ],
-                ),
-              ),
-              PopupMenuItem<String>(
-                value: 'move_date',
-                child: Row(
-                  children: [
-                    Icon(Icons.calendar_today,
-                        color: AppTheme.accentOrange, size: 20),
-                    const SizedBox(width: 12),
-                    Text('Move Date'),
-                  ],
-                ),
-              ),
-              PopupMenuItem<String>(
-                value: 'adjust_pay',
-                child: Row(
-                  children: [
-                    Icon(Icons.attach_money,
-                        color: AppTheme.primaryGreen, size: 20),
-                    const SizedBox(width: 12),
-                    Text('Adjust Pay'),
-                  ],
-                ),
-              ),
-            ],
           ),
         ],
       ),

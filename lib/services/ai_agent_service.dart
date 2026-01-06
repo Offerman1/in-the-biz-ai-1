@@ -10,10 +10,15 @@ class AIAgentService {
   /// The AI will analyze the message and execute any necessary functions
   Future<Map<String, dynamic>> sendMessage(
     String message,
-    List<Map<String, dynamic>> history,
-  ) async {
+    List<Map<String, dynamic>> history, {
+    String? userContext,
+  }) async {
     try {
       debugPrint('[AI Agent] Sending message: $message');
+      if (userContext != null && userContext.isNotEmpty) {
+        debugPrint(
+            '[AI Agent] User context provided: ${userContext.length} chars');
+      }
 
       // Check if user is logged in
       final session = Supabase.instance.client.auth.currentSession;
@@ -47,6 +52,7 @@ class AIAgentService {
         body: {
           'message': message,
           'history': history,
+          'userContext': userContext ?? '',
           'timeZoneOffset': timeZoneOffset,
           'timeZoneName': timeZoneName,
           'localDate': localDate,

@@ -295,6 +295,25 @@ class _EventPortfolioScreenState extends State<EventPortfolioScreen> {
                         ],
                       ),
 
+                    // Venue
+                    if (venue != null && venue.isNotEmpty)
+                      Row(
+                        children: [
+                          Icon(Icons.location_on,
+                              size: 12, color: AppTheme.textSecondary),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              venue,
+                              style: AppTheme.labelSmall
+                                  .copyWith(color: AppTheme.textSecondary),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+
                     // Guest count
                     if (guestCount != null)
                       Row(
@@ -306,6 +325,22 @@ class _EventPortfolioScreenState extends State<EventPortfolioScreen> {
                             '$guestCount guests',
                             style: AppTheme.labelSmall
                                 .copyWith(color: AppTheme.textSecondary),
+                          ),
+                        ],
+                      ),
+
+                    // Total Sale
+                    if (totalSale != null && totalSale > 0)
+                      Row(
+                        children: [
+                          Icon(Icons.receipt_long,
+                              size: 12, color: AppTheme.accentBlue),
+                          const SizedBox(width: 4),
+                          Text(
+                            '\$${totalSale.toStringAsFixed(2)}',
+                            style: AppTheme.labelSmall.copyWith(
+                              color: AppTheme.accentBlue,
+                            ),
                           ),
                         ],
                       ),

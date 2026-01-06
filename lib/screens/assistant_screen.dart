@@ -10,7 +10,6 @@ import '../services/database_service.dart';
 import '../theme/app_theme.dart';
 import '../models/shift.dart';
 import '../providers/shift_provider.dart';
-import '../providers/theme_provider.dart';
 import '../widgets/animated_logo.dart';
 import 'package:intl/intl.dart';
 
@@ -173,7 +172,11 @@ class _AssistantScreenState extends State<AssistantScreen> {
               })
           .toList();
 
-      final response = await aiAgent.sendMessage(message, history);
+      final response = await aiAgent.sendMessage(
+        message,
+        history,
+        userContext: _userContext,
+      );
 
       if (response['success'] == true) {
         final functionsExecuted = response['functionsExecuted'] ?? 0;
@@ -842,10 +845,10 @@ class _AssistantScreenState extends State<AssistantScreen> {
     required String notes,
   }) async {
     try {
-      final cashVal = double.tryParse(cashTips) ?? 0.0;
-      final creditVal = double.tryParse(creditTips) ?? 0.0;
-      final rateVal = double.tryParse(hourlyRate) ?? 0.0;
-      final hoursVal = double.tryParse(hoursWorked) ?? 0.0;
+      final cashVal = _parseDouble(cashTips);
+      final creditVal = _parseDouble(creditTips);
+      final rateVal = _parseDouble(hourlyRate);
+      final hoursVal = _parseDouble(hoursWorked);
       final total = cashVal + creditVal + (rateVal * hoursVal);
 
       final shift = Shift(

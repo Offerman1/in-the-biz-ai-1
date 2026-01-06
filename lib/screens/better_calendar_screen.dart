@@ -676,10 +676,6 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                 bottom: drawerHeight + 10,
                 child: LayoutBuilder(
                   builder: (context, constraints) {
-                    // Detect tablet vs phone
-                    final screenWidth = MediaQuery.of(context).size.width;
-                    final isTablet = screenWidth > 600;
-
                     // Calculate number of weeks in current month
                     final firstDayOfMonth =
                         DateTime(_focusedDay.year, _focusedDay.month, 1);
@@ -1233,46 +1229,6 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
     } catch (e) {
       return time;
     }
-  }
-
-  Widget _buildMiniPreview(Map<DateTime, List<Shift>> shiftsByDate) {
-    if (_selectedDay == null) return const SizedBox.shrink();
-
-    final normalizedDay =
-        DateTime(_selectedDay!.year, _selectedDay!.month, _selectedDay!.day);
-    final dayShifts = shiftsByDate[normalizedDay] ?? [];
-    final totalIncome = dayShifts.fold<double>(
-        0, (sum, shift) => sum + shift.getDisplayAmount(_moneyDisplayMode));
-    final shiftCount = dayShifts.length;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            DateFormat('EEE, MMM d').format(_selectedDay!),
-            style: AppTheme.bodyLarge.copyWith(fontWeight: FontWeight.w600),
-          ),
-          Row(
-            children: [
-              if (totalIncome > 0)
-                Text(
-                  currencyFormat.format(totalIncome),
-                  style: AppTheme.moneyMedium.copyWith(fontSize: 16),
-                ),
-              const SizedBox(width: 8),
-              Text(
-                '$shiftCount shift${shiftCount != 1 ? 's' : ''}',
-                style: AppTheme.bodyMedium.copyWith(color: AppTheme.textMuted),
-              ),
-              const SizedBox(width: 4),
-              Icon(Icons.expand_less, color: AppTheme.textMuted, size: 20),
-            ],
-          ),
-        ],
-      ),
-    );
   }
 
   Widget _buildDrawerContent(Map<DateTime, List<Shift>> shiftsByDate) {
@@ -1860,7 +1816,6 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
   // MONTH LIST VIEW (like week view but for whole month)
   Widget _buildMonthListView(Map<DateTime, List<Shift>> shiftsByDate) {
     // Get all days in the current month
-    final firstDayOfMonth = DateTime(_focusedDay.year, _focusedDay.month, 1);
     final lastDayOfMonth = DateTime(_focusedDay.year, _focusedDay.month + 1, 0);
     final daysInMonth = lastDayOfMonth.day;
 
@@ -2430,8 +2385,6 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
         weekShifts.fold<double>(0, (sum, shift) => sum + shift.totalIncome);
     final totalHours =
         weekShifts.fold<double>(0, (sum, shift) => sum + shift.hoursWorked);
-    final isCurrentWeek = DateTime.now().isAfter(weekStart) &&
-        DateTime.now().isBefore(weekEnd.add(const Duration(days: 1)));
 
     return Column(
       children: [
