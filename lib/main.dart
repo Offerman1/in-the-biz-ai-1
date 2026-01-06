@@ -68,21 +68,75 @@ class InTheBizApp extends StatelessWidget {
           title: 'In The Biz AI',
           debugShowCheckedModeBanner: false,
           theme: themeProvider.getThemeData(),
-          home: const AuthWrapper(),
+          home: kIsWeb
+              ? const ResponsiveWebLayout(child: AuthWrapper())
+              : const AuthWrapper(),
           routes: {
-            '/settings': (context) => const SettingsScreen(),
-            '/quickbooks-callback': (context) =>
-                const QuickBooksCallbackScreen(),
+            '/settings': (context) => kIsWeb
+                ? const ResponsiveWebLayout(child: SettingsScreen())
+                : const SettingsScreen(),
+            '/quickbooks-callback': (context) => kIsWeb
+                ? const ResponsiveWebLayout(child: QuickBooksCallbackScreen())
+                : const QuickBooksCallbackScreen(),
           },
           onGenerateRoute: (settings) {
             // Handle /quickbooks-callback route for web
             if (settings.name == '/quickbooks-callback') {
               return MaterialPageRoute(
-                builder: (context) => const QuickBooksCallbackScreen(),
+                builder: (context) => kIsWeb
+                    ? const ResponsiveWebLayout(
+                        child: QuickBooksCallbackScreen())
+                    : const QuickBooksCallbackScreen(),
               );
             }
             return null;
           },
+        );
+      },
+    );
+  }
+}
+
+/// Responsive layout wrapper for web that constrains content width
+/// and leaves space for ads on the sides
+class ResponsiveWebLayout extends StatelessWidget {
+  final Widget child;
+
+  const ResponsiveWebLayout({super.key, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // On narrow screens (mobile/tablet), show full width
+        if (constraints.maxWidth <= 1200) {
+          return child;
+        }
+
+        // On desktop, constrain content width to 1200px and center it
+        // This leaves space for ads on both sides
+        return Row(
+          children: [
+            // Left spacer (for future ad placement)
+            Expanded(
+              child: Container(
+                color: Colors.transparent,
+                // Future: Add vertical banner ads here
+              ),
+            ),
+            // Main content (constrained to 1200px)
+            SizedBox(
+              width: 1200,
+              child: child,
+            ),
+            // Right spacer (for future ad placement)
+            Expanded(
+              child: Container(
+                color: Colors.transparent,
+                // Future: Add vertical banner ads here
+              ),
+            ),
+          ],
         );
       },
     );
