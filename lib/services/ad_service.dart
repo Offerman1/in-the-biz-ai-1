@@ -40,12 +40,6 @@ class AdService {
     }
 
     // Real Ad Unit IDs for production
-    if (_isWebPlatform) {
-      return 'ca-app-pub-1150666051629225/8744568210'; // Web uses Android ID
-    }
-
-    if (!_isMobilePlatform) return '';
-
     if (Platform.isAndroid) {
       return 'ca-app-pub-1150666051629225/8744568210'; // Android - Shift Save Ad
     } else if (Platform.isIOS) {

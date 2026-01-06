@@ -163,6 +163,22 @@ class _CheckoutAnalyticsTabState extends State<CheckoutAnalyticsTab> {
                     AppTheme.accentPurple)),
           ],
         ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+                child: _buildSummaryCard(
+                    'Avg Sales/Shift',
+                    '\$${avgSalesPerShift.toStringAsFixed(2)}',
+                    AppTheme.accentBlue.withOpacity(0.7))),
+            const SizedBox(width: 12),
+            Expanded(
+                child: _buildSummaryCard(
+                    'Avg Tips/Shift',
+                    '\$${avgTipsPerShift.toStringAsFixed(2)}',
+                    AppTheme.primaryGreen.withOpacity(0.7))),
+          ],
+        ),
         const SizedBox(height: 24),
 
         // Sales vs Tips chart
