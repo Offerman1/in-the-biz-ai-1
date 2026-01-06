@@ -109,7 +109,7 @@ class ResponsiveWebLayout extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         // On narrow screens (mobile/tablet), show full width
-        if (constraints.maxWidth <= 1200) {
+        if (constraints.maxWidth <= 1600) {
           return child;
         }
 

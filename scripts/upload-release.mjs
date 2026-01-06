@@ -9,7 +9,7 @@ import path from 'path';
 const PACKAGE_NAME = 'com.inthebiz.app';
 const SERVICE_ACCOUNT_PATH = './play-service-account.json';
 const AAB_PATH = './build/app/outputs/bundle/release/app-release.aab';
-const TRACK = 'internal'; // internal, alpha, beta, or production
+const TRACK = 'alpha'; // internal, alpha (closed testing), beta (open testing), or production
 
 async function uploadRelease() {
   try {
@@ -67,12 +67,25 @@ async function uploadRelease() {
       requestBody: {
         track: TRACK,
         releases: [{
-          name: `${versionCode}`, // Set version name
+          name: `v1.1.0`, // Set version name
           versionCodes: [versionCode.toString()],
           status: 'completed', // Set to completed to make it active
           releaseNotes: [{
             language: 'en-US',
-            text: 'Bug fixes and performance improvements',
+            text: `What's New in v1.1.0:
+
+🤖 AI Assistant Improvements
+• Enhanced AI context for more personalized responses
+• Improved number parsing for currency values
+
+📊 Better Analytics & Display
+• Event Portfolio cards now show venue and total sale
+• Bulk operations show loading indicator
+• New analytics metrics in Checkout tab
+
+🛠️ Bug Fixes & Performance
+• Fixed unused code and wired up missing functionality
+• Optimized performance and code quality`,
           }],
         }],
       },
