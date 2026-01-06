@@ -98,8 +98,8 @@ class InTheBizApp extends StatelessWidget {
   }
 }
 
-/// Responsive layout wrapper for web that constrains content width
-/// and leaves space for ads on the sides
+/// Responsive layout wrapper for web that adds horizontal padding on desktop
+/// Background colors/gradients extend full-width naturally
 class ResponsiveWebLayout extends StatelessWidget {
   final Widget child;
 
@@ -114,33 +114,13 @@ class ResponsiveWebLayout extends StatelessWidget {
           return child;
         }
 
-        // On desktop, constrain content width to 1200px and center it
-        // Side spaces match the app's background color
-        return Container(
-          color: AppTheme.darkBackground, // Match app background
-          child: Row(
-            children: [
-              // Left spacer (for future ad placement)
-              Expanded(
-                child: Container(
-                  color: AppTheme.darkBackground,
-                  // Future: Add vertical banner ads here
-                ),
-              ),
-              // Main content (constrained to 1200px)
-              SizedBox(
-                width: 1200,
-                child: child,
-              ),
-              // Right spacer (for future ad placement)
-              Expanded(
-                child: Container(
-                  color: AppTheme.darkBackground,
-                  // Future: Add vertical banner ads here
-                ),
-              ),
-            ],
-          ),
+        // On desktop, add horizontal padding to constrain content
+        // Background extends full-width naturally
+        final horizontalPadding = (constraints.maxWidth - 1200) / 2;
+
+        return Padding(
+          padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+          child: child,
         );
       },
     );
