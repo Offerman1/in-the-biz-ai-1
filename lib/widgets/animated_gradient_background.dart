@@ -100,10 +100,10 @@ class _AnimatedGradientBackgroundState extends State<AnimatedGradientBackground>
       builder: (context, child) {
         final value = _controller.value;
 
-        // Create subtle color variations
+        // Create more noticeable color variations
         final color1 = widget.baseColor;
-        final color2 = _adjustColor(widget.baseColor, 0.85);
-        final color3 = _adjustColor(widget.baseColor, 0.7);
+        final color2 = _adjustColor(widget.baseColor, 0.75); // Was 0.85
+        final color3 = _adjustColor(widget.baseColor, 0.55); // Was 0.7
 
         // Interpolate between colors
         final t = math.sin(value * 2 * math.pi) * 0.5 + 0.5;

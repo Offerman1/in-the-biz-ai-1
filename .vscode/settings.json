@@ -32,5 +32,11 @@
     "ls": true,
     "Get-Content": true,
     "Get-ChildItem": true
-  }
+  },
+  "deno.enable": true,
+  "deno.enablePaths": [
+    "supabase/functions"
+  ],
+  "deno.lint": false,
+  "deno.unstable": true
 }

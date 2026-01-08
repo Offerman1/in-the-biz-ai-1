@@ -99,9 +99,10 @@ EXTRACTION INSTRUCTIONS:
 3. **People:**
    - guest_count_expected (number): Expected number of guests
    - guest_count_confirmed (number): Confirmed/final guest count
-   - primary_contact_name (string): Main contact person
+   - primary_contact_name (string): Main contact person (hostess/host)
    - primary_contact_phone (string): Contact phone number
    - primary_contact_email (string): Contact email
+   - client_name (string): Client/company/organization hosting the event
 
 4. **Financials:**
    - total_sale_amount (number): Total cost of the event
@@ -136,6 +137,7 @@ RESPONSE FORMAT (JSON only, no markdown):
   "primary_contact_name": "John Smith",
   "primary_contact_phone": "555-1234",
   "primary_contact_email": "john@example.com",
+  "client_name": "Smith Family",
   "total_sale_amount": 12500.00,
   "deposit_amount": 5000.00,
   "balance_due": 7500.00,

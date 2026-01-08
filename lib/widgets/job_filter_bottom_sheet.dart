@@ -109,11 +109,13 @@ class JobFilterBottomSheet extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppTheme.primaryGreen.withOpacity(0.1)
+              ? AppTheme.cardBackground // Subtle neutral background, not green
               : Colors.transparent,
           border: Border(
             left: BorderSide(
-              color: isSelected ? AppTheme.primaryGreen : Colors.transparent,
+              color: isSelected
+                  ? AppTheme.primaryGreen
+                  : Colors.transparent, // Only accent on border
               width: 3,
             ),
           ),
@@ -124,14 +126,13 @@ class JobFilterBottomSheet extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: isSelected
-                    ? AppTheme.primaryGreen.withOpacity(0.2)
-                    : AppTheme.darkBackground,
+                color:
+                    AppTheme.cardBackgroundLight, // Always neutral, not colored
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
                 icon,
-                color: isSelected ? AppTheme.primaryGreen : AppTheme.textMuted,
+                color: AppTheme.textMuted, // Always gray, not colored
                 size: 24,
               ),
             ),
@@ -148,9 +149,7 @@ class JobFilterBottomSheet extends StatelessWidget {
                     style: AppTheme.bodyLarge.copyWith(
                       fontWeight:
                           isSelected ? FontWeight.w600 : FontWeight.w400,
-                      color: isSelected
-                          ? AppTheme.primaryGreen
-                          : AppTheme.textPrimary,
+                      color: AppTheme.textPrimary, // Always white, not colored
                     ),
                   ),
                   if (employer != null && employer.isNotEmpty) ...[

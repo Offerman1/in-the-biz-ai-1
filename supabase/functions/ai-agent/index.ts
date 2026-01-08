@@ -14,6 +14,7 @@ import { GoalExecutor } from "./executors/goal-executor.ts";
 import { SettingsExecutor } from "./executors/settings-executor.ts";
 import { AnalyticsExecutor } from "./executors/analytics-executor.ts";
 import { ContactExecutor } from "./executors/contact-executor.ts";
+import { UtilityExecutor } from "./executors/utility-executor.ts";
 
 // Import utilities
 import { ContextBuilder } from "./utils/context-builder.ts";
@@ -35,7 +36,7 @@ serve(async (req) => {
 
   try {
     // Parse request - including timezone info from client
-    const { message, history = [], timeZoneOffset = 0, timeZoneName = 'UTC', localDate = null } = await req.json();
+    const { message, history = [], timeZoneOffset = 0, timeZoneName = 'UTC', localDate = null, localTime = null } = await req.json();
 
     if (!message) {
       return new Response(
@@ -123,6 +124,7 @@ serve(async (req) => {
     // Use the client's local date if provided, otherwise calculate from timezone offset
     let currentDate: string;
     let currentYear: number;
+    let currentTime: string = localTime || "00:00:00";
     
     if (localDate) {
       // Client sent their local date - use it directly
@@ -136,15 +138,45 @@ serve(async (req) => {
       currentYear = userLocalTime.getFullYear();
     }
     
-    console.log(`[AI Agent] User timezone: ${timeZoneName}, offset: ${timeZoneOffset} min, local date: ${currentDate}`);
+    // Parse current time to determine time of day context
+    const timeParts = currentTime.split(':');
+    const currentHour = parseInt(timeParts[0]) || 0;
+    const currentMinute = parseInt(timeParts[1]) || 0;
+    
+    // Format time for display (12-hour format)
+    const hour12 = currentHour % 12 || 12;
+    const ampm = currentHour >= 12 ? 'PM' : 'AM';
+    const formattedTime = `${hour12}:${currentMinute.toString().padStart(2, '0')} ${ampm}`;
+    
+    // Determine time of day context for shift-aware logic
+    let timeOfDayContext: string;
+    if (currentHour >= 0 && currentHour < 5) {
+      timeOfDayContext = `It's late night/early morning (${formattedTime}). If user says "I just finished my shift" or mentions "today", they likely mean a shift that STARTED yesterday evening and just ended now. The shift date should be YESTERDAY (when it started), not today.`;
+    } else if (currentHour >= 5 && currentHour < 12) {
+      timeOfDayContext = `It's morning (${formattedTime}). User likely means today's date for any shift references.`;
+    } else if (currentHour >= 12 && currentHour < 17) {
+      timeOfDayContext = `It's afternoon (${formattedTime}). User likely means today's date for any shift references.`;
+    } else if (currentHour >= 17 && currentHour < 21) {
+      timeOfDayContext = `It's evening (${formattedTime}). User likely means today's date for any shift references.`;
+    } else {
+      timeOfDayContext = `It's late evening (${formattedTime}). If user says "I just finished my shift", the shift date should be TODAY (when it started), even if it's close to midnight.`;
+    }
+    
+    console.log(`[AI Agent] User timezone: ${timeZoneName}, offset: ${timeZoneOffset} min, local date: ${currentDate}, time: ${currentTime}`);
     
     // Set the user's local date for the DateParser to use when parsing "today", "yesterday", etc.
     DateParser.setUserLocalDate(currentDate);
+
+    // Initialize utility executor with time info (needs to be after time parsing)
+    const utilityExecutor = new UtilityExecutor(supabase, userId, formattedTime, timeZoneName);
     
     const systemPrompt = `You are "Biz", an intelligent AI assistant for service industry workers who track tips and income.
 
 **TODAY'S DATE:** ${currentDate}
+**CURRENT TIME:** ${formattedTime} (${timeZoneName})
 **CURRENT YEAR:** ${currentYear}
+
+**TIME CONTEXT:** ${timeOfDayContext}
 
 ${userContext}
 
@@ -157,6 +189,7 @@ You can perform actions, not just answer questions. You have access to 60+ funct
 - Change themes and settings
 - Query analytics and generate reports
 - Manage notifications
+- Send feature requests to the development team
 
 **CONTACT MANAGEMENT:**
 When user mentions vendors, staff, or people they worked with, automatically create contacts:
@@ -183,21 +216,36 @@ Extract ALL details mentioned: names, roles, companies, phone, email, website, s
    
    Example: "User says: 'Add Uber as a job' → add_job(name='Uber', template='rideshare')"
 
-2. **DATES - ALWAYS USE CURRENT YEAR (${currentYear}):**
+2. **SHIFT TIMING - SMART DATE & TIME HANDLING:**
+   - **Shift date = when the shift STARTED, not when it ended**
+   - If user says "I just finished my shift" at 2 AM, and shift started at 6 PM yesterday, the shift date is YESTERDAY
+   - Use current time (${formattedTime}) as the END time when user says "I just finished"
+   - If user provides a start time, calculate hours worked: (end time - start time)
+   - Cross-midnight shifts: If start time is PM and current time is AM, shift started YESTERDAY
+   - Check user's scheduled shifts to auto-fill start times when possible
+   - Example: User at 11:45 PM says "I just made $200" → shift date is TODAY (shift started earlier today)
+   - Example: User at 1:30 AM says "I just finished, started at 6 PM" → shift date is YESTERDAY, hours = 7.5
+
+3. **DATES - ALWAYS USE CURRENT YEAR (${currentYear}):**
    - When user says "December 28th" → use ${currentYear}-12-28, NOT any previous year
    - When user says "yesterday", "last week", "the 22nd" → use ${currentYear} unless they explicitly say another year
    - Only use a previous year if user EXPLICITLY says "2024" or "last year"
    - If a date seems ambiguous, ASK the user to confirm before making changes
 
-2. **JOBS - AUTO-SELECT WHEN ONLY ONE EXISTS:**
+4. **JOBS - AUTO-SELECT WHEN ONLY ONE EXISTS:**
    - If user has exactly 1 job: ALWAYS use that job's ID for new shifts without asking
    - If user has 2+ jobs: check if job name is mentioned, otherwise ASK which job
    - Never create a shift without a job_id if user has jobs set up
 
-3. **ACTION-THEN-ASK PATTERN:**
+5. **ACTION-THEN-ASK PATTERN:**
    - CREATE the shift/record immediately with the info provided
    - THEN ask follow-up questions for missing optional details
    - Example: "✅ Added $300 shift for today at [JobName]! Did you want to add hours worked, start/end time, or any notes?"
+
+6. **FEATURE REQUESTS:**
+   - If user asks for something you can't do, offer to send the idea to the dev team
+   - Say: "I can't do that yet, but would you like me to send this idea to the development team? They review all suggestions!"
+   - If user says yes, call send_feature_request with their idea
 
 4. **CONFIRMATIONS FOR AMBIGUITY:**
    - If a date could match multiple shifts (e.g., user worked Dec 28 in both 2024 and 2025), ASK which one
@@ -270,6 +318,11 @@ Extract ALL details mentioned: names, roles, companies, phone, email, website, s
             functionResult = await goalExecutor.execute(call.name, call.args);
           } else if (call.name.includes("contact")) {
             functionResult = await contactExecutor.execute(call.name, call.args);
+          } else if (
+            call.name.includes("feature_request") ||
+            call.name.includes("current_time")
+          ) {
+            functionResult = await utilityExecutor.execute(call.name, call.args);
           } else if (
             call.name.includes("theme") ||
             call.name.includes("notification") ||

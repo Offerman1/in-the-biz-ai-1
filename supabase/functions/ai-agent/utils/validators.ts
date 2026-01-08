@@ -78,18 +78,29 @@ export class Validators {
 
   static parseThemeName(input: string): string {
     const themeMap: Record<string, string> = {
-      "light mode": "light_mode",
-      light: "light_mode",
-      dark: "finance_green",
-      "dark mode": "finance_green",
-      green: "finance_green",
+      "light mode": "cash_light",
+      light: "cash_light",
+      dark: "cash_app",
+      "dark mode": "cash_app",
+      "finance green": "cash_app",
+      green: "cash_app",
       blue: "midnight_blue",
       purple: "purple_reign",
       ocean: "ocean_breeze",
       sunset: "sunset_glow",
-      forest: "forest_night",
+      neon: "neon_cash",
       paypal: "paypal_blue",
-      crypto: "finance_pro",
+      crypto: "coinbase_pro",
+      "cash light": "cash_light",
+      "finance light": "light_blue",
+      "purple light": "purple_light",
+      "sunset light": "sunset_light",
+      "ocean light": "ocean_light",
+      "pink light": "pink_light",
+      "slate light": "slate_light",
+      "mint light": "mint_light",
+      "lavender light": "lavender_light",
+      "gold light": "gold_light",
     };
 
     const lower = input.toLowerCase().trim();

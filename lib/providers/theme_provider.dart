@@ -12,6 +12,9 @@ class ThemeProvider extends ChangeNotifier {
   Color? _gradientColor2;
   final _supabase = Supabase.instance.client;
 
+  // Per-theme background settings storage
+  final Map<String, Map<String, dynamic>> _themeBackgroundSettings = {};
+
   // Animation toggles
   bool _animatedGradients = true;
   bool _parallaxScrolling = false; // Off by default
@@ -113,8 +116,82 @@ class ThemeProvider extends ChangeNotifier {
   }
 
   static final Map<String, Map<String, Color>> _themePresets = {
+    // ====== DEFAULT THEME (Forest Night colors with Finance Green name) ======
     'cash_app': {
-      'primary': const Color(0xFF00D632),
+      'primary': const Color.fromARGB(
+          167, 16, 185, 38), // Forest Night green (YOUR FAVORITE!)
+      'background': const Color(0xFF0D0D0D), // Almost black
+      'card': const Color(0xFF1A1A1A), // Dark gray
+      'cardLight': const Color(0xFF2C2C2C), // Lighter gray
+      'textPrimary': const Color(0xFFFFFFFF),
+      'textSecondary': const Color(0xFFB3B3B3),
+      'textMuted': const Color(0xFF666666),
+      'accentRed': const Color(0xFFEF4444),
+      'accentBlue': const Color(0xFF3B82F6),
+      'accentYellow': const Color(0xFFFBBF24),
+      'accentOrange': const Color(0xFFF97316),
+      'accentPurple': const Color(0xFFA855F7),
+    },
+    // ====== DARK THEMES ======
+    'midnight_blue': {
+      'primary': const Color(0xFF3B82F6), // Blue accent
+      'background': const Color(0xFF0D0D0D),
+      'card': const Color(0xFF1A1A1A),
+      'cardLight': const Color(0xFF2C2C2C),
+      'textPrimary': const Color(0xFFFFFFFF),
+      'textSecondary': const Color(0xFFB3B3B3),
+      'textMuted': const Color(0xFF666666),
+      'accentRed': const Color(0xFFEF4444),
+      'accentBlue': const Color(0xFF06B6D4),
+      'accentYellow': const Color(0xFFFBBF24),
+      'accentOrange': const Color(0xFFF97316),
+      'accentPurple': const Color(0xFFA855F7),
+    },
+    'purple_reign': {
+      'primary': const Color(0xFFA855F7), // Purple accent
+      'background': const Color(0xFF0D0D0D),
+      'card': const Color(0xFF1A1A1A),
+      'cardLight': const Color(0xFF2C2C2C),
+      'textPrimary': const Color(0xFFFFFFFF),
+      'textSecondary': const Color(0xFFB3B3B3),
+      'textMuted': const Color(0xFF666666),
+      'accentRed': const Color(0xFFEF4444),
+      'accentBlue': const Color(0xFF06B6D4),
+      'accentYellow': const Color(0xFFFBBF24),
+      'accentOrange': const Color(0xFFF97316),
+      'accentPurple': const Color(0xFFC084FC),
+    },
+    'ocean_breeze': {
+      'primary': const Color(0xFF06B6D4), // Cyan/teal accent
+      'background': const Color(0xFF0D0D0D),
+      'card': const Color(0xFF1A1A1A),
+      'cardLight': const Color(0xFF2C2C2C),
+      'textPrimary': const Color(0xFFFFFFFF),
+      'textSecondary': const Color(0xFFB3B3B3),
+      'textMuted': const Color(0xFF666666),
+      'accentRed': const Color(0xFFEF4444),
+      'accentBlue': const Color(0xFF3B82F6),
+      'accentYellow': const Color(0xFFFBBF24),
+      'accentOrange': const Color(0xFFF97316),
+      'accentPurple': const Color(0xFFA855F7),
+    },
+    'sunset_glow': {
+      'primary': const Color(0xFFFF6B35), // Keep orange accent
+      'background': const Color(0xFF0D0D0D), // Very dark/black background
+      'card': const Color(0xFF1A1A1A), // Dark neutral card
+      'cardLight': const Color(0xFF2A2A2A), // Slightly lighter
+      'textPrimary': const Color(0xFFFFFFFF),
+      'textSecondary':
+          const Color(0xFFB3B3B3), // Neutral gray instead of orange tint
+      'textMuted': const Color(0xFF666666), // Neutral muted
+      'accentRed': const Color(0xFFFF3366),
+      'accentBlue': const Color(0xFF6B8CFF),
+      'accentYellow': const Color(0xFFFFCC33),
+      'accentOrange': const Color(0xFFFF8C42),
+      'accentPurple': const Color(0xFFAF52DE),
+    },
+    'neon_cash': {
+      'primary': const Color(0xFF00D632), // Original bright neon green
       'background': const Color(0xFF121212),
       'card': const Color(0xFF1E1E1E),
       'cardLight': const Color(0xFF2C2C2C),
@@ -127,154 +204,176 @@ class ThemeProvider extends ChangeNotifier {
       'accentOrange': const Color(0xFFFF9500),
       'accentPurple': const Color(0xFFAF52DE),
     },
-    'midnight_blue': {
-      'primary': const Color(0xFF3B82F6), // Blue accent for buttons/highlights
-      'background': const Color(0xFF0D0D0D), // Almost black (neutral)
-      'card': const Color(0xFF1A1A1A), // Dark gray (neutral)
-      'cardLight': const Color(0xFF2C2C2C), // Lighter gray (neutral)
-      'textPrimary': const Color(0xFFFFFFFF), // White text
-      'textSecondary': const Color(0xFFB3B3B3), // Light gray text
-      'textMuted': const Color(0xFF666666), // Muted gray text
-      'accentRed': const Color(0xFFEF4444), // Red for errors
-      'accentBlue': const Color(0xFF06B6D4), // Cyan for secondary accent
-      'accentYellow': const Color(0xFFFBBF24), // Yellow for warnings
-      'accentOrange': const Color(0xFFF97316), // Orange for info
-      'accentPurple': const Color(0xFFA855F7), // Purple for special items
-    },
-    'purple_reign': {
-      'primary':
-          const Color(0xFFA855F7), // Purple accent for buttons/highlights
-      'background': const Color(0xFF0D0D0D), // Almost black (neutral)
-      'card': const Color(0xFF1A1A1A), // Dark gray (neutral)
-      'cardLight': const Color(0xFF2C2C2C), // Lighter gray (neutral)
-      'textPrimary': const Color(0xFFFFFFFF), // White text
-      'textSecondary': const Color(0xFFB3B3B3), // Light gray text
-      'textMuted': const Color(0xFF666666), // Muted gray text
-      'accentRed': const Color(0xFFEF4444), // Red for errors
-      'accentBlue': const Color(0xFF06B6D4), // Cyan for secondary
-      'accentYellow': const Color(0xFFFBBF24), // Yellow for warnings
-      'accentOrange': const Color(0xFFF97316), // Orange for info
-      'accentPurple': const Color(0xFFC084FC), // Light purple for gradients
-    },
-    'ocean_breeze': {
-      'primary':
-          const Color(0xFF06B6D4), // Cyan/teal accent for buttons/highlights
-      'background': const Color(0xFF0D0D0D), // Almost black (neutral)
-      'card': const Color(0xFF1A1A1A), // Dark gray (neutral)
-      'cardLight': const Color(0xFF2C2C2C), // Lighter gray (neutral)
-      'textPrimary': const Color(0xFFFFFFFF), // White text
-      'textSecondary': const Color(0xFFB3B3B3), // Light gray text
-      'textMuted': const Color(0xFF666666), // Muted gray text
-      'accentRed': const Color(0xFFEF4444), // Red for errors
-      'accentBlue': const Color(0xFF3B82F6), // Blue for secondary
-      'accentYellow': const Color(0xFFFBBF24), // Yellow for warnings
-      'accentOrange': const Color(0xFFF97316), // Orange for info
-      'accentPurple': const Color(0xFFA855F7), // Purple for special items
-    },
-    'sunset_glow': {
-      'primary': const Color(0xFFFF6B35),
-      'background': const Color(0xFF1A0F0A),
-      'card': const Color(0xFF2A1F1A),
-      'cardLight': const Color(0xFF3A2F2A),
-      'textPrimary': const Color(0xFFFFFFFF),
-      'textSecondary': const Color(0xFFFFD4B3),
-      'textMuted': const Color(0xFFB39480),
-      'accentRed': const Color(0xFFFF3366),
-      'accentBlue': const Color(0xFF6B8CFF),
-      'accentYellow': const Color(0xFFFFCC33),
-      'accentOrange': const Color(0xFFFF8C42),
-      'accentPurple': const Color(0xFFAF52DE),
-    },
-    'forest_night': {
-      'primary': const Color.fromARGB(
-          167, 16, 185, 38), // Emerald green accent for buttons/highlights
-      'background': const Color(0xFF0D0D0D), // Almost black (neutral)
-      'card': const Color(0xFF1A1A1A), // Dark gray (neutral)
-      'cardLight': const Color(0xFF2C2C2C), // Lighter gray (neutral)
-      'textPrimary': const Color(0xFFFFFFFF), // White text
-      'textSecondary': const Color(0xFFB3B3B3), // Light gray text
-      'textMuted': const Color(0xFF666666), // Muted gray text
-      'accentRed': const Color(0xFFEF4444), // Red for errors
-      'accentBlue': const Color(0xFF3B82F6), // Blue for secondary
-      'accentYellow': const Color(0xFFFBBF24), // Yellow for warnings
-      'accentOrange': const Color(0xFFF97316), // Orange for info
-      'accentPurple': const Color(0xFFA855F7), // Purple for special items
-    },
-    // NEW THEMES
     'paypal_blue': {
-      'primary':
-          const Color(0xFF0070BA), // PayPal blue accent for buttons/highlights
-      'background': const Color(0xFF0D0D0D), // Almost black (neutral)
-      'card': const Color(0xFF1A1A1A), // Dark gray (neutral)
-      'cardLight': const Color(0xFF2C2C2C), // Lighter gray (neutral)
-      'textPrimary': const Color(0xFFFFFFFF), // White text
-      'textSecondary': const Color(0xFFB3B3B3), // Light gray text
-      'textMuted': const Color(0xFF666666), // Muted gray text
-      'accentRed': const Color(0xFFEF4444), // Red for errors
-      'accentBlue': const Color(0xFF3B82F6), // Blue for secondary
-      'accentYellow': const Color(0xFFFBBF24), // Yellow for warnings
-      'accentOrange': const Color(0xFFF97316), // Orange for info
-      'accentPurple': const Color(0xFFA855F7), // Purple for special items
+      'primary': const Color(0xFF0070BA), // PayPal blue
+      'background': const Color(0xFF0D0D0D),
+      'card': const Color(0xFF1A1A1A),
+      'cardLight': const Color(0xFF2C2C2C),
+      'textPrimary': const Color(0xFFFFFFFF),
+      'textSecondary': const Color(0xFFB3B3B3),
+      'textMuted': const Color(0xFF666666),
+      'accentRed': const Color(0xFFEF4444),
+      'accentBlue': const Color(0xFF3B82F6),
+      'accentYellow': const Color(0xFFFBBF24),
+      'accentOrange': const Color(0xFFF97316),
+      'accentPurple': const Color(0xFFA855F7),
     },
     'coinbase_pro': {
-      'primary':
-          const Color(0xFF5B5FEF), // Blue/purple accent for buttons/highlights
-      'background': const Color(0xFF0D0D0D), // Almost black (neutral)
-      'card': const Color(0xFF1A1A1A), // Dark gray (neutral)
-      'cardLight': const Color(0xFF2C2C2C), // Lighter gray (neutral)
-      'textPrimary': const Color(0xFFFFFFFF), // White text
-      'textSecondary': const Color(0xFFB3B3B3), // Light gray text
-      'textMuted': const Color(0xFF666666), // Muted gray text
-      'accentRed': const Color(0xFFEF4444), // Red for errors
-      'accentBlue': const Color(0xFF3B82F6), // Blue for secondary
-      'accentYellow': const Color(0xFFFBBF24), // Yellow for warnings
-      'accentOrange': const Color(0xFFF97316), // Orange for info
-      'accentPurple': const Color(0xFF8B5CF6), // Purple for gradients
+      'primary': const Color(0xFF5B5FEF), // Blue/purple accent
+      'background': const Color(0xFF0D0D0D),
+      'card': const Color(0xFF1A1A1A),
+      'cardLight': const Color(0xFF2C2C2C),
+      'textPrimary': const Color(0xFFFFFFFF),
+      'textSecondary': const Color(0xFFB3B3B3),
+      'textMuted': const Color(0xFF666666),
+      'accentRed': const Color(0xFFEF4444),
+      'accentBlue': const Color(0xFF3B82F6),
+      'accentYellow': const Color(0xFFFBBF24),
+      'accentOrange': const Color(0xFFF97316),
+      'accentPurple': const Color(0xFF8B5CF6),
     },
-    'light_mode': {
-      'primary': const Color.fromARGB(
-          255, 107, 197, 89), // Darker emerald green (professional, not neon)
-      'background': const Color(0xFFFFFFFF),
-      'card': const Color(0xFFF9FAFB), // Slightly off-white for subtle depth
-      'cardLight': const Color(0xFFF3F4F6), // Light gray
-      'textPrimary':
-          const Color(0xFF111827), // Almost black (softer than pure black)
-      'textSecondary': const Color(0xFF6B7280), // Medium gray
-      'textMuted': const Color(0xFF9CA3AF), // Light gray
-      'accentRed': const Color(0xFFDC2626), // Darker red
-      'accentBlue': const Color(0xFF2563EB), // Darker blue
-      'accentYellow': const Color(0xFFF59E0B), // Darker yellow
-      'accentOrange': const Color(0xFFEA580C), // Darker orange
-      'accentPurple': const Color(0xFF9333EA), // Darker purple
+    // ====== LIGHT THEMES ======
+    'cash_light': {
+      'primary': const Color(0xFF059669), // Emerald green accent ONLY
+      'background': const Color(0xFFFFFFFF), // Pure white
+      'card': const Color(0xFFF5F5F5), // Just slightly darker than white
+      'cardLight': const Color(0xFFEEEEEE), // Just slightly darker
+      'textPrimary': const Color(0xFF111827), // Almost black
+      'textSecondary': const Color(0xFF4B5563), // Dark gray
+      'textMuted': const Color(0xFF9CA3AF), // Medium gray
+      'accentRed': const Color(0xFFDC2626),
+      'accentBlue': const Color(0xFF2563EB),
+      'accentYellow': const Color(0xFFF59E0B),
+      'accentOrange': const Color(0xFFEA580C),
+      'accentPurple': const Color(0xFF9333EA),
     },
     'light_blue': {
-      'primary': const Color(0xFF0070BA), // PayPal blue
-      'background': const Color(0xFFFAFAFA), // Very light gray (not pure white)
-      'card': const Color(0xFFFFFFFF), // White cards
-      'cardLight': const Color(0xFFF5F5F5), // Light gray for subtle elements
-      'textPrimary': const Color(0xFF2C2E2F), // Almost black
-      'textSecondary': const Color(0xFF6C7378), // Gray
-      'textMuted': const Color(0xFF9DA3A6), // Light gray
-      'accentRed': const Color(0xFFD32F2F), // Red
-      'accentBlue': const Color(0xFF0070BA), // PayPal blue
-      'accentYellow': const Color(0xFFFFC439), // PayPal yellow accent
-      'accentOrange': const Color(0xFFFF6B35), // Orange
-      'accentPurple': const Color(0xFF7B4FFF), // Purple
+      'primary': const Color(0xFF0070BA), // Blue accent ONLY
+      'background': const Color(0xFFFFFFFF),
+      'card': const Color(0xFFF9FAFB),
+      'cardLight': const Color(0xFFF3F4F6),
+      'textPrimary': const Color(0xFF111827),
+      'textSecondary': const Color(0xFF4B5563),
+      'textMuted': const Color(0xFF9CA3AF),
+      'accentRed': const Color(0xFFDC2626),
+      'accentBlue': const Color(0xFF2563EB),
+      'accentYellow': const Color(0xFFF59E0B),
+      'accentOrange': const Color(0xFFEA580C),
+      'accentPurple': const Color(0xFF9333EA),
     },
-    'soft_purple': {
-      'primary': const Color(0xFF8E24AA),
-      'background': const Color(0xFFFAF9FC),
-      'card': const Color(0xFFF3E5F5),
-      'cardLight': const Color(0xFFE1BEE7),
-      'textPrimary': const Color(0xFF000000),
-      'textSecondary': const Color(0xFF4A148C),
-      'textMuted': const Color(0xFF7B1FA2),
-      'accentRed': const Color(0xFFE53935),
-      'accentBlue': const Color(0xFF1E88E5),
-      'accentYellow': const Color(0xFFFDD835),
-      'accentOrange': const Color(0xFFFB8C00),
-      'accentPurple': const Color(0xFF8E24AA),
+    'purple_light': {
+      'primary': const Color(0xFF7C3AED), // Purple accent ONLY
+      'background': const Color(0xFFFFFFFF),
+      'card': const Color(0xFFF9FAFB),
+      'cardLight': const Color(0xFFF3F4F6),
+      'textPrimary': const Color(0xFF111827),
+      'textSecondary': const Color(0xFF4B5563),
+      'textMuted': const Color(0xFF9CA3AF),
+      'accentRed': const Color(0xFFDC2626),
+      'accentBlue': const Color(0xFF2563EB),
+      'accentYellow': const Color(0xFFF59E0B),
+      'accentOrange': const Color(0xFFEA580C),
+      'accentPurple': const Color(0xFF9333EA),
     },
+    'sunset_light': {
+      'primary': const Color(0xFFEA580C), // Orange accent ONLY
+      'background': const Color(0xFFFFFFFF),
+      'card': const Color(0xFFF9FAFB),
+      'cardLight': const Color(0xFFF3F4F6),
+      'textPrimary': const Color(0xFF111827),
+      'textSecondary': const Color(0xFF4B5563),
+      'textMuted': const Color(0xFF9CA3AF),
+      'accentRed': const Color(0xFFDC2626),
+      'accentBlue': const Color(0xFF2563EB),
+      'accentYellow': const Color(0xFFF59E0B),
+      'accentOrange': const Color(0xFFEA580C),
+      'accentPurple': const Color(0xFF9333EA),
+    },
+    'ocean_light': {
+      'primary': const Color(0xFF0891B2), // Cyan accent ONLY
+      'background': const Color(0xFFFFFFFF),
+      'card': const Color(0xFFF9FAFB),
+      'cardLight': const Color(0xFFF3F4F6),
+      'textPrimary': const Color(0xFF111827),
+      'textSecondary': const Color(0xFF4B5563),
+      'textMuted': const Color(0xFF9CA3AF),
+      'accentRed': const Color(0xFFDC2626),
+      'accentBlue': const Color(0xFF2563EB),
+      'accentYellow': const Color(0xFFF59E0B),
+      'accentOrange': const Color(0xFFEA580C),
+      'accentPurple': const Color(0xFF9333EA),
+    },
+    'pink_light': {
+      'primary': const Color(0xFFDB2777), // Pink accent ONLY
+      'background': const Color(0xFFFFFFFF),
+      'card': const Color(0xFFF9FAFB),
+      'cardLight': const Color(0xFFF3F4F6),
+      'textPrimary': const Color(0xFF111827),
+      'textSecondary': const Color(0xFF4B5563),
+      'textMuted': const Color(0xFF9CA3AF),
+      'accentRed': const Color(0xFFDC2626),
+      'accentBlue': const Color(0xFF2563EB),
+      'accentYellow': const Color(0xFFF59E0B),
+      'accentOrange': const Color(0xFFEA580C),
+      'accentPurple': const Color(0xFF9333EA),
+    },
+    'slate_light': {
+      'primary': const Color(0xFF475569), // Slate gray accent ONLY
+      'background': const Color(0xFFFFFFFF),
+      'card': const Color(0xFFF9FAFB),
+      'cardLight': const Color(0xFFF3F4F6),
+      'textPrimary': const Color(0xFF111827),
+      'textSecondary': const Color(0xFF4B5563),
+      'textMuted': const Color(0xFF9CA3AF),
+      'accentRed': const Color(0xFFDC2626),
+      'accentBlue': const Color(0xFF2563EB),
+      'accentYellow': const Color(0xFFF59E0B),
+      'accentOrange': const Color(0xFFEA580C),
+      'accentPurple': const Color(0xFF9333EA),
+    },
+    'mint_light': {
+      'primary': const Color(0xFF10B981), // Mint green accent ONLY
+      'background': const Color(0xFFFFFFFF),
+      'card': const Color(0xFFF9FAFB),
+      'cardLight': const Color(0xFFF3F4F6),
+      'textPrimary': const Color(0xFF111827),
+      'textSecondary': const Color(0xFF4B5563),
+      'textMuted': const Color(0xFF9CA3AF),
+      'accentRed': const Color(0xFFDC2626),
+      'accentBlue': const Color(0xFF2563EB),
+      'accentYellow': const Color(0xFFF59E0B),
+      'accentOrange': const Color(0xFFEA580C),
+      'accentPurple': const Color(0xFF9333EA),
+    },
+    'lavender_light': {
+      'primary': const Color(0xFF8B5CF6), // Lavender accent ONLY
+      'background': const Color(0xFFFFFFFF),
+      'card': const Color(0xFFF9FAFB),
+      'cardLight': const Color(0xFFF3F4F6),
+      'textPrimary': const Color(0xFF111827),
+      'textSecondary': const Color(0xFF4B5563),
+      'textMuted': const Color(0xFF9CA3AF),
+      'accentRed': const Color(0xFFDC2626),
+      'accentBlue': const Color(0xFF2563EB),
+      'accentYellow': const Color(0xFFF59E0B),
+      'accentOrange': const Color(0xFFEA580C),
+      'accentPurple': const Color(0xFF9333EA),
+    },
+    'gold_light': {
+      'primary': const Color(0xFFCA8A04), // Gold accent ONLY
+      'background': const Color(0xFFFFFFFF),
+      'card': const Color(0xFFF9FAFB),
+      'cardLight': const Color(0xFFF3F4F6),
+      'textPrimary': const Color(0xFF111827),
+      'textSecondary': const Color(0xFF4B5563),
+      'textMuted': const Color(0xFF9CA3AF),
+      'accentRed': const Color(0xFFDC2626),
+      'accentBlue': const Color(0xFF2563EB),
+      'accentYellow': const Color(0xFFF59E0B),
+      'accentOrange': const Color(0xFFEA580C),
+      'accentPurple': const Color(0xFF9333EA),
+    },
+    // Remove old forest_night, light_mode, soft_purple entries
   };
 
   Future<void> _loadTheme() async {
@@ -285,7 +384,7 @@ class ThemeProvider extends ChangeNotifier {
       final response = await _supabase
           .from('user_preferences')
           .select(
-              'theme, animated_gradients, parallax_scrolling, shimmer_effects, particle_effects')
+              'theme, animated_gradients, parallax_scrolling, shimmer_effects, particle_effects, theme_background_settings')
           .eq('user_id', user.id)
           .maybeSingle();
 
@@ -295,7 +394,37 @@ class ThemeProvider extends ChangeNotifier {
         _parallaxScrolling = response['parallax_scrolling'] ?? true;
         _shimmerEffects = response['shimmer_effects'] ?? true;
         _particleEffects = response['particle_effects'] ?? false;
+
+        // Load per-theme background settings
+        if (response['theme_background_settings'] != null) {
+          final savedSettings =
+              response['theme_background_settings'] as Map<String, dynamic>;
+          savedSettings.forEach((key, value) {
+            if (value is Map<String, dynamic>) {
+              _themeBackgroundSettings[key] = Map<String, dynamic>.from(value);
+            }
+          });
+
+          // Apply current theme's background settings if saved
+          final currentSettings = _themeBackgroundSettings[_currentTheme];
+          if (currentSettings != null) {
+            _backgroundMode = currentSettings['mode'] ?? 'default';
+            _customBackgroundColor = currentSettings['customColor'] != null
+                ? Color(currentSettings['customColor'])
+                : null;
+            _gradientColor1 = currentSettings['gradientColor1'] != null
+                ? Color(currentSettings['gradientColor1'])
+                : null;
+            _gradientColor2 = currentSettings['gradientColor2'] != null
+                ? Color(currentSettings['gradientColor2'])
+                : null;
+          }
+        }
+
         _applyTheme(_currentTheme);
+        if (_backgroundMode != 'default') {
+          _applyBackgroundMode();
+        }
         notifyListeners();
       }
     } catch (e) {
@@ -339,8 +468,43 @@ class ThemeProvider extends ChangeNotifier {
   }
 
   Future<void> setTheme(String themeName, {bool setPending = true}) async {
+    // Save current theme's background settings before switching
+    if (_currentTheme.isNotEmpty) {
+      _themeBackgroundSettings[_currentTheme] = {
+        'mode': _backgroundMode,
+        'customColor': _customBackgroundColor?.value,
+        'gradientColor1': _gradientColor1?.value,
+        'gradientColor2': _gradientColor2?.value,
+      };
+    }
+
     _currentTheme = themeName;
+
+    // Load the new theme's saved background settings (if any)
+    final savedSettings = _themeBackgroundSettings[themeName];
+    if (savedSettings != null) {
+      _backgroundMode = savedSettings['mode'] ?? 'default';
+      _customBackgroundColor = savedSettings['customColor'] != null
+          ? Color(savedSettings['customColor'])
+          : null;
+      _gradientColor1 = savedSettings['gradientColor1'] != null
+          ? Color(savedSettings['gradientColor1'])
+          : null;
+      _gradientColor2 = savedSettings['gradientColor2'] != null
+          ? Color(savedSettings['gradientColor2'])
+          : null;
+    } else {
+      // No saved settings for this theme - use defaults
+      _backgroundMode = 'default';
+      _customBackgroundColor = null;
+      _gradientColor1 = null;
+      _gradientColor2 = null;
+    }
+
     _applyTheme(themeName);
+    if (_backgroundMode != 'default') {
+      _applyBackgroundMode(); // Apply saved background mode
+    }
     updateSystemUI(); // Update status bar icons for theme
     notifyListeners();
 
@@ -383,12 +547,19 @@ class ThemeProvider extends ChangeNotifier {
       'purple_reign': 'Purple Reign',
       'ocean_breeze': 'Ocean Breeze',
       'sunset_glow': 'Sunset Glow',
-      'forest_night': 'Forest Night',
+      'neon_cash': 'Neon Cash',
       'paypal_blue': 'PayPal Blue',
-      'finance_pro': 'Finance Pro',
-      'light_mode': 'Light Mode',
+      'coinbase_pro': 'Finance Pro',
+      'cash_light': 'Cash Light',
       'light_blue': 'Finance Light',
-      'soft_purple': 'Soft Purple',
+      'purple_light': 'Purple Light',
+      'sunset_light': 'Sunset Light',
+      'ocean_light': 'Ocean Light',
+      'pink_light': 'Pink Light',
+      'slate_light': 'Slate Light',
+      'mint_light': 'Mint Light',
+      'lavender_light': 'Lavender Light',
+      'gold_light': 'Gold Light',
     };
     return names[themeKey] ?? themeKey;
   }
@@ -442,21 +613,32 @@ class ThemeProvider extends ChangeNotifier {
     _customBackgroundColor = customColor;
     _gradientColor1 = gradientColor1;
     _gradientColor2 = gradientColor2;
+
+    // Save to per-theme settings
+    _themeBackgroundSettings[_currentTheme] = {
+      'mode': mode,
+      'customColor': customColor?.value,
+      'gradientColor1': gradientColor1?.value,
+      'gradientColor2': gradientColor2?.value,
+    };
+
     _applyBackgroundMode();
     updateSystemUI(); // Update status bar icons
     notifyListeners();
 
-    // Save to database
+    // Save to database (with theme-specific key)
     try {
       final user = _supabase.auth.currentUser;
       if (user == null) return;
 
+      // Save per-theme background settings as JSON
       await _supabase.from('user_preferences').upsert({
         'user_id': user.id,
         'background_mode': mode,
         'custom_bg_color': customColor?.value,
         'gradient_color1': gradientColor1?.value,
         'gradient_color2': gradientColor2?.value,
+        'theme_background_settings': _themeBackgroundSettings,
         'updated_at': DateTime.now().toIso8601String(),
       });
     } catch (e) {

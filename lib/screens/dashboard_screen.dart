@@ -436,8 +436,7 @@ class _HomeScreenState extends State<_HomeScreen> {
                                 });
                               },
                               child: Icon(Icons.add,
-                                  color: AppTheme.primaryGreen.withOpacity(0.7),
-                                  size: 28),
+                                  color: AppTheme.primaryGreen, size: 28),
                             ),
                             const SizedBox(width: 12),
                             GestureDetector(
@@ -453,8 +452,7 @@ class _HomeScreenState extends State<_HomeScreen> {
                                 });
                               },
                               child: Icon(Icons.flag,
-                                  color: AppTheme.primaryGreen.withOpacity(0.7),
-                                  size: 28),
+                                  color: AppTheme.primaryGreen, size: 28),
                             ),
                           ],
                         ),
@@ -552,9 +550,7 @@ class _HomeScreenState extends State<_HomeScreen> {
                                       ),
                                     )
                                   : Icon(Icons.refresh,
-                                      color: AppTheme.primaryGreen
-                                          .withOpacity(0.7),
-                                      size: 28),
+                                      color: AppTheme.primaryGreen, size: 28),
                             ),
                             const SizedBox(width: 12),
                             GestureDetector(
@@ -566,8 +562,7 @@ class _HomeScreenState extends State<_HomeScreen> {
                                 );
                               },
                               child: Icon(Icons.settings_outlined,
-                                  color: AppTheme.primaryGreen.withOpacity(0.7),
-                                  size: 28),
+                                  color: AppTheme.primaryGreen, size: 28),
                             ),
                           ],
                         ),
@@ -610,7 +605,7 @@ class _HomeScreenState extends State<_HomeScreen> {
                           if (_jobs.length > 2) ...[
                             PopupMenuButton<String?>(
                               icon: Icon(Icons.arrow_drop_down,
-                                  color: AppTheme.primaryGreen, size: 20),
+                                  color: AppTheme.textMuted, size: 20),
                               padding: EdgeInsets.zero,
                               color: AppTheme.cardBackground,
                               shape: RoundedRectangleBorder(
@@ -731,9 +726,31 @@ class _HomeScreenState extends State<_HomeScreen> {
                               value: goalPercent,
                               backgroundColor: Colors.transparent,
                               valueColor: AlwaysStoppedAnimation<Color>(
-                                AppTheme.primaryGreen,
+                                Colors.transparent,
                               ),
                               minHeight: 32,
+                            ),
+                          ),
+                        ),
+                        // Full gradient overlay that fills based on progress
+                        Positioned.fill(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(16),
+                            child: FractionallySizedBox(
+                              alignment: Alignment.centerLeft,
+                              widthFactor: goalPercent.clamp(0.0, 1.0),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.centerLeft,
+                                    end: Alignment.centerRight,
+                                    colors: [
+                                      AppTheme.primaryGreen,
+                                      AppTheme.accentBlue,
+                                    ],
+                                  ),
+                                ),
+                              ),
                             ),
                           ),
                         ),
@@ -998,12 +1015,21 @@ class _HomeScreenState extends State<_HomeScreen> {
                       ),
                       const SizedBox(height: 16),
                       ElevatedButton.icon(
-                        onPressed: () {
-                          Navigator.push(
+                        onPressed: () async {
+                          final result = await Navigator.push(
                             context,
                             MaterialPageRoute(
                                 builder: (context) => const AddShiftScreen()),
                           );
+                          // Refresh data if shift was saved
+                          if (result == true && mounted) {
+                            final shiftProvider = Provider.of<ShiftProvider>(
+                                context,
+                                listen: false);
+                            await shiftProvider.loadShifts();
+                            await _loadJobs();
+                            await _loadGoal();
+                          }
                         },
                         icon: const Icon(Icons.add),
                         label: const Text('Add Shift'),
@@ -1018,7 +1044,7 @@ class _HomeScreenState extends State<_HomeScreen> {
           SliverList(
             delegate: SliverChildBuilderDelegate(
               (context, index) {
-                // Filter shifts by selected job AND only past shifts, then show only last 5
+                // Filter shifts by selected job, include today's shifts and past shifts
                 final now = DateTime.now();
                 final today = DateTime(now.year, now.month, now.day);
 
@@ -1030,7 +1056,8 @@ class _HomeScreenState extends State<_HomeScreen> {
                     .where((shift) {
                   final shiftDate = DateTime(
                       shift.date.year, shift.date.month, shift.date.day);
-                  return shiftDate.isBefore(today); // Only past shifts
+                  // Include today and past shifts (not future shifts)
+                  return !shiftDate.isAfter(today);
                 }).toList();
 
                 final recentShifts = filteredShifts.take(5).toList();
@@ -1051,7 +1078,8 @@ class _HomeScreenState extends State<_HomeScreen> {
                     .where((shift) {
                   final shiftDate = DateTime(
                       shift.date.year, shift.date.month, shift.date.day);
-                  return shiftDate.isBefore(today); // Only past shifts
+                  // Include today and past shifts (not future shifts)
+                  return !shiftDate.isAfter(today);
                 }).toList();
                 return filteredShifts.length > 5 ? 5 : filteredShifts.length;
               }(),
@@ -1065,6 +1093,7 @@ class _HomeScreenState extends State<_HomeScreen> {
 
   Widget _buildPeriodChip(String label, String period) {
     final isSelected = _selectedPeriod == period;
+    final isLightMode = AppTheme.darkBackground.computeLuminance() > 0.5;
     return GestureDetector(
       onTap: () {
         setState(() {
@@ -1075,13 +1104,20 @@ class _HomeScreenState extends State<_HomeScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
         decoration: BoxDecoration(
-          color: isSelected ? AppTheme.primaryGreen : AppTheme.cardBackground,
+          color: isSelected
+              ? (isLightMode
+                  ? const Color(
+                      0xFFD1D5DB) // Darker gray for light mode selected
+                  : AppTheme.cardBackgroundLight)
+              : AppTheme.cardBackground,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: isSelected ? AppTheme.primaryOnDark : AppTheme.textSecondary,
+            color: isSelected
+                ? AppTheme.textPrimary
+                : AppTheme.textSecondary, // White/gray text, not colored
             fontSize: 10,
             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
           ),
@@ -1092,6 +1128,7 @@ class _HomeScreenState extends State<_HomeScreen> {
 
   Widget _buildJobTab(String label, String? jobId) {
     final isSelected = _selectedJobId == jobId;
+    final isLightMode = AppTheme.darkBackground.computeLuminance() > 0.5;
     return Expanded(
       child: GestureDetector(
         onTap: () {
@@ -1104,7 +1141,12 @@ class _HomeScreenState extends State<_HomeScreen> {
           margin: const EdgeInsets.symmetric(horizontal: 2),
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
           decoration: BoxDecoration(
-            color: isSelected ? AppTheme.primaryGreen : AppTheme.cardBackground,
+            color: isSelected
+                ? (isLightMode
+                    ? const Color(
+                        0xFFD1D5DB) // Darker gray for light mode selected
+                    : AppTheme.cardBackgroundLight)
+                : AppTheme.cardBackground,
             borderRadius: BorderRadius.circular(8),
           ),
           child: Text(
@@ -1113,8 +1155,9 @@ class _HomeScreenState extends State<_HomeScreen> {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              color:
-                  isSelected ? AppTheme.primaryOnDark : AppTheme.textSecondary,
+              color: isSelected
+                  ? AppTheme.adaptiveTextColor
+                  : AppTheme.textSecondary,
               fontSize: 11,
               fontWeight: FontWeight.w700,
             ),
@@ -1227,7 +1270,7 @@ class _HomeScreenState extends State<_HomeScreen> {
                       Text(
                         DateFormat('MMM').format(shift.date).toUpperCase(),
                         style: AppTheme.labelSmall.copyWith(
-                          color: AppTheme.primaryGreen,
+                          color: AppTheme.textSecondary,
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
                         ),
@@ -1235,7 +1278,7 @@ class _HomeScreenState extends State<_HomeScreen> {
                       Text(
                         DateFormat('d').format(shift.date),
                         style: AppTheme.titleLarge.copyWith(
-                          color: AppTheme.primaryGreen,
+                          color: AppTheme.textPrimary,
                           fontWeight: FontWeight.w700,
                           fontSize: 20,
                         ),
@@ -1243,7 +1286,7 @@ class _HomeScreenState extends State<_HomeScreen> {
                       Text(
                         DateFormat('y').format(shift.date),
                         style: AppTheme.labelSmall.copyWith(
-                          color: AppTheme.primaryGreen,
+                          color: AppTheme.textSecondary,
                           fontSize: 9,
                           fontWeight: FontWeight.w600,
                         ),

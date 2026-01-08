@@ -50,17 +50,29 @@ export class SettingsExecutor {
 
     // Map natural language to theme IDs
     const themeMap: Record<string, string> = {
-      "light mode": "light_mode",
-      light: "light_mode",
-      dark: "finance_green",
-      "dark mode": "finance_green",
+      "light mode": "cash_light",
+      light: "cash_light",
+      dark: "cash_app",
+      "dark mode": "cash_app",
+      "finance green": "cash_app",
+      green: "cash_app",
       blue: "midnight_blue",
       purple: "purple_reign",
       ocean: "ocean_breeze",
       sunset: "sunset_glow",
-      forest: "forest_night",
+      neon: "neon_cash",
       paypal: "paypal_blue",
-      crypto: "finance_pro",
+      crypto: "coinbase_pro",
+      "cash light": "cash_light",
+      "finance light": "light_blue",
+      "purple light": "purple_light",
+      "sunset light": "sunset_light",
+      "ocean light": "ocean_light",
+      "pink light": "pink_light",
+      "slate light": "slate_light",
+      "mint light": "mint_light",
+      "lavender light": "lavender_light",
+      "gold light": "gold_light",
     };
 
     const finalTheme = themeMap[theme.toLowerCase()] || theme;
@@ -100,10 +112,10 @@ export class SettingsExecutor {
   private async getAvailableThemes() {
     const themes = [
       {
-        id: "finance_green",
+        id: "cash_app",
         name: "Finance Green (Default)",
         type: "dark",
-        description: "Classic green finance app theme",
+        description: "Emerald green finance theme",
       },
       {
         id: "midnight_blue",
@@ -130,10 +142,10 @@ export class SettingsExecutor {
         description: "Warm orange tones",
       },
       {
-        id: "forest_night",
-        name: "Forest Night",
+        id: "neon_cash",
+        name: "Neon Cash",
         type: "dark",
-        description: "Nature-inspired green",
+        description: "Bright neon green",
       },
       {
         id: "paypal_blue",
@@ -142,28 +154,70 @@ export class SettingsExecutor {
         description: "PayPal-inspired theme",
       },
       {
-        id: "finance_pro",
+        id: "coinbase_pro",
         name: "Finance Pro (Crypto)",
         type: "dark",
         description: "Blue and purple crypto theme",
       },
       {
-        id: "light_mode",
-        name: "Light Mode",
+        id: "cash_light",
+        name: "Cash Light",
         type: "light",
-        description: "Clean white background",
+        description: "Clean white with emerald green",
       },
       {
         id: "light_blue",
-        name: "Light Blue",
+        name: "Finance Light",
         type: "light",
-        description: "Sunny blue theme",
+        description: "PayPal-inspired light theme",
       },
       {
-        id: "soft_purple",
-        name: "Soft Purple",
+        id: "purple_light",
+        name: "Purple Light",
         type: "light",
         description: "Gentle purple theme",
+      },
+      {
+        id: "sunset_light",
+        name: "Sunset Light",
+        type: "light",
+        description: "Warm peachy tones",
+      },
+      {
+        id: "ocean_light",
+        name: "Ocean Light",
+        type: "light",
+        description: "Soft teal and cyan",
+      },
+      {
+        id: "pink_light",
+        name: "Pink Light",
+        type: "light",
+        description: "Rose and blush tones",
+      },
+      {
+        id: "slate_light",
+        name: "Slate Light",
+        type: "light",
+        description: "Cool blue-gray",
+      },
+      {
+        id: "mint_light",
+        name: "Mint Light",
+        type: "light",
+        description: "Fresh mint green",
+      },
+      {
+        id: "lavender_light",
+        name: "Lavender Light",
+        type: "light",
+        description: "Soft lavender purple",
+      },
+      {
+        id: "gold_light",
+        name: "Gold Light",
+        type: "light",
+        description: "Warm gold tones",
       },
     ];
 
@@ -179,23 +233,30 @@ export class SettingsExecutor {
 
     // Theme color previews (simplified)
     const themeColors: Record<string, any> = {
-      finance_green: { primary: "#00D632", accent: "#2D9CDB" },
-      midnight_blue: { primary: "#4A90E2", accent: "#50C878" },
-      purple_reign: { primary: "#9B59B6", accent: "#E74C3C" },
-      ocean_breeze: { primary: "#1ABC9C", accent: "#3498DB" },
-      sunset_glow: { primary: "#FF6B35", accent: "#F7931E" },
-      forest_night: { primary: "#27AE60", accent: "#16A085" },
-      paypal_blue: { primary: "#0070BA", accent: "#00457C" },
-      finance_pro: { primary: "#667EEA", accent: "#764BA2" },
-      light_mode: { primary: "#00D632", accent: "#2D9CDB" },
-      light_blue: { primary: "#4A90E2", accent: "#50C878" },
-      soft_purple: { primary: "#9B59B6", accent: "#E74C3C" },
+      cash_app: { primary: "#10B981", accent: "#3B82F6" },
+      midnight_blue: { primary: "#3B82F6", accent: "#06B6D4" },
+      purple_reign: { primary: "#A855F7", accent: "#C084FC" },
+      ocean_breeze: { primary: "#06B6D4", accent: "#3B82F6" },
+      sunset_glow: { primary: "#FF6B35", accent: "#FF8C42" },
+      neon_cash: { primary: "#00D632", accent: "#007AFF" },
+      paypal_blue: { primary: "#0070BA", accent: "#3B82F6" },
+      coinbase_pro: { primary: "#5B5FEF", accent: "#8B5CF6" },
+      cash_light: { primary: "#10B981", accent: "#2563EB" },
+      light_blue: { primary: "#0070BA", accent: "#FFC439" },
+      purple_light: { primary: "#8E24AA", accent: "#E1BEE7" },
+      sunset_light: { primary: "#FF6B35", accent: "#FFE4D6" },
+      ocean_light: { primary: "#0891B2", accent: "#BAE6FD" },
+      pink_light: { primary: "#EC4899", accent: "#FBCFE8" },
+      slate_light: { primary: "#475569", accent: "#E2E8F0" },
+      mint_light: { primary: "#10B981", accent: "#BBF7D0" },
+      lavender_light: { primary: "#8B5CF6", accent: "#E9D5FF" },
+      gold_light: { primary: "#D97706", accent: "#FDE68A" },
     };
 
     return {
       success: true,
       theme,
-      colors: themeColors[theme] || themeColors.finance_green,
+      colors: themeColors[theme] || themeColors.cash_app,
       message: `Preview of ${theme} theme`,
     };
   }

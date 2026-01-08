@@ -28,7 +28,10 @@ import '../widgets/collapsible_section.dart';
 import '../widgets/hero_card.dart';
 import '../widgets/navigation_wrapper.dart';
 import '../widgets/add_field_picker.dart';
+import '../widgets/section_options_menu.dart';
+import '../widgets/add_section_picker.dart';
 import '../models/field_definition.dart';
+import '../models/section_definition.dart';
 import 'onboarding_screen.dart';
 import 'add_job_screen.dart';
 import 'settings_screen.dart';
@@ -48,6 +51,7 @@ class AddShiftScreen extends StatefulWidget {
   final Uint8List? imageBytes;
   final DateTime? preselectedDate;
   final Map<String, dynamic>? prefilledCheckoutData;
+  final bool autoOpenBeoScanner;
 
   const AddShiftScreen({
     super.key,
@@ -56,6 +60,7 @@ class AddShiftScreen extends StatefulWidget {
     this.imageBytes,
     this.preselectedDate,
     this.prefilledCheckoutData,
+    this.autoOpenBeoScanner = false,
   });
 
   @override
@@ -234,6 +239,9 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
   // Custom field controllers (key -> TextEditingController)
   final Map<String, TextEditingController> _customFieldControllers = {};
 
+  // Hidden sections for this shift (per-shift override)
+  List<String> _shiftHiddenSections = [];
+
   // Linked checkout ID (from server checkout scan)
   String? _checkoutId;
 
@@ -253,6 +261,12 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
     }
     if (widget.prefilledCheckoutData != null) {
       _applyCheckoutData();
+    }
+    // Auto-open BEO scanner if flag is set
+    if (widget.autoOpenBeoScanner) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _handleScanTypeSelected(ScanType.beo);
+      });
     }
   }
 
@@ -528,6 +542,9 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
         minute: int.parse(parts[1].substring(0, 2)),
       );
     }
+
+    // Load shift-level hidden sections
+    _shiftHiddenSections = List.from(shift.shiftHiddenSections);
   }
 
   @override
@@ -944,6 +961,10 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
             : null,
         cashSales: double.tryParse(_cashSalesController.text),
         cardSales: double.tryParse(_cardSalesController.text),
+        // =====================================================
+        // HIDDEN SECTIONS (per-shift override)
+        // =====================================================
+        shiftHiddenSections: _shiftHiddenSections,
       );
 
       // Debug logging
@@ -1084,6 +1105,155 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
       return '\$${amount.toInt()}';
     }
     return '\$${amount.toStringAsFixed(2)}';
+  }
+
+  /// Check if a section is visible (not hidden)
+  bool _isSectionVisible(String sectionKey) {
+    // Check job template hidden sections
+    final templateHidden = _template?.hiddenSections ?? [];
+    // Check shift-level hidden sections
+    final shiftHidden = _shiftHiddenSections;
+    // Section is visible if NOT in either list
+    return !templateHidden.contains(sectionKey) &&
+        !shiftHidden.contains(sectionKey);
+  }
+
+  /// Get all hidden section keys
+  List<String> _getAllHiddenSections() {
+    final templateHidden = _template?.hiddenSections ?? [];
+    return {...templateHidden, ..._shiftHiddenSections}.toList();
+  }
+
+  /// Handle section removal
+  Future<void> _handleRemoveSection(
+      String sectionKey, RemoveSectionOption option) async {
+    if (option == RemoveSectionOption.cancel) return;
+
+    switch (option) {
+      case RemoveSectionOption.thisShiftOnly:
+        // Add to shift-level hidden sections
+        setState(() {
+          if (!_shiftHiddenSections.contains(sectionKey)) {
+            _shiftHiddenSections.add(sectionKey);
+          }
+        });
+        _showSnackBar('Section hidden for this shift');
+        break;
+
+      case RemoveSectionOption.allFutureShifts:
+        // Update job template
+        await _updateTemplateHiddenSections(sectionKey, hide: true);
+        _showSnackBar('Section hidden for all future shifts');
+        break;
+
+      case RemoveSectionOption.allShiftsIncludingPast:
+        // Update job template AND batch update all existing shifts
+        await _updateTemplateHiddenSections(sectionKey, hide: true);
+        await _batchUpdateShiftsSections(sectionKey, hide: true);
+        _showSnackBar('Section hidden for all shifts');
+        break;
+
+      case RemoveSectionOption.cancel:
+        break;
+    }
+  }
+
+  /// Handle section addition
+  Future<void> _handleAddSection(
+      String sectionKey, RemoveSectionOption scope) async {
+    switch (scope) {
+      case RemoveSectionOption.thisShiftOnly:
+        // Remove from shift-level hidden sections
+        setState(() {
+          _shiftHiddenSections.remove(sectionKey);
+        });
+        _showSnackBar('Section added to this shift');
+        break;
+
+      case RemoveSectionOption.allFutureShifts:
+        // Update job template
+        await _updateTemplateHiddenSections(sectionKey, hide: false);
+        _showSnackBar('Section added for all future shifts');
+        break;
+
+      case RemoveSectionOption.allShiftsIncludingPast:
+        // Update job template AND batch update all existing shifts
+        await _updateTemplateHiddenSections(sectionKey, hide: false);
+        await _batchUpdateShiftsSections(sectionKey, hide: false);
+        _showSnackBar('Section added to all shifts');
+        break;
+
+      case RemoveSectionOption.cancel:
+        break;
+    }
+  }
+
+  /// Update template hidden sections
+  Future<void> _updateTemplateHiddenSections(String sectionKey,
+      {required bool hide}) async {
+    if (_selectedJob == null || _template == null) return;
+
+    List<String> updatedHidden = List.from(_template!.hiddenSections);
+    if (hide && !updatedHidden.contains(sectionKey)) {
+      updatedHidden.add(sectionKey);
+    } else if (!hide) {
+      updatedHidden.remove(sectionKey);
+    }
+
+    final updatedTemplate = _template!.copyWith(hiddenSections: updatedHidden);
+    final updatedJob = _selectedJob!.copyWith(template: updatedTemplate);
+
+    try {
+      await _db.updateJob(updatedJob);
+      setState(() {
+        _template = updatedTemplate;
+        final index = _userJobs.indexWhere((j) => j.id == _selectedJob!.id);
+        if (index >= 0) {
+          _userJobs[index] = updatedJob;
+        }
+        _selectedJob = updatedJob;
+      });
+    } catch (e) {
+      _showSnackBar('Failed to update template: $e');
+    }
+  }
+
+  /// Batch update all shifts for this job
+  Future<void> _batchUpdateShiftsSections(String sectionKey,
+      {required bool hide}) async {
+    if (_selectedJob == null) return;
+
+    try {
+      // Get all shifts for this job
+      final shifts = await _db.getShiftsByJob(_selectedJob!.id);
+
+      for (final shift in shifts) {
+        List<String> updatedHidden = List.from(shift.shiftHiddenSections);
+        if (hide && !updatedHidden.contains(sectionKey)) {
+          updatedHidden.add(sectionKey);
+        } else if (!hide) {
+          updatedHidden.remove(sectionKey);
+        }
+
+        final updatedShift = shift.copyWith(shiftHiddenSections: updatedHidden);
+        await _db.updateShift(updatedShift);
+      }
+    } catch (e) {
+      _showSnackBar('Failed to update shifts: $e');
+    }
+  }
+
+  /// Show a snackbar message
+  void _showSnackBar(String message) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: AppTheme.successColor,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
   }
 
   double _calculateHours() {
@@ -1289,6 +1459,9 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
                 if (data['event_name'] != null) {
                   _eventNameController.text = data['event_name'].toString();
                 }
+                if (data['client_name'] != null) {
+                  _clientNameController.text = data['client_name'].toString();
+                }
                 if (data['guest_count_confirmed'] != null) {
                   _guestCountController.text =
                       data['guest_count_confirmed'].toString();
@@ -1311,6 +1484,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
                 if (data['formatted_notes'] != null) {
                   _notesController.text = data['formatted_notes'].toString();
                 }
+                // TODO: Add event_date and event_start_time/event_end_time mapping
               });
             },
           ),
@@ -2169,6 +2343,12 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
                   // Add Field Button
                   const SizedBox(height: 16),
                   _buildAddFieldButton(),
+
+                  // Add Section Button (if sections are hidden)
+                  if (_getAllHiddenSections().isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    _buildAddSectionButton(),
+                  ],
                 ],
               );
             },
@@ -2584,6 +2764,38 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
     );
   }
 
+  /// Build the Add Section button
+  Widget _buildAddSectionButton() {
+    final hiddenCount = _getAllHiddenSections().length;
+    return OutlinedButton.icon(
+      onPressed: _showAddSectionPicker,
+      icon: Icon(Icons.view_module, color: AppTheme.accentBlue),
+      label: Text(
+        'Add Section ($hiddenCount hidden)',
+        style: TextStyle(color: AppTheme.accentBlue),
+      ),
+      style: OutlinedButton.styleFrom(
+        side: BorderSide(color: AppTheme.accentBlue.withOpacity(0.5)),
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+        ),
+      ),
+    );
+  }
+
+  /// Show the Add Section picker
+  void _showAddSectionPicker() {
+    final hiddenSections = _getAllHiddenSections();
+    AddSectionPicker.show(
+      context: context,
+      hiddenSectionKeys: hiddenSections,
+      onSectionSelected: (sectionKey, scope) async {
+        await _handleAddSection(sectionKey, scope);
+      },
+    );
+  }
+
   /// Show the Add Field picker
   void _showAddFieldPicker() {
     final alreadyAddedKeys =
@@ -2905,6 +3117,9 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
   }
 
   Widget _buildTimeSection() {
+    // Check visibility
+    if (!_isSectionVisible('time_hours')) return const SizedBox.shrink();
+
     final hours = _calculateHours();
     final isUsingTimeRange = _startTime != null && _endTime != null;
     final manualHours = double.tryParse(_hoursWorkedController.text) ?? 0;
@@ -2914,7 +3129,13 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
     return CollapsibleSection(
       title: 'Time & Hours$hoursText',
       icon: Icons.access_time,
+      trailing: SectionOptionsMenu(
+        sectionKey: 'time_hours',
+        onOptionSelected: (option) =>
+            _handleRemoveSection('time_hours', option),
+      ),
       children: [
+        // ROW 1: Start Time & End Time (2x2 Grid)
         Row(
           children: [
             Expanded(
@@ -2940,6 +3161,123 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
             })),
           ],
         ),
+        const SizedBox(height: 12),
+        // ROW 2: Hours Worked & Hourly Rate (2x2 Grid)
+        Row(
+          children: [
+            // Hours Worked - matching style of time pickers
+            Expanded(
+              child: GestureDetector(
+                onTap: isUsingTimeRange ? null : () {},
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppTheme.cardBackgroundLight,
+                    borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Hours Worked', style: AppTheme.labelSmall),
+                      const SizedBox(height: 4),
+                      isUsingTimeRange
+                          ? Text(
+                              _formatHours(hours),
+                              style: AppTheme.bodyLarge,
+                            )
+                          : TextField(
+                              controller: _hoursWorkedController,
+                              keyboardType: TextInputType.number,
+                              style: AppTheme.bodyLarge,
+                              decoration: InputDecoration(
+                                hintText: '8.5',
+                                hintStyle: AppTheme.bodyLarge.copyWith(
+                                  color: AppTheme.textMuted,
+                                ),
+                                border: InputBorder.none,
+                                isDense: true,
+                                contentPadding: EdgeInsets.zero,
+                              ),
+                              onChanged: (_) => setState(() {}),
+                            ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            // Hourly Rate - matching style of time pickers
+            Expanded(
+              child: GestureDetector(
+                onTap: _useHourlyRateOverride ? null : _showRateOverrideDialog,
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppTheme.cardBackgroundLight,
+                    borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+                    border: _useHourlyRateOverride
+                        ? Border.all(
+                            color: AppTheme.accentOrange.withOpacity(0.5))
+                        : null,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child:
+                                Text('Hourly Rate', style: AppTheme.labelSmall),
+                          ),
+                          if (_useHourlyRateOverride)
+                            GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  _useHourlyRateOverride = false;
+                                  _hourlyRateOverrideController.clear();
+                                });
+                              },
+                              child: Icon(Icons.close,
+                                  size: 16, color: AppTheme.textMuted),
+                            )
+                          else
+                            GestureDetector(
+                              onTap: _showRateOverrideDialog,
+                              child: Icon(Icons.edit,
+                                  size: 16, color: AppTheme.primaryGreen),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      _useHourlyRateOverride
+                          ? TextField(
+                              controller: _hourlyRateOverrideController,
+                              keyboardType: TextInputType.number,
+                              style: AppTheme.bodyLarge,
+                              decoration: InputDecoration(
+                                hintText: '25.00',
+                                hintStyle: AppTheme.bodyLarge.copyWith(
+                                  color: AppTheme.textMuted,
+                                ),
+                                prefixText: '\$',
+                                suffixText: '/hr',
+                                border: InputBorder.none,
+                                isDense: true,
+                                contentPadding: EdgeInsets.zero,
+                              ),
+                              onChanged: (_) => setState(() {}),
+                            )
+                          : Text(
+                              '\$${(_selectedJob?.hourlyRate ?? 0).toStringAsFixed(2)}/hr',
+                              style: AppTheme.bodyLarge,
+                            ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
         if (isUsingTimeRange) ...[
           const SizedBox(height: 12),
           Container(
@@ -2956,7 +3294,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Hours auto-calculated: ${_formatHours(hours)}',
+                    'Hours auto-calculated from time range',
                     style: AppTheme.bodyMedium
                         .copyWith(color: AppTheme.primaryGreen, fontSize: 13),
                   ),
@@ -2973,127 +3311,6 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
                 ),
               ],
             ),
-          ),
-        ] else ...[
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                flex: 1,
-                child: TextFormField(
-                  controller: _hoursWorkedController,
-                  keyboardType: TextInputType.number,
-                  style: AppTheme.bodyMedium,
-                  decoration: InputDecoration(
-                    prefixIcon: Icon(Icons.timer, color: AppTheme.primaryGreen),
-                    hintText: 'Hours worked (e.g., 8.5)',
-                    filled: true,
-                    fillColor: AppTheme.cardBackgroundLight,
-                    border: OutlineInputBorder(
-                      borderRadius:
-                          BorderRadius.circular(AppTheme.radiusMedium),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                  onChanged: (_) => setState(() {}),
-                ),
-              ),
-              const SizedBox(width: 12),
-              // Hourly Rate Display with Override
-              Expanded(
-                flex: 1,
-                child: GestureDetector(
-                  onTap:
-                      _useHourlyRateOverride ? null : _showRateOverrideDialog,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 14),
-                    decoration: BoxDecoration(
-                      color: _useHourlyRateOverride
-                          ? AppTheme.cardBackgroundLight
-                          : AppTheme.cardBackgroundLight.withOpacity(0.5),
-                      borderRadius:
-                          BorderRadius.circular(AppTheme.radiusMedium),
-                      border: _useHourlyRateOverride
-                          ? Border.all(
-                              color: AppTheme.accentOrange.withOpacity(0.5))
-                          : null,
-                    ),
-                    child: _useHourlyRateOverride
-                        ? Row(
-                            children: [
-                              Expanded(
-                                child: TextFormField(
-                                  controller: _hourlyRateOverrideController,
-                                  keyboardType: TextInputType.number,
-                                  style: AppTheme.bodyMedium,
-                                  decoration: InputDecoration(
-                                    hintText: 'Override rate',
-                                    hintStyle: TextStyle(
-                                      color: AppTheme.textMuted,
-                                      fontSize: 11,
-                                    ),
-                                    prefixText: '\$ ',
-                                    suffixText: '/hr',
-                                    isDense: true,
-                                    contentPadding: EdgeInsets.zero,
-                                    border: InputBorder.none,
-                                  ),
-                                  onChanged: (_) => setState(() {}),
-                                ),
-                              ),
-                              IconButton(
-                                icon: Icon(Icons.close,
-                                    size: 18, color: AppTheme.textMuted),
-                                padding: EdgeInsets.zero,
-                                constraints: BoxConstraints(),
-                                onPressed: () {
-                                  setState(() {
-                                    _useHourlyRateOverride = false;
-                                    _hourlyRateOverrideController.clear();
-                                  });
-                                },
-                              ),
-                            ],
-                          )
-                        : Row(
-                            children: [
-                              Icon(Icons.attach_money,
-                                  color: AppTheme.primaryGreen, size: 20),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Hourly Rate',
-                                      style: TextStyle(
-                                        color: Colors.grey[600],
-                                        fontSize: 11,
-                                      ),
-                                    ),
-                                    Text(
-                                      '\$${(_selectedJob?.hourlyRate ?? 0).toStringAsFixed(2)}/hr',
-                                      style: AppTheme.bodyMedium.copyWith(
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              IconButton(
-                                icon: Icon(Icons.edit,
-                                    size: 18, color: AppTheme.primaryGreen),
-                                padding: EdgeInsets.zero,
-                                constraints: BoxConstraints(),
-                                onPressed: _showRateOverrideDialog,
-                              ),
-                            ],
-                          ),
-                  ),
-                ),
-              ),
-            ],
           ),
         ],
         if (_template?.tracksOvertime ?? false) ...[
@@ -3254,6 +3471,9 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
   }
 
   Widget _buildEarningsSection() {
+    // Check visibility
+    if (!_isSectionVisible('income_breakdown')) return const SizedBox.shrink();
+
     final cashTips = double.tryParse(_cashTipsController.text) ?? 0;
     final creditTips = double.tryParse(_creditTipsController.text) ?? 0;
     final commission = double.tryParse(_commissionController.text) ?? 0;
@@ -3266,6 +3486,11 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
       title: 'Earnings$earningsText',
       icon: Icons.attach_money,
       accentColor: AppTheme.primaryGreen,
+      trailing: SectionOptionsMenu(
+        sectionKey: 'income_breakdown',
+        onOptionSelected: (option) =>
+            _handleRemoveSection('income_breakdown', option),
+      ),
       children: [
         const SizedBox(height: 8), // Top padding to prevent label overlap
         if (_template!.showTips) ...[
@@ -3640,6 +3865,9 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
   }
 
   Widget _buildEventDetailsSection() {
+    // Check visibility
+    if (!_isSectionVisible('event_contract')) return const SizedBox.shrink();
+
     final guestCount = int.tryParse(_guestCountController.text);
     String summary = 'Event Details';
 
@@ -3650,7 +3878,11 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
     return CollapsibleSection(
       title: summary,
       icon: Icons.celebration,
-      accentColor: AppTheme.accentYellow,
+      trailing: SectionOptionsMenu(
+        sectionKey: 'event_contract',
+        onOptionSelected: (option) =>
+            _handleRemoveSection('event_contract', option),
+      ),
       children: [
         const SizedBox(height: 8), // Top padding to prevent label overlap
         if (_template!.showEventName) ...[
@@ -3773,10 +4005,18 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
   }
 
   Widget _buildWorkDetailsSection() {
+    // Check visibility
+    if (!_isSectionVisible('work_details')) return const SizedBox.shrink();
+
     return CollapsibleSection(
       title: 'Work Details',
       icon: Icons.location_on,
       accentColor: AppTheme.accentBlue,
+      trailing: SectionOptionsMenu(
+        sectionKey: 'work_details',
+        onOptionSelected: (option) =>
+            _handleRemoveSection('work_details', option),
+      ),
       children: [
         if (_template!.showLocation) ...[
           TextFormField(
@@ -4917,10 +5157,16 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
   }
 
   Widget _buildDocumentationSection() {
+    // Check visibility
+    if (!_isSectionVisible('notes')) return const SizedBox.shrink();
+
     return CollapsibleSection(
       title: 'Documentation',
       icon: Icons.description,
-      accentColor: AppTheme.textSecondary,
+      trailing: SectionOptionsMenu(
+        sectionKey: 'notes',
+        onOptionSelected: (option) => _handleRemoveSection('notes', option),
+      ),
       children: [
         if (_template!.showNotes) ...[
           TextFormField(
@@ -5713,6 +5959,8 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
 
   Widget _buildAttachmentsSection() {
     if (widget.existingShift == null) return const SizedBox.shrink();
+    // Check visibility
+    if (!_isSectionVisible('attachments')) return const SizedBox.shrink();
 
     return Container(
       padding: const EdgeInsets.all(20),

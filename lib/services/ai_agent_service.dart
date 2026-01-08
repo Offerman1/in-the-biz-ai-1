@@ -40,10 +40,13 @@ class AIAgentService {
       // Also send the user's current local date in YYYY-MM-DD format
       final localDate =
           '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+      // Send current local time in HH:MM:SS format
+      final localTime =
+          '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}';
 
       debugPrint(
           '[AI Agent] User timezone: $timeZoneName (offset: $timeZoneOffset minutes)');
-      debugPrint('[AI Agent] User local date: $localDate');
+      debugPrint('[AI Agent] User local date: $localDate, time: $localTime');
 
       // Use the Supabase client SDK to invoke the function
       // This automatically handles authentication headers (Authorization and apikey)
@@ -56,6 +59,7 @@ class AIAgentService {
           'timeZoneOffset': timeZoneOffset,
           'timeZoneName': timeZoneName,
           'localDate': localDate,
+          'localTime': localTime,
         },
       );
 

@@ -248,7 +248,7 @@ class _CheckoutAnalyticsTabState extends State<CheckoutAnalyticsTab> {
                   period,
                   textAlign: TextAlign.center,
                   style: AppTheme.labelMedium.copyWith(
-                    color: isSelected ? Colors.black : AppTheme.textSecondary,
+                    color: isSelected ? Colors.white : AppTheme.textSecondary,
                     fontWeight:
                         isSelected ? FontWeight.bold : FontWeight.normal,
                   ),

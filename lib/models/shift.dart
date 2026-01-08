@@ -163,6 +163,11 @@ class Shift {
   final double? cashSales;
   final double? cardSales;
 
+  // =====================================================
+  // HIDDEN SECTIONS (per-shift override)
+  // =====================================================
+  final List<String> shiftHiddenSections;
+
   Shift({
     required this.id,
     required this.date,
@@ -281,6 +286,8 @@ class Shift {
     this.tableSection,
     this.cashSales,
     this.cardSales,
+    // Hidden sections
+    this.shiftHiddenSections = const [],
   });
 
   double get totalIncome {
@@ -448,6 +455,8 @@ class Shift {
     String? tableSection,
     double? cashSales,
     double? cardSales,
+    // Hidden sections
+    List<String>? shiftHiddenSections,
   }) {
     return Shift(
       id: id ?? this.id,
@@ -569,6 +578,8 @@ class Shift {
       tableSection: tableSection ?? this.tableSection,
       cashSales: cashSales ?? this.cashSales,
       cardSales: cardSales ?? this.cardSales,
+      // Hidden sections
+      shiftHiddenSections: shiftHiddenSections ?? this.shiftHiddenSections,
     );
   }
 
@@ -690,6 +701,8 @@ class Shift {
       'tableSection': tableSection,
       'cashSales': cashSales,
       'cardSales': cardSales,
+      // Hidden sections
+      'shiftHiddenSections': shiftHiddenSections,
     };
   }
 
@@ -811,6 +824,11 @@ class Shift {
       tableSection: map['tableSection'],
       cashSales: map['cashSales']?.toDouble(),
       cardSales: map['cardSales']?.toDouble(),
+      // Hidden sections
+      shiftHiddenSections: (map['shiftHiddenSections'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          [],
     );
   }
 
@@ -936,6 +954,11 @@ class Shift {
       tableSection: map['table_section'],
       cashSales: map['cash_sales']?.toDouble(),
       cardSales: map['card_sales']?.toDouble(),
+      // Hidden sections
+      shiftHiddenSections: (map['shift_hidden_sections'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          [],
     );
   }
 
@@ -1056,6 +1079,8 @@ class Shift {
       'table_section': tableSection,
       'cash_sales': cashSales,
       'card_sales': cardSales,
+      // Hidden sections
+      'shift_hidden_sections': shiftHiddenSections,
     };
   }
 }

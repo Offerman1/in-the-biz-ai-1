@@ -71,7 +71,11 @@ class ShiftProvider with ChangeNotifier {
   Future<Shift?> addShift(Shift shift) async {
     try {
       final newShift = await _db.saveShift(shift);
-      await loadShifts(); // Reload to update UI
+      // Immediately add to local list for instant UI update
+      _shifts.insert(0, newShift);
+      notifyListeners();
+      // Also reload from database to ensure consistency
+      await loadShifts();
       return newShift;
     } catch (e) {
       _error = e.toString();
@@ -83,6 +87,13 @@ class ShiftProvider with ChangeNotifier {
   Future<void> updateShift(Shift shift) async {
     try {
       await _db.updateShift(shift);
+      // Immediately update local list for instant UI update
+      final index = _shifts.indexWhere((s) => s.id == shift.id);
+      if (index != -1) {
+        _shifts[index] = shift;
+        notifyListeners();
+      }
+      // Also reload from database to ensure consistency
       await loadShifts();
     } catch (e) {
       _error = e.toString();
@@ -93,6 +104,10 @@ class ShiftProvider with ChangeNotifier {
   Future<void> deleteShift(String shiftId) async {
     try {
       await _db.deleteShift(shiftId);
+      // Immediately remove from local list for instant UI update
+      _shifts.removeWhere((s) => s.id == shiftId);
+      notifyListeners();
+      // Also reload from database to ensure consistency
       await loadShifts();
     } catch (e) {
       _error = e.toString();

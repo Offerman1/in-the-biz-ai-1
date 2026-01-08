@@ -120,6 +120,9 @@ class JobTemplate {
   // Custom fields added by user
   final List<CustomField> customFields;
 
+  // Hidden sections (for template-level hiding)
+  final List<String> hiddenSections;
+
   JobTemplate({
     this.payStructure = PayStructure.hourly,
     this.flatRateAmount,
@@ -213,6 +216,8 @@ class JobTemplate {
     this.showTableSection = false,
     // Custom fields
     this.customFields = const [],
+    // Hidden sections
+    this.hiddenSections = const [],
   });
 
   /// Create from Supabase JSONB field
@@ -315,6 +320,11 @@ class JobTemplate {
               ?.map((e) => CustomField.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
+      // Hidden sections
+      hiddenSections: (json['hidden_sections'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          [],
     );
   }
 
@@ -412,6 +422,8 @@ class JobTemplate {
       'show_table_section': showTableSection,
       // Custom fields
       'custom_fields': customFields.map((f) => f.toJson()).toList(),
+      // Hidden sections
+      'hidden_sections': hiddenSections,
     };
   }
 
@@ -762,6 +774,8 @@ class JobTemplate {
     bool? showTableSection,
     // Custom fields
     List<CustomField>? customFields,
+    // Hidden sections
+    List<String>? hiddenSections,
   }) {
     return JobTemplate(
       payStructure: payStructure ?? this.payStructure,
@@ -859,6 +873,8 @@ class JobTemplate {
       showTableSection: showTableSection ?? this.showTableSection,
       // Custom fields
       customFields: customFields ?? this.customFields,
+      // Hidden sections
+      hiddenSections: hiddenSections ?? this.hiddenSections,
     );
   }
 }

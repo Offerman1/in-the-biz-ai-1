@@ -68,26 +68,33 @@ class AppTheme {
   static Color get chartGreen2 => primaryGreen.withOpacity(0.7);
   static Color get chartGreen3 => primaryGreen.withOpacity(0.4);
 
-  // Nav bar colors - light themes get colored nav bar with white icons
+  // Nav bar colors - Professional design for both light and dark themes
   static Color get navBarBackground {
     final isLight = (_colors?.isLightBackground ?? false);
-    return isLight ? primaryGreen : cardBackground;
+    return isLight
+        ? const Color(
+            0xFFFFFFFF) // Pure white with border/shadow for separation
+        : cardBackground;
   }
 
   static Color get navBarIconColor {
     final isLight = (_colors?.isLightBackground ?? false);
-    return isLight ? Colors.white : textMuted;
+    return isLight
+        ? const Color(0xFF6B7280) // Darker gray for light mode
+        : const Color(0xFF9CA3AF); // Light gray (not white) for dark mode
   }
 
   static Color get navBarIconActiveColor {
     final isLight = (_colors?.isLightBackground ?? false);
-    return isLight ? Colors.white : primaryGreen;
+    return isLight
+        ? primaryGreen // Use the theme's accent color for active state
+        : primaryGreen;
   }
 
   static Color get navBarActiveBackground {
     final isLight = (_colors?.isLightBackground ?? false);
     return isLight
-        ? Colors.white.withOpacity(0.2)
+        ? primaryGreen.withOpacity(0.08) // Very subtle tint of accent color
         : primaryGreen.withOpacity(0.15);
   }
 

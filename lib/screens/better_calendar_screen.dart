@@ -576,7 +576,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
             label,
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: isSelected ? Colors.black : AppTheme.textSecondary,
+              color: isSelected ? Colors.white : AppTheme.textSecondary,
               fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
             ),
           ),
@@ -1216,6 +1216,13 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
 
   String _formatTime(String time) {
     try {
+      // If time already contains AM/PM, return it as-is
+      if (time.toUpperCase().contains('AM') ||
+          time.toUpperCase().contains('PM')) {
+        return time;
+      }
+
+      // Otherwise, convert from 24-hour to 12-hour format
       final parts = time.split(':');
       if (parts.length < 2) return time;
       var hour = int.parse(parts[0]);
@@ -1339,7 +1346,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                             Text(
                               'Income',
                               style: TextStyle(
-                                color: Colors.black.withOpacity(0.7),
+                                color: Colors.white.withOpacity(0.7),
                                 fontSize: 10,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -1347,7 +1354,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                             Text(
                               currencyFormat.format(totalIncome),
                               style: const TextStyle(
-                                color: Colors.black,
+                                color: Colors.white,
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -1378,7 +1385,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                             Text(
                               'Hours',
                               style: TextStyle(
-                                color: Colors.black.withOpacity(0.7),
+                                color: Colors.white.withOpacity(0.7),
                                 fontSize: 10,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -1386,7 +1393,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                             Text(
                               '${totalHours.toStringAsFixed(1)}h',
                               style: const TextStyle(
-                                color: Colors.black,
+                                color: Colors.white,
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -1408,7 +1415,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                         child: Text(
                           _getShiftCountLabel(dayShifts.length),
                           style: const TextStyle(
-                            color: Colors.black,
+                            color: Colors.white,
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
                           ),
@@ -1434,7 +1441,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                         ),
                         child: const Icon(
                           Icons.add,
-                          color: Colors.black,
+                          color: Colors.white,
                           size: 22,
                         ),
                       ),

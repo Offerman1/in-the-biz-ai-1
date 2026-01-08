@@ -28,6 +28,7 @@ class FieldOrderProvider extends ChangeNotifier {
     'photos_section',
     'attachments_section',
     'event_team_section',
+    'checkout_section',
     'invoices_section',
     'receipts_section',
   ];

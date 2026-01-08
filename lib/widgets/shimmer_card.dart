@@ -31,10 +31,26 @@ class _ShimmerCardState extends State<ShimmerCard>
       // Start shimmer after random delay to stagger cards
       Future.delayed(Duration(milliseconds: math.Random().nextInt(3000)), () {
         if (mounted && widget.enabled) {
-          _controller.repeat(reverse: false);
+          _startShimmerCycle();
         }
       });
     }
+  }
+
+  // Run shimmer once, then wait 9 seconds before repeating
+  void _startShimmerCycle() {
+    if (!mounted || !widget.enabled) return;
+
+    _controller.forward(from: 0).then((_) {
+      if (mounted && widget.enabled) {
+        // Wait 9 seconds before next shimmer
+        Future.delayed(const Duration(seconds: 9), () {
+          if (mounted && widget.enabled) {
+            _startShimmerCycle();
+          }
+        });
+      }
+    });
   }
 
   @override
@@ -42,7 +58,7 @@ class _ShimmerCardState extends State<ShimmerCard>
     super.didUpdateWidget(oldWidget);
     if (widget.enabled != oldWidget.enabled) {
       if (widget.enabled) {
-        _controller.repeat();
+        _startShimmerCycle();
       } else {
         _controller.stop();
       }

@@ -1118,24 +1118,31 @@ NEVER execute bulk edits without user confirmation first.`,
   // ============================================
   {
     name: "change_theme",
-    description: "Switch app theme/color scheme. Parse natural language: 'light mode'→'light_mode', 'dark mode'→'finance_green'",
+    description: "Switch app theme/color scheme. Parse natural language: 'light'→'cash_light', 'dark'→'cash_app'",
     parameters: {
       type: "object",
       properties: {
         theme: {
           type: "string",
           enum: [
-            "light_mode",
-            "finance_green",
+            "cash_app",
             "midnight_blue",
             "purple_reign",
             "ocean_breeze",
             "sunset_glow",
-            "forest_night",
+            "neon_cash",
             "paypal_blue",
-            "finance_pro",
+            "coinbase_pro",
+            "cash_light",
             "light_blue",
-            "soft_purple",
+            "purple_light",
+            "sunset_light",
+            "ocean_light",
+            "pink_light",
+            "slate_light",
+            "mint_light",
+            "lavender_light",
+            "gold_light",
           ],
           description: "Theme name",
         },
@@ -1444,6 +1451,41 @@ NEVER execute bulk edits without user confirmation first.`,
         eventName: { type: "string" },
       },
       required: ["eventName"],
+    },
+  },
+
+  // ============================================
+  // FEATURE REQUESTS (1 function)
+  // ============================================
+  {
+    name: "send_feature_request",
+    description: "Send a feature request or idea to the development team. Use this when user wants to suggest a feature, report something they wish the app could do, or when you can't fulfill a request and they agree to submit it as a suggestion.",
+    parameters: {
+      type: "object",
+      properties: {
+        idea: {
+          type: "string",
+          description: "The feature idea or request from the user. Be descriptive - include what they want and why.",
+        },
+        category: {
+          type: "string",
+          description: "Category of the request: 'new_feature', 'improvement', 'bug_report', 'integration', 'other'",
+          enum: ["new_feature", "improvement", "bug_report", "integration", "other"],
+        },
+      },
+      required: ["idea"],
+    },
+  },
+
+  // ============================================
+  // TIME QUERIES (1 function)
+  // ============================================
+  {
+    name: "get_current_time",
+    description: "Get the current local time. Use this when user asks 'what time is it?' or similar.",
+    parameters: {
+      type: "object",
+      properties: {},
     },
   },
 ];

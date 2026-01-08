@@ -252,10 +252,10 @@ class _AddFieldPickerState extends State<AddFieldPicker> {
                     setState(() => _selectedCategory = null);
                   },
                   selectedColor: AppTheme.primaryGreen,
-                  checkmarkColor: Colors.black,
+                  checkmarkColor: Colors.white,
                   labelStyle: TextStyle(
                     color: _selectedCategory == null
-                        ? Colors.black
+                        ? Colors.white
                         : AppTheme.textPrimary,
                   ),
                   backgroundColor: AppTheme.cardBackgroundLight,
@@ -273,10 +273,10 @@ class _AddFieldPickerState extends State<AddFieldPicker> {
                         });
                       },
                       selectedColor: AppTheme.primaryGreen,
-                      checkmarkColor: Colors.black,
+                      checkmarkColor: Colors.white,
                       labelStyle: TextStyle(
                         color: _selectedCategory == cat
-                            ? Colors.black
+                            ? Colors.white
                             : AppTheme.textPrimary,
                         fontSize: 12,
                       ),

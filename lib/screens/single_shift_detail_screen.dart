@@ -931,11 +931,11 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
                 },
               ),
             IconButton(
-              icon: const Icon(Icons.edit),
+              icon: Icon(Icons.edit, color: AppTheme.navBarIconColor),
               onPressed: () => _editShift(context),
             ),
             IconButton(
-              icon: const Icon(Icons.delete),
+              icon: Icon(Icons.delete, color: AppTheme.navBarIconColor),
               onPressed: () => _confirmDelete(context),
             ),
           ],
@@ -1080,10 +1080,132 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
             child: _buildEventTeamSection(),
           ));
           break;
+
+        case 'checkout_section':
+          if (shift.checkoutId != null) {
+            widgets.add(Padding(
+              key: ValueKey('checkout_section'),
+              padding: const EdgeInsets.only(bottom: 20),
+              child: _buildCheckoutSection(),
+            ));
+          }
+          break;
       }
     }
 
     return widgets;
+  }
+
+  Widget _buildCheckoutSection() {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackground,
+        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+        border: Border.all(
+          color: AppTheme.accentOrange.withOpacity(0.3),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Icon(Icons.receipt_long,
+                    color: AppTheme.accentOrange, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  'Linked Checkout',
+                  style: AppTheme.titleMedium.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+          // Content
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.link, color: AppTheme.textMuted, size: 16),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'This shift was created from a scanned server checkout',
+                        style: AppTheme.bodySmall.copyWith(
+                          color: AppTheme.textSecondary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppTheme.cardBackgroundLight,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.info_outline,
+                          color: AppTheme.accentOrange, size: 18),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Checkout ID',
+                              style: AppTheme.labelSmall.copyWith(
+                                color: AppTheme.textMuted,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              shift.checkoutId ?? '',
+                              style: AppTheme.bodySmall.copyWith(
+                                color: AppTheme.textPrimary,
+                                fontFamily: 'monospace',
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.copy,
+                            color: AppTheme.textMuted, size: 18),
+                        onPressed: () {
+                          Clipboard.setData(
+                              ClipboardData(text: shift.checkoutId ?? ''));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: const Text('Checkout ID copied'),
+                              backgroundColor: AppTheme.successColor,
+                              duration: const Duration(seconds: 2),
+                            ),
+                          );
+                        },
+                        tooltip: 'Copy ID',
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildEventTeamSection() {
@@ -1391,10 +1513,10 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
             width: 56,
             height: 70,
             decoration: BoxDecoration(
-              color: AppTheme.primaryGreen.withOpacity(0.15),
+              color: AppTheme.cardBackgroundLight,
               borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
               border: Border.all(
-                color: AppTheme.primaryGreen.withOpacity(0.3),
+                color: AppTheme.textMuted.withOpacity(0.3),
                 width: 1,
               ),
             ),
@@ -1404,7 +1526,7 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
                 Text(
                   DateFormat('MMM').format(shift.date).toUpperCase(),
                   style: AppTheme.labelSmall.copyWith(
-                    color: AppTheme.primaryGreen,
+                    color: AppTheme.textSecondary,
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
                   ),
@@ -1412,7 +1534,7 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
                 Text(
                   DateFormat('d').format(shift.date),
                   style: AppTheme.titleLarge.copyWith(
-                    color: AppTheme.primaryGreen,
+                    color: AppTheme.textPrimary,
                     fontWeight: FontWeight.w700,
                     fontSize: 20,
                   ),
@@ -1420,7 +1542,7 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
                 Text(
                   DateFormat('y').format(shift.date),
                   style: AppTheme.labelSmall.copyWith(
-                    color: AppTheme.primaryGreen,
+                    color: AppTheme.textSecondary,
                     fontSize: 9,
                     fontWeight: FontWeight.w600,
                   ),
@@ -1567,6 +1689,49 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
                     );
                   }
 
+                  // Linked Checkout badge
+                  if (shift.checkoutId != null) {
+                    leftItems.add(
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Container(
+                          margin: const EdgeInsets.only(right: 6),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppTheme.accentOrange.withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(
+                              color: AppTheme.accentOrange.withOpacity(0.3),
+                              width: 0.5,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.receipt_long,
+                                size: 12,
+                                color: AppTheme.accentOrange,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Checkout',
+                                style: AppTheme.labelSmall.copyWith(
+                                  color: AppTheme.accentOrange,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }
+
                   // Hours widget (right side for first row)
                   final hoursWidget = Container(
                     padding: const EdgeInsets.symmetric(
@@ -1574,10 +1739,10 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
                       vertical: 2,
                     ),
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryGreen.withOpacity(0.15),
+                      color: AppTheme.cardBackgroundLight,
                       borderRadius: BorderRadius.circular(4),
                       border: Border.all(
-                        color: AppTheme.primaryGreen.withOpacity(0.3),
+                        color: AppTheme.textMuted.withOpacity(0.3),
                         width: 0.5,
                       ),
                     ),
@@ -1668,17 +1833,43 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
+          // Header with Scan BEO button
           Row(
             children: [
-              Icon(Icons.assignment, color: AppTheme.accentYellow, size: 24),
+              Icon(Icons.assignment, color: AppTheme.primaryGreen, size: 24),
               const SizedBox(width: 12),
-              Text(
-                'Event Contract',
-                style: AppTheme.titleLarge.copyWith(
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 0.5,
+              Expanded(
+                child: Text(
+                  'Event Contract',
+                  style: AppTheme.titleLarge.copyWith(
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
+                  ),
                 ),
+              ),
+              // ✨ Scan BEO Button
+              IconButton(
+                icon: Icon(Icons.auto_awesome,
+                    color: AppTheme.primaryGreen, size: 24),
+                onPressed: () {
+                  // Navigate to edit screen with auto-open BEO scanner
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AddShiftScreen(
+                        existingShift: shift,
+                        autoOpenBeoScanner: true,
+                      ),
+                    ),
+                  ).then((result) {
+                    // Pop back to parent screen if shift was updated
+                    // The parent (shift list) will reload automatically
+                    if (result == true && mounted) {
+                      Navigator.pop(context, true);
+                    }
+                  });
+                },
+                tooltip: 'Scan BEO',
               ),
             ],
           ),
@@ -1703,7 +1894,7 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
           ),
           const SizedBox(height: 20),
 
-          // Two-column layout for details
+          // Two-column layout for BEO details
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -1720,39 +1911,25 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
                       isNumeric: true,
                     ),
                     const SizedBox(height: 16),
-                    // Editable Time section
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'TIME',
-                          style: AppTheme.labelSmall.copyWith(
-                            color: AppTheme.textMuted,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        _buildEditableTimeField(
-                          fieldKey: 'startTime',
-                          value: shift.startTime ?? '',
-                        ),
-                        Text(
-                          'to',
-                          style: AppTheme.bodyMedium.copyWith(
-                            color: AppTheme.textMuted,
-                            fontSize: 12,
-                          ),
-                        ),
-                        _buildEditableTimeField(
-                          fieldKey: 'endTime',
-                          value: shift.endTime ?? '',
-                        ),
-                      ],
+                    _buildEditableMultilineRow(
+                      label: 'HOSTESS',
+                      fieldKey: 'hostess',
+                      value: shift.hostess ?? '',
                     ),
                     const SizedBox(height: 16),
-                    // Hours - calculated from time, NOT editable
-                    _buildBEODetailRow(
-                        'HOURS', '${_calculatedHours.toStringAsFixed(1)} hrs'),
+                    _buildEditableMultilineRow(
+                      label: 'LOCATION',
+                      fieldKey: 'location',
+                      value: shift.location ?? '',
+                    ),
+                    const SizedBox(height: 16),
+                    _buildEditableBEORow(
+                      label: 'TOTAL SALES',
+                      fieldKey: 'eventCost',
+                      value: (shift.eventCost ?? 0).toStringAsFixed(2),
+                      prefix: '\$',
+                      isNumeric: true,
+                    ),
                   ],
                 ),
               ),
@@ -1763,22 +1940,24 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildEditableMultilineRow(
-                      label: 'HOSTESS',
-                      fieldKey: 'hostess',
-                      value: shift.hostess ?? '',
+                      label: 'CLIENT',
+                      fieldKey: 'clientName',
+                      value: shift.clientName ?? '',
+                    ),
+                    const SizedBox(height: 16),
+                    _buildEditableMultilineRow(
+                      label: 'PROJECT',
+                      fieldKey: 'projectName',
+                      value: shift.projectName ?? '',
                     ),
                     const SizedBox(height: 16),
                     _buildEditableBEORow(
-                      label: 'RATE',
-                      fieldKey: 'hourlyRate',
-                      value: effectiveHourlyRate.toStringAsFixed(2),
+                      label: 'COMMISSION',
+                      fieldKey: 'commission',
+                      value: (shift.commission ?? 0).toStringAsFixed(2),
                       prefix: '\$',
-                      suffix: '/hr',
                       isNumeric: true,
                     ),
-                    const SizedBox(height: 16),
-                    // Editable tips (cash + credit combined for display, but we edit them separately)
-                    _buildEditableTipsRow(),
                   ],
                 ),
               ),
@@ -1955,64 +2134,6 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
     );
   }
 
-  // Editable time field - shows formatted time, allows direct text entry
-  Widget _buildEditableTimeField({
-    required String fieldKey,
-    required String value,
-  }) {
-    final isEditing = _activeEditField == fieldKey;
-    final controller = _controllers[fieldKey];
-    final focusNode = _focusNodes[fieldKey];
-
-    if (controller == null || focusNode == null) {
-      return Text(
-        _formatTime(value),
-        style: AppTheme.bodyLarge.copyWith(fontWeight: FontWeight.w600),
-      );
-    }
-
-    final baseStyle = AppTheme.bodyLarge.copyWith(fontWeight: FontWeight.w600);
-    final displayText =
-        controller.text.isEmpty ? 'Tap to add' : _formatTime(controller.text);
-
-    return GestureDetector(
-      onTap: () {
-        setState(() => _activeEditField = fieldKey);
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          focusNode.requestFocus();
-        });
-      },
-      child: isEditing
-          ? IntrinsicWidth(
-              child: TextField(
-                controller: controller,
-                focusNode: focusNode,
-                style: baseStyle,
-                cursorColor: AppTheme.primaryGreen,
-                decoration: InputDecoration(
-                  border: InputBorder.none,
-                  isDense: true,
-                  contentPadding: EdgeInsets.zero,
-                  hintText: '3:00 PM',
-                  hintStyle: baseStyle.copyWith(
-                    color: AppTheme.textMuted,
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-                onSubmitted: (_) => _onFieldEditComplete(fieldKey),
-                onTapOutside: (_) => _onFieldEditComplete(fieldKey),
-              ),
-            )
-          : Text(
-              displayText,
-              style: controller.text.isEmpty
-                  ? baseStyle.copyWith(
-                      color: AppTheme.textMuted, fontStyle: FontStyle.italic)
-                  : baseStyle,
-            ),
-    );
-  }
-
   // Editable multi-line row - for hostess and other fields that may wrap
   Widget _buildEditableMultilineRow({
     required String label,
@@ -2081,119 +2202,6 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
     );
   }
 
-  // Editable tips row - shows total, taps to edit cash/credit separately
-  Widget _buildEditableTipsRow() {
-    final isEditingCash = _activeEditField == 'cashTips';
-    final isEditingCredit = _activeEditField == 'creditTips';
-    final isEditing = isEditingCash || isEditingCredit;
-
-    final cashController = _controllers['cashTips'];
-    final creditController = _controllers['creditTips'];
-    final cashFocusNode = _focusNodes['cashTips'];
-    final creditFocusNode = _focusNodes['creditTips'];
-
-    final baseStyle = AppTheme.bodyLarge.copyWith(
-      fontWeight: FontWeight.w600,
-      height: 1.3,
-    );
-
-    final totalTips = shift.cashTips + shift.creditTips;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'TIPS',
-          style: AppTheme.labelSmall.copyWith(
-            color: AppTheme.textMuted,
-            letterSpacing: 1.2,
-            fontSize: 11,
-          ),
-        ),
-        const SizedBox(height: 4),
-        if (!isEditing)
-          GestureDetector(
-            onTap: () {
-              setState(() => _activeEditField = 'cashTips');
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                cashFocusNode?.requestFocus();
-              });
-            },
-            child: Text(
-              '\$${totalTips.toStringAsFixed(2)}',
-              style: baseStyle,
-            ),
-          )
-        else
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Cash tips
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('Cash: \$', style: baseStyle.copyWith(fontSize: 14)),
-                  IntrinsicWidth(
-                    child: TextField(
-                      controller: cashController,
-                      focusNode: cashFocusNode,
-                      keyboardType:
-                          const TextInputType.numberWithOptions(decimal: true),
-                      inputFormatters: [
-                        FilteringTextInputFormatter.allow(
-                            RegExp(r'^\d*\.?\d{0,2}')),
-                      ],
-                      style: baseStyle.copyWith(fontSize: 14),
-                      cursorColor: AppTheme.primaryGreen,
-                      decoration: const InputDecoration(
-                        border: InputBorder.none,
-                        isDense: true,
-                        contentPadding: EdgeInsets.zero,
-                      ),
-                      onSubmitted: (_) {
-                        setState(() => _activeEditField = 'creditTips');
-                        creditFocusNode?.requestFocus();
-                      },
-                      onTapOutside: (_) => _onFieldEditComplete('cashTips'),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              // Credit tips
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('Credit: \$', style: baseStyle.copyWith(fontSize: 14)),
-                  IntrinsicWidth(
-                    child: TextField(
-                      controller: creditController,
-                      focusNode: creditFocusNode,
-                      keyboardType:
-                          const TextInputType.numberWithOptions(decimal: true),
-                      inputFormatters: [
-                        FilteringTextInputFormatter.allow(
-                            RegExp(r'^\d*\.?\d{0,2}')),
-                      ],
-                      style: baseStyle.copyWith(fontSize: 14),
-                      cursorColor: AppTheme.primaryGreen,
-                      decoration: const InputDecoration(
-                        border: InputBorder.none,
-                        isDense: true,
-                        contentPadding: EdgeInsets.zero,
-                      ),
-                      onSubmitted: (_) => _onFieldEditComplete('creditTips'),
-                      onTapOutside: (_) => _onFieldEditComplete('creditTips'),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-      ],
-    );
-  }
-
   Widget _buildBreakdownCard() {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -2207,10 +2215,50 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
         children: [
           Text('Income Breakdown', style: AppTheme.titleMedium),
           const SizedBox(height: 16),
+          // Work Time (Start - End)
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppTheme.accentPurple.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+                ),
+                child: Icon(Icons.access_time,
+                    color: AppTheme.accentPurple, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(child: Text('Work Time', style: AppTheme.bodyMedium)),
+              Text(
+                '${_formatTime(shift.startTime)} - ${_formatTime(shift.endTime)}',
+                style: AppTheme.titleMedium,
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          // Hours Worked
+          _buildBreakdownRow(
+            'Hours Worked',
+            _calculatedHours,
+            Icons.schedule,
+            AppTheme.accentYellow,
+            suffix: ' hrs',
+          ),
+          const SizedBox(height: 12),
+          // Hourly Rate
+          _buildEditableBreakdownRow(
+            label: 'Hourly Rate',
+            fieldKey: 'hourlyRate',
+            icon: Icons.attach_money,
+            color: AppTheme.accentOrange,
+          ),
+          const SizedBox(height: 16),
+          Divider(color: AppTheme.cardBackgroundLight),
+          const SizedBox(height: 16),
           _buildEditableBreakdownRow(
             label: 'Cash Tips',
             fieldKey: 'cashTips',
-            icon: Icons.attach_money,
+            icon: Icons.payments,
             color: AppTheme.primaryGreen,
           ),
           const SizedBox(height: 12),
@@ -2219,15 +2267,6 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
             fieldKey: 'creditTips',
             icon: Icons.credit_card,
             color: AppTheme.accentBlue,
-          ),
-          const SizedBox(height: 12),
-          // Hours - NOT editable, calculated from time fields above
-          _buildBreakdownRow(
-            'Hours Worked',
-            _calculatedHours,
-            Icons.schedule,
-            AppTheme.accentYellow,
-            suffix: ' hrs',
           ),
           const SizedBox(height: 16),
           Divider(color: AppTheme.cardBackgroundLight),

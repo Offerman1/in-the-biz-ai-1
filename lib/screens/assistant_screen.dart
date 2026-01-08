@@ -206,15 +206,11 @@ class _AssistantScreenState extends State<AssistantScreen> {
         // Save AI response to database
         await _saveChatMessage(replyText, false);
 
-        // Refresh data if functions were executed
-        if (functionsExecuted > 0) {
-          // Refresh shifts
+        // Refresh data if functions were executed (silently)
+        if (functionsExecuted > 0 && mounted) {
           final shiftProvider =
               Provider.of<ShiftProvider>(context, listen: false);
           await shiftProvider.loadShifts();
-
-          // Theme changes happen automatically via database triggers
-          // No manual refresh needed
         }
       } else {
         throw Exception(response['error'] ?? 'Unknown error');
@@ -392,9 +388,13 @@ class _AssistantScreenState extends State<AssistantScreen> {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-          backgroundColor: AppTheme.cardBackground,
-          elevation: 2,
-          shadowColor: Colors.black.withOpacity(0.3),
+          backgroundColor:
+              AppTheme.cardBackground, // Solid color to match input area
+          elevation: 0, // Remove shadow for cleaner look
+          scrolledUnderElevation:
+              0, // Prevent color change on scroll (Material 3)
+          shadowColor: Colors.transparent,
+          surfaceTintColor: Colors.transparent, // Prevent Material 3 tint
           toolbarHeight: 70, // Slightly taller for stacked text
           // Only show back button if we can actually pop (not when shown as a tab)
           leading: canPop
@@ -528,8 +528,8 @@ class _AssistantScreenState extends State<AssistantScreen> {
               ),
             Container(
               padding: const EdgeInsets.all(12),
-              decoration: const BoxDecoration(
-                color: Colors.transparent,
+              decoration: BoxDecoration(
+                color: AppTheme.cardBackground,
               ),
               child: SafeArea(
                 child: Row(

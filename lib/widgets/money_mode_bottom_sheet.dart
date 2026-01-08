@@ -110,11 +110,13 @@ class MoneyModeBottomSheet extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppTheme.primaryGreen.withOpacity(0.1)
+              ? AppTheme.cardBackground // Subtle neutral background
               : Colors.transparent,
           border: Border(
             left: BorderSide(
-              color: isSelected ? AppTheme.primaryGreen : Colors.transparent,
+              color: isSelected
+                  ? AppTheme.primaryGreen
+                  : Colors.transparent, // Only accent on border
               width: 3,
             ),
           ),
@@ -125,14 +127,12 @@ class MoneyModeBottomSheet extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: isSelected
-                    ? AppTheme.primaryGreen.withOpacity(0.2)
-                    : AppTheme.darkBackground,
+                color: AppTheme.cardBackgroundLight, // Always neutral
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
                 icon,
-                color: isSelected ? AppTheme.primaryGreen : AppTheme.textMuted,
+                color: AppTheme.textMuted, // Always gray
                 size: 24,
               ),
             ),
@@ -149,9 +149,7 @@ class MoneyModeBottomSheet extends StatelessWidget {
                     style: AppTheme.bodyLarge.copyWith(
                       fontWeight:
                           isSelected ? FontWeight.w600 : FontWeight.w400,
-                      color: isSelected
-                          ? AppTheme.primaryGreen
-                          : AppTheme.textPrimary,
+                      color: AppTheme.textPrimary, // Always white
                     ),
                   ),
                   const SizedBox(height: 4),
