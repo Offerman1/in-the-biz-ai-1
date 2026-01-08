@@ -1,15 +1,23 @@
 // Test Zoho SMTP connection
 import nodemailer from 'nodemailer';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const config = {
-  host: 'smtppro.zoho.com',
-  port: 587,
+  host: process.env.ZOHO_SMTP_HOST || 'smtppro.zoho.com',
+  port: parseInt(process.env.ZOHO_SMTP_PORT || '587'),
   secure: false, // true for 465, false for other ports
   auth: {
-    user: 'support@inthebiz.app',
-    pass: 'Benderbender111!',
+    user: process.env.ZOHO_SMTP_USERNAME,
+    pass: process.env.ZOHO_SMTP_PASSWORD,
   },
 };
+
+if (!config.auth.user || !config.auth.pass) {
+  console.error('❌ Missing ZOHO_SMTP_USERNAME or ZOHO_SMTP_PASSWORD in .env file');
+  process.exit(1);
+}
 
 console.log('Testing Zoho SMTP connection...');
 console.log(`Host: ${config.host}:${config.port}`);
