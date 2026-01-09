@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -287,27 +288,64 @@ class _AssistantScreenState extends State<AssistantScreen> {
       // Route to appropriate handler based on scan type
       switch (session.scanType) {
         case ScanType.beo:
-          result = await _visionScanner.analyzeBEO(session.imagePaths, userId);
+          if (kIsWeb && session.hasBytes) {
+            result = await _visionScanner.analyzeBEOFromBytes(
+                session.imageBytes!, userId,
+                mimeTypes: session.mimeTypes);
+          } else {
+            result =
+                await _visionScanner.analyzeBEO(session.imagePaths, userId);
+          }
           break;
         case ScanType.checkout:
-          result =
-              await _visionScanner.analyzeCheckout(session.imagePaths, userId);
+          if (kIsWeb && session.hasBytes) {
+            result = await _visionScanner.analyzeCheckoutFromBytes(
+                session.imageBytes!, userId,
+                mimeTypes: session.mimeTypes);
+          } else {
+            result = await _visionScanner.analyzeCheckout(
+                session.imagePaths, userId);
+          }
           break;
         case ScanType.businessCard:
-          result =
-              await _visionScanner.scanBusinessCard(session.imagePaths, userId);
+          if (kIsWeb && session.hasBytes) {
+            result = await _visionScanner.scanBusinessCardFromBytes(
+                session.imageBytes!, userId,
+                mimeTypes: session.mimeTypes);
+          } else {
+            result = await _visionScanner.scanBusinessCard(
+                session.imagePaths, userId);
+          }
           break;
         case ScanType.paycheck:
-          result =
-              await _visionScanner.analyzePaycheck(session.imagePaths, userId);
+          if (kIsWeb && session.hasBytes) {
+            result = await _visionScanner.analyzePaycheckFromBytes(
+                session.imageBytes!, userId,
+                mimeTypes: session.mimeTypes);
+          } else {
+            result = await _visionScanner.analyzePaycheck(
+                session.imagePaths, userId);
+          }
           break;
         case ScanType.invoice:
-          result =
-              await _visionScanner.analyzeInvoice(session.imagePaths, userId);
+          if (kIsWeb && session.hasBytes) {
+            result = await _visionScanner.analyzeInvoiceFromBytes(
+                session.imageBytes!, userId,
+                mimeTypes: session.mimeTypes);
+          } else {
+            result =
+                await _visionScanner.analyzeInvoice(session.imagePaths, userId);
+          }
           break;
         case ScanType.receipt:
-          result =
-              await _visionScanner.analyzeReceipt(session.imagePaths, userId);
+          if (kIsWeb && session.hasBytes) {
+            result = await _visionScanner.analyzeReceiptFromBytes(
+                session.imageBytes!, userId,
+                mimeTypes: session.mimeTypes);
+          } else {
+            result =
+                await _visionScanner.analyzeReceipt(session.imagePaths, userId);
+          }
           break;
       }
 

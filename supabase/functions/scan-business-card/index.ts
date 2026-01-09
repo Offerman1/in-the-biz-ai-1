@@ -13,6 +13,116 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+// Valid database enum values for contact_role
+const VALID_ROLES = [
+  'dj', 'band_musician', 'photo_booth', 'photographer', 'videographer',
+  'wedding_planner', 'event_coordinator', 'hostess', 'support_staff',
+  'security', 'valet', 'florist', 'linen_rental', 'cake_bakery',
+  'catering', 'rentals', 'lighting_av', 'rabbi', 'priest', 'pastor',
+  'officiant', 'venue_manager', 'venue_coordinator', 'custom'
+];
+
+// Map AI-extracted roles to valid database enum values
+function mapRoleToEnum(aiRole: string | null): string {
+  if (!aiRole) return 'custom';
+  
+  const role = aiRole.toLowerCase().trim();
+  
+  // Direct matches
+  if (VALID_ROLES.includes(role)) return role;
+  if (VALID_ROLES.includes(role.replace(/\s+/g, '_'))) return role.replace(/\s+/g, '_');
+  
+  // Common mappings
+  const mappings: Record<string, string> = {
+    // Music/Entertainment
+    'musician': 'band_musician',
+    'band': 'band_musician',
+    'artist': 'band_musician',
+    'vocalist': 'band_musician',
+    'singer': 'band_musician',
+    'performer': 'band_musician',
+    'entertainment': 'dj',
+    'disc jockey': 'dj',
+    'emcee': 'dj',
+    'mc': 'dj',
+    
+    // Photo/Video
+    'photo': 'photographer',
+    'camera': 'photographer',
+    'video': 'videographer',
+    'film': 'videographer',
+    'cinematographer': 'videographer',
+    'photo booth': 'photo_booth',
+    'photobooth': 'photo_booth',
+    
+    // Planning/Coordination
+    'planner': 'wedding_planner',
+    'wedding planner': 'wedding_planner',
+    'event planner': 'event_coordinator',
+    'coordinator': 'event_coordinator',
+    'event coordinator': 'event_coordinator',
+    'wedding coordinator': 'event_coordinator',
+    'manager': 'venue_manager',
+    'venue manager': 'venue_manager',
+    
+    // Food/Catering
+    'caterer': 'catering',
+    'chef': 'catering',
+    'food': 'catering',
+    'baker': 'cake_bakery',
+    'cake': 'cake_bakery',
+    'pastry': 'cake_bakery',
+    
+    // Decor/Rentals
+    'florist': 'florist',
+    'flowers': 'florist',
+    'floral': 'florist',
+    'linen': 'linen_rental',
+    'rental': 'rentals',
+    'decor': 'rentals',
+    'decorator': 'rentals',
+    
+    // Technical
+    'lighting': 'lighting_av',
+    'av': 'lighting_av',
+    'audio': 'lighting_av',
+    'sound': 'lighting_av',
+    'tech': 'lighting_av',
+    
+    // Religious
+    'rabbi': 'rabbi',
+    'priest': 'priest',
+    'pastor': 'pastor',
+    'minister': 'officiant',
+    'officiant': 'officiant',
+    'celebrant': 'officiant',
+    
+    // Staff
+    'host': 'hostess',
+    'hostess': 'hostess',
+    'greeter': 'hostess',
+    'security': 'security',
+    'guard': 'security',
+    'bouncer': 'security',
+    'valet': 'valet',
+    'parking': 'valet',
+    'staff': 'support_staff',
+    'assistant': 'support_staff',
+    'helper': 'support_staff',
+  };
+  
+  // Check direct mapping
+  if (mappings[role]) return mappings[role];
+  
+  // Check if role contains any mapping keywords
+  for (const [keyword, enumValue] of Object.entries(mappings)) {
+    if (role.includes(keyword)) return enumValue;
+  }
+  
+  // Default to custom if no match found
+  return 'custom';
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -147,6 +257,24 @@ IMPORTANT:
     // Parse JSON response
     const extractedData = JSON.parse(text);
 
+    // Validate required fields - name is required
+    if (!extractedData.name || extractedData.name.trim() === '') {
+      // Try to use company name as fallback, or generate a placeholder
+      if (extractedData.company && extractedData.company.trim() !== '') {
+        extractedData.name = extractedData.company;
+      } else if (extractedData.email) {
+        // Extract name from email if possible
+        const emailName = extractedData.email.split('@')[0].replace(/[._-]/g, ' ');
+        extractedData.name = emailName.charAt(0).toUpperCase() + emailName.slice(1);
+      } else {
+        extractedData.name = 'Unknown Contact';
+      }
+    }
+
+    // Map AI-extracted role to valid database enum
+    const mappedRole = mapRoleToEnum(extractedData.role);
+    const originalRole = extractedData.role; // Keep original for custom_role field
+
     // Save to database (event_contacts table)
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -158,7 +286,8 @@ IMPORTANT:
         user_id: userId,
         name: extractedData.name,
         company: extractedData.company,
-        role: extractedData.role,
+        role: mappedRole,
+        custom_role: mappedRole === 'custom' ? originalRole : null,
         phone: extractedData.phone,
         email: extractedData.email,
         website: extractedData.website,

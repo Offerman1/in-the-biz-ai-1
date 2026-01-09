@@ -1436,8 +1436,19 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
   Future<void> _processBEOScan(DocumentScanSession session) async {
     try {
       final userId = _db.supabase.auth.currentUser!.id;
-      final result =
-          await _visionScanner.analyzeBEO(session.imagePaths, userId);
+
+      Map<String, dynamic> result;
+
+      // Use bytes on web, file paths on mobile
+      if (kIsWeb && session.hasBytes) {
+        result = await _visionScanner.analyzeBEOFromBytes(
+          session.imageBytes!,
+          userId,
+          mimeTypes: session.mimeTypes,
+        );
+      } else {
+        result = await _visionScanner.analyzeBEO(session.imagePaths, userId);
+      }
 
       if (!mounted) return;
 
@@ -1522,11 +1533,23 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
       print(
           '💳 Calling analyzeCheckout with ${session.imagePaths.length} images');
 
-      final result = await _visionScanner.analyzeCheckout(
-        session.imagePaths,
-        userId,
-        shiftId: widget.existingShift?.id,
-      );
+      Map<String, dynamic> result;
+
+      // Use bytes on web, file paths on mobile
+      if (kIsWeb && session.hasBytes) {
+        result = await _visionScanner.analyzeCheckoutFromBytes(
+          session.imageBytes!,
+          userId,
+          shiftId: widget.existingShift?.id,
+          mimeTypes: session.mimeTypes,
+        );
+      } else {
+        result = await _visionScanner.analyzeCheckout(
+          session.imagePaths,
+          userId,
+          shiftId: widget.existingShift?.id,
+        );
+      }
 
       print('💳 analyzeCheckout completed successfully');
 
@@ -1820,11 +1843,24 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
   Future<void> _processBusinessCardScan(DocumentScanSession session) async {
     try {
       final userId = _db.supabase.auth.currentUser!.id;
-      final result = await _visionScanner.scanBusinessCard(
-        session.imagePaths,
-        userId,
-        shiftId: widget.existingShift?.id,
-      );
+
+      Map<String, dynamic> result;
+
+      // Use bytes on web, file paths on mobile
+      if (kIsWeb && session.hasBytes) {
+        result = await _visionScanner.scanBusinessCardFromBytes(
+          session.imageBytes!,
+          userId,
+          shiftId: widget.existingShift?.id,
+          mimeTypes: session.mimeTypes,
+        );
+      } else {
+        result = await _visionScanner.scanBusinessCard(
+          session.imagePaths,
+          userId,
+          shiftId: widget.existingShift?.id,
+        );
+      }
 
       if (!mounted) return;
 
@@ -1874,8 +1910,20 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
   Future<void> _processPaycheckScan(DocumentScanSession session) async {
     try {
       final userId = _db.supabase.auth.currentUser!.id;
-      final result =
-          await _visionScanner.analyzePaycheck(session.imagePaths, userId);
+
+      Map<String, dynamic> result;
+
+      // Use bytes on web, file paths on mobile
+      if (kIsWeb && session.hasBytes) {
+        result = await _visionScanner.analyzePaycheckFromBytes(
+          session.imageBytes!,
+          userId,
+          mimeTypes: session.mimeTypes,
+        );
+      } else {
+        result =
+            await _visionScanner.analyzePaycheck(session.imagePaths, userId);
+      }
 
       if (!mounted) return;
 
@@ -1937,8 +1985,20 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
   Future<void> _processInvoiceScan(DocumentScanSession session) async {
     try {
       final userId = _db.supabase.auth.currentUser!.id;
-      final result =
-          await _visionScanner.analyzeInvoice(session.imagePaths, userId);
+
+      Map<String, dynamic> result;
+
+      // Use bytes on web, file paths on mobile
+      if (kIsWeb && session.hasBytes) {
+        result = await _visionScanner.analyzeInvoiceFromBytes(
+          session.imageBytes!,
+          userId,
+          mimeTypes: session.mimeTypes,
+        );
+      } else {
+        result =
+            await _visionScanner.analyzeInvoice(session.imagePaths, userId);
+      }
 
       if (!mounted) return;
 
@@ -1992,11 +2052,24 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
   Future<void> _processReceiptScan(DocumentScanSession session) async {
     try {
       final userId = _db.supabase.auth.currentUser!.id;
-      final result = await _visionScanner.analyzeReceipt(
-        session.imagePaths,
-        userId,
-        shiftId: widget.existingShift?.id,
-      );
+
+      Map<String, dynamic> result;
+
+      // Use bytes on web, file paths on mobile
+      if (kIsWeb && session.hasBytes) {
+        result = await _visionScanner.analyzeReceiptFromBytes(
+          session.imageBytes!,
+          userId,
+          shiftId: widget.existingShift?.id,
+          mimeTypes: session.mimeTypes,
+        );
+      } else {
+        result = await _visionScanner.analyzeReceipt(
+          session.imagePaths,
+          userId,
+          shiftId: widget.existingShift?.id,
+        );
+      }
 
       if (!mounted) return;
 

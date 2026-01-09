@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 /// Vision Scanner Scan Types
 /// Defines all supported document types for AI vision scanning
 enum ScanType {
@@ -23,16 +25,23 @@ enum ScanType {
 class DocumentScanSession {
   final ScanType scanType;
   final List<String> imagePaths;
+  final List<Uint8List>? imageBytes; // For web compatibility
+  final List<String>? mimeTypes; // For web compatibility
   final DateTime createdAt;
 
   DocumentScanSession({
     required this.scanType,
     required this.imagePaths,
+    this.imageBytes,
+    this.mimeTypes,
     DateTime? createdAt,
   }) : createdAt = createdAt ?? DateTime.now();
 
-  bool get hasImages => imagePaths.isNotEmpty;
-  int get pageCount => imagePaths.length;
+  bool get hasImages =>
+      imagePaths.isNotEmpty || (imageBytes?.isNotEmpty ?? false);
+  int get pageCount =>
+      imagePaths.isNotEmpty ? imagePaths.length : (imageBytes?.length ?? 0);
+  bool get hasBytes => imageBytes != null && imageBytes!.isNotEmpty;
 
   Map<String, dynamic> toJson() => {
         'scanType': scanType.name,

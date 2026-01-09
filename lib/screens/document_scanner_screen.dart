@@ -1,4 +1,5 @@
-import 'dart:io';
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../theme/app_theme.dart';
@@ -24,6 +25,8 @@ class DocumentScannerScreen extends StatefulWidget {
 class _DocumentScannerScreenState extends State<DocumentScannerScreen> {
   final ImagePicker _picker = ImagePicker();
   final List<String> _capturedImages = [];
+  final List<Uint8List> _capturedBytes = []; // For web compatibility
+  final List<String> _mimeTypes = []; // For web compatibility
   bool _isCapturing = false;
 
   /// Pick multiple images from gallery (like attaching to email)
@@ -47,12 +50,18 @@ class _DocumentScannerScreenState extends State<DocumentScannerScreen> {
       print('🖼️ Picker returned ${images.length} images');
 
       if (images.isNotEmpty) {
-        setState(() {
-          for (final image in images) {
+        for (final image in images) {
+          // Read bytes for web compatibility
+          final bytes = await image.readAsBytes();
+          final mimeType = image.mimeType ?? 'image/jpeg';
+
+          setState(() {
             _capturedImages.add(image.path);
-            print('🖼️ Added image: ${image.path}');
-          }
-        });
+            _capturedBytes.add(bytes);
+            _mimeTypes.add(mimeType);
+            print('🖼️ Added image: ${image.path} (${bytes.length} bytes)');
+          });
+        }
 
         print('🖼️ Total images now: ${_capturedImages.length}');
 
@@ -110,8 +119,14 @@ class _DocumentScannerScreenState extends State<DocumentScannerScreen> {
       );
 
       if (image != null) {
+        // Read bytes for web compatibility
+        final bytes = await image.readAsBytes();
+        final mimeType = image.mimeType ?? 'image/jpeg';
+
         setState(() {
           _capturedImages.add(image.path);
+          _capturedBytes.add(bytes);
+          _mimeTypes.add(mimeType);
         });
 
         // Show "Scan another page?" prompt after a short delay
@@ -253,8 +268,9 @@ class _DocumentScannerScreenState extends State<DocumentScannerScreen> {
   void _finishScanning() {
     print('🔍 _finishScanning called');
     print('🔍 _capturedImages.length: ${_capturedImages.length}');
+    print('🔍 _capturedBytes.length: ${_capturedBytes.length}');
 
-    if (_capturedImages.isEmpty) {
+    if (_capturedImages.isEmpty && _capturedBytes.isEmpty) {
       print('🔍 No images, popping');
       Navigator.pop(context);
       return;
@@ -263,10 +279,13 @@ class _DocumentScannerScreenState extends State<DocumentScannerScreen> {
     print('🔍 Creating session with ${_capturedImages.length} images');
     print('🔍 Scan type: ${widget.scanType}');
     print('🔍 Image paths: $_capturedImages');
+    print('🔍 Is web: $kIsWeb');
 
     final session = DocumentScanSession(
       scanType: widget.scanType,
       imagePaths: _capturedImages,
+      imageBytes: _capturedBytes,
+      mimeTypes: _mimeTypes,
     );
 
     print('🔍 Calling onScanComplete callback...');
@@ -278,6 +297,12 @@ class _DocumentScannerScreenState extends State<DocumentScannerScreen> {
   void _deleteImage(int index) {
     setState(() {
       _capturedImages.removeAt(index);
+      if (index < _capturedBytes.length) {
+        _capturedBytes.removeAt(index);
+      }
+      if (index < _mimeTypes.length) {
+        _mimeTypes.removeAt(index);
+      }
     });
 
     if (_capturedImages.isEmpty) {
@@ -422,18 +447,26 @@ class _DocumentScannerScreenState extends State<DocumentScannerScreen> {
                     itemBuilder: (context, index) {
                       return Stack(
                         children: [
-                          // Image
+                          // Image - always use MemoryImage since we have bytes
                           Container(
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
                                 color: AppTheme.primaryGreen.withOpacity(0.3),
                               ),
-                              image: DecorationImage(
-                                image: FileImage(File(_capturedImages[index])),
-                                fit: BoxFit.cover,
-                              ),
+                              image: (index < _capturedBytes.length)
+                                  ? DecorationImage(
+                                      image: MemoryImage(_capturedBytes[index]),
+                                      fit: BoxFit.cover,
+                                    )
+                                  : null,
                             ),
+                            // Fallback for when bytes aren't available
+                            child: (index >= _capturedBytes.length)
+                                ? const Center(
+                                    child: Icon(Icons.image,
+                                        color: Colors.grey, size: 48))
+                                : null,
                           ),
 
                           // Page number badge

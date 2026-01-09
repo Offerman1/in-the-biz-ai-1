@@ -1,7 +1,12 @@
-import 'dart:io';
 import 'dart:convert';
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/vision_scan.dart';
+
+// Conditional import for File - only on non-web platforms
+import 'vision_scanner_io.dart' if (dart.library.html) 'vision_scanner_web.dart'
+    as platform;
 
 /// Service for AI Vision Scanner operations
 /// Handles image upload, Edge Function calls, and result processing
@@ -14,13 +19,18 @@ class VisionScannerService {
     ScanType scanType,
     String userId,
   ) async {
+    if (kIsWeb) {
+      throw UnsupportedError(
+          'uploadImagesToStorage is not supported on web. Use uploadBytesToStorage instead.');
+    }
+
     final List<String> uploadedUrls = [];
 
     // Get the appropriate bucket based on scan type
     final bucketName = _getBucketName(scanType);
 
     for (int i = 0; i < imagePaths.length; i++) {
-      final file = File(imagePaths[i]);
+      final file = platform.getFileForUpload(imagePaths[i]);
       final fileExt = imagePaths[i].split('.').last;
       final fileName =
           '${userId}/${DateTime.now().millisecondsSinceEpoch}_page${i + 1}.$fileExt';
@@ -44,13 +54,18 @@ class VisionScannerService {
   }
 
   /// Get base64 encoded images for Edge Function
+  /// Works with file paths on mobile, throws on web (use getBase64ImagesFromBytes instead)
   Future<List<Map<String, String>>> getBase64Images(
       List<String> imagePaths) async {
+    if (kIsWeb) {
+      throw UnsupportedError(
+          'getBase64Images with file paths is not supported on web. Use getBase64ImagesFromBytes instead.');
+    }
+
     final List<Map<String, String>> base64Images = [];
 
     for (final path in imagePaths) {
-      final file = File(path);
-      final bytes = await file.readAsBytes();
+      final bytes = await platform.readFileBytes(path);
       final base64 = base64Encode(bytes);
 
       // Determine MIME type
@@ -71,13 +86,50 @@ class VisionScannerService {
     return base64Images;
   }
 
-  /// Analyze BEO document
+  /// Get base64 encoded images from bytes (works on web and mobile)
+  List<Map<String, String>> getBase64ImagesFromBytes(List<Uint8List> imageBytes,
+      {List<String>? mimeTypes}) {
+    final List<Map<String, String>> base64Images = [];
+
+    for (int i = 0; i < imageBytes.length; i++) {
+      final base64 = base64Encode(imageBytes[i]);
+      final mimeType = (mimeTypes != null && i < mimeTypes.length)
+          ? mimeTypes[i]
+          : 'image/jpeg';
+
+      base64Images.add({
+        'data': base64,
+        'mimeType': mimeType,
+      });
+    }
+
+    return base64Images;
+  }
+
+  /// Analyze BEO document (mobile - file paths)
   Future<Map<String, dynamic>> analyzeBEO(
     List<String> imagePaths,
     String userId,
   ) async {
     final base64Images = await getBase64Images(imagePaths);
+    return _analyzeBEOWithImages(base64Images, userId);
+  }
 
+  /// Analyze BEO document from bytes (web compatible)
+  Future<Map<String, dynamic>> analyzeBEOFromBytes(
+    List<Uint8List> imageBytes,
+    String userId, {
+    List<String>? mimeTypes,
+  }) async {
+    final base64Images =
+        getBase64ImagesFromBytes(imageBytes, mimeTypes: mimeTypes);
+    return _analyzeBEOWithImages(base64Images, userId);
+  }
+
+  Future<Map<String, dynamic>> _analyzeBEOWithImages(
+    List<Map<String, String>> base64Images,
+    String userId,
+  ) async {
     final response = await _supabase.functions.invoke(
       'analyze-beo',
       body: {
@@ -93,7 +145,7 @@ class VisionScannerService {
     return response.data as Map<String, dynamic>;
   }
 
-  /// Analyze server checkout
+  /// Analyze server checkout (mobile - file paths)
   Future<Map<String, dynamic>> analyzeCheckout(
     List<String> imagePaths,
     String userId, {
@@ -101,7 +153,30 @@ class VisionScannerService {
     bool forceNew = false,
   }) async {
     final base64Images = await getBase64Images(imagePaths);
+    return _analyzeCheckoutWithImages(base64Images, userId,
+        shiftId: shiftId, forceNew: forceNew);
+  }
 
+  /// Analyze server checkout from bytes (web compatible)
+  Future<Map<String, dynamic>> analyzeCheckoutFromBytes(
+    List<Uint8List> imageBytes,
+    String userId, {
+    String? shiftId,
+    bool forceNew = false,
+    List<String>? mimeTypes,
+  }) async {
+    final base64Images =
+        getBase64ImagesFromBytes(imageBytes, mimeTypes: mimeTypes);
+    return _analyzeCheckoutWithImages(base64Images, userId,
+        shiftId: shiftId, forceNew: forceNew);
+  }
+
+  Future<Map<String, dynamic>> _analyzeCheckoutWithImages(
+    List<Map<String, String>> base64Images,
+    String userId, {
+    String? shiftId,
+    bool forceNew = false,
+  }) async {
     final response = await _supabase.functions.invoke(
       'analyze-checkout',
       body: {
@@ -119,13 +194,30 @@ class VisionScannerService {
     return response.data as Map<String, dynamic>;
   }
 
-  /// Analyze paycheck
+  /// Analyze paycheck (mobile - file paths)
   Future<Map<String, dynamic>> analyzePaycheck(
     List<String> imagePaths,
     String userId,
   ) async {
     final base64Images = await getBase64Images(imagePaths);
+    return _analyzePaycheckWithImages(base64Images, userId);
+  }
 
+  /// Analyze paycheck from bytes (web compatible)
+  Future<Map<String, dynamic>> analyzePaycheckFromBytes(
+    List<Uint8List> imageBytes,
+    String userId, {
+    List<String>? mimeTypes,
+  }) async {
+    final base64Images =
+        getBase64ImagesFromBytes(imageBytes, mimeTypes: mimeTypes);
+    return _analyzePaycheckWithImages(base64Images, userId);
+  }
+
+  Future<Map<String, dynamic>> _analyzePaycheckWithImages(
+    List<Map<String, String>> base64Images,
+    String userId,
+  ) async {
     final response = await _supabase.functions.invoke(
       'analyze-paycheck',
       body: {
@@ -141,14 +233,33 @@ class VisionScannerService {
     return response.data as Map<String, dynamic>;
   }
 
-  /// Scan business card
+  /// Scan business card (mobile - file paths)
   Future<Map<String, dynamic>> scanBusinessCard(
     List<String> imagePaths,
     String userId, {
     String? shiftId,
   }) async {
     final base64Images = await getBase64Images(imagePaths);
+    return _scanBusinessCardWithImages(base64Images, userId, shiftId: shiftId);
+  }
 
+  /// Scan business card from bytes (web compatible)
+  Future<Map<String, dynamic>> scanBusinessCardFromBytes(
+    List<Uint8List> imageBytes,
+    String userId, {
+    String? shiftId,
+    List<String>? mimeTypes,
+  }) async {
+    final base64Images =
+        getBase64ImagesFromBytes(imageBytes, mimeTypes: mimeTypes);
+    return _scanBusinessCardWithImages(base64Images, userId, shiftId: shiftId);
+  }
+
+  Future<Map<String, dynamic>> _scanBusinessCardWithImages(
+    List<Map<String, String>> base64Images,
+    String userId, {
+    String? shiftId,
+  }) async {
     final response = await _supabase.functions.invoke(
       'scan-business-card',
       body: {
@@ -165,14 +276,33 @@ class VisionScannerService {
     return response.data as Map<String, dynamic>;
   }
 
-  /// Analyze invoice
+  /// Analyze invoice (mobile - file paths)
   Future<Map<String, dynamic>> analyzeInvoice(
     List<String> imagePaths,
     String userId, {
     String? shiftId,
   }) async {
     final base64Images = await getBase64Images(imagePaths);
+    return _analyzeInvoiceWithImages(base64Images, userId, shiftId: shiftId);
+  }
 
+  /// Analyze invoice from bytes (web compatible)
+  Future<Map<String, dynamic>> analyzeInvoiceFromBytes(
+    List<Uint8List> imageBytes,
+    String userId, {
+    String? shiftId,
+    List<String>? mimeTypes,
+  }) async {
+    final base64Images =
+        getBase64ImagesFromBytes(imageBytes, mimeTypes: mimeTypes);
+    return _analyzeInvoiceWithImages(base64Images, userId, shiftId: shiftId);
+  }
+
+  Future<Map<String, dynamic>> _analyzeInvoiceWithImages(
+    List<Map<String, String>> base64Images,
+    String userId, {
+    String? shiftId,
+  }) async {
     final response = await _supabase.functions.invoke(
       'analyze-invoice',
       body: {
@@ -189,14 +319,33 @@ class VisionScannerService {
     return response.data as Map<String, dynamic>;
   }
 
-  /// Analyze receipt for expense tracking
+  /// Analyze receipt for expense tracking (mobile - file paths)
   Future<Map<String, dynamic>> analyzeReceipt(
     List<String> imagePaths,
     String userId, {
     String? shiftId,
   }) async {
     final base64Images = await getBase64Images(imagePaths);
+    return _analyzeReceiptWithImages(base64Images, userId, shiftId: shiftId);
+  }
 
+  /// Analyze receipt from bytes (web compatible)
+  Future<Map<String, dynamic>> analyzeReceiptFromBytes(
+    List<Uint8List> imageBytes,
+    String userId, {
+    String? shiftId,
+    List<String>? mimeTypes,
+  }) async {
+    final base64Images =
+        getBase64ImagesFromBytes(imageBytes, mimeTypes: mimeTypes);
+    return _analyzeReceiptWithImages(base64Images, userId, shiftId: shiftId);
+  }
+
+  Future<Map<String, dynamic>> _analyzeReceiptWithImages(
+    List<Map<String, String>> base64Images,
+    String userId, {
+    String? shiftId,
+  }) async {
     final response = await _supabase.functions.invoke(
       'analyze-receipt',
       body: {
