@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart' show kIsWeb, kDebugMode;
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../main.dart' show appVersion;
 import '../providers/shift_provider.dart';
 import '../services/database_service.dart';
 import '../services/tax_service.dart';
@@ -433,7 +434,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           backgroundColor: AppTheme.darkBackground,
           appBar: AppBar(
             backgroundColor: AppTheme.darkBackground,
-            title: Text('Settings',
+            title: Text('Settings  v$appVersion',
                 style: AppTheme.titleLarge
                     .copyWith(color: AppTheme.adaptiveTextColor)),
             actions: [
