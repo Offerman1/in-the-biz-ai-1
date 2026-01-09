@@ -44,5 +44,32 @@
 </head>
 <body>
   <script src="flutter_bootstrap.js" async></script>
+  
+  <!-- Auto-update detection - prompts user when new version available -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('flutter_service_worker.js').then(function(registration) {
+        // Check for updates every 60 seconds
+        setInterval(() => registration.update(), 60000);
+        
+        registration.addEventListener('updatefound', () => {
+          const newWorker = registration.installing;
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              // New version available - auto refresh
+              if (confirm('A new version of In The Biz is available! Click OK to update now.')) {
+                window.location.reload();
+              }
+            }
+          });
+        });
+      });
+      
+      // Also listen for the controlling service worker changing
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        window.location.reload();
+      });
+    }
+  </script>
 </body>
 </html>
