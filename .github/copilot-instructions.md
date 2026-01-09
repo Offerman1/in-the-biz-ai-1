@@ -23,31 +23,68 @@ description: AI rules derived by SpecStory from the project AI interaction histo
 
 ## 🚨 CRITICAL WEB DEPLOYMENT RULE - READ THIS FIRST 🚨
 
+**DEPLOYMENT TARGET: Vercel (main branch) - NOT GitHub Pages**
+
 **WHENEVER YOU MAKE CHANGES TO ANY DART FILE (lib/main.dart, lib/screens/*, lib/widgets/*, etc.):**
 
-**YOU MUST RUN THE FULL BUILD AND DEPLOY COMMAND IMMEDIATELY:**
+### Step-by-Step Deployment Process:
 
+**Step 1: Update version in BOTH places (if changing version):**
+- `pubspec.yaml` line 4: `version: X.X.X+X`
+- `lib/main.dart` line 22: `const String appVersion = 'X.X.X+X';`
+
+**Step 2: Clean build (recommended for version changes):**
 ```cmd
-cd "c:\Users\Brandon 2021\Desktop\In The Biz AI" & flutter build web --release & robocopy "build\web" "." *.* /E /XD build .git node_modules android ios lib docs scripts supabase .idea .vscode .github assets web .specstory .dart_tool & git add . & git commit -m "Deploy: [your message]" & git push origin gh-pages
+cd "c:\Users\Brandon 2021\Desktop\In The Biz AI"
+flutter clean
+flutter pub get
+flutter build web --release
 ```
 
-**WHY THIS IS CRITICAL:**
+**Step 3: Copy built files to root:**
+```cmd
+Copy-Item -Path "build\web\main.dart.js" -Destination "main.dart.js" -Force
+```
+
+**Step 4: Commit and push to MAIN (not gh-pages):**
+```cmd
+git add .
+git commit -m "Deploy: [your message]"
+git push origin main
+```
+
+**OR use this single command (after building):**
+```cmd
+cd "c:\Users\Brandon 2021\Desktop\In The Biz AI" ; Copy-Item -Path "build\web\main.dart.js" -Destination "main.dart.js" -Force ; git add . ; git commit -m "Deploy: [your message]" ; git push origin main
+```
+
+### WHY THIS IS CRITICAL:
 - Editing `lib/main.dart` does NOT update the website
 - The website serves `main.dart.js` from the ROOT, not from `lib/`
 - `flutter build web` compiles Dart → JavaScript in `build/web/`
-- `robocopy` copies `build/web/` → ROOT (where GitHub Pages serves from)
-- Without these steps, changes are NEVER deployed
+- The built `main.dart.js` must be copied to the ROOT directory
+- Vercel watches the **main** branch and deploys in ~6 seconds
+- Version is hardcoded in `lib/main.dart` line 22 - you MUST update it there too!
 
-**DO NOT:**
+### DO NOT:
 - ❌ Just edit `lib/main.dart` and stop
 - ❌ Say "the code is updated" without deploying
-- ❌ Forget to copy build files to root
+- ❌ Forget to copy `main.dart.js` to root
+- ❌ Push to gh-pages (that's the OLD way)
+- ❌ Only update version in pubspec.yaml (also update lib/main.dart!)
 - ❌ Wait for the user to ask - DEPLOY IMMEDIATELY after code changes
 
-**ALWAYS:**
+### ALWAYS:
 - ✅ Build AND deploy in the SAME action
-- ✅ Run the full command every single time
-- ✅ Tell the user deployment is complete and wait 5-10 mins for GitHub Pages
+- ✅ Update version in BOTH pubspec.yaml AND lib/main.dart
+- ✅ Push to **main** branch (Vercel deploys from main)
+- ✅ Verify deployment by checking console for correct version number
+- ✅ Deployment completes in ~6 seconds on Vercel
+
+### IMPORTANT: GitHub/Vercel Account Ownership
+- The GitHub repo MUST be owned by the same account that Vercel is authenticated as
+- Currently: Repo owned by **Offerman1**, Vercel authenticated as **Offerman1**
+- If deployments stop working, check that repo ownership and Vercel authentication match
 
 ---
 
@@ -141,12 +178,26 @@ cd "c:\Users\Brandon 2021\Desktop\In The Biz AI" & flutter build web --release &
 
 ## 🌐 Web Deployment
 
-**Single-command deployment (recommended):**
+**Deployment Target: Vercel on main branch**
+
+**Full deployment process:**
 ```cmd
-cd "c:\Users\Brandon 2021\Desktop\In The Biz AI" ; flutter build web --release ; robocopy "build\web" "." *.* /E /XD build .git node_modules android ios lib docs scripts supabase .idea .vscode .github assets web .specstory .dart_tool ; git add . ; git commit -m "Deploy: [Your message]" ; git push origin gh-pages
+cd "c:\Users\Brandon 2021\Desktop\In The Biz AI"
+flutter clean
+flutter pub get
+flutter build web --release
+Copy-Item -Path "build\web\main.dart.js" -Destination "main.dart.js" -Force
+git add .
+git commit -m "Deploy: [Your message]"
+git push origin main
 ```
 
-**See full deployment section below for details and alternatives.**
+**Quick deploy (if no version change):**
+```cmd
+cd "c:\Users\Brandon 2021\Desktop\In The Biz AI" ; flutter build web --release ; Copy-Item -Path "build\web\main.dart.js" -Destination "main.dart.js" -Force ; git add . ; git commit -m "Deploy: [Your message]" ; git push origin main
+```
+
+**See CRITICAL WEB DEPLOYMENT RULE at top for full details.**
 
 ---
 
