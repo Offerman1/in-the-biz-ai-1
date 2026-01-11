@@ -70,98 +70,288 @@ serve(async (req) => {
       },
     }));
 
-    // BEO Analysis Prompt
+    // BEO Analysis Prompt - Comprehensive Event Extraction
     const prompt = `You are an expert event planner analyzing a Banquet Event Order (BEO) contract.
 
-TASK: Extract ALL relevant event details from this ${images.length}-page document.
+TASK: Extract ALL relevant event details from this ${images.length}-page document. 
+This is a COMPREHENSIVE extraction - capture EVERYTHING.
 
-BEOs can be multi-page and contain:
-- Event identity (name, date, type)
-- Logistics (setup time, event start/end, breakdown)
-- People (guest count, primary contact)
-- Financials (total sale, deposit, balance, commission)
-- Details (menu, decor, staffing requirements)
+BEOs contain multiple sections. Extract data for ALL of these categories:
 
-EXTRACTION INSTRUCTIONS:
-1. **Event Identity:**
-   - event_name (string): The event's official name
-   - event_date (YYYY-MM-DD): The date of the event
-   - event_type (string): 'Wedding', 'Corporate', 'Birthday', 'Other'
-   - venue_name (string): Name of the venue
-   - venue_address (string): Full venue address
+═══════════════════════════════════════════════════════════════════════════════
+SECTION 1: GENERAL EVENT & CONTACT INFORMATION
+═══════════════════════════════════════════════════════════════════════════════
 
-2. **Logistics:**
-   - setup_time (HH:MM): When setup begins
-   - event_start_time (HH:MM): When the event officially starts
-   - event_end_time (HH:MM): When the event officially ends
-   - breakdown_time (HH:MM): When breakdown begins
+**Event Identity:**
+- event_name (string): The event's official name/title
+- event_date (YYYY-MM-DD): The date of the event
+- event_type (string): 'Wedding', 'Corporate', 'Birthday', 'Gala', 'Product Launch', 'Other'
+- post_as (string): How the event should appear on public signage/screens
+- venue_name (string): Name of the venue
+- venue_address (string): Full venue address
+- function_space (string): Specific room or area (e.g., "Crystal Ballroom", "Dock Area")
+- account_name (string): Corporate account or organization name
 
-3. **People:**
-   - guest_count_expected (number): Expected number of guests
-   - guest_count_confirmed (number): Confirmed/final guest count
-   - primary_contact_name (string): Main contact person (hostess/host)
-   - primary_contact_phone (string): Contact phone number
-   - primary_contact_email (string): Contact email
-   - client_name (string): Client/company/organization hosting the event
+**Client Contact:**
+- primary_contact_name (string): Main contact person (hostess/host/client)
+- primary_contact_phone (string): Contact phone number
+- primary_contact_email (string): Contact email
 
-4. **Financials:**
-   - total_sale_amount (number): Total cost of the event
-   - deposit_amount (number): Deposit paid
-   - balance_due (number): Remaining balance
-   - commission_percentage (number): Commission percentage (if mentioned)
-   - commission_amount (number): Commission dollar amount
+**Internal Contacts:**
+- sales_manager_name (string): Sales/event manager name
+- sales_manager_phone (string): Sales manager phone
+- sales_manager_email (string): Sales manager email
+- catering_manager_name (string): Catering/kitchen manager
+- catering_manager_phone (string): Catering manager phone
 
-5. **Additional Details:**
-   - menu_items (string): Food and beverage menu
-   - decor_notes (string): Decoration requirements
-   - staffing_requirements (string): Number of servers, bartenders, etc.
-   - special_requests (string): Any special client requests
+═══════════════════════════════════════════════════════════════════════════════
+SECTION 2: TIMELINE & LOGISTICS
+═══════════════════════════════════════════════════════════════════════════════
 
-6. **AI Metadata:**
-   - formatted_notes (string): Organize unstructured data (menu, decor, staffing) into clean, readable sections with markdown formatting. Use headers, bullet points, and bold text for clarity.
-   - ai_confidence_scores (object): Your confidence (0-1) for each extracted field
+- setup_date (YYYY-MM-DD): Date of setup (if different from event date)
+- teardown_date (YYYY-MM-DD): Date of teardown
+- load_in_time (HH:MM): When load-in/setup begins
+- setup_time (HH:MM): When setup begins
+- guest_arrival_time (HH:MM): When guests arrive
+- event_start_time (HH:MM): When event officially starts
+- event_end_time (HH:MM): When event ends
+- breakdown_time (HH:MM): When breakdown begins
+- load_out_time (HH:MM): When load-out completes
 
-RESPONSE FORMAT (JSON only, no markdown):
+═══════════════════════════════════════════════════════════════════════════════
+SECTION 3: GUEST COUNTS & ATTENDANCE
+═══════════════════════════════════════════════════════════════════════════════
+
+- guest_count_expected (number): Expected/projected guests
+- guest_count_confirmed (number): Confirmed/guaranteed count
+- adult_count (number): Number of adults
+- child_count (number): Number of children
+- vendor_meal_count (number): Vendor/staff meals
+
+═══════════════════════════════════════════════════════════════════════════════
+SECTION 4: DETAILED FINANCIALS
+═══════════════════════════════════════════════════════════════════════════════
+
+**Sales Breakdown:**
+- food_total (number): Total for food items
+- beverage_total (number): Total for beverages
+- labor_total (number): Total for labor/staffing
+- room_rental (number): Room/space rental fee
+- equipment_rental (number): Equipment/AV rental
+
+**Calculations:**
+- subtotal (number): Sum before service charge/tax
+- service_charge_percent (number): Service charge percentage (e.g., 22)
+- service_charge_amount (number): Service charge dollar amount
+- tax_percent (number): Tax percentage (e.g., 7)
+- tax_amount (number): Tax dollar amount
+- gratuity_amount (number): Gratuity if separate
+- grand_total (number): Final total
+- deposits_paid (number): Total deposits paid
+- deposit_amount (number): Individual deposit amounts
+- balance_due (number): Remaining balance
+
+**Commission:**
+- commission_percentage (number): Your commission percentage
+- commission_amount (number): Your commission dollar amount
+
+**Total Sale:**
+- total_sale_amount (number): Overall event cost (same as grand_total if not specified separately)
+
+═══════════════════════════════════════════════════════════════════════════════
+SECTION 5: FOOD & BEVERAGE DETAILS
+═══════════════════════════════════════════════════════════════════════════════
+
+- menu_style (string): 'Buffet', 'Plated', 'Stations', 'Family Style', 'Passed Hors doeuvres', 'Cocktail Reception'
+
+- menu_details (JSON object): Full menu breakdown
+  Format: {
+    "appetizers": [{"name": "Item Name", "description": "Details", "qty": 80, "price": 5.00}],
+    "salads": [{"name": "...", "description": "..."}],
+    "entrees": [{"name": "...", "description": "...", "qty": 80}],
+    "sides": [{"name": "...", "description": "..."}],
+    "desserts": [{"name": "...", "description": "..."}],
+    "passed_items": [{"name": "...", "description": "..."}]
+  }
+
+- beverage_details (JSON object): Beverage package info
+  Format: {
+    "package": "Non-Alcoholic Package",
+    "price_per_person": 5.00,
+    "bar_type": "Open/Cash/Host",
+    "drink_tickets": 3,
+    "cash_bar_after": true,
+    "consumption_bar": false,
+    "brands": "House/Premium/Top Shelf"
+  }
+
+- menu_items (string): Simple comma-separated list of all menu items (legacy field)
+- dietary_restrictions (string): Allergies, dietary needs noted
+
+═══════════════════════════════════════════════════════════════════════════════
+SECTION 6: ROOM SETUP & INVENTORY
+═══════════════════════════════════════════════════════════════════════════════
+
+- setup_details (JSON object): Full setup breakdown
+  Format: {
+    "tables": [{"type": "60in Round", "qty": 8, "linen_color": "white"}],
+    "chairs": {"type": "Chiavari", "qty": 80},
+    "linens": {"tablecloths": "white", "napkins": "navy"},
+    "decor": ["Silver votive candles", "Floral centerpieces"],
+    "av_equipment": ["Microphone", "Projector", "Screen"],
+    "special_items": ["Dance floor", "Stage", "Podium"],
+    "lounge": ["High tops with spandex", "Lounge furniture"]
+  }
+
+- decor_notes (string): Decoration requirements in text form
+- floor_plan_notes (string): Floor plan descriptions or references
+
+═══════════════════════════════════════════════════════════════════════════════
+SECTION 7: STAFFING & SERVICES
+═══════════════════════════════════════════════════════════════════════════════
+
+- staffing_details (JSON object): Staff breakdown
+  Format: {
+    "servers": 4,
+    "bartenders": 2,
+    "captain": 1,
+    "security": 0,
+    "valet": false,
+    "av_tech": 0,
+    "coat_check": false,
+    "staff_meals": true,
+    "labor_rate": 150
+  }
+
+- staffing_requirements (string): Text description of staffing
+- vendor_details (JSON array): External vendors
+  Format: [
+    {"name": "Jason Blank", "type": "DJ", "company": "", "phone": "", "email": "", "notes": ""},
+    {"name": "Casino Tables Florida Fun", "type": "Entertainment", "phone": "", "notes": ""}
+  ]
+
+═══════════════════════════════════════════════════════════════════════════════
+SECTION 8: TIMELINE/AGENDA
+═══════════════════════════════════════════════════════════════════════════════
+
+- event_timeline (JSON array): Order of events
+  Format: [
+    {"time": "5:00 PM", "activity": "Guest Arrival & Cocktail Hour"},
+    {"time": "6:00 PM", "activity": "Dinner Service"},
+    {"time": "7:00 PM", "activity": "Speeches"},
+    {"time": "8:00 PM", "activity": "Entertainment"}
+  ]
+
+═══════════════════════════════════════════════════════════════════════════════
+SECTION 9: BILLING & LEGAL
+═══════════════════════════════════════════════════════════════════════════════
+
+- payment_method (string): How payment will be made
+- cancellation_policy (string): Cancellation terms if mentioned
+
+═══════════════════════════════════════════════════════════════════════════════
+SECTION 10: SPECIAL NOTES & CATCH-ALL
+═══════════════════════════════════════════════════════════════════════════════
+
+- special_requests (string): Any special client requests
+- formatted_notes (string): **CRITICAL** - This is for ANY information that doesn't fit 
+  the above fields. Organize ALL unstructured data into clean, readable sections using 
+  markdown formatting. Include:
+  - Insurance requirements
+  - Vendor coordination notes
+  - Parking/transportation details
+  - Client-provided items
+  - Any other details
+  
+  Use headers (##), bullet points (-), and bold (**text**) for clarity.
+
+- ai_confidence_scores (JSON object): Your confidence (0-1) for each key field
+  Example: {"event_name": 0.98, "grand_total": 0.95, "guest_count_confirmed": 0.88}
+
+═══════════════════════════════════════════════════════════════════════════════
+RESPONSE FORMAT
+═══════════════════════════════════════════════════════════════════════════════
+
+Return ONLY valid JSON. Example structure:
+
 {
-  "event_name": "Smith Wedding",
-  "event_date": "2026-06-15",
-  "event_type": "Wedding",
-  "venue_name": "Grand Ballroom",
-  "venue_address": "123 Main St, City, State",
-  "setup_time": "14:00",
-  "event_start_time": "18:00",
-  "event_end_time": "23:00",
-  "breakdown_time": "00:00",
-  "guest_count_expected": 150,
-  "guest_count_confirmed": 142,
-  "primary_contact_name": "John Smith",
-  "primary_contact_phone": "555-1234",
-  "primary_contact_email": "john@example.com",
-  "client_name": "Smith Family",
-  "total_sale_amount": 12500.00,
-  "deposit_amount": 5000.00,
-  "balance_due": 7500.00,
-  "commission_percentage": 15.0,
-  "commission_amount": 1875.00,
-  "menu_items": "Appetizers: Bruschetta, Shrimp Cocktail\\nEntrees: Chicken Marsala, Grilled Salmon\\nDessert: Wedding Cake",
-  "decor_notes": "White linens, gold chargers, centerpieces with roses",
-  "staffing_requirements": "3 bartenders, 8 servers, 1 captain",
-  "special_requests": "Gluten-free options, vegan dessert",
-  "formatted_notes": "## Menu\\n- **Appetizers:** Bruschetta, Shrimp Cocktail\\n- **Entrees:** Chicken Marsala, Grilled Salmon\\n- **Dessert:** Wedding Cake\\n\\n## Decor\\nWhite linens, gold chargers, centerpieces with roses\\n\\n## Staffing\\n- 3 Bartenders\\n- 8 Servers\\n- 1 Captain\\n\\n## Special Requests\\nGluten-free options, vegan dessert",
+  "event_name": "BASS United",
+  "event_date": "2026-01-09",
+  "event_type": "Corporate",
+  "venue_name": "Shooters Waterfront",
+  "function_space": "Grateful Palate Catering & Events",
+  "guest_count_confirmed": 80,
+  "primary_contact_name": "Stephanie Koury",
+  "primary_contact_phone": "(954) 785-7800",
+  "primary_contact_email": "Stephanie@bassunited.com",
+  "sales_manager_name": "Tatiana Ichenko",
+  "event_start_time": "17:00",
+  "event_end_time": "21:00",
+  "food_total": 7150.00,
+  "beverage_total": 400.00,
+  "labor_total": 300.00,
+  "subtotal": 7850.00,
+  "service_charge_percent": 22,
+  "service_charge_amount": 1661.00,
+  "tax_percent": 7,
+  "tax_amount": 644.77,
+  "grand_total": 10155.77,
+  "deposits_paid": 4011.08,
+  "balance_due": 6144.69,
+  "menu_style": "Buffet",
+  "menu_details": {
+    "passed_items": [
+      {"name": "Hoisin Glazed Pork Meatballs", "qty": 80},
+      {"name": "Mini French Dip", "qty": 80}
+    ],
+    "salads": [{"name": "Apple Walnut Romaine", "qty": 80}],
+    "entrees": [
+      {"name": "Grilled Soy Ginger Salmon", "qty": 80},
+      {"name": "Skirt Steak Chimichurri", "qty": 80}
+    ],
+    "sides": [
+      {"name": "Garlic Whipped Potatoes", "qty": 80},
+      {"name": "Grilled Asparagus", "qty": 80}
+    ],
+    "desserts": [
+      {"name": "Dark Chocolate Mousse Shooter", "qty": 80}
+    ]
+  },
+  "beverage_details": {
+    "package": "Non-Alcoholic Package",
+    "price_per_person": 5.00,
+    "drink_tickets": 3,
+    "cash_bar_after": true
+  },
+  "staffing_details": {
+    "bartenders": 2,
+    "valet": false
+  },
+  "vendor_details": [
+    {"name": "Jason Blank", "type": "DJ"}
+  ],
+  "setup_details": {
+    "tables": [{"type": "60in Round", "qty": 8, "linen_color": "white"}],
+    "decor": ["High tops with navy spandex", "Silver votive candles"]
+  },
+  "formatted_notes": "## Insurance Requirements\\n- Certificate of insurance required for 3033 Group LLC\\n- Certificate required for Shooters Waterfront\\n\\n## Client Provided Items\\n- Stephanie to provide 3 drink tickets per person\\n\\n## Special Notes\\n- Possibly move one casino table to dock\\n- Nuts present in kitchen but can prepare without",
   "ai_confidence_scores": {
-    "event_name": 0.98,
-    "event_date": 0.95,
-    "total_sale_amount": 0.92,
-    "guest_count_confirmed": 0.85,
-    "menu_items": 0.90
+    "event_name": 0.99,
+    "grand_total": 0.98,
+    "guest_count_confirmed": 0.95,
+    "menu_details": 0.92
   }
 }
 
-IMPORTANT:
-- If a field is not visible in the document, use null
-- For confidence scores, be honest: 0.9+ = clear text, 0.7-0.9 = partially visible, <0.7 = guessing
-- Return ONLY valid JSON, no explanations
-- Analyze ALL pages together for complete context`;
+CRITICAL RULES:
+1. If a field is not visible in the document, use null - don't guess
+2. For JSON fields (menu_details, beverage_details, etc.), only include what's actually in the document
+3. Put ALL overflow/unstructured data into formatted_notes - NOTHING should be lost
+4. Return ONLY valid JSON, no markdown code blocks, no explanations
+5. Analyze ALL ${images.length} pages together for complete context
+6. Times should be in 24-hour format (HH:MM)
+7. Dates should be in YYYY-MM-DD format
+8. Amounts should be numbers without $ symbols`;
 
     // Call Gemini Vision API
     const result = await model.generateContent([prompt, ...imageParts]);

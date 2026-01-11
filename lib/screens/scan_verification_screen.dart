@@ -3,6 +3,7 @@ import '../theme/app_theme.dart';
 import '../models/vision_scan.dart';
 import '../services/database_service.dart';
 import 'add_shift_screen.dart';
+import 'add_edit_contact_screen.dart';
 
 /// Universal verification screen for all AI scan types
 /// Shows extracted data with confidence badges for user review before saving
@@ -862,21 +863,305 @@ class _ScanVerificationScreenState extends State<ScanVerificationScreen> {
 
   List<Widget> _buildBEOFields() {
     return [
-      _buildFieldRow('Event Name', 'event_name'),
-      _buildFieldRow('Event Date', 'event_date'),
+      // ═══════════════════════════════════════════════════════════════════════
+      // SECTION 1: EVENT IDENTITY
+      // ═══════════════════════════════════════════════════════════════════════
+      _buildSectionHeader('Event Information', Icons.event),
+      _buildFieldRow('Event Name', 'event_name', isRequired: true),
+      _buildFieldRow('Event Date', 'event_date', isRequired: true),
       _buildFieldRow('Event Type', 'event_type'),
       _buildFieldRow('Venue', 'venue_name'),
-      _buildFieldRow('Guest Count', 'guest_count_confirmed'),
-      _buildFieldRow('Total Sale', 'total_sale_amount', suffix: ' USD'),
-      _buildFieldRow('Commission', 'commission_amount', suffix: ' USD'),
-      _buildFieldRow('Primary Contact', 'primary_contact_name'),
-      _buildFieldRow('Contact Phone', 'primary_contact_phone'),
-      _buildFieldRow('Contact Email', 'primary_contact_email'),
+      _buildFieldRow('Venue Address', 'venue_address'),
+      _buildFieldRow('Function Space', 'function_space'),
+      _buildFieldRow('Account Name', 'account_name'),
+
+      // ═══════════════════════════════════════════════════════════════════════
+      // SECTION 2: CONTACTS
+      // ═══════════════════════════════════════════════════════════════════════
+      _buildSectionHeader('Contact Information', Icons.people),
+      _buildFieldRow('Client/Host Name', 'primary_contact_name'),
+      _buildFieldRow('Client Phone', 'primary_contact_phone'),
+      _buildFieldRow('Client Email', 'primary_contact_email'),
+      _buildFieldRow('Sales Manager', 'sales_manager_name'),
+      _buildFieldRow('Sales Manager Phone', 'sales_manager_phone'),
+      _buildFieldRow('Catering Manager', 'catering_manager_name'),
+
+      // ═══════════════════════════════════════════════════════════════════════
+      // SECTION 3: TIMING
+      // ═══════════════════════════════════════════════════════════════════════
+      _buildSectionHeader('Timeline', Icons.schedule),
       _buildFieldRow('Event Start Time', 'event_start_time'),
       _buildFieldRow('Event End Time', 'event_end_time'),
+      _buildFieldRow('Setup Time', 'setup_time'),
+      _buildFieldRow('Guest Arrival Time', 'guest_arrival_time'),
+      _buildFieldRow('Breakdown Time', 'breakdown_time'),
+
+      // ═══════════════════════════════════════════════════════════════════════
+      // SECTION 4: GUEST COUNTS
+      // ═══════════════════════════════════════════════════════════════════════
+      _buildSectionHeader('Guest Count', Icons.groups),
+      _buildFieldRow('Confirmed Guests', 'guest_count_confirmed'),
+      _buildFieldRow('Expected Guests', 'guest_count_expected'),
+      _buildFieldRow('Adult Count', 'adult_count'),
+      _buildFieldRow('Child Count', 'child_count'),
+      _buildFieldRow('Vendor Meals', 'vendor_meal_count'),
+
+      // ═══════════════════════════════════════════════════════════════════════
+      // SECTION 5: FINANCIALS
+      // ═══════════════════════════════════════════════════════════════════════
+      _buildSectionHeader('Financials', Icons.attach_money),
+      _buildFieldRow('Food Total', 'food_total', suffix: ' USD'),
+      _buildFieldRow('Beverage Total', 'beverage_total', suffix: ' USD'),
+      _buildFieldRow('Labor Total', 'labor_total', suffix: ' USD'),
+      _buildFieldRow('Room Rental', 'room_rental', suffix: ' USD'),
+      _buildFieldRow('Equipment Rental', 'equipment_rental', suffix: ' USD'),
+      _buildFieldRow('Subtotal', 'subtotal', suffix: ' USD'),
+      _buildFieldRow('Service Charge %', 'service_charge_percent', suffix: '%'),
+      _buildFieldRow('Service Charge', 'service_charge_amount', suffix: ' USD'),
+      _buildFieldRow('Tax %', 'tax_percent', suffix: '%'),
+      _buildFieldRow('Tax Amount', 'tax_amount', suffix: ' USD'),
+      _buildFieldRow('Gratuity', 'gratuity_amount', suffix: ' USD'),
+      _buildFieldRow('Grand Total', 'grand_total', suffix: ' USD'),
+      _buildFieldRow('Deposits Paid', 'deposits_paid', suffix: ' USD'),
+      _buildFieldRow('Balance Due', 'balance_due', suffix: ' USD'),
+      _buildFieldRow('Total Sale', 'total_sale_amount', suffix: ' USD'),
+      _buildFieldRow('Commission %', 'commission_percentage', suffix: '%'),
+      _buildFieldRow('Commission Amount', 'commission_amount', suffix: ' USD'),
+
+      // ═══════════════════════════════════════════════════════════════════════
+      // SECTION 6: MENU
+      // ═══════════════════════════════════════════════════════════════════════
+      _buildSectionHeader('Menu', Icons.restaurant_menu),
+      _buildFieldRow('Menu Style', 'menu_style'),
+      _buildFieldRow('Menu Items', 'menu_items', multiline: true),
+      _buildFieldRow('Dietary Restrictions', 'dietary_restrictions',
+          multiline: true),
+      if (_editableData['menu_details'] != null)
+        _buildJsonFieldDisplay('Menu Details', 'menu_details'),
+      if (_editableData['beverage_details'] != null)
+        _buildJsonFieldDisplay('Beverage Details', 'beverage_details'),
+
+      // ═══════════════════════════════════════════════════════════════════════
+      // SECTION 7: SETUP & DECOR
+      // ═══════════════════════════════════════════════════════════════════════
+      _buildSectionHeader('Setup & Decor', Icons.chair),
+      _buildFieldRow('Decor Notes', 'decor_notes', multiline: true),
+      _buildFieldRow('Floor Plan Notes', 'floor_plan_notes', multiline: true),
+      if (_editableData['setup_details'] != null)
+        _buildJsonFieldDisplay('Setup Details', 'setup_details'),
+
+      // ═══════════════════════════════════════════════════════════════════════
+      // SECTION 8: STAFFING
+      // ═══════════════════════════════════════════════════════════════════════
+      _buildSectionHeader('Staffing', Icons.badge),
+      _buildFieldRow('Staffing Requirements', 'staffing_requirements',
+          multiline: true),
+      if (_editableData['staffing_details'] != null)
+        _buildJsonFieldDisplay('Staffing Details', 'staffing_details'),
+
+      // ═══════════════════════════════════════════════════════════════════════
+      // SECTION 9: VENDORS
+      // ═══════════════════════════════════════════════════════════════════════
+      if (_editableData['vendor_details'] != null) ..._buildVendorSection(),
+
+      // ═══════════════════════════════════════════════════════════════════════
+      // SECTION 10: ADDITIONAL NOTES
+      // ═══════════════════════════════════════════════════════════════════════
+      _buildSectionHeader('Additional Notes', Icons.notes),
+      _buildFieldRow('Special Requests', 'special_requests', multiline: true),
       if (_editableData['formatted_notes'] != null)
-        _buildFieldRow('Additional Notes', 'formatted_notes', multiline: true),
+        _buildFieldRow('AI-Organized Notes', 'formatted_notes',
+            multiline: true),
     ];
+  }
+
+  /// Build a section header with icon
+  Widget _buildSectionHeader(String title, IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 24, bottom: 12),
+      child: Row(
+        children: [
+          Icon(icon, color: AppTheme.primaryGreen, size: 20),
+          const SizedBox(width: 8),
+          Text(
+            title,
+            style: AppTheme.titleMedium.copyWith(
+              color: AppTheme.textPrimary,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const Expanded(child: SizedBox()),
+          Container(
+            height: 1,
+            width: 100,
+            color: AppTheme.primaryGreen.withOpacity(0.3),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Build a display for JSON fields (menu_details, setup_details, etc.)
+  Widget _buildJsonFieldDisplay(String label, String fieldKey) {
+    final data = _editableData[fieldKey];
+    if (data == null) return const SizedBox.shrink();
+
+    String displayText = '';
+    if (data is Map) {
+      data.forEach((key, value) {
+        if (value != null && value.toString().isNotEmpty) {
+          if (value is List) {
+            displayText += '• $key:\n';
+            for (var item in value) {
+              if (item is Map) {
+                final name = item['name'] ?? item['type'] ?? 'Item';
+                displayText += '  - $name\n';
+              } else {
+                displayText += '  - $item\n';
+              }
+            }
+          } else {
+            displayText += '• $key: $value\n';
+          }
+        }
+      });
+    }
+
+    if (displayText.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: AppTheme.labelMedium.copyWith(
+              color: AppTheme.textSecondary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppTheme.cardBackgroundLight,
+              borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+              border: Border.all(
+                color: AppTheme.textMuted.withOpacity(0.2),
+              ),
+            ),
+            child: Text(
+              displayText.trim(),
+              style: AppTheme.bodyMedium.copyWith(
+                color: AppTheme.textPrimary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Build vendor section with "Add to Contacts" buttons
+  List<Widget> _buildVendorSection() {
+    final vendors = _editableData['vendor_details'];
+    if (vendors == null || vendors is! List || vendors.isEmpty) {
+      return [];
+    }
+
+    return [
+      _buildSectionHeader('Vendors', Icons.business),
+      ...vendors.map<Widget>((vendor) {
+        final name = vendor['name'] ?? 'Unknown Vendor';
+        final type = vendor['type'] ?? 'Vendor';
+        final phone = vendor['phone'] ?? '';
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppTheme.cardBackgroundLight,
+              borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+              border: Border.all(
+                color: AppTheme.textMuted.withOpacity(0.2),
+              ),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        name,
+                        style: AppTheme.bodyMedium.copyWith(
+                          color: AppTheme.textPrimary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        type,
+                        style: AppTheme.bodySmall.copyWith(
+                          color: AppTheme.textSecondary,
+                        ),
+                      ),
+                      if (phone.isNotEmpty)
+                        Text(
+                          phone,
+                          style: AppTheme.bodySmall.copyWith(
+                            color: AppTheme.textMuted,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: () => _addVendorToContacts(vendor),
+                  icon: Icon(Icons.person_add,
+                      color: AppTheme.primaryGreen, size: 18),
+                  label: Text(
+                    'Add to Contacts',
+                    style:
+                        TextStyle(color: AppTheme.primaryGreen, fontSize: 12),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
+    ];
+  }
+
+  /// Add vendor to contacts - navigates to add contact screen with pre-filled data
+  void _addVendorToContacts(Map<String, dynamic> vendor) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AddEditContactScreen(
+          preFillData: {
+            'name': vendor['name'] ?? '',
+            'type': vendor['type'] ?? '',
+            'phone': vendor['phone'] ?? '',
+            'email': vendor['email'] ?? '',
+            'company': vendor['company'] ?? vendor['name'] ?? '',
+            'notes': 'Added from BEO scan',
+          },
+        ),
+      ),
+    ).then((result) {
+      if (result == true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${vendor['name']} added to contacts'),
+            backgroundColor: AppTheme.successColor,
+          ),
+        );
+      }
+    });
   }
 
   List<Widget> _buildCheckoutFields() {

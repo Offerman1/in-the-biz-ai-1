@@ -41,6 +41,8 @@ class Shift {
   final double? eventCost; // Total cost of event (DJs, event planners)
   final String? section; // Section/area worked (Main Dining, Bar, Patio, etc.)
   final String? checkoutId; // Links to server_checkouts table
+  final String?
+      beoEventId; // Links to beo_events table for comprehensive event data
 
   // Future shift fields (NEW)
   final String status; // 'scheduled' or 'completed'
@@ -200,6 +202,7 @@ class Shift {
     this.eventCost,
     this.section,
     this.checkoutId,
+    this.beoEventId,
     this.status = 'completed',
     this.source = 'manual',
     this.isRecurring = false,
@@ -369,6 +372,7 @@ class Shift {
     double? eventCost,
     String? section,
     String? checkoutId,
+    String? beoEventId,
     String? status,
     String? source,
     bool? isRecurring,
@@ -488,6 +492,7 @@ class Shift {
       eventCost: eventCost ?? this.eventCost,
       section: section ?? this.section,
       checkoutId: checkoutId ?? this.checkoutId,
+      beoEventId: beoEventId ?? this.beoEventId,
       status: status ?? this.status,
       source: source ?? this.source,
       isRecurring: isRecurring ?? this.isRecurring,
@@ -864,6 +869,7 @@ class Shift {
       eventCost: map['event_cost']?.toDouble(),
       section: map['section'],
       checkoutId: map['checkout_id'],
+      beoEventId: map['beo_event_id'],
       status: map['status'] ?? 'completed',
       source: map['source'] ?? 'manual',
       isRecurring: map['is_recurring'] ?? false,
@@ -993,6 +999,7 @@ class Shift {
       'event_cost': eventCost,
       'section': section,
       'checkout_id': checkoutId,
+      'beo_event_id': beoEventId,
       'status': status,
       'source': source,
       'is_recurring': isRecurring,

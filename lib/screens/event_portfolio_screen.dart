@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../theme/app_theme.dart';
 import '../services/database_service.dart';
+import 'beo_detail_screen.dart';
+import '../models/beo_event.dart';
 
 /// Event Portfolio Gallery for Event Planners
 /// Shows past BEO events with photos and details
@@ -56,6 +58,31 @@ class _EventPortfolioScreenState extends State<EventPortfolioScreen> {
     }
   }
 
+  /// Navigate to create new BEO
+  void _createNewBeo() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const BeoDetailScreen(isCreating: true),
+      ),
+    ).then((result) {
+      if (result == true) {
+        _loadEvents(); // Refresh list after creating
+      }
+    });
+  }
+
+  /// Navigate to view/edit existing BEO
+  void _openBeoDetails(Map<String, dynamic> eventData) {
+    final beo = BeoEvent.fromJson(eventData);
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => BeoDetailScreen(beoEvent: beo),
+      ),
+    ).then((_) => _loadEvents());
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -84,6 +111,15 @@ class _EventPortfolioScreenState extends State<EventPortfolioScreen> {
                     : _buildEventsGrid(),
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _createNewBeo,
+        backgroundColor: AppTheme.primaryGreen,
+        icon: const Icon(Icons.add, color: Colors.white),
+        label: const Text(
+          'Create BEO',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
       ),
     );
   }
@@ -189,7 +225,7 @@ class _EventPortfolioScreenState extends State<EventPortfolioScreen> {
     }
 
     return GestureDetector(
-      onTap: () => _showEventDetails(event),
+      onTap: () => _openBeoDetails(event),
       child: Container(
         decoration: BoxDecoration(
           color: AppTheme.cardBackground,
@@ -381,173 +417,5 @@ class _EventPortfolioScreenState extends State<EventPortfolioScreen> {
       default:
         return '🎉';
     }
-  }
-
-  void _showEventDetails(Map<String, dynamic> event) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (context) => _EventDetailsSheet(event: event),
-    );
-  }
-}
-
-/// Bottom sheet showing full event details
-class _EventDetailsSheet extends StatelessWidget {
-  final Map<String, dynamic> event;
-
-  const _EventDetailsSheet({required this.event});
-
-  @override
-  Widget build(BuildContext context) {
-    final eventName = event['event_name'] as String? ?? 'Untitled Event';
-    final eventType = event['event_type'] as String? ?? '';
-    final eventDate = event['event_date'] as String?;
-    final venue = event['venue_name'] as String?;
-    final guestCount = event['guest_count_confirmed'] as int? ??
-        event['guest_count_expected'] as int?;
-    final totalSale = (event['total_sale_amount'] as num?)?.toDouble();
-    final commission = (event['commission_amount'] as num?)?.toDouble();
-    final contact = event['primary_contact_name'] as String?;
-    final formattedNotes = event['formatted_notes'] as String?;
-
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.75,
-      decoration: BoxDecoration(
-        color: AppTheme.cardBackground,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      child: Column(
-        children: [
-          // Handle bar
-          Container(
-            margin: const EdgeInsets.only(top: 12, bottom: 8),
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: AppTheme.textMuted.withOpacity(0.5),
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-
-          // Header
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        eventName,
-                        style: AppTheme.titleLarge.copyWith(
-                          color: AppTheme.textPrimary,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      if (eventType.isNotEmpty)
-                        Text(
-                          eventType,
-                          style: AppTheme.bodyMedium.copyWith(
-                            color: AppTheme.primaryGreen,
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-                IconButton(
-                  icon: Icon(Icons.close, color: AppTheme.textSecondary),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ],
-            ),
-          ),
-
-          // Details
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                if (eventDate != null)
-                  _buildDetailRow(
-                      Icons.calendar_today,
-                      'Date',
-                      DateFormat('MMMM d, yyyy')
-                          .format(DateTime.parse(eventDate))),
-                if (venue != null)
-                  _buildDetailRow(Icons.location_on, 'Venue', venue),
-                if (guestCount != null)
-                  _buildDetailRow(Icons.people, 'Guests', '$guestCount'),
-                if (contact != null)
-                  _buildDetailRow(Icons.person, 'Contact', contact),
-                if (totalSale != null)
-                  _buildDetailRow(Icons.attach_money, 'Total Sale',
-                      '\$${totalSale.toStringAsFixed(2)}'),
-                if (commission != null)
-                  _buildDetailRow(Icons.payments, 'Commission',
-                      '\$${commission.toStringAsFixed(2)}',
-                      color: AppTheme.primaryGreen),
-                if (formattedNotes != null) ...[
-                  const SizedBox(height: 24),
-                  Text(
-                    'Event Details',
-                    style: AppTheme.titleMedium.copyWith(
-                      color: AppTheme.textPrimary,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: AppTheme.cardBackgroundLight,
-                      borderRadius:
-                          BorderRadius.circular(AppTheme.radiusMedium),
-                    ),
-                    child: Text(
-                      formattedNotes,
-                      style: AppTheme.bodySmall
-                          .copyWith(color: AppTheme.textSecondary),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDetailRow(IconData icon, String label, String value,
-      {Color? color}) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Row(
-        children: [
-          Icon(icon, size: 20, color: color ?? AppTheme.textSecondary),
-          const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: AppTheme.labelSmall.copyWith(color: AppTheme.textMuted),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                value,
-                style: AppTheme.bodyMedium.copyWith(
-                  color: color ?? AppTheme.textPrimary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
   }
 }

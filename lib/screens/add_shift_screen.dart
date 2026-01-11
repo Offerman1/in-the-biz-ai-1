@@ -245,6 +245,9 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
   // Linked checkout ID (from server checkout scan)
   String? _checkoutId;
 
+  // Linked BEO Event ID (from BEO scan)
+  String? _beoEventId;
+
   @override
   void initState() {
     super.initState();
@@ -545,6 +548,9 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
 
     // Load shift-level hidden sections
     _shiftHiddenSections = List.from(shift.shiftHiddenSections);
+
+    // Load linked BEO Event ID
+    _beoEventId = shift.beoEventId;
   }
 
   @override
@@ -820,6 +826,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
             ? _sectionController.text.trim()
             : null,
         checkoutId: _checkoutId,
+        beoEventId: _beoEventId,
         clientName: _clientNameController.text.trim().isNotEmpty
             ? _clientNameController.text.trim()
             : null,
@@ -1452,6 +1459,9 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
 
       if (!mounted) return;
 
+      // Capture the BEO Event ID from the response
+      final beoEventId = result['beoEventId'] as String?;
+
       // Hide loading snackbar
       ScaffoldMessenger.of(context).clearSnackBars();
 
@@ -1465,19 +1475,33 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
             confidenceScores:
                 result['data']['ai_confidence_scores'] as Map<String, dynamic>?,
             onConfirm: (data) async {
-              // Pre-fill shift form with BEO data
+              // Store the BEO Event ID to link with shift
               setState(() {
+                _beoEventId = beoEventId;
+
+                // Pre-fill shift form with BEO data
                 if (data['event_name'] != null) {
                   _eventNameController.text = data['event_name'].toString();
                 }
-                if (data['client_name'] != null) {
-                  _clientNameController.text = data['client_name'].toString();
+                if (data['primary_contact_name'] != null) {
+                  _hostessController.text =
+                      data['primary_contact_name'].toString();
                 }
                 if (data['guest_count_confirmed'] != null) {
                   _guestCountController.text =
                       data['guest_count_confirmed'].toString();
+                } else if (data['guest_count_expected'] != null) {
+                  _guestCountController.text =
+                      data['guest_count_expected'].toString();
                 }
-                if (data['total_sale_amount'] != null) {
+                if (data['venue_name'] != null) {
+                  _locationController.text = data['venue_name'].toString();
+                }
+
+                // Financial data
+                if (data['grand_total'] != null) {
+                  _eventCostController.text = data['grand_total'].toString();
+                } else if (data['total_sale_amount'] != null) {
                   _eventCostController.text =
                       data['total_sale_amount'].toString();
                 }
@@ -1485,17 +1509,43 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
                   _commissionController.text =
                       data['commission_amount'].toString();
                 }
-                if (data['venue_name'] != null) {
-                  _locationController.text = data['venue_name'].toString();
+
+                // Timing
+                if (data['event_date'] != null) {
+                  try {
+                    _selectedDate =
+                        DateTime.parse(data['event_date'].toString());
+                  } catch (_) {}
                 }
-                if (data['primary_contact_name'] != null) {
-                  _hostessController.text =
-                      data['primary_contact_name'].toString();
+                if (data['event_start_time'] != null) {
+                  try {
+                    final time = data['event_start_time'].toString();
+                    final parts = time.split(':');
+                    if (parts.length >= 2) {
+                      _startTime = TimeOfDay(
+                        hour: int.parse(parts[0]),
+                        minute: int.parse(parts[1]),
+                      );
+                    }
+                  } catch (_) {}
                 }
+                if (data['event_end_time'] != null) {
+                  try {
+                    final time = data['event_end_time'].toString();
+                    final parts = time.split(':');
+                    if (parts.length >= 2) {
+                      _endTime = TimeOfDay(
+                        hour: int.parse(parts[0]),
+                        minute: int.parse(parts[1]),
+                      );
+                    }
+                  } catch (_) {}
+                }
+
+                // Notes
                 if (data['formatted_notes'] != null) {
                   _notesController.text = data['formatted_notes'].toString();
                 }
-                // TODO: Add event_date and event_start_time/event_end_time mapping
               });
             },
           ),

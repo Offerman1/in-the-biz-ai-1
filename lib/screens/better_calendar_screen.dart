@@ -5,14 +5,17 @@ import 'package:table_calendar/table_calendar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/shift.dart';
 import '../models/job.dart';
+import '../models/beo_event.dart';
 import '../models/money_display_mode.dart';
 import '../providers/shift_provider.dart';
 import '../providers/theme_provider.dart';
+import '../providers/beo_event_provider.dart';
 import '../services/database_service.dart';
 import '../services/calendar_sync_service.dart';
 import '../screens/add_shift_screen.dart';
 import '../screens/shift_detail_screen.dart';
 import '../screens/single_shift_detail_screen.dart';
+import '../screens/beo_detail_screen.dart';
 import '../widgets/job_filter_bottom_sheet.dart';
 import '../widgets/money_mode_bottom_sheet.dart';
 import '../theme/app_theme.dart';
@@ -62,7 +65,14 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
     WidgetsBinding.instance.addObserver(this);
     _loadPreferences();
     _loadJobs();
+    _loadBeoEvents(); // Load BEO events
     _autoSyncCalendar(); // Auto-sync future shifts when screen opens
+  }
+
+  /// Load BEO events from provider
+  Future<void> _loadBeoEvents() async {
+    final beoProvider = Provider.of<BeoEventProvider>(context, listen: false);
+    await beoProvider.loadBeoEvents();
   }
 
   @override
@@ -157,18 +167,32 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
   @override
   Widget build(BuildContext context) {
     final shiftProvider = Provider.of<ShiftProvider>(context);
+    final beoProvider = Provider.of<BeoEventProvider>(context);
     final allShifts = shiftProvider.shifts;
+    final allBeoEvents = beoProvider.beoEvents;
 
-    // Apply job filter
+    // Apply job filter (BEOs are not filtered by job)
     final filteredShifts = _selectedJobId == null
         ? allShifts
         : allShifts.where((shift) => shift.jobId == _selectedJobId).toList();
+
+    // Get standalone BEOs (not linked to a shift) for calendar display
+    final standaloneBeoEvents =
+        allBeoEvents.where((e) => e.isStandalone).toList();
 
     // Group shifts by date
     final shiftsByDate = <DateTime, List<Shift>>{};
     for (final shift in filteredShifts) {
       final date = DateTime(shift.date.year, shift.date.month, shift.date.day);
       shiftsByDate.putIfAbsent(date, () => []).add(shift);
+    }
+
+    // Group standalone BEOs by date (for calendar display)
+    final beosByDate = <DateTime, List<BeoEvent>>{};
+    for (final beo in standaloneBeoEvents) {
+      final date =
+          DateTime(beo.eventDate.year, beo.eventDate.month, beo.eventDate.day);
+      beosByDate.putIfAbsent(date, () => []).add(beo);
     }
 
     return Consumer<ThemeProvider>(
@@ -181,7 +205,8 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                 _buildHeader(),
                 _buildViewToggle(),
                 Expanded(
-                  child: _buildContent(shiftsByDate, filteredShifts),
+                  child: _buildContent(shiftsByDate, filteredShifts,
+                      beosByDate: beosByDate),
                 ),
               ],
             ),
@@ -586,10 +611,11 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
   }
 
   Widget _buildContent(
-      Map<DateTime, List<Shift>> shiftsByDate, List<Shift> allShifts) {
+      Map<DateTime, List<Shift>> shiftsByDate, List<Shift> allShifts,
+      {Map<DateTime, List<BeoEvent>>? beosByDate}) {
     switch (_viewMode) {
       case CalendarViewMode.month:
-        return _buildMonthView(shiftsByDate);
+        return _buildMonthView(shiftsByDate, beosByDate: beosByDate ?? {});
       case CalendarViewMode.week:
         return _buildWeekView(shiftsByDate, allShifts);
       case CalendarViewMode.year:
@@ -598,7 +624,8 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
   }
 
   // MONTH VIEW
-  Widget _buildMonthView(Map<DateTime, List<Shift>> shiftsByDate) {
+  Widget _buildMonthView(Map<DateTime, List<Shift>> shiftsByDate,
+      {Map<DateTime, List<BeoEvent>> beosByDate = const {}}) {
     // If list view is enabled, show list instead of calendar
     if (_isMonthListView) {
       return _buildMonthListView(shiftsByDate);
@@ -611,9 +638,15 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
     final selectedDayShifts = selectedDayNormalized != null
         ? (shiftsByDate[selectedDayNormalized] ?? [])
         : [];
+    final selectedDayBeos = selectedDayNormalized != null
+        ? (beosByDate[selectedDayNormalized] ?? [])
+        : [];
 
-    // Height calculation: compact summary bar (60) + each shift card (110) + padding (80)
-    final contentHeight = 60 + (selectedDayShifts.length * 110) + 80;
+    // Height calculation: compact summary bar (60) + each shift card (110) + each BEO card (90) + padding (80)
+    final contentHeight = 60 +
+        (selectedDayShifts.length * 110) +
+        (selectedDayBeos.length * 90) +
+        80;
     final maxDrawerHeight =
         MediaQuery.of(context).size.height * 0.7; // Max 70% of screen
     final calculatedHeight = contentHeight.toDouble();
@@ -742,23 +775,28 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                             calendarBuilders: CalendarBuilders(
                               defaultBuilder: (context, day, focusedDay) {
                                 return _buildDayCell(day, shiftsByDate, false,
-                                    false, dynamicRowHeight, _isDrawerExpanded);
+                                    false, dynamicRowHeight, _isDrawerExpanded,
+                                    beosByDate: beosByDate);
                               },
                               selectedBuilder: (context, day, focusedDay) {
                                 return _buildDayCell(day, shiftsByDate, true,
-                                    false, dynamicRowHeight, _isDrawerExpanded);
+                                    false, dynamicRowHeight, _isDrawerExpanded,
+                                    beosByDate: beosByDate);
                               },
                               todayBuilder: (context, day, focusedDay) {
                                 return _buildDayCell(day, shiftsByDate, false,
-                                    true, dynamicRowHeight, _isDrawerExpanded);
+                                    true, dynamicRowHeight, _isDrawerExpanded,
+                                    beosByDate: beosByDate);
                               },
                               outsideBuilder: (context, day, focusedDay) {
                                 return _buildDayCell(day, shiftsByDate, false,
-                                    false, dynamicRowHeight, _isDrawerExpanded);
+                                    false, dynamicRowHeight, _isDrawerExpanded,
+                                    beosByDate: beosByDate);
                               },
                               disabledBuilder: (context, day, focusedDay) {
                                 return _buildDayCell(day, shiftsByDate, false,
-                                    false, dynamicRowHeight, _isDrawerExpanded);
+                                    false, dynamicRowHeight, _isDrawerExpanded,
+                                    beosByDate: beosByDate);
                               },
                             ),
                             onDaySelected: (selectedDay, focusedDay) {
@@ -766,8 +804,10 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                                   selectedDay.month, selectedDay.day);
                               final hasShifts =
                                   shiftsByDate.containsKey(normalizedDay);
+                              final hasBeos =
+                                  beosByDate.containsKey(normalizedDay);
 
-                              if (!hasShifts) {
+                              if (!hasShifts && !hasBeos) {
                                 // Empty day - go directly to add shift with selected date
                                 Navigator.push(
                                   context,
@@ -866,7 +906,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                           ),
                         ),
                         Expanded(
-                          child: _buildDrawerContent(shiftsByDate),
+                          child: _buildDrawerContent(shiftsByDate, beosByDate),
                         ),
                       ],
                     ),
@@ -881,9 +921,11 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
   }
 
   Widget _buildDayCell(DateTime day, Map<DateTime, List<Shift>> shiftsByDate,
-      bool isSelected, bool isToday, double rowHeight, bool isDrawerExpanded) {
+      bool isSelected, bool isToday, double rowHeight, bool isDrawerExpanded,
+      {Map<DateTime, List<BeoEvent>>? beosByDate}) {
     final normalizedDay = DateTime(day.year, day.month, day.day);
     final dayShifts = shiftsByDate[normalizedDay] ?? [];
+    final dayBeos = beosByDate?[normalizedDay] ?? [];
 
     // Check if day is outside current month
     final isOutsideMonth = day.month != _focusedDay.month;
@@ -895,6 +937,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
 
     // Filter shifts: hide past shifts on outside days
     final visibleShifts = isPastOutsideDay ? <Shift>[] : dayShifts;
+    final visibleBeos = isPastOutsideDay ? <BeoEvent>[] : dayBeos;
 
     // Sort shifts by start time (earliest first)
     final sortedShifts = List<Shift>.from(visibleShifts);
@@ -979,7 +1022,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
       ),
       clipBehavior: Clip.hardEdge,
       child: isExtremelySqueezed
-          // EXTREMELY SQUEEZED: Just show day number + dot (NO FittedBox to prevent duplication)
+          // EXTREMELY SQUEEZED: Just show day number + dots (NO FittedBox to prevent duplication)
           ? Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -994,17 +1037,34 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                   maxLines: 1,
                   overflow: TextOverflow.clip,
                 ),
-                if (sortedShifts.isNotEmpty) ...[
+                if (sortedShifts.isNotEmpty || visibleBeos.isNotEmpty) ...[
                   const SizedBox(height: 2),
-                  Container(
-                    width: 4,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: hasIncompleteShift
-                          ? AppTheme.accentOrange
-                          : AppTheme.primaryGreen,
-                    ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (sortedShifts.isNotEmpty)
+                        Container(
+                          width: 4,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: hasIncompleteShift
+                                ? AppTheme.accentOrange
+                                : AppTheme.primaryGreen,
+                          ),
+                        ),
+                      if (sortedShifts.isNotEmpty && visibleBeos.isNotEmpty)
+                        const SizedBox(width: 2),
+                      if (visibleBeos.isNotEmpty)
+                        Container(
+                          width: 4,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: AppTheme.accentPurple, // Purple for BEOs
+                          ),
+                        ),
+                    ],
                   ),
                 ],
               ],
@@ -1238,7 +1298,8 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
     }
   }
 
-  Widget _buildDrawerContent(Map<DateTime, List<Shift>> shiftsByDate) {
+  Widget _buildDrawerContent(Map<DateTime, List<Shift>> shiftsByDate,
+      Map<DateTime, List<BeoEvent>> beosByDate) {
     if (_selectedDay == null) {
       return Center(
         child: Text('Select a day', style: AppTheme.bodyMedium),
@@ -1248,8 +1309,9 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
     final normalizedDay =
         DateTime(_selectedDay!.year, _selectedDay!.month, _selectedDay!.day);
     final dayShifts = shiftsByDate[normalizedDay] ?? [];
+    final dayBeos = beosByDate[normalizedDay] ?? [];
 
-    if (dayShifts.isEmpty) {
+    if (dayShifts.isEmpty && dayBeos.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -1454,8 +1516,123 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
 
               // Shift cards - matching dashboard style
               ...dayShifts.map((shift) => _buildDrawerShiftCard(shift)),
+
+              // BEO event cards - purple accent
+              ...dayBeos.map((beo) => _buildDrawerBeoCard(beo)),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  /// Builds a BEO event card for the drawer
+  Widget _buildDrawerBeoCard(BeoEvent beo) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => BeoDetailScreen(beoEvent: beo),
+          ),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppTheme.cardBackgroundLight,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: AppTheme.accentPurple.withOpacity(0.5),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            // Purple BEO icon
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: AppTheme.accentPurple.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                Icons.description_outlined,
+                color: AppTheme.accentPurple,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            // Event info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    beo.eventName,
+                    style: AppTheme.bodyMedium.copyWith(
+                      color: AppTheme.textPrimary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.location_on_outlined,
+                        size: 12,
+                        color: AppTheme.textMuted,
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          beo.venueName ?? 'No venue',
+                          style: TextStyle(
+                            color: AppTheme.textMuted,
+                            fontSize: 12,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            // Guest count if available
+            if (beo.displayGuestCount != null && beo.displayGuestCount! > 0)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppTheme.accentPurple.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.people_outline,
+                      size: 12,
+                      color: AppTheme.accentPurple,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${beo.displayGuestCount}',
+                      style: TextStyle(
+                        color: AppTheme.accentPurple,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
         ),
       ),
     );

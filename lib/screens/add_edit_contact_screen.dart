@@ -17,10 +17,14 @@ class AddEditContactScreen extends StatefulWidget {
   /// Optional: pre-link to a specific shift
   final String? shiftId;
 
+  /// Optional: pre-fill data for new contact (from BEO vendor, etc.)
+  final Map<String, dynamic>? preFillData;
+
   const AddEditContactScreen({
     super.key,
     this.contact,
     this.shiftId,
+    this.preFillData,
   });
 
   @override
@@ -66,7 +70,74 @@ class _AddEditContactScreenState extends State<AddEditContactScreen> {
     super.initState();
     if (widget.contact != null) {
       _loadExistingContact();
+    } else if (widget.preFillData != null) {
+      _loadPreFillData();
     }
+  }
+
+  /// Load pre-fill data (from BEO vendor, etc.)
+  void _loadPreFillData() {
+    final data = widget.preFillData!;
+    _nameController.text = data['name'] ?? '';
+    _companyController.text = data['company'] ?? '';
+    _phoneController.text = data['phone'] ?? '';
+    _emailController.text = data['email'] ?? '';
+    _websiteController.text = data['website'] ?? '';
+    _notesController.text = data['notes'] ?? '';
+
+    // Try to match vendor type to contact role
+    final type = (data['type'] ?? '').toString().toLowerCase();
+    _selectedRole = _matchVendorTypeToRole(type);
+    if (_selectedRole == ContactRole.custom && type.isNotEmpty) {
+      _customRoleController.text = data['type'] ?? '';
+    }
+  }
+
+  /// Match vendor type string to ContactRole
+  ContactRole _matchVendorTypeToRole(String type) {
+    final typeMap = {
+      'dj': ContactRole.dj,
+      'entertainment': ContactRole.dj,
+      'band': ContactRole.bandMusician,
+      'musician': ContactRole.bandMusician,
+      'photo booth': ContactRole.photoBooth,
+      'photobooth': ContactRole.photoBooth,
+      'photographer': ContactRole.photographer,
+      'photography': ContactRole.photographer,
+      'videographer': ContactRole.videographer,
+      'video': ContactRole.videographer,
+      'wedding planner': ContactRole.weddingPlanner,
+      'planner': ContactRole.weddingPlanner,
+      'coordinator': ContactRole.eventCoordinator,
+      'event coordinator': ContactRole.eventCoordinator,
+      'florist': ContactRole.florist,
+      'flowers': ContactRole.florist,
+      'linens': ContactRole.linenRental,
+      'linen rental': ContactRole.linenRental,
+      'cake': ContactRole.cakeBakery,
+      'bakery': ContactRole.cakeBakery,
+      'catering': ContactRole.catering,
+      'caterer': ContactRole.catering,
+      'rentals': ContactRole.rentals,
+      'lighting': ContactRole.lightingAv,
+      'av': ContactRole.lightingAv,
+      'audio visual': ContactRole.lightingAv,
+      'rabbi': ContactRole.rabbi,
+      'priest': ContactRole.priest,
+      'pastor': ContactRole.pastor,
+      'officiant': ContactRole.officiant,
+      'venue manager': ContactRole.venueManager,
+      'venue coordinator': ContactRole.venueCoordinator,
+      'security': ContactRole.security,
+      'valet': ContactRole.valet,
+    };
+
+    for (final entry in typeMap.entries) {
+      if (type.contains(entry.key)) {
+        return entry.value;
+      }
+    }
+    return ContactRole.custom;
   }
 
   void _loadExistingContact() {
@@ -443,7 +514,8 @@ class _AddEditContactScreenState extends State<AddEditContactScreen> {
         notes: _notesController.text.trim().isNotEmpty
             ? _notesController.text.trim()
             : null,
-        imageUrl: _profilePhotoUrl ?? _imageUrl, // Use profile photo if available, else business card
+        imageUrl: _profilePhotoUrl ??
+            _imageUrl, // Use profile photo if available, else business card
         isFavorite: _isFavorite,
         // Social media
         instagram: _instagramController.text.trim().isNotEmpty

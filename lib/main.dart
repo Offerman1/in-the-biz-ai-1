@@ -11,6 +11,7 @@ import 'package:in_the_biz_ai/screens/quickbooks_callback_screen.dart';
 import 'package:in_the_biz_ai/providers/shift_provider.dart';
 import 'package:in_the_biz_ai/providers/theme_provider.dart';
 import 'package:in_the_biz_ai/providers/field_order_provider.dart';
+import 'package:in_the_biz_ai/providers/beo_event_provider.dart';
 import 'package:in_the_biz_ai/services/database_service.dart';
 import 'package:in_the_biz_ai/services/notification_service.dart';
 import 'package:in_the_biz_ai/services/ad_service.dart';
@@ -76,6 +77,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => ShiftProvider()),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => FieldOrderProvider()),
+        ChangeNotifierProvider(create: (_) => BeoEventProvider()),
         // Only provide SubscriptionService on mobile
         if (!kIsWeb)
           ChangeNotifierProvider(create: (_) => SubscriptionService()),
