@@ -61,9 +61,9 @@ class _AnimatedGradientBackgroundState extends State<AnimatedGradientBackground>
 
   Color _adjustColor(Color color, double factor) {
     return Color.fromRGBO(
-      (color.red * factor).clamp(0, 255).toInt(),
-      (color.green * factor).clamp(0, 255).toInt(),
-      (color.blue * factor).clamp(0, 255).toInt(),
+      ((color.r * 255) * factor).clamp(0, 255).toInt(),
+      ((color.g * 255) * factor).clamp(0, 255).toInt(),
+      ((color.b * 255) * factor).clamp(0, 255).toInt(),
       1,
     );
   }

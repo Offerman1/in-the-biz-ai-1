@@ -80,8 +80,11 @@ class SubscriptionService extends ChangeNotifier {
     }
   }
 
+  // Note: purchasePackage is deprecated but still works. The new API requires PurchaseParams.
+  // ignore: deprecated_member_use
   Future<bool> purchasePackage(Package package) async {
     try {
+      // ignore: deprecated_member_use
       final purchaseResult = await Purchases.purchasePackage(package);
       _customerInfo = purchaseResult.customerInfo;
       _isPro = purchaseResult.customerInfo.entitlements.all['pro']?.isActive ??

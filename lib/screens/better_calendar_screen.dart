@@ -825,8 +825,8 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                       },
                       child: Transform(
                         transform: Matrix4.identity()
-                          ..translate(_offset.dx, _offset.dy)
-                          ..scale(_calendarScale),
+                          ..translate(_offset.dx, _offset.dy, 0)
+                          ..scale(_calendarScale, _calendarScale, 1.0),
                         child: Container(
                           width: constraints.maxWidth,
                           height: constraints.maxHeight,
@@ -867,8 +867,8 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   todayDecoration: BoxDecoration(
-                                    color:
-                                        AppTheme.primaryGreen.withValues(alpha: 0.3),
+                                    color: AppTheme.primaryGreen
+                                        .withValues(alpha: 0.3),
                                     borderRadius: BorderRadius.circular(8),
                                     border: Border.all(
                                         color: AppTheme.primaryGreen, width: 2),
@@ -1951,7 +1951,8 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                                   vertical: 4,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: AppTheme.accentBlue.withValues(alpha: 0.2),
+                                  color: AppTheme.accentBlue
+                                      .withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(
@@ -2415,12 +2416,14 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                             decoration: BoxDecoration(
                               color: dayShifts.first.status == 'scheduled'
                                   ? AppTheme.accentBlue.withValues(alpha: 0.08)
-                                  : AppTheme.primaryGreen.withValues(alpha: 0.08),
+                                  : AppTheme.primaryGreen
+                                      .withValues(alpha: 0.08),
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
                                 color: dayShifts.first.status == 'scheduled'
                                     ? AppTheme.accentBlue.withValues(alpha: 0.3)
-                                    : AppTheme.primaryGreen.withValues(alpha: 0.3),
+                                    : AppTheme.primaryGreen
+                                        .withValues(alpha: 0.3),
                                 width: 1,
                               ),
                             ),
@@ -2597,13 +2600,17 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
                                 color: isScheduled
-                                    ? AppTheme.accentBlue.withValues(alpha: 0.08)
-                                    : AppTheme.primaryGreen.withValues(alpha: 0.08),
+                                    ? AppTheme.accentBlue
+                                        .withValues(alpha: 0.08)
+                                    : AppTheme.primaryGreen
+                                        .withValues(alpha: 0.08),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
                                   color: isScheduled
-                                      ? AppTheme.accentBlue.withValues(alpha: 0.3)
-                                      : AppTheme.primaryGreen.withValues(alpha: 0.3),
+                                      ? AppTheme.accentBlue
+                                          .withValues(alpha: 0.3)
+                                      : AppTheme.primaryGreen
+                                          .withValues(alpha: 0.3),
                                   width: 1,
                                 ),
                               ),
@@ -3452,7 +3459,8 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                               ? AppTheme.primaryGreen
                               : (monthShifts.isEmpty
                                   ? AppTheme.cardBackgroundLight
-                                  : AppTheme.primaryGreen.withValues(alpha: 0.3)),
+                                  : AppTheme.primaryGreen
+                                      .withValues(alpha: 0.3)),
                           width: isCurrentMonth
                               ? 2
                               : (monthShifts.isEmpty ? 1 : 1.5),

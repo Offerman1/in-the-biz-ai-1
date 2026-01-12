@@ -472,9 +472,9 @@ class ThemeProvider extends ChangeNotifier {
     if (_currentTheme.isNotEmpty) {
       _themeBackgroundSettings[_currentTheme] = {
         'mode': _backgroundMode,
-        'customColor': _customBackgroundColor?.value,
-        'gradientColor1': _gradientColor1?.value,
-        'gradientColor2': _gradientColor2?.value,
+        'customColor': _customBackgroundColor?.toARGB32(),
+        'gradientColor1': _gradientColor1?.toARGB32(),
+        'gradientColor2': _gradientColor2?.toARGB32(),
       };
     }
 
@@ -617,9 +617,9 @@ class ThemeProvider extends ChangeNotifier {
     // Save to per-theme settings
     _themeBackgroundSettings[_currentTheme] = {
       'mode': mode,
-      'customColor': customColor?.value,
-      'gradientColor1': gradientColor1?.value,
-      'gradientColor2': gradientColor2?.value,
+      'customColor': customColor?.toARGB32(),
+      'gradientColor1': gradientColor1?.toARGB32(),
+      'gradientColor2': gradientColor2?.toARGB32(),
     };
 
     _applyBackgroundMode();
@@ -635,9 +635,9 @@ class ThemeProvider extends ChangeNotifier {
       await _supabase.from('user_preferences').upsert({
         'user_id': user.id,
         'background_mode': mode,
-        'custom_bg_color': customColor?.value,
-        'gradient_color1': gradientColor1?.value,
-        'gradient_color2': gradientColor2?.value,
+        'custom_bg_color': customColor?.toARGB32(),
+        'gradient_color1': gradientColor1?.toARGB32(),
+        'gradient_color2': gradientColor2?.toARGB32(),
         'theme_background_settings': _themeBackgroundSettings,
         'updated_at': DateTime.now().toIso8601String(),
       });

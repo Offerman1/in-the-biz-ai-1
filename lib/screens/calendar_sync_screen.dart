@@ -186,8 +186,8 @@ class _CalendarSyncScreenState extends State<CalendarSyncScreen> {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content:
-                    const Text('Failed to access Google Calendar. Please try again.'),
+                content: const Text(
+                    'Failed to access Google Calendar. Please try again.'),
                 backgroundColor: AppTheme.accentRed,
               ),
             );
@@ -207,7 +207,7 @@ class _CalendarSyncScreenState extends State<CalendarSyncScreen> {
     }
 
     // For mobile platforms, use permission_handler for better UX
-    var status = await Permission.calendar.request();
+    var status = await Permission.calendarFullAccess.request();
 
     if (status.isGranted) {
       // Also request through device_calendar plugin
@@ -222,7 +222,8 @@ class _CalendarSyncScreenState extends State<CalendarSyncScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Calendar permission is required to sync schedules'),
+            content:
+                const Text('Calendar permission is required to sync schedules'),
             backgroundColor: AppTheme.accentRed,
           ),
         );
