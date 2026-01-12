@@ -51,6 +51,7 @@ class AddShiftScreen extends StatefulWidget {
   final Uint8List? imageBytes;
   final DateTime? preselectedDate;
   final Map<String, dynamic>? prefilledCheckoutData;
+  final Map<String, dynamic>? prefilledBeoData;
   final bool autoOpenBeoScanner;
 
   const AddShiftScreen({
@@ -60,6 +61,7 @@ class AddShiftScreen extends StatefulWidget {
     this.imageBytes,
     this.preselectedDate,
     this.prefilledCheckoutData,
+    this.prefilledBeoData,
     this.autoOpenBeoScanner = false,
   });
 
@@ -265,6 +267,9 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
     if (widget.prefilledCheckoutData != null) {
       _applyCheckoutData();
     }
+    if (widget.prefilledBeoData != null) {
+      _applyBeoData();
+    }
     // Auto-open BEO scanner if flag is set
     if (widget.autoOpenBeoScanner) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -304,6 +309,65 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
     // Store checkout ID for linking
     if (data['checkoutId'] != null) {
       _checkoutId = data['checkoutId'].toString();
+    }
+  }
+
+  /// Apply BEO data to pre-fill form fields
+  void _applyBeoData() {
+    final data = widget.prefilledBeoData!;
+
+    if (data['event_name'] != null &&
+        data['event_name'].toString().isNotEmpty) {
+      _eventNameController.text = data['event_name'].toString();
+    }
+    if (data['location'] != null && data['location'].toString().isNotEmpty) {
+      _locationController.text = data['location'].toString();
+    }
+    if (data['hostess'] != null && data['hostess'].toString().isNotEmpty) {
+      _hostessController.text = data['hostess'].toString();
+    }
+    if (data['guest_count'] != null &&
+        data['guest_count'].toString().isNotEmpty) {
+      _guestCountController.text = data['guest_count'].toString();
+    }
+    if (data['event_cost'] != null &&
+        data['event_cost'].toString().isNotEmpty) {
+      _eventCostController.text = data['event_cost'].toString();
+    }
+    if (data['commission'] != null &&
+        data['commission'].toString().isNotEmpty) {
+      _commissionController.text = data['commission'].toString();
+    }
+    // Parse start time
+    if (data['start_time'] != null &&
+        data['start_time'].toString().isNotEmpty) {
+      try {
+        final time = data['start_time'].toString();
+        final parts = time.split(':');
+        if (parts.length >= 2) {
+          _startTime = TimeOfDay(
+            hour: int.parse(parts[0]),
+            minute: int.parse(parts[1]),
+          );
+        }
+      } catch (_) {}
+    }
+    // Parse end time
+    if (data['end_time'] != null && data['end_time'].toString().isNotEmpty) {
+      try {
+        final time = data['end_time'].toString();
+        final parts = time.split(':');
+        if (parts.length >= 2) {
+          _endTime = TimeOfDay(
+            hour: int.parse(parts[0]),
+            minute: int.parse(parts[1]),
+          );
+        }
+      } catch (_) {}
+    }
+    // Store BEO Event ID for linking
+    if (data['beo_event_id'] != null) {
+      _beoEventId = data['beo_event_id'].toString();
     }
   }
 

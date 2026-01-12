@@ -46,6 +46,48 @@ export class UtilityExecutor {
       };
     }
 
+    // Fetch the user's name and email
+    let userName = "Unknown User";
+    let userEmail = "No email on file";
+    
+    try {
+      // First, try to get name from profiles table
+      const { data: profile } = await this.supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", this.userId)
+        .single();
+      
+      if (profile?.full_name) {
+        userName = profile.full_name;
+      }
+    } catch (e) {
+      console.log("Could not fetch user profile:", e);
+    }
+
+    try {
+      // Also get the user's email from auth.users (using service role key)
+      const { data: authUser } = await this.supabase.auth.admin.getUserById(this.userId);
+      
+      if (authUser?.user?.email) {
+        userEmail = authUser.user.email;
+        // If we still don't have a name, try getting it from user metadata
+        if (userName === "Unknown User") {
+          const metadata = authUser.user.user_metadata;
+          if (metadata?.full_name) {
+            userName = metadata.full_name;
+          } else if (metadata?.name) {
+            userName = metadata.name;
+          } else {
+            // Use email username as last resort
+            userName = userEmail.split('@')[0];
+          }
+        }
+      }
+    } catch (e) {
+      console.log("Could not fetch user email:", e);
+    }
+
     // Get Zoho SMTP credentials from environment
     const smtpHost = Deno.env.get("ZOHO_SMTP_HOST");
     const smtpPort = Deno.env.get("ZOHO_SMTP_PORT");
@@ -74,6 +116,8 @@ export class UtilityExecutor {
 
       const emailHtml = `
         <h2>${categoryLabels[category] || category}</h2>
+        <p><strong>User Name:</strong> ${userName}</p>
+        <p><strong>User Email:</strong> ${userEmail}</p>
         <p><strong>User ID:</strong> ${this.userId}</p>
         <p><strong>Submitted:</strong> ${new Date().toISOString()}</p>
         <hr>

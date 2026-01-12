@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../models/vision_scan.dart';
+import '../models/beo_event.dart';
 import '../services/database_service.dart';
+import '../services/beo_event_service.dart';
 import 'add_shift_screen.dart';
 import 'add_edit_contact_screen.dart';
 
@@ -33,7 +35,9 @@ class _ScanVerificationScreenState extends State<ScanVerificationScreen> {
   late Map<String, dynamic> _editableData;
   bool _isSaving = false;
   bool _isCreatingShift = false;
+  bool _isSavingBeo = false;
   final DatabaseService _db = DatabaseService();
+  final BeoEventService _beoService = BeoEventService();
 
   @override
   void initState() {
@@ -703,7 +707,9 @@ class _ScanVerificationScreenState extends State<ScanVerificationScreen> {
             child: SafeArea(
               child: widget.scanType == ScanType.checkout
                   ? _buildCheckoutActionButtons()
-                  : _buildDefaultActionButtons(),
+                  : widget.scanType == ScanType.beo
+                      ? _buildBeoActionButtons()
+                      : _buildDefaultActionButtons(),
             ),
           ),
         ],
@@ -828,6 +834,222 @@ class _ScanVerificationScreenState extends State<ScanVerificationScreen> {
         ),
       ],
     );
+  }
+
+  /// BEO-specific action buttons (Cancel, Save BEO Only, Save & Create Shift)
+  Widget _buildBeoActionButtons() {
+    final isLoading = _isSavingBeo || _isCreatingShift;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Top row: Cancel + Save BEO Only
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed:
+                    isLoading ? null : () => Navigator.pop(context, false),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppTheme.textSecondary,
+                  side: BorderSide(color: AppTheme.textMuted),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+                child: const Text('Cancel'),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              flex: 2,
+              child: OutlinedButton.icon(
+                onPressed: isLoading ? null : _saveBeoOnly,
+                icon: _isSavingBeo
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : Icon(Icons.description_outlined,
+                        color: AppTheme.accentPurple),
+                label: Text(
+                  _isSavingBeo ? 'Saving...' : 'Save as BEO Only',
+                  style: TextStyle(color: AppTheme.accentPurple),
+                ),
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(color: AppTheme.accentPurple),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        // Bottom: Save BEO & Create Shift (primary action)
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: isLoading ? null : _saveBeoAndCreateShift,
+            icon: _isCreatingShift
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.black,
+                    ),
+                  )
+                : const Icon(Icons.add_circle),
+            label: Text(
+                _isCreatingShift ? 'Creating...' : 'Save BEO & Create Shift'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primaryGreen,
+              foregroundColor: Colors.black,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        // Helper text
+        Text(
+          'BEO will appear on your calendar • Shift tracks your work hours',
+          style: AppTheme.labelSmall.copyWith(
+            color: AppTheme.textMuted,
+            fontSize: 11,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  }
+
+  /// Save BEO only (standalone) - appears on calendar with purple dot
+  Future<void> _saveBeoOnly() async {
+    setState(() => _isSavingBeo = true);
+
+    try {
+      // Create BeoEvent from extracted data
+      final beoEvent = BeoEvent.fromJson({
+        ..._editableData,
+        'is_standalone': true,
+        'created_manually': false,
+      });
+
+      // Save to database
+      await _beoService.createBeoEvent(beoEvent);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'BEO saved! It will appear on your calendar.',
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: AppTheme.accentPurple,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+        Navigator.pop(context, true);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to save BEO: $e'),
+            backgroundColor: AppTheme.dangerColor,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSavingBeo = false);
+      }
+    }
+  }
+
+  /// Save BEO and create a linked shift
+  Future<void> _saveBeoAndCreateShift() async {
+    setState(() => _isCreatingShift = true);
+
+    try {
+      // First, save the BEO event
+      final beoEvent = BeoEvent.fromJson({
+        ..._editableData,
+        'is_standalone': false, // Will be linked to a shift
+        'created_manually': false,
+      });
+
+      final savedBeo = await _beoService.createBeoEvent(beoEvent);
+
+      if (!mounted) return;
+
+      // Navigate to Add Shift screen with pre-filled data from BEO
+      final result = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(
+          builder: (context) => AddShiftScreen(
+            preselectedDate: beoEvent.eventDate,
+            prefilledBeoData: {
+              'event_name': beoEvent.eventName,
+              'location': beoEvent.venueName ?? '',
+              'hostess': beoEvent.primaryContactName ?? '',
+              'guest_count': beoEvent.displayGuestCount?.toString() ?? '',
+              'event_cost': beoEvent.grandTotal?.toString() ?? '',
+              'commission': beoEvent.commissionAmount?.toString() ?? '',
+              'start_time': beoEvent.eventStartTime,
+              'end_time': beoEvent.eventEndTime,
+              'beo_event_id': savedBeo.id,
+            },
+          ),
+        ),
+      );
+
+      if (mounted) {
+        if (result == true) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.check_circle, color: Colors.white),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text(
+                      'BEO saved & Shift created!',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ],
+              ),
+              backgroundColor: AppTheme.successColor,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+        Navigator.pop(context, result ?? false);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to save: $e'),
+            backgroundColor: AppTheme.dangerColor,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isCreatingShift = false);
+      }
+    }
   }
 
   Widget _buildConfidenceLegendItem(String emoji, String label) {
