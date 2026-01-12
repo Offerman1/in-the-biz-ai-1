@@ -72,10 +72,10 @@ class _DocumentPreviewWidgetState extends State<DocumentPreviewWidget> {
           height: widget.height,
           width: widget.width,
           decoration: BoxDecoration(
-            color: AppTheme.cardBackgroundLight.withOpacity(0.3),
+            color: AppTheme.cardBackgroundLight.withValues(alpha: 0.3),
             borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
             border: Border.all(
-              color: _getIconColor().withOpacity(0.3),
+              color: _getIconColor().withValues(alpha: 0.3),
               width: 1,
             ),
           ),
@@ -90,7 +90,7 @@ class _DocumentPreviewWidgetState extends State<DocumentPreviewWidget> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.3),
+                    color: Colors.black.withValues(alpha: 0.3),
                     borderRadius: const BorderRadius.only(
                       bottomLeft: Radius.circular(AppTheme.radiusSmall),
                       bottomRight: Radius.circular(AppTheme.radiusSmall),
@@ -190,8 +190,8 @@ class _DocumentPreviewWidgetState extends State<DocumentPreviewWidget> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            color.withOpacity(0.15),
-            color.withOpacity(0.05),
+            color.withValues(alpha: 0.15),
+            color.withValues(alpha: 0.05),
           ],
         ),
       ),

@@ -170,13 +170,13 @@ class _CheckoutAnalyticsTabState extends State<CheckoutAnalyticsTab> {
                 child: _buildSummaryCard(
                     'Avg Sales/Shift',
                     '\$${avgSalesPerShift.toStringAsFixed(2)}',
-                    AppTheme.accentBlue.withOpacity(0.7))),
+                    AppTheme.accentBlue.withValues(alpha: 0.7))),
             const SizedBox(width: 12),
             Expanded(
                 child: _buildSummaryCard(
                     'Avg Tips/Shift',
                     '\$${avgTipsPerShift.toStringAsFixed(2)}',
-                    AppTheme.primaryGreen.withOpacity(0.7))),
+                    AppTheme.primaryGreen.withValues(alpha: 0.7))),
           ],
         ),
         const SizedBox(height: 24),
@@ -267,7 +267,7 @@ class _CheckoutAnalyticsTabState extends State<CheckoutAnalyticsTab> {
       decoration: BoxDecoration(
         color: AppTheme.cardBackground,
         borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -431,7 +431,7 @@ class _CheckoutAnalyticsTabState extends State<CheckoutAnalyticsTab> {
                   const SizedBox(height: 6),
                   LinearProgressIndicator(
                     value: percentage / 100,
-                    backgroundColor: AppTheme.textMuted.withOpacity(0.2),
+                    backgroundColor: AppTheme.textMuted.withValues(alpha: 0.2),
                     valueColor:
                         AlwaysStoppedAnimation<Color>(AppTheme.primaryGreen),
                   ),

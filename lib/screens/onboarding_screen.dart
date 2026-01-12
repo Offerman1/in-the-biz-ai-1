@@ -892,7 +892,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   child: Container(
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? AppTheme.primaryGreen.withOpacity(0.2)
+                          ? AppTheme.primaryGreen.withValues(alpha: 0.2)
                           : AppTheme.cardBackground,
                       borderRadius:
                           BorderRadius.circular(AppTheme.radiusMedium),
@@ -1015,7 +1015,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       }
                     });
                   },
-                  selectedColor: AppTheme.primaryGreen.withOpacity(0.3),
+                  selectedColor: AppTheme.primaryGreen.withValues(alpha: 0.3),
                   backgroundColor: AppTheme.cardBackground,
                   checkmarkColor: AppTheme.primaryGreen,
                   labelStyle: TextStyle(
@@ -1901,7 +1901,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         jobName, template.copyWith(payStructure: structure));
                   }
                 },
-                selectedColor: AppTheme.primaryGreen.withOpacity(0.3),
+                selectedColor: AppTheme.primaryGreen.withValues(alpha: 0.3),
                 backgroundColor: AppTheme.cardBackgroundLight,
                 labelStyle: TextStyle(
                   color: isSelected
@@ -2078,7 +2078,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
         border: Border.all(
           color: isEnabled
-              ? AppTheme.primaryGreen.withOpacity(0.3)
+              ? AppTheme.primaryGreen.withValues(alpha: 0.3)
               : Colors.transparent,
         ),
       ),
@@ -2090,7 +2090,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: isEnabled
-                      ? AppTheme.primaryGreen.withOpacity(0.15)
+                      ? AppTheme.primaryGreen.withValues(alpha: 0.15)
                       : AppTheme.cardBackgroundLight,
                   borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
                 ),
@@ -2345,7 +2345,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             decoration: BoxDecoration(
               color: isSecondary
                   ? AppTheme.cardBackgroundLight
-                  : AppTheme.primaryGreen.withOpacity(0.15),
+                  : AppTheme.primaryGreen.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
             ),
             child: Icon(
@@ -2649,7 +2649,7 @@ class _CollapsibleSectionState extends State<_CollapsibleSection> {
         borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
         border: widget.hasActiveFields
             ? Border.all(
-                color: AppTheme.primaryGreen.withOpacity(0.3), width: 1)
+                color: AppTheme.primaryGreen.withValues(alpha: 0.3), width: 1)
             : null,
       ),
       child: Column(
@@ -2687,7 +2687,7 @@ class _CollapsibleSectionState extends State<_CollapsibleSection> {
                           horizontal: 8, vertical: 2),
                       margin: const EdgeInsets.only(right: 8),
                       decoration: BoxDecoration(
-                        color: AppTheme.primaryGreen.withOpacity(0.2),
+                        color: AppTheme.primaryGreen.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(

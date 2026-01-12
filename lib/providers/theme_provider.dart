@@ -748,7 +748,7 @@ class ThemeProvider extends ChangeNotifier {
       // Text selection theme for cursor and selection
       textSelectionTheme: TextSelectionThemeData(
         cursorColor: primaryColor,
-        selectionColor: primaryColor.withOpacity(0.3),
+        selectionColor: primaryColor.withValues(alpha: 0.3),
         selectionHandleColor: primaryColor,
       ),
     );

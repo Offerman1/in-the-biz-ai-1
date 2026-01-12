@@ -151,7 +151,7 @@ class _EventPortfolioScreenState extends State<EventPortfolioScreen> {
                 side: BorderSide(
                   color: isSelected
                       ? AppTheme.primaryGreen
-                      : AppTheme.textMuted.withOpacity(0.3),
+                      : AppTheme.textMuted.withValues(alpha: 0.3),
                 ),
               ),
             );
@@ -230,7 +230,7 @@ class _EventPortfolioScreenState extends State<EventPortfolioScreen> {
         decoration: BoxDecoration(
           color: AppTheme.cardBackground,
           borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-          border: Border.all(color: AppTheme.primaryGreen.withOpacity(0.2)),
+          border: Border.all(color: AppTheme.primaryGreen.withValues(alpha: 0.2)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

@@ -29,7 +29,7 @@ class ScanTypeMenu extends StatelessWidget {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: AppTheme.textMuted.withOpacity(0.5),
+                color: AppTheme.textMuted.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -63,7 +63,7 @@ class ScanTypeMenu extends StatelessWidget {
               physics: const NeverScrollableScrollPhysics(),
               itemCount: ScanType.values.length,
               separatorBuilder: (context, index) => Divider(
-                color: AppTheme.textMuted.withOpacity(0.1),
+                color: AppTheme.textMuted.withValues(alpha: 0.1),
                 height: 1,
               ),
               itemBuilder: (context, index) {

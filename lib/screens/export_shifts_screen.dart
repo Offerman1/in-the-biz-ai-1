@@ -311,7 +311,7 @@ class _ExportShiftsScreenState extends State<ExportShiftsScreen> {
                         borderRadius:
                             BorderRadius.circular(AppTheme.radiusMedium),
                         border: Border.all(
-                          color: AppTheme.primaryGreen.withOpacity(0.3),
+                          color: AppTheme.primaryGreen.withValues(alpha: 0.3),
                           width: 1,
                         ),
                       ),
@@ -466,7 +466,7 @@ class _ExportShiftsScreenState extends State<ExportShiftsScreen> {
                       color: AppTheme.cardBackground,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
+                          color: Colors.black.withValues(alpha: 0.2),
                           blurRadius: 8,
                           offset: const Offset(0, -2),
                         ),

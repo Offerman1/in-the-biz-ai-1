@@ -710,7 +710,7 @@ class _AddJobScreenState extends State<AddJobScreen> {
                         _applyIndustryTemplate(_selectedIndustry);
                       });
                     },
-                    selectedColor: AppTheme.primaryGreen.withOpacity(0.3),
+                    selectedColor: AppTheme.primaryGreen.withValues(alpha: 0.3),
                     backgroundColor: AppTheme.cardBackground,
                     checkmarkColor: AppTheme.primaryGreen,
                     labelStyle: TextStyle(
@@ -794,7 +794,7 @@ class _AddJobScreenState extends State<AddJobScreen> {
                             borderRadius:
                                 BorderRadius.circular(AppTheme.radiusMedium),
                             border: Border.all(
-                              color: AppTheme.primaryGreen.withOpacity(0.3),
+                              color: AppTheme.primaryGreen.withValues(alpha: 0.3),
                             ),
                           ),
                           child: Row(
@@ -889,10 +889,10 @@ class _AddJobScreenState extends State<AddJobScreen> {
   Widget _buildTipOutSection() {
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.cardBackground.withOpacity(0.5),
+        color: AppTheme.cardBackground.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
         border: Border.all(
-          color: AppTheme.accentYellow.withOpacity(0.3),
+          color: AppTheme.accentYellow.withValues(alpha: 0.3),
         ),
       ),
       child: Theme(
@@ -1513,7 +1513,7 @@ class _AddJobScreenState extends State<AddJobScreen> {
                   selected: _payStructure == PayStructure.hourly,
                   onSelected: (selected) =>
                       setState(() => _payStructure = PayStructure.hourly),
-                  selectedColor: AppTheme.primaryGreen.withOpacity(0.3),
+                  selectedColor: AppTheme.primaryGreen.withValues(alpha: 0.3),
                   backgroundColor: AppTheme.cardBackgroundLight,
                 ),
               ),
@@ -1524,7 +1524,7 @@ class _AddJobScreenState extends State<AddJobScreen> {
                   selected: _payStructure == PayStructure.flatRate,
                   onSelected: (selected) =>
                       setState(() => _payStructure = PayStructure.flatRate),
-                  selectedColor: AppTheme.primaryGreen.withOpacity(0.3),
+                  selectedColor: AppTheme.primaryGreen.withValues(alpha: 0.3),
                   backgroundColor: AppTheme.cardBackgroundLight,
                 ),
               ),
@@ -1535,7 +1535,7 @@ class _AddJobScreenState extends State<AddJobScreen> {
                   selected: _payStructure == PayStructure.commission,
                   onSelected: (selected) =>
                       setState(() => _payStructure = PayStructure.commission),
-                  selectedColor: AppTheme.primaryGreen.withOpacity(0.3),
+                  selectedColor: AppTheme.primaryGreen.withValues(alpha: 0.3),
                   backgroundColor: AppTheme.cardBackgroundLight,
                 ),
               ),

@@ -200,8 +200,8 @@ class _StatsScreenState extends State<StatsScreen> {
                               horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
                             color: percentChange >= 0
-                                ? AppTheme.primaryGreen.withOpacity(0.15)
-                                : AppTheme.accentRed.withOpacity(0.15),
+                                ? AppTheme.primaryGreen.withValues(alpha: 0.15)
+                                : AppTheme.accentRed.withValues(alpha: 0.15),
                             borderRadius:
                                 BorderRadius.circular(AppTheme.radiusSmall),
                           ),
@@ -327,7 +327,7 @@ class _StatsScreenState extends State<StatsScreen> {
                                 gradient: LinearGradient(
                                   colors: [
                                     AppTheme.primaryGreen,
-                                    AppTheme.primaryGreen.withOpacity(0.7),
+                                    AppTheme.primaryGreen.withValues(alpha: 0.7),
                                   ],
                                   begin: Alignment.bottomCenter,
                                   end: Alignment.topCenter,
@@ -429,7 +429,7 @@ class _StatsScreenState extends State<StatsScreen> {
                               height: 40,
                               decoration: BoxDecoration(
                                 color: isTop
-                                    ? AppTheme.primaryGreen.withOpacity(0.15)
+                                    ? AppTheme.primaryGreen.withValues(alpha: 0.15)
                                     : AppTheme.cardBackgroundLight,
                                 borderRadius:
                                     BorderRadius.circular(AppTheme.radiusSmall),
@@ -645,7 +645,7 @@ class _StatsScreenState extends State<StatsScreen> {
             gradient: LinearGradient(
               colors: [
                 AppTheme.primaryGreen,
-                AppTheme.primaryGreen.withOpacity(0.7),
+                AppTheme.primaryGreen.withValues(alpha: 0.7),
               ],
             ),
             barWidth: 3,
@@ -665,8 +665,8 @@ class _StatsScreenState extends State<StatsScreen> {
               show: true,
               gradient: LinearGradient(
                 colors: [
-                  AppTheme.primaryGreen.withOpacity(0.3),
-                  AppTheme.primaryGreen.withOpacity(0.0),
+                  AppTheme.primaryGreen.withValues(alpha: 0.3),
+                  AppTheme.primaryGreen.withValues(alpha: 0.0),
                 ],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
@@ -904,7 +904,7 @@ class _StatsScreenState extends State<StatsScreen> {
                 color: AppTheme.darkBackground,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: AppTheme.primaryGreen.withOpacity(0.3),
+                  color: AppTheme.primaryGreen.withValues(alpha: 0.3),
                   width: 1,
                 ),
               ),
@@ -963,7 +963,7 @@ class _StatsScreenState extends State<StatsScreen> {
             // Divider
             Container(
               height: 1,
-              color: AppTheme.primaryGreen.withOpacity(0.2),
+              color: AppTheme.primaryGreen.withValues(alpha: 0.2),
             ),
             const SizedBox(height: 16),
           ],
@@ -1089,7 +1089,7 @@ class _StatsScreenState extends State<StatsScreen> {
       decoration: BoxDecoration(
         color: AppTheme.cardBackground,
         borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-        border: Border.all(color: color.withOpacity(0.3), width: 1),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
       ),
       child: Column(
         children: [
@@ -1419,14 +1419,14 @@ class _StatsScreenState extends State<StatsScreen> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppTheme.accentBlue.withOpacity(0.1),
-            AppTheme.primaryGreen.withOpacity(0.1)
+            AppTheme.accentBlue.withValues(alpha: 0.1),
+            AppTheme.primaryGreen.withValues(alpha: 0.1)
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-        border: Border.all(color: AppTheme.primaryGreen.withOpacity(0.3)),
+        border: Border.all(color: AppTheme.primaryGreen.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

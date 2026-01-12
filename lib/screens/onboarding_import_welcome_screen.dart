@@ -28,7 +28,7 @@ class OnboardingImportWelcomeScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(30),
                   boxShadow: [
                     BoxShadow(
-                      color: AppTheme.primaryGreen.withOpacity(0.3),
+                      color: AppTheme.primaryGreen.withValues(alpha: 0.3),
                       blurRadius: 20,
                       spreadRadius: 5,
                     ),
@@ -73,7 +73,7 @@ class OnboardingImportWelcomeScreen extends StatelessWidget {
                   color: AppTheme.cardBackground,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: AppTheme.primaryGreen.withOpacity(0.3),
+                    color: AppTheme.primaryGreen.withValues(alpha: 0.3),
                     width: 1,
                   ),
                 ),
@@ -82,7 +82,7 @@ class OnboardingImportWelcomeScreen extends StatelessWidget {
                     Icon(
                       Icons.upload_file,
                       size: 48,
-                      color: AppTheme.primaryGreen.withOpacity(0.8),
+                      color: AppTheme.primaryGreen.withValues(alpha: 0.8),
                     ),
                     const SizedBox(height: 16),
                     Text(
@@ -105,7 +105,7 @@ class OnboardingImportWelcomeScreen extends StatelessWidget {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: AppTheme.primaryGreen.withOpacity(0.15),
+                        color: AppTheme.primaryGreen.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(

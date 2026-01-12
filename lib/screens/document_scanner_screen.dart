@@ -71,7 +71,7 @@ class _DocumentScannerScreenState extends State<DocumentScannerScreen> {
             SnackBar(
               content: Text(
                   '${images.length} image${images.length == 1 ? '' : 's'} added'),
-              backgroundColor: AppTheme.primaryGreen.withOpacity(0.9),
+              backgroundColor: AppTheme.primaryGreen.withValues(alpha: 0.9),
               duration: const Duration(seconds: 2),
             ),
           );
@@ -181,7 +181,7 @@ class _DocumentScannerScreenState extends State<DocumentScannerScreen> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppTheme.textMuted.withOpacity(0.5),
+                  color: AppTheme.textMuted.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -452,7 +452,7 @@ class _DocumentScannerScreenState extends State<DocumentScannerScreen> {
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: AppTheme.primaryGreen.withOpacity(0.3),
+                                color: AppTheme.primaryGreen.withValues(alpha: 0.3),
                               ),
                               image: (index < _capturedBytes.length)
                                   ? DecorationImage(
@@ -525,7 +525,7 @@ class _DocumentScannerScreenState extends State<DocumentScannerScreen> {
                     color: AppTheme.cardBackground,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.3),
+                        color: Colors.black.withValues(alpha: 0.3),
                         blurRadius: 10,
                         offset: const Offset(0, -2),
                       ),

@@ -778,7 +778,7 @@ class _CalendarSyncScreenState extends State<CalendarSyncScreen> {
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: isSelected
-                              ? AppTheme.primaryGreen.withOpacity(0.2)
+                              ? AppTheme.primaryGreen.withValues(alpha: 0.2)
                               : AppTheme.cardBackground,
                           borderRadius:
                               BorderRadius.circular(AppTheme.radiusMedium),
@@ -1208,7 +1208,7 @@ class _CalendarSyncScreenState extends State<CalendarSyncScreen> {
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: isSelected
-                              ? AppTheme.primaryGreen.withOpacity(0.2)
+                              ? AppTheme.primaryGreen.withValues(alpha: 0.2)
                               : AppTheme.cardBackground,
                           borderRadius:
                               BorderRadius.circular(AppTheme.radiusMedium),
@@ -1501,7 +1501,7 @@ class _CalendarSyncScreenState extends State<CalendarSyncScreen> {
               width: 50,
               height: 50,
               decoration: BoxDecoration(
-                color: AppTheme.primaryGreen.withOpacity(0.15),
+                color: AppTheme.primaryGreen.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
               ),
               child: Center(

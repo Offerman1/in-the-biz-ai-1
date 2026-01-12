@@ -224,7 +224,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   height: 40,
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? AppTheme.primaryGreen.withOpacity(0.15)
+                        ? AppTheme.primaryGreen.withValues(alpha: 0.15)
                         : AppTheme.cardBackgroundLight,
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -292,7 +292,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 leading: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryGreen.withOpacity(0.15),
+                    color: AppTheme.primaryGreen.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(Icons.school, color: AppTheme.primaryGreen),
@@ -315,7 +315,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 leading: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppTheme.accentBlue.withOpacity(0.15),
+                    color: AppTheme.accentBlue.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(Icons.flash_on, color: AppTheme.accentBlue),
@@ -665,7 +665,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryGreen.withOpacity(0.15),
+                      color: AppTheme.primaryGreen.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
@@ -740,7 +740,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       _calculateTax();
                     },
                     backgroundColor: AppTheme.cardBackgroundLight,
-                    selectedColor: AppTheme.primaryGreen.withOpacity(0.2),
+                    selectedColor: AppTheme.primaryGreen.withValues(alpha: 0.2),
                     checkmarkColor: AppTheme.primaryGreen,
                     labelStyle: AppTheme.bodyMedium.copyWith(
                       color: _selectedTaxJobId == null
@@ -764,7 +764,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         _calculateTax();
                       },
                       backgroundColor: AppTheme.cardBackgroundLight,
-                      selectedColor: AppTheme.primaryGreen.withOpacity(0.2),
+                      selectedColor: AppTheme.primaryGreen.withValues(alpha: 0.2),
                       checkmarkColor: AppTheme.primaryGreen,
                       labelStyle: AppTheme.bodyMedium.copyWith(
                         color: _selectedTaxJobId == activeJobs[0]['id']
@@ -784,7 +784,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             horizontal: 12, vertical: 8),
                         decoration: BoxDecoration(
                           color: _selectedTaxJobId != null
-                              ? AppTheme.primaryGreen.withOpacity(0.2)
+                              ? AppTheme.primaryGreen.withValues(alpha: 0.2)
                               : AppTheme.cardBackgroundLight,
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
@@ -879,7 +879,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppTheme.accentBlue.withOpacity(0.1),
+                    color: AppTheme.accentBlue.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
@@ -1028,7 +1028,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryGreen.withOpacity(0.2),
+                      color: AppTheme.primaryGreen.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
@@ -1175,7 +1175,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: AppTheme.primaryGreen.withOpacity(0.15),
+            color: AppTheme.primaryGreen.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(Icons.upload_file, color: AppTheme.primaryGreen),
@@ -1208,7 +1208,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: AppTheme.primaryGreen.withOpacity(0.15),
+            color: AppTheme.primaryGreen.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(8),
           ),
           child:
@@ -1241,7 +1241,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: AppTheme.accentBlue.withOpacity(0.15),
+            color: AppTheme.accentBlue.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(Icons.calendar_month, color: AppTheme.accentBlue),
@@ -1265,10 +1265,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: AppTheme.cardBackground.withOpacity(0.5),
+            color: AppTheme.cardBackground.withValues(alpha: 0.5),
             borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
             border: Border.all(
-              color: AppTheme.textMuted.withOpacity(0.2),
+              color: AppTheme.textMuted.withValues(alpha: 0.2),
               width: 1,
               style: BorderStyle.solid,
             ),
@@ -1278,7 +1278,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Icon(Icons.work_outline,
-                  size: 48, color: AppTheme.textMuted.withOpacity(0.5)),
+                  size: 48, color: AppTheme.textMuted.withValues(alpha: 0.5)),
               const SizedBox(height: 12),
               Text(
                 'No jobs added yet',
@@ -1313,7 +1313,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
             border: isDefault
                 ? Border.all(
-                    color: AppTheme.primaryGreen.withOpacity(0.5), width: 2)
+                    color: AppTheme.primaryGreen.withValues(alpha: 0.5), width: 2)
                 : null,
           ),
           child: Material(
@@ -1351,7 +1351,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                       horizontal: 6, vertical: 2),
                                   decoration: BoxDecoration(
                                     color:
-                                        AppTheme.primaryGreen.withOpacity(0.2),
+                                        AppTheme.primaryGreen.withValues(alpha: 0.2),
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: Row(
@@ -1499,10 +1499,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(6),
         border: Border.all(
-          color: color.withOpacity(0.3),
+          color: color.withValues(alpha: 0.3),
           width: 1,
         ),
       ),
@@ -1558,10 +1558,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
-            color: AppTheme.cardBackground.withOpacity(0.5),
+            color: AppTheme.cardBackground.withValues(alpha: 0.5),
             borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
             border: Border.all(
-              color: AppTheme.textMuted.withOpacity(0.3),
+              color: AppTheme.textMuted.withValues(alpha: 0.3),
               width: 1,
             ),
           ),
@@ -1584,7 +1584,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: AppTheme.textMuted.withOpacity(0.15),
+                      color: AppTheme.textMuted.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
@@ -1607,7 +1607,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
-                          color: AppTheme.textMuted.withOpacity(0.2),
+                          color: AppTheme.textMuted.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
@@ -1719,7 +1719,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: AppTheme.accentBlue.withOpacity(0.15),
+            color: AppTheme.accentBlue.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(Icons.flag, color: AppTheme.accentBlue),
@@ -1749,7 +1749,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: AppTheme.accentPurple.withOpacity(0.15),
+            color: AppTheme.accentPurple.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(Icons.contacts, color: AppTheme.accentPurple),
@@ -1779,7 +1779,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: AppTheme.primaryGreen.withOpacity(0.15),
+            color: AppTheme.primaryGreen.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(Icons.photo_library, color: AppTheme.primaryGreen),
@@ -1811,7 +1811,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: AppTheme.accentBlue.withOpacity(0.15),
+            color: AppTheme.accentBlue.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(Icons.receipt_long, color: AppTheme.accentBlue),
@@ -1842,7 +1842,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: AppTheme.accentPurple.withOpacity(0.15),
+            color: AppTheme.accentPurple.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(Icons.folder, color: AppTheme.accentPurple),
@@ -1873,7 +1873,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: AppTheme.accentOrange.withOpacity(0.15),
+            color: AppTheme.accentOrange.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(Icons.checklist, color: AppTheme.accentOrange),
@@ -1927,7 +1927,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: AppTheme.primaryGreen.withOpacity(0.15),
+            color: AppTheme.primaryGreen.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(Icons.work, color: AppTheme.primaryGreen),
@@ -1962,7 +1962,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: AppTheme.primaryGreen.withOpacity(0.15),
+            color: AppTheme.primaryGreen.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(Icons.palette, color: AppTheme.primaryGreen),
@@ -2003,7 +2003,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: AppTheme.accentBlue.withOpacity(0.15),
+              color: AppTheme.accentBlue.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Center(
@@ -2024,10 +2024,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: AppTheme.accentOrange.withOpacity(0.2),
+                  color: AppTheme.accentOrange.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(4),
                   border: Border.all(
-                    color: AppTheme.accentOrange.withOpacity(0.5),
+                    color: AppTheme.accentOrange.withValues(alpha: 0.5),
                     width: 1,
                   ),
                 ),
@@ -2106,7 +2106,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       height: 40,
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? AppTheme.primaryGreen.withOpacity(0.15)
+                            ? AppTheme.primaryGreen.withValues(alpha: 0.15)
                             : AppTheme.cardBackground,
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -2174,7 +2174,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             leading: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppTheme.accentBlue.withOpacity(0.15),
+                color: AppTheme.accentBlue.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(Icons.support_agent,
@@ -2194,7 +2194,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             leading: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppTheme.primaryGreen.withOpacity(0.15),
+                color: AppTheme.primaryGreen.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(Icons.lightbulb_outline,
@@ -2213,7 +2213,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             leading: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppTheme.textMuted.withOpacity(0.15),
+                color: AppTheme.textMuted.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(Icons.privacy_tip_outlined,
@@ -2230,7 +2230,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             leading: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppTheme.textMuted.withOpacity(0.15),
+                color: AppTheme.textMuted.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(Icons.description_outlined,
@@ -2303,7 +2303,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         children: [
           ListTile(
             leading: CircleAvatar(
-              backgroundColor: AppTheme.primaryGreen.withOpacity(0.15),
+              backgroundColor: AppTheme.primaryGreen.withValues(alpha: 0.15),
               child: Text(
                 (user?.email?.substring(0, 1) ?? 'U').toUpperCase(),
                 style: TextStyle(color: AppTheme.primaryGreen),
@@ -2345,10 +2345,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppTheme.accentYellow.withOpacity(0.1),
+                  color: AppTheme.accentYellow.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: AppTheme.accentYellow.withOpacity(0.3),
+                    color: AppTheme.accentYellow.withValues(alpha: 0.3),
                     width: 1,
                   ),
                 ),
@@ -2416,10 +2416,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: AppTheme.accentYellow.withOpacity(0.1),
+                    color: AppTheme.accentYellow.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: AppTheme.accentYellow.withOpacity(0.3),
+                      color: AppTheme.accentYellow.withValues(alpha: 0.3),
                       width: 1,
                     ),
                   ),
@@ -2547,10 +2547,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppTheme.accentOrange.withOpacity(0.1),
+                    color: AppTheme.accentOrange.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: AppTheme.accentOrange.withOpacity(0.3),
+                      color: AppTheme.accentOrange.withValues(alpha: 0.3),
                       width: 1,
                     ),
                   ),
@@ -2591,7 +2591,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     color: AppTheme.cardBackgroundLight,
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: AppTheme.textMuted.withOpacity(0.3),
+                      color: AppTheme.textMuted.withValues(alpha: 0.3),
                     ),
                   ),
                   child: DropdownButtonHideUnderline(
@@ -2662,13 +2662,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                       borderSide: BorderSide(
-                        color: AppTheme.textMuted.withOpacity(0.3),
+                        color: AppTheme.textMuted.withValues(alpha: 0.3),
                       ),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                       borderSide: BorderSide(
-                        color: AppTheme.textMuted.withOpacity(0.3),
+                        color: AppTheme.textMuted.withValues(alpha: 0.3),
                       ),
                     ),
                     focusedBorder: OutlineInputBorder(
@@ -2782,10 +2782,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppTheme.dangerColor.withOpacity(0.1),
+                  color: AppTheme.dangerColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                   border:
-                      Border.all(color: AppTheme.dangerColor.withOpacity(0.3)),
+                      Border.all(color: AppTheme.dangerColor.withValues(alpha: 0.3)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -3063,7 +3063,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: AppTheme.primaryGreen.withOpacity(0.15),
+            color: AppTheme.primaryGreen.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(Icons.group_work, color: AppTheme.primaryGreen),
@@ -3092,7 +3092,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: AppTheme.primaryGreen.withOpacity(0.15),
+                color: AppTheme.primaryGreen.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(Icons.sync, color: AppTheme.primaryGreen),
@@ -3147,7 +3147,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: AppTheme.accentBlue.withOpacity(0.15),
+                    color: AppTheme.accentBlue.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(Icons.check_circle_outline,
@@ -3172,7 +3172,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: AppTheme.accentYellow.withOpacity(0.15),
+                    color: AppTheme.accentYellow.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(Icons.flash_on, color: AppTheme.accentYellow),
@@ -3226,7 +3226,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: AppTheme.accentOrange.withOpacity(0.15),
+                    color: AppTheme.accentOrange.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(Icons.remove_circle_outline,
@@ -3251,7 +3251,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: AppTheme.accentRed.withOpacity(0.15),
+                    color: AppTheme.accentRed.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(Icons.warning_amber, color: AppTheme.accentRed),
@@ -3474,8 +3474,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       color: isConnected
-                          ? AppTheme.primaryGreen.withOpacity(0.15)
-                          : AppTheme.accentBlue.withOpacity(0.15),
+                          ? AppTheme.primaryGreen.withValues(alpha: 0.15)
+                          : AppTheme.accentBlue.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Icon(
@@ -3832,7 +3832,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         color: AppTheme.cardBackground,
         borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
         border: Border.all(
-          color: AppTheme.accentOrange.withOpacity(0.3),
+          color: AppTheme.accentOrange.withValues(alpha: 0.3),
           width: 1,
         ),
       ),
@@ -3868,7 +3868,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             color: AppTheme.cardBackground,
             borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
             border: Border.all(
-              color: AppTheme.accentOrange.withOpacity(0.3),
+              color: AppTheme.accentOrange.withValues(alpha: 0.3),
               width: 1,
             ),
           ),

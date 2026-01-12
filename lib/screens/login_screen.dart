@@ -301,7 +301,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               height: 1.2,
                               shadows: [
                                 Shadow(
-                                  color: AppTheme.primaryGreen.withOpacity(0.5),
+                                  color: AppTheme.primaryGreen.withValues(alpha: 0.5),
                                   blurRadius: 8,
                                   offset: const Offset(0, 2),
                                 ),
@@ -324,8 +324,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            AppTheme.primaryGreen.withOpacity(0.3),
-                            AppTheme.primaryGreen.withOpacity(0.15),
+                            AppTheme.primaryGreen.withValues(alpha: 0.3),
+                            AppTheme.primaryGreen.withValues(alpha: 0.15),
                           ],
                         ),
                         borderRadius: BorderRadius.circular(6),
@@ -440,10 +440,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppTheme.accentRed.withOpacity(0.1),
+                    color: AppTheme.accentRed.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
                     border:
-                        Border.all(color: AppTheme.accentRed.withOpacity(0.3)),
+                        Border.all(color: AppTheme.accentRed.withValues(alpha: 0.3)),
                   ),
                   child: Row(
                     children: [
@@ -481,10 +481,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   margin: const EdgeInsets.only(bottom: 16),
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryGreen.withOpacity(0.1),
+                    color: AppTheme.primaryGreen.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
                     border: Border.all(
-                        color: AppTheme.primaryGreen.withOpacity(0.3)),
+                        color: AppTheme.primaryGreen.withValues(alpha: 0.3)),
                   ),
                   child: Column(
                     children: [
@@ -615,7 +615,7 @@ class _LoginScreenState extends State<LoginScreen> {
         borderRadius: BorderRadius.circular(8),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),

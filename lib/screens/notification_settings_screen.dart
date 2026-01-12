@@ -139,10 +139,10 @@ class _NotificationSettingsScreenState
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppTheme.primaryGreen.withOpacity(0.1),
+              color: AppTheme.primaryGreen.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: AppTheme.primaryGreen.withOpacity(0.3),
+                color: AppTheme.primaryGreen.withValues(alpha: 0.3),
               ),
             ),
             child: Row(
@@ -182,8 +182,8 @@ class _NotificationSettingsScreenState
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: value
-              ? AppTheme.primaryGreen.withOpacity(0.3)
-              : AppTheme.textMuted.withOpacity(0.1),
+              ? AppTheme.primaryGreen.withValues(alpha: 0.3)
+              : AppTheme.textMuted.withValues(alpha: 0.1),
         ),
       ),
       child: SwitchListTile(
@@ -196,7 +196,7 @@ class _NotificationSettingsScreenState
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: value
-                    ? AppTheme.primaryGreen.withOpacity(0.2)
+                    ? AppTheme.primaryGreen.withValues(alpha: 0.2)
                     : AppTheme.darkBackground,
                 borderRadius: BorderRadius.circular(8),
               ),

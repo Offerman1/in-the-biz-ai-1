@@ -58,22 +58,22 @@ class _HeroCardState extends State<HeroCard>
           decoration: BoxDecoration(
             // Semi-transparent base that lets background show through slightly
             color: isLightMode
-                ? AppTheme.cardBackground.withOpacity(0.6)
-                : AppTheme.cardBackground.withOpacity(0.7),
+                ? AppTheme.cardBackground.withValues(alpha: 0.6)
+                : AppTheme.cardBackground.withValues(alpha: 0.7),
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
                 AppTheme.primaryGreen
-                    .withOpacity(0.25 + (wave * 0.1)), // Animated opacity
-                AppTheme.accentBlue.withOpacity(0.2 + (wave * 0.08)),
+                    .withValues(alpha: 0.25 + (wave * 0.1)), // Animated opacity
+                AppTheme.accentBlue.withValues(alpha: 0.2 + (wave * 0.08)),
               ],
             ),
             borderRadius:
                 BorderRadius.circular(widget.borderRadius ?? AppTheme.radiusXL),
             border: Border.all(
               color: AppTheme.primaryGreen
-                  .withOpacity(0.4 + (wave * 0.2)), // Animated border
+                  .withValues(alpha: 0.4 + (wave * 0.2)), // Animated border
               width: 1,
             ),
           ),

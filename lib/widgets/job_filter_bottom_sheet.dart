@@ -72,7 +72,7 @@ class JobFilterBottomSheet extends StatelessWidget {
             if (jobs.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Divider(color: AppTheme.textMuted.withOpacity(0.2)),
+                child: Divider(color: AppTheme.textMuted.withValues(alpha: 0.2)),
               ),
 
             // Individual jobs

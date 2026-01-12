@@ -142,7 +142,7 @@ class _AnimatedLogoState extends State<AnimatedLogo>
                           Icon(
                             Icons.auto_awesome,
                             size: isTablet ? 22 : 14, // Same size, no growth
-                            color: Colors.white.withOpacity(
+                            color: Colors.white.withValues(alpha: 
                               (sparkleValue < 0.5
                                       ? sparkleValue * 2
                                       : (1 - sparkleValue) * 2) *
@@ -169,7 +169,7 @@ class _AnimatedLogoState extends State<AnimatedLogo>
                         end: Alignment.centerRight,
                         colors: [
                           Colors.transparent,
-                          Colors.white.withOpacity(0.6),
+                          Colors.white.withValues(alpha: 0.6),
                           Colors.transparent,
                         ],
                         stops: [

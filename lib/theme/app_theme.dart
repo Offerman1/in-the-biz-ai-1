@@ -51,8 +51,8 @@ class AppTheme {
     final isLight = (_colors?.isLightBackground ?? false);
     // Use primary color but make it subtle
     return isLight
-        ? primaryGreen.withOpacity(0.7) // Subtle in light mode
-        : primaryGreen.withOpacity(0.6); // Subtle in dark mode
+        ? primaryGreen.withValues(alpha: 0.7) // Subtle in light mode
+        : primaryGreen.withValues(alpha: 0.6); // Subtle in dark mode
   }
 
   // Hero card background - ALWAYS black, never changes, period
@@ -65,8 +65,8 @@ class AppTheme {
   static Color get dangerColor => accentRed; // Red for errors/danger
   static Color get successColor => primaryGreen; // Green for success
   static Color get chartGreen1 => primaryGreen;
-  static Color get chartGreen2 => primaryGreen.withOpacity(0.7);
-  static Color get chartGreen3 => primaryGreen.withOpacity(0.4);
+  static Color get chartGreen2 => primaryGreen.withValues(alpha: 0.7);
+  static Color get chartGreen3 => primaryGreen.withValues(alpha: 0.4);
 
   // Nav bar colors - Professional design for both light and dark themes
   static Color get navBarBackground {
@@ -94,23 +94,23 @@ class AppTheme {
   static Color get navBarActiveBackground {
     final isLight = (_colors?.isLightBackground ?? false);
     return isLight
-        ? primaryGreen.withOpacity(0.08) // Very subtle tint of accent color
-        : primaryGreen.withOpacity(0.15);
+        ? primaryGreen.withValues(alpha: 0.08) // Very subtle tint of accent color
+        : primaryGreen.withValues(alpha: 0.15);
   }
 
   // Shadow colors - adapt to theme
   static Color get shadowColor {
     final isLight = (_colors?.isLightBackground ?? false);
     return isLight
-        ? Colors.black.withOpacity(0.08) // Very subtle shadow in light mode
-        : Colors.black.withOpacity(0.3); // Darker shadow in dark mode
+        ? Colors.black.withValues(alpha: 0.08) // Very subtle shadow in light mode
+        : Colors.black.withValues(alpha: 0.3); // Darker shadow in dark mode
   }
 
   static Color get overlayColor {
     final isLight = (_colors?.isLightBackground ?? false);
     return isLight
-        ? Colors.black.withOpacity(0.15) // Subtle overlay in light mode
-        : Colors.black.withOpacity(0.4); // Darker overlay in dark mode
+        ? Colors.black.withValues(alpha: 0.15) // Subtle overlay in light mode
+        : Colors.black.withValues(alpha: 0.4); // Darker overlay in dark mode
   }
 
   // Text shadow - only visible in dark mode, invisible in light mode
@@ -120,7 +120,7 @@ class AppTheme {
         ? [] // No text shadow in light mode
         : [
             Shadow(
-              color: Colors.black.withOpacity(0.3),
+              color: Colors.black.withValues(alpha: 0.3),
               offset: const Offset(0, 2),
               blurRadius: 4,
             ),
@@ -129,7 +129,7 @@ class AppTheme {
 
   // Gradients
   static LinearGradient get greenGradient => LinearGradient(
-        colors: [primaryGreen, primaryGreen.withOpacity(0.8)],
+        colors: [primaryGreen, primaryGreen.withValues(alpha: 0.8)],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       );
@@ -271,7 +271,7 @@ class AppTheme {
         ),
         navigationBarTheme: NavigationBarThemeData(
           backgroundColor: cardBackground,
-          indicatorColor: primaryGreen.withOpacity(0.2),
+          indicatorColor: primaryGreen.withValues(alpha: 0.2),
           labelTextStyle: WidgetStateProperty.all(
             const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
           ),

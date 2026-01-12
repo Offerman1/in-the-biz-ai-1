@@ -125,7 +125,7 @@ class _ImportScreenState extends State<ImportScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppTheme.primaryGreen.withOpacity(0.1),
+                color: AppTheme.primaryGreen.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Column(
@@ -601,12 +601,12 @@ class _ImportScreenState extends State<ImportScreen> {
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
                                 color: selectedField == field
-                                    ? AppTheme.primaryGreen.withOpacity(0.2)
+                                    ? AppTheme.primaryGreen.withValues(alpha: 0.2)
                                     : Colors.transparent,
                                 border: Border.all(
                                   color: selectedField == field
                                       ? AppTheme.primaryGreen
-                                      : AppTheme.primaryGreen.withOpacity(0.3),
+                                      : AppTheme.primaryGreen.withValues(alpha: 0.3),
                                   width: selectedField == field ? 2 : 1,
                                 ),
                                 borderRadius: BorderRadius.circular(8),
@@ -649,7 +649,7 @@ class _ImportScreenState extends State<ImportScreen> {
                       );
                     }),
                     const SizedBox(height: 16),
-                    Divider(color: AppTheme.textMuted.withOpacity(0.3)),
+                    Divider(color: AppTheme.textMuted.withValues(alpha: 0.3)),
                     const SizedBox(height: 16),
                   ],
 
@@ -686,12 +686,12 @@ class _ImportScreenState extends State<ImportScreen> {
                             ),
                             decoration: BoxDecoration(
                               color: selectedField == field
-                                  ? AppTheme.primaryGreen.withOpacity(0.2)
+                                  ? AppTheme.primaryGreen.withValues(alpha: 0.2)
                                   : Colors.transparent,
                               border: Border.all(
                                 color: selectedField == field
                                     ? AppTheme.primaryGreen
-                                    : AppTheme.textMuted.withOpacity(0.3),
+                                    : AppTheme.textMuted.withValues(alpha: 0.3),
                                 width: selectedField == field ? 2 : 1,
                               ),
                               borderRadius: BorderRadius.circular(8),
@@ -775,10 +775,10 @@ class _ImportScreenState extends State<ImportScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppTheme.primaryGreen.withOpacity(0.1),
+                color: AppTheme.primaryGreen.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: AppTheme.primaryGreen.withOpacity(0.3),
+                  color: AppTheme.primaryGreen.withValues(alpha: 0.3),
                 ),
               ),
               child: Row(
@@ -1232,7 +1232,7 @@ class _ImportScreenState extends State<ImportScreen> {
                   Icon(
                     Icons.upload_file,
                     size: 80,
-                    color: AppTheme.primaryGreen.withOpacity(0.7),
+                    color: AppTheme.primaryGreen.withValues(alpha: 0.7),
                   ),
                   const SizedBox(height: 24),
                   Text(
@@ -1257,7 +1257,7 @@ class _ImportScreenState extends State<ImportScreen> {
                         color: AppTheme.cardBackground,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: AppTheme.primaryGreen.withOpacity(0.3),
+                          color: AppTheme.primaryGreen.withValues(alpha: 0.3),
                         ),
                       ),
                       child: Column(
@@ -1355,10 +1355,10 @@ class _ImportScreenState extends State<ImportScreen> {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: AppTheme.accentRed.withOpacity(0.1),
+                        color: AppTheme.accentRed.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                            color: AppTheme.accentRed.withOpacity(0.3)),
+                            color: AppTheme.accentRed.withValues(alpha: 0.3)),
                       ),
                       child: Row(
                         children: [
@@ -1400,11 +1400,11 @@ class _ImportScreenState extends State<ImportScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: _getConfidenceColor(overallConfidence).withOpacity(0.1),
+                color: _getConfidenceColor(overallConfidence).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color:
-                      _getConfidenceColor(overallConfidence).withOpacity(0.3),
+                      _getConfidenceColor(overallConfidence).withValues(alpha: 0.3),
                 ),
               ),
               child: Row(
@@ -1443,7 +1443,7 @@ class _ImportScreenState extends State<ImportScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppTheme.accentOrange.withOpacity(0.1),
+                  color: AppTheme.accentOrange.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Column(
@@ -1516,7 +1516,7 @@ class _ImportScreenState extends State<ImportScreen> {
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
                           color:
-                              _getConfidenceColor(confidence).withOpacity(0.3),
+                              _getConfidenceColor(confidence).withValues(alpha: 0.3),
                         ),
                       ),
                       child: Row(
@@ -1643,7 +1643,7 @@ class _ImportScreenState extends State<ImportScreen> {
               width: 100,
               height: 100,
               decoration: BoxDecoration(
-                color: AppTheme.primaryGreen.withOpacity(0.1),
+                color: AppTheme.primaryGreen.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(

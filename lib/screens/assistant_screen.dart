@@ -467,7 +467,7 @@ class _AssistantScreenState extends State<AssistantScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: AppTheme.textPrimary.withOpacity(0.1),
+                  color: AppTheme.textPrimary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: ShaderMask(
@@ -596,7 +596,7 @@ class _AssistantScreenState extends State<AssistantScreen> {
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: AppTheme.primaryGreen.withOpacity(0.3),
+                              color: AppTheme.primaryGreen.withValues(alpha: 0.3),
                               blurRadius: 8,
                               offset: const Offset(0, 2),
                             ),
@@ -615,11 +615,11 @@ class _AssistantScreenState extends State<AssistantScreen> {
                     Expanded(
                       child: Container(
                         decoration: BoxDecoration(
-                          color: AppTheme.cardBackgroundLight.withOpacity(0.9),
+                          color: AppTheme.cardBackgroundLight.withValues(alpha: 0.9),
                           borderRadius: BorderRadius.circular(24),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
+                              color: Colors.black.withValues(alpha: 0.2),
                               blurRadius: 8,
                               offset: const Offset(0, 2),
                             ),
@@ -633,7 +633,7 @@ class _AssistantScreenState extends State<AssistantScreen> {
                           decoration: InputDecoration(
                             hintText: 'Ask me about earnings, goals, shifts...',
                             hintStyle: AppTheme.bodyMedium.copyWith(
-                              color: AppTheme.textMuted.withOpacity(0.5),
+                              color: AppTheme.textMuted.withValues(alpha: 0.5),
                             ),
                             border: InputBorder.none,
                             contentPadding: const EdgeInsets.symmetric(
@@ -655,7 +655,7 @@ class _AssistantScreenState extends State<AssistantScreen> {
                         decoration: BoxDecoration(
                           gradient: _isLoading ? null : AppTheme.greenGradient,
                           color: _isLoading
-                              ? AppTheme.cardBackgroundLight.withOpacity(0.9)
+                              ? AppTheme.cardBackgroundLight.withValues(alpha: 0.9)
                               : null,
                           shape: BoxShape.circle,
                           boxShadow: _isLoading
@@ -663,7 +663,7 @@ class _AssistantScreenState extends State<AssistantScreen> {
                               : [
                                   BoxShadow(
                                     color:
-                                        AppTheme.primaryGreen.withOpacity(0.3),
+                                        AppTheme.primaryGreen.withValues(alpha: 0.3),
                                     blurRadius: 8,
                                     offset: const Offset(0, 2),
                                   ),
@@ -699,7 +699,7 @@ class _AssistantScreenState extends State<AssistantScreen> {
           width: 8,
           height: 8,
           decoration: BoxDecoration(
-            color: AppTheme.textMuted.withOpacity(0.3 + (value * 0.7)),
+            color: AppTheme.textMuted.withValues(alpha: 0.3 + (value * 0.7)),
             shape: BoxShape.circle,
           ),
         );

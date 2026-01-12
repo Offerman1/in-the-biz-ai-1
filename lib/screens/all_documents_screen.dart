@@ -259,7 +259,7 @@ class _AllDocumentsScreenState extends State<AllDocumentsScreen> {
                   onSelected: (selected) {
                     setState(() => _selectedFilter = filter);
                   },
-                  selectedColor: AppTheme.primaryGreen.withOpacity(0.2),
+                  selectedColor: AppTheme.primaryGreen.withValues(alpha: 0.2),
                   checkmarkColor: AppTheme.primaryGreen,
                   labelStyle: TextStyle(
                     color: isSelected

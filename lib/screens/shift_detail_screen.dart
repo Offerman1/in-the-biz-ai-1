@@ -831,7 +831,7 @@ class _ShiftDetailScreenState extends State<ShiftDetailScreen>
                                                     BorderRadius.circular(8),
                                                 border: Border.all(
                                                   color: AppTheme.primaryGreen
-                                                      .withOpacity(0.3),
+                                                      .withValues(alpha: 0.3),
                                                   width: 2,
                                                   style: BorderStyle.solid,
                                                 ),
@@ -1063,7 +1063,7 @@ class _ShiftDetailScreenState extends State<ShiftDetailScreen>
           height: 40,
           decoration: BoxDecoration(
             color: isGreen
-                ? AppTheme.primaryGreen.withOpacity(0.15)
+                ? AppTheme.primaryGreen.withValues(alpha: 0.15)
                 : AppTheme.cardBackgroundLight,
             borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
           ),

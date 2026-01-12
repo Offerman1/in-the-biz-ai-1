@@ -124,7 +124,7 @@ class AddSectionPicker extends StatelessWidget {
             color: AppTheme.cardBackgroundLight,
             borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
             border: Border.all(
-              color: AppTheme.primaryGreen.withOpacity(0.3),
+              color: AppTheme.primaryGreen.withValues(alpha: 0.3),
             ),
           ),
           child: Row(
@@ -132,7 +132,7 @@ class AddSectionPicker extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryGreen.withOpacity(0.15),
+                  color: AppTheme.primaryGreen.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
                 ),
                 child: Icon(

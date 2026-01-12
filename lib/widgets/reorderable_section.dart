@@ -32,7 +32,7 @@ class ReorderableSection extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
-              color: AppTheme.textMuted.withOpacity(0.2),
+              color: AppTheme.textMuted.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(4),
             ),
             child: Icon(

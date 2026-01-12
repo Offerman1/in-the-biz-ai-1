@@ -347,7 +347,7 @@ class _AddEditContactScreenState extends State<AddEditContactScreen> {
             // Take Photo
             ListTile(
               leading: CircleAvatar(
-                backgroundColor: AppTheme.primaryGreen.withOpacity(0.2),
+                backgroundColor: AppTheme.primaryGreen.withValues(alpha: 0.2),
                 child: Icon(Icons.camera_alt, color: AppTheme.primaryGreen),
               ),
               title: Text(
@@ -362,7 +362,7 @@ class _AddEditContactScreenState extends State<AddEditContactScreen> {
             // Choose from Gallery
             ListTile(
               leading: CircleAvatar(
-                backgroundColor: AppTheme.accentBlue.withOpacity(0.2),
+                backgroundColor: AppTheme.accentBlue.withValues(alpha: 0.2),
                 child: Icon(Icons.photo_library, color: AppTheme.accentBlue),
               ),
               title: Text(
@@ -378,7 +378,7 @@ class _AddEditContactScreenState extends State<AddEditContactScreen> {
             if (_profilePhotoUrl != null)
               ListTile(
                 leading: CircleAvatar(
-                  backgroundColor: AppTheme.accentRed.withOpacity(0.2),
+                  backgroundColor: AppTheme.accentRed.withValues(alpha: 0.2),
                   child: Icon(Icons.delete, color: AppTheme.accentRed),
                 ),
                 title: Text(
@@ -611,7 +611,7 @@ class _AddEditContactScreenState extends State<AddEditContactScreen> {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: AppTheme.accentPurple.withOpacity(0.3),
+                      color: AppTheme.accentPurple.withValues(alpha: 0.3),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                     ),
@@ -676,7 +676,7 @@ class _AddEditContactScreenState extends State<AddEditContactScreen> {
                             const SizedBox(width: 8),
                             Icon(
                               Icons.auto_awesome,
-                              color: Colors.white.withOpacity(0.8),
+                              color: Colors.white.withValues(alpha: 0.8),
                               size: 16,
                             ),
                           ],
@@ -996,7 +996,7 @@ class _AddEditContactScreenState extends State<AddEditContactScreen> {
           const SizedBox(width: 8),
           Material(
             color: controller.text.trim().isNotEmpty
-                ? (actionColor ?? AppTheme.primaryGreen).withOpacity(0.15)
+                ? (actionColor ?? AppTheme.primaryGreen).withValues(alpha: 0.15)
                 : AppTheme.cardBackground,
             borderRadius: BorderRadius.circular(12),
             child: InkWell(
@@ -1347,17 +1347,17 @@ class _AddEditContactScreenState extends State<AddEditContactScreen> {
               height: 36,
               decoration: BoxDecoration(
                 color: hasValue
-                    ? iconColor.withOpacity(0.25)
-                    : iconColor.withOpacity(0.15),
+                    ? iconColor.withValues(alpha: 0.25)
+                    : iconColor.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(8),
                 border: hasValue
-                    ? Border.all(color: iconColor.withOpacity(0.5), width: 1)
+                    ? Border.all(color: iconColor.withValues(alpha: 0.5), width: 1)
                     : null,
               ),
               child: Center(
                 child: FaIcon(
                   icon,
-                  color: hasValue ? iconColor : iconColor.withOpacity(0.5),
+                  color: hasValue ? iconColor : iconColor.withValues(alpha: 0.5),
                   size: 18,
                 ),
               ),

@@ -51,7 +51,7 @@ class _CollapsibleTemplateSectionState
         borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
         border: widget.hasActiveFields
             ? Border.all(
-                color: AppTheme.primaryGreen.withOpacity(0.3), width: 1)
+                color: AppTheme.primaryGreen.withValues(alpha: 0.3), width: 1)
             : null,
       ),
       child: Column(
@@ -91,7 +91,7 @@ class _CollapsibleTemplateSectionState
                         vertical: 2,
                       ),
                       decoration: BoxDecoration(
-                        color: AppTheme.primaryGreen.withOpacity(0.2),
+                        color: AppTheme.primaryGreen.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(

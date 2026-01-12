@@ -124,10 +124,10 @@ class _AddFieldPickerState extends State<AddFieldPicker> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppTheme.accentOrange.withOpacity(0.1),
+                color: AppTheme.accentOrange.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
                 border:
-                    Border.all(color: AppTheme.accentOrange.withOpacity(0.3)),
+                    Border.all(color: AppTheme.accentOrange.withValues(alpha: 0.3)),
               ),
               child: Row(
                 children: [
@@ -329,7 +329,7 @@ class _AddFieldPickerState extends State<AddFieldPicker> {
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: AppTheme.primaryGreen.withOpacity(0.1),
+            color: AppTheme.primaryGreen.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(
@@ -361,7 +361,7 @@ class _AddFieldPickerState extends State<AddFieldPicker> {
                 margin: const EdgeInsets.only(top: 4),
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: AppTheme.accentOrange.withOpacity(0.2),
+                  color: AppTheme.accentOrange.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(

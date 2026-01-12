@@ -146,7 +146,7 @@ class SectionOptionsMenu extends StatelessWidget {
             borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
             border: Border.all(
               color: option == RemoveSectionOption.allShiftsIncludingPast
-                  ? AppTheme.dangerColor.withOpacity(0.3)
+                  ? AppTheme.dangerColor.withValues(alpha: 0.3)
                   : Colors.transparent,
             ),
           ),

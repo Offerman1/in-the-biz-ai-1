@@ -171,7 +171,7 @@ class _ScanVerificationScreenState extends State<ScanVerificationScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
-                    color: AppTheme.accentOrange.withOpacity(0.2),
+                    color: AppTheme.accentOrange.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
@@ -194,14 +194,14 @@ class _ScanVerificationScreenState extends State<ScanVerificationScreen> {
               decoration: BoxDecoration(
                 color: hasValue
                     ? AppTheme.cardBackgroundLight
-                    : AppTheme.cardBackgroundLight.withOpacity(0.5),
+                    : AppTheme.cardBackgroundLight.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
                 border: Border.all(
                   color: hasValue
                       ? (confidenceBadge.isNotEmpty
-                          ? confidenceColor.withOpacity(0.3)
-                          : AppTheme.textMuted.withOpacity(0.2))
-                      : AppTheme.accentOrange.withOpacity(0.5),
+                          ? confidenceColor.withValues(alpha: 0.3)
+                          : AppTheme.textMuted.withValues(alpha: 0.2))
+                      : AppTheme.accentOrange.withValues(alpha: 0.5),
                   width: hasValue ? 1 : 2,
                   style: hasValue ? BorderStyle.solid : BorderStyle.solid,
                 ),
@@ -335,7 +335,7 @@ class _ScanVerificationScreenState extends State<ScanVerificationScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
-                    color: AppTheme.accentBlue.withOpacity(0.2),
+                    color: AppTheme.accentBlue.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
@@ -355,14 +355,14 @@ class _ScanVerificationScreenState extends State<ScanVerificationScreen> {
             decoration: BoxDecoration(
               color: hasValue
                   ? AppTheme.cardBackgroundLight
-                  : AppTheme.cardBackgroundLight.withOpacity(0.5),
+                  : AppTheme.cardBackgroundLight.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
               border: Border.all(
                 color: hasValue
                     ? (confidenceBadge.isNotEmpty
-                        ? confidenceColor.withOpacity(0.3)
-                        : AppTheme.textMuted.withOpacity(0.2))
-                    : AppTheme.accentOrange.withOpacity(0.5),
+                        ? confidenceColor.withValues(alpha: 0.3)
+                        : AppTheme.textMuted.withValues(alpha: 0.2))
+                    : AppTheme.accentOrange.withValues(alpha: 0.5),
                 width: hasValue ? 1 : 2,
               ),
             ),
@@ -688,7 +688,7 @@ class _ScanVerificationScreenState extends State<ScanVerificationScreen> {
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(16),
-            color: AppTheme.primaryGreen.withOpacity(0.1),
+            color: AppTheme.primaryGreen.withValues(alpha: 0.1),
             child: Row(
               children: [
                 Text(widget.scanType.emoji,
@@ -750,7 +750,7 @@ class _ScanVerificationScreenState extends State<ScanVerificationScreen> {
               color: AppTheme.cardBackground,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.3),
+                  color: Colors.black.withValues(alpha: 0.3),
                   blurRadius: 10,
                   offset: const Offset(0, -2),
                 ),
@@ -1268,7 +1268,7 @@ class _ScanVerificationScreenState extends State<ScanVerificationScreen> {
           Container(
             height: 1,
             width: 100,
-            color: AppTheme.primaryGreen.withOpacity(0.3),
+            color: AppTheme.primaryGreen.withValues(alpha: 0.3),
           ),
         ],
       ),
@@ -1323,7 +1323,7 @@ class _ScanVerificationScreenState extends State<ScanVerificationScreen> {
               color: AppTheme.cardBackgroundLight,
               borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
               border: Border.all(
-                color: AppTheme.textMuted.withOpacity(0.2),
+                color: AppTheme.textMuted.withValues(alpha: 0.2),
               ),
             ),
             child: Text(
@@ -1360,7 +1360,7 @@ class _ScanVerificationScreenState extends State<ScanVerificationScreen> {
               color: AppTheme.cardBackgroundLight,
               borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
               border: Border.all(
-                color: AppTheme.textMuted.withOpacity(0.2),
+                color: AppTheme.textMuted.withValues(alpha: 0.2),
               ),
             ),
             child: Row(
@@ -1516,7 +1516,7 @@ class _ScanVerificationScreenState extends State<ScanVerificationScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
-                    color: sourceColor.withOpacity(0.2),
+                    color: sourceColor.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
@@ -1545,12 +1545,12 @@ class _ScanVerificationScreenState extends State<ScanVerificationScreen> {
               decoration: BoxDecoration(
                 color: hasValue
                     ? AppTheme.cardBackgroundLight
-                    : AppTheme.cardBackgroundLight.withOpacity(0.5),
+                    : AppTheme.cardBackgroundLight.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
                 border: Border.all(
                   color: hasValue
-                      ? AppTheme.textMuted.withOpacity(0.2)
-                      : AppTheme.accentOrange.withOpacity(0.5),
+                      ? AppTheme.textMuted.withValues(alpha: 0.2)
+                      : AppTheme.accentOrange.withValues(alpha: 0.5),
                   width: hasValue ? 1 : 2,
                 ),
               ),

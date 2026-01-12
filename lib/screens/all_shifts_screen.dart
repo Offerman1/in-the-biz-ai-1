@@ -509,10 +509,10 @@ class _AllShiftsScreenState extends State<AllShiftsScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: AppTheme.primaryGreen.withOpacity(0.1),
+        color: AppTheme.primaryGreen.withValues(alpha: 0.1),
         border: Border(
-          top: BorderSide(color: AppTheme.primaryGreen.withOpacity(0.3)),
-          bottom: BorderSide(color: AppTheme.primaryGreen.withOpacity(0.3)),
+          top: BorderSide(color: AppTheme.primaryGreen.withValues(alpha: 0.3)),
+          bottom: BorderSide(color: AppTheme.primaryGreen.withValues(alpha: 0.3)),
         ),
       ),
       child: Row(
@@ -663,7 +663,7 @@ class _AllShiftsScreenState extends State<AllShiftsScreen> {
           Icon(
             Icons.work_outline,
             size: 80,
-            color: AppTheme.textSecondary.withOpacity(0.3),
+            color: AppTheme.textSecondary.withValues(alpha: 0.3),
           ),
           const SizedBox(height: 16),
           Text(
@@ -708,7 +708,7 @@ class _AllShiftsScreenState extends State<AllShiftsScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: isSelected
-            ? AppTheme.primaryGreen.withOpacity(0.1)
+            ? AppTheme.primaryGreen.withValues(alpha: 0.1)
             : AppTheme.cardBackground,
         borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
         border: isSelected
@@ -716,7 +716,7 @@ class _AllShiftsScreenState extends State<AllShiftsScreen> {
             : null,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -773,10 +773,10 @@ class _AllShiftsScreenState extends State<AllShiftsScreen> {
                   width: 56,
                   height: 70,
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryGreen.withOpacity(0.15),
+                    color: AppTheme.primaryGreen.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
                     border: Border.all(
-                      color: AppTheme.primaryGreen.withOpacity(0.3),
+                      color: AppTheme.primaryGreen.withValues(alpha: 0.3),
                       width: 1,
                     ),
                   ),
@@ -860,11 +860,11 @@ class _AllShiftsScreenState extends State<AllShiftsScreen> {
                                 ),
                                 decoration: BoxDecoration(
                                   color:
-                                      AppTheme.accentPurple.withOpacity(0.15),
+                                      AppTheme.accentPurple.withValues(alpha: 0.15),
                                   borderRadius: BorderRadius.circular(4),
                                   border: Border.all(
                                     color:
-                                        AppTheme.accentPurple.withOpacity(0.3),
+                                        AppTheme.accentPurple.withValues(alpha: 0.3),
                                     width: 0.5,
                                   ),
                                 ),
@@ -926,10 +926,10 @@ class _AllShiftsScreenState extends State<AllShiftsScreen> {
                                   vertical: 2,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: AppTheme.accentBlue.withOpacity(0.15),
+                                  color: AppTheme.accentBlue.withValues(alpha: 0.15),
                                   borderRadius: BorderRadius.circular(4),
                                   border: Border.all(
-                                    color: AppTheme.accentBlue.withOpacity(0.3),
+                                    color: AppTheme.accentBlue.withValues(alpha: 0.3),
                                     width: 0.5,
                                   ),
                                 ),
@@ -1285,7 +1285,7 @@ class _AllShiftsScreenState extends State<AllShiftsScreen> {
                 leading: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryGreen.withOpacity(0.15),
+                    color: AppTheme.primaryGreen.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(Icons.table_chart, color: AppTheme.primaryGreen),
@@ -1299,7 +1299,7 @@ class _AllShiftsScreenState extends State<AllShiftsScreen> {
                 leading: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: AppTheme.accentRed.withOpacity(0.15),
+                    color: AppTheme.accentRed.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(Icons.picture_as_pdf, color: AppTheme.accentRed),

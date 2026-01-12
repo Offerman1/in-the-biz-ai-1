@@ -150,7 +150,7 @@ class _AppearanceSettingsScreenState extends State<AppearanceSettingsScreen> {
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? primaryColor.withOpacity(0.2)
+                        ? primaryColor.withValues(alpha: 0.2)
                         : themeProvider.cardBackgroundLight,
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -295,7 +295,7 @@ class _AppearanceSettingsScreenState extends State<AppearanceSettingsScreen> {
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? AppTheme.primaryGreen.withOpacity(0.2)
+                        ? AppTheme.primaryGreen.withValues(alpha: 0.2)
                         : themeProvider.cardBackgroundLight,
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -380,7 +380,7 @@ class _AppearanceSettingsScreenState extends State<AppearanceSettingsScreen> {
                             padding: const EdgeInsets.symmetric(vertical: 8),
                             decoration: BoxDecoration(
                               color: !showGradients
-                                  ? AppTheme.primaryGreen.withOpacity(0.2)
+                                  ? AppTheme.primaryGreen.withValues(alpha: 0.2)
                                   : Colors.transparent,
                               borderRadius: BorderRadius.circular(6),
                             ),
@@ -407,7 +407,7 @@ class _AppearanceSettingsScreenState extends State<AppearanceSettingsScreen> {
                             padding: const EdgeInsets.symmetric(vertical: 8),
                             decoration: BoxDecoration(
                               color: showGradients
-                                  ? AppTheme.primaryGreen.withOpacity(0.2)
+                                  ? AppTheme.primaryGreen.withValues(alpha: 0.2)
                                   : Colors.transparent,
                               borderRadius: BorderRadius.circular(6),
                             ),
@@ -464,7 +464,7 @@ class _AppearanceSettingsScreenState extends State<AppearanceSettingsScreen> {
                           ),
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: AppTheme.primaryGreen.withOpacity(0.3),
+                            color: AppTheme.primaryGreen.withValues(alpha: 0.3),
                             width: 2,
                           ),
                         ),
@@ -707,7 +707,7 @@ class _AppearanceSettingsScreenState extends State<AppearanceSettingsScreen> {
           ),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: AppTheme.primaryGreen.withOpacity(0.3),
+            color: AppTheme.primaryGreen.withValues(alpha: 0.3),
             width: 1.5,
           ),
         ),

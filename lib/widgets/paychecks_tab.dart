@@ -223,7 +223,7 @@ class _PaychecksTabState extends State<PaychecksTab> {
           decoration: BoxDecoration(
             color: AppTheme.cardBackground,
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: AppTheme.primaryGreen.withOpacity(0.3)),
+            border: Border.all(color: AppTheme.primaryGreen.withValues(alpha: 0.3)),
           ),
           child: DropdownButton<String>(
             value: _selectedYear,
@@ -263,12 +263,12 @@ class _PaychecksTabState extends State<PaychecksTab> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AppTheme.primaryGreen.withOpacity(0.15),
-            AppTheme.accentBlue.withOpacity(0.1),
+            AppTheme.primaryGreen.withValues(alpha: 0.15),
+            AppTheme.accentBlue.withValues(alpha: 0.1),
           ],
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.primaryGreen.withOpacity(0.3)),
+        border: Border.all(color: AppTheme.primaryGreen.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -338,9 +338,9 @@ class _PaychecksTabState extends State<PaychecksTab> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -358,7 +358,7 @@ class _PaychecksTabState extends State<PaychecksTab> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.2),
+                  color: color.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -409,7 +409,7 @@ class _PaychecksTabState extends State<PaychecksTab> {
       decoration: BoxDecoration(
         color: AppTheme.cardBackground,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.textMuted.withOpacity(0.2)),
+        border: Border.all(color: AppTheme.textMuted.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -514,8 +514,8 @@ class _PaychecksTabState extends State<PaychecksTab> {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: hasGap
-              ? AppTheme.warningColor.withOpacity(0.5)
-              : AppTheme.textMuted.withOpacity(0.2),
+              ? AppTheme.warningColor.withValues(alpha: 0.5)
+              : AppTheme.textMuted.withValues(alpha: 0.2),
         ),
       ),
       child: Column(
@@ -586,7 +586,7 @@ class _PaychecksTabState extends State<PaychecksTab> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: AppTheme.warningColor.withOpacity(0.1),
+                color: AppTheme.warningColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Row(
@@ -633,7 +633,7 @@ class _PaychecksTabState extends State<PaychecksTab> {
             label: const Text('Scan Paycheck'),
             style: OutlinedButton.styleFrom(
               foregroundColor: AppTheme.primaryGreen,
-              side: BorderSide(color: AppTheme.primaryGreen.withOpacity(0.5)),
+              side: BorderSide(color: AppTheme.primaryGreen.withValues(alpha: 0.5)),
               padding: const EdgeInsets.symmetric(vertical: 12),
             ),
           ),
@@ -646,7 +646,7 @@ class _PaychecksTabState extends State<PaychecksTab> {
             label: const Text('Add Manually'),
             style: OutlinedButton.styleFrom(
               foregroundColor: AppTheme.accentBlue,
-              side: BorderSide(color: AppTheme.accentBlue.withOpacity(0.5)),
+              side: BorderSide(color: AppTheme.accentBlue.withValues(alpha: 0.5)),
               padding: const EdgeInsets.symmetric(vertical: 12),
             ),
           ),

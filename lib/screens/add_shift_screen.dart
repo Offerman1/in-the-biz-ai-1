@@ -751,10 +751,10 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppTheme.primaryGreen.withOpacity(0.1),
+                color: AppTheme.primaryGreen.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
                 border:
-                    Border.all(color: AppTheme.primaryGreen.withOpacity(0.3)),
+                    Border.all(color: AppTheme.primaryGreen.withValues(alpha: 0.3)),
               ),
               child: Row(
                 children: [
@@ -1462,7 +1462,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
           ],
         ),
         duration: const Duration(seconds: 30),
-        backgroundColor: AppTheme.primaryGreen.withOpacity(0.9),
+        backgroundColor: AppTheme.primaryGreen.withValues(alpha: 0.9),
       ),
     );
 
@@ -2586,7 +2586,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
                     letterSpacing: -1,
                     shadows: [
                       Shadow(
-                        color: Colors.black.withOpacity(0.4),
+                        color: Colors.black.withValues(alpha: 0.4),
                         blurRadius: 4,
                         offset: const Offset(0, 2),
                       ),
@@ -2795,8 +2795,8 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: customField.deductFromEarnings
-                      ? AppTheme.accentOrange.withOpacity(0.2)
-                      : AppTheme.textMuted.withOpacity(0.2),
+                      ? AppTheme.accentOrange.withValues(alpha: 0.2)
+                      : AppTheme.textMuted.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
@@ -2941,7 +2941,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
         style: TextStyle(color: AppTheme.primaryGreen),
       ),
       style: OutlinedButton.styleFrom(
-        side: BorderSide(color: AppTheme.primaryGreen.withOpacity(0.5)),
+        side: BorderSide(color: AppTheme.primaryGreen.withValues(alpha: 0.5)),
         padding: const EdgeInsets.symmetric(vertical: 16),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
@@ -2961,7 +2961,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
         style: TextStyle(color: AppTheme.accentBlue),
       ),
       style: OutlinedButton.styleFrom(
-        side: BorderSide(color: AppTheme.accentBlue.withOpacity(0.5)),
+        side: BorderSide(color: AppTheme.accentBlue.withValues(alpha: 0.5)),
         padding: const EdgeInsets.symmetric(vertical: 16),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
@@ -3202,10 +3202,10 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
                 vertical: 6,
               ),
               decoration: BoxDecoration(
-                color: AppTheme.accentBlue.withOpacity(0.15),
+                color: AppTheme.accentBlue.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(4),
                 border: Border.all(
-                  color: AppTheme.accentBlue.withOpacity(0.3),
+                  color: AppTheme.accentBlue.withValues(alpha: 0.3),
                   width: 0.5,
                 ),
               ),
@@ -3403,7 +3403,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
                     borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
                     border: _useHourlyRateOverride
                         ? Border.all(
-                            color: AppTheme.accentOrange.withOpacity(0.5))
+                            color: AppTheme.accentOrange.withValues(alpha: 0.5))
                         : null,
                   ),
                   child: Column(
@@ -3469,9 +3469,9 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppTheme.primaryGreen.withOpacity(0.1),
+              color: AppTheme.primaryGreen.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
-              border: Border.all(color: AppTheme.primaryGreen.withOpacity(0.3)),
+              border: Border.all(color: AppTheme.primaryGreen.withValues(alpha: 0.3)),
             ),
             child: Row(
               children: [
@@ -3607,9 +3607,9 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppTheme.primaryGreen.withOpacity(0.1),
+              color: AppTheme.primaryGreen.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
-              border: Border.all(color: AppTheme.primaryGreen.withOpacity(0.3)),
+              border: Border.all(color: AppTheme.primaryGreen.withValues(alpha: 0.3)),
             ),
             child: Row(
               children: [
@@ -3646,12 +3646,12 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
           }
         });
       },
-      selectedColor: AppTheme.primaryGreen.withOpacity(0.2),
+      selectedColor: AppTheme.primaryGreen.withValues(alpha: 0.2),
       checkmarkColor: AppTheme.primaryGreen,
       side: BorderSide(
         color: isSelected
             ? AppTheme.primaryGreen
-            : AppTheme.textMuted.withOpacity(0.3),
+            : AppTheme.textMuted.withValues(alpha: 0.3),
       ),
     );
   }
@@ -3822,7 +3822,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: AppTheme.accentYellow.withOpacity(0.1),
+                            color: AppTheme.accentYellow.withValues(alpha: 0.1),
                             borderRadius:
                                 BorderRadius.circular(AppTheme.radiusMedium),
                           ),
@@ -3905,11 +3905,11 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: AppTheme.primaryGreen.withOpacity(0.1),
+                        color: AppTheme.primaryGreen.withValues(alpha: 0.1),
                         borderRadius:
                             BorderRadius.circular(AppTheme.radiusSmall),
                         border: Border.all(
-                          color: AppTheme.primaryGreen.withOpacity(0.3),
+                          color: AppTheme.primaryGreen.withValues(alpha: 0.3),
                         ),
                       ),
                       child: Column(
@@ -5381,7 +5381,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
         color: AppTheme.cardBackground,
         borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
         border: Border.all(
-          color: AppTheme.primaryGreen.withOpacity(0.3),
+          color: AppTheme.primaryGreen.withValues(alpha: 0.3),
           width: 1,
         ),
       ),
@@ -5462,8 +5462,8 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
           borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
           border: Border.all(
             color: (isImage || isVideo)
-                ? AppTheme.primaryGreen.withOpacity(0.3)
-                : iconColor.withOpacity(0.3),
+                ? AppTheme.primaryGreen.withValues(alpha: 0.3)
+                : iconColor.withValues(alpha: 0.3),
             width: 2,
           ),
         ),
@@ -5495,7 +5495,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
                             child: Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.6),
+                                color: Colors.black.withValues(alpha: 0.6),
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(
@@ -5542,7 +5542,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.6),
+                    color: Colors.black.withValues(alpha: 0.6),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
@@ -5618,7 +5618,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
                 leading: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryGreen.withOpacity(0.15),
+                    color: AppTheme.primaryGreen.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(Icons.school, color: AppTheme.primaryGreen),
@@ -5640,7 +5640,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
                 leading: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppTheme.accentBlue.withOpacity(0.15),
+                    color: AppTheme.accentBlue.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(Icons.flash_on, color: AppTheme.accentBlue),
@@ -5771,7 +5771,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: AppTheme.primaryGreen.withOpacity(0.2),
+                          color: AppTheme.primaryGreen.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
@@ -5842,7 +5842,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
                     color: AppTheme.darkBackground,
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: AppTheme.primaryGreen.withOpacity(0.3),
+                      color: AppTheme.primaryGreen.withValues(alpha: 0.3),
                       width: 1,
                     ),
                   ),
@@ -5920,7 +5920,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryGreen.withOpacity(0.15),
+                  color: AppTheme.primaryGreen.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: contact.imageUrl != null
@@ -6174,7 +6174,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
                         vertical: 2,
                       ),
                       decoration: BoxDecoration(
-                        color: AppTheme.accentBlue.withOpacity(0.2),
+                        color: AppTheme.accentBlue.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
@@ -6319,7 +6319,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
                 label: const Text('Scan'),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppTheme.accentBlue,
-                  side: BorderSide(color: AppTheme.accentBlue.withOpacity(0.5)),
+                  side: BorderSide(color: AppTheme.accentBlue.withValues(alpha: 0.5)),
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
               ),
@@ -6333,7 +6333,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppTheme.accentPurple,
                   side:
-                      BorderSide(color: AppTheme.accentPurple.withOpacity(0.5)),
+                      BorderSide(color: AppTheme.accentPurple.withValues(alpha: 0.5)),
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
               ),
@@ -6347,7 +6347,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppTheme.primaryGreen,
                   side:
-                      BorderSide(color: AppTheme.primaryGreen.withOpacity(0.5)),
+                      BorderSide(color: AppTheme.primaryGreen.withValues(alpha: 0.5)),
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
               ),
@@ -6359,10 +6359,10 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
         Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: AppTheme.cardBackgroundLight.withOpacity(0.3),
+            color: AppTheme.cardBackgroundLight.withValues(alpha: 0.3),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: AppTheme.textMuted.withOpacity(0.2),
+              color: AppTheme.textMuted.withValues(alpha: 0.2),
               style: BorderStyle.solid,
             ),
           ),
@@ -6405,7 +6405,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppTheme.accentOrange,
                   side:
-                      BorderSide(color: AppTheme.accentOrange.withOpacity(0.5)),
+                      BorderSide(color: AppTheme.accentOrange.withValues(alpha: 0.5)),
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
               ),
@@ -6419,7 +6419,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppTheme.accentPurple,
                   side:
-                      BorderSide(color: AppTheme.accentPurple.withOpacity(0.5)),
+                      BorderSide(color: AppTheme.accentPurple.withValues(alpha: 0.5)),
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
               ),
@@ -6433,7 +6433,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppTheme.primaryGreen,
                   side:
-                      BorderSide(color: AppTheme.primaryGreen.withOpacity(0.5)),
+                      BorderSide(color: AppTheme.primaryGreen.withValues(alpha: 0.5)),
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
               ),
@@ -6445,10 +6445,10 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
         Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: AppTheme.cardBackgroundLight.withOpacity(0.3),
+            color: AppTheme.cardBackgroundLight.withValues(alpha: 0.3),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: AppTheme.textMuted.withOpacity(0.2),
+              color: AppTheme.textMuted.withValues(alpha: 0.2),
               style: BorderStyle.solid,
             ),
           ),

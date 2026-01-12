@@ -102,7 +102,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             color: AppTheme.navBarBackground,
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.3),
+                color: Colors.black.withValues(alpha: 0.3),
                 blurRadius: 10,
                 offset: const Offset(0, -2),
               ),
@@ -473,7 +473,7 @@ class _HomeScreenState extends State<_HomeScreen> {
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 6, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: AppTheme.textPrimary.withOpacity(0.1),
+                                  color: AppTheme.textPrimary.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: ShaderMask(
@@ -713,10 +713,10 @@ class _HomeScreenState extends State<_HomeScreen> {
                         Container(
                           height: 32,
                           decoration: BoxDecoration(
-                            color: AppTheme.primaryGreen.withOpacity(0.25),
+                            color: AppTheme.primaryGreen.withValues(alpha: 0.25),
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                              color: AppTheme.primaryGreen.withOpacity(0.4),
+                              color: AppTheme.primaryGreen.withValues(alpha: 0.4),
                               width: 1,
                             ),
                           ),
@@ -768,7 +768,7 @@ class _HomeScreenState extends State<_HomeScreen> {
                                     fontWeight: FontWeight.w700,
                                     shadows: [
                                       Shadow(
-                                        color: Colors.black.withOpacity(0.3),
+                                        color: Colors.black.withValues(alpha: 0.3),
                                         blurRadius: 2,
                                         offset: const Offset(0, 1),
                                       ),
@@ -784,7 +784,7 @@ class _HomeScreenState extends State<_HomeScreen> {
                                     fontWeight: FontWeight.w700,
                                     shadows: [
                                       Shadow(
-                                        color: Colors.black.withOpacity(0.3),
+                                        color: Colors.black.withValues(alpha: 0.3),
                                         blurRadius: 2,
                                         offset: const Offset(0, 1),
                                       ),
@@ -830,12 +830,12 @@ class _HomeScreenState extends State<_HomeScreen> {
                             gradient: LinearGradient(
                               colors: percentChange >= 0
                                   ? [
-                                      AppTheme.primaryGreen.withOpacity(0.25),
-                                      AppTheme.primaryGreen.withOpacity(0.15),
+                                      AppTheme.primaryGreen.withValues(alpha: 0.25),
+                                      AppTheme.primaryGreen.withValues(alpha: 0.15),
                                     ]
                                   : [
-                                      AppTheme.accentRed.withOpacity(0.25),
-                                      AppTheme.accentRed.withOpacity(0.15),
+                                      AppTheme.accentRed.withValues(alpha: 0.25),
+                                      AppTheme.accentRed.withValues(alpha: 0.15),
                                     ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
@@ -843,8 +843,8 @@ class _HomeScreenState extends State<_HomeScreen> {
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
                               color: percentChange >= 0
-                                  ? AppTheme.primaryGreen.withOpacity(0.4)
-                                  : AppTheme.accentRed.withOpacity(0.4),
+                                  ? AppTheme.primaryGreen.withValues(alpha: 0.4)
+                                  : AppTheme.accentRed.withValues(alpha: 0.4),
                               width: 1,
                             ),
                           ),
@@ -872,7 +872,7 @@ class _HomeScreenState extends State<_HomeScreen> {
                                   fontWeight: FontWeight.w700,
                                   shadows: [
                                     Shadow(
-                                      color: Colors.black.withOpacity(0.3),
+                                      color: Colors.black.withValues(alpha: 0.3),
                                       blurRadius: 2,
                                       offset: const Offset(0, 1),
                                     ),
@@ -1236,7 +1236,7 @@ class _HomeScreenState extends State<_HomeScreen> {
         borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -1264,10 +1264,10 @@ class _HomeScreenState extends State<_HomeScreen> {
                   width: 56,
                   height: 70,
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryGreen.withOpacity(0.15),
+                    color: AppTheme.primaryGreen.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
                     border: Border.all(
-                      color: AppTheme.primaryGreen.withOpacity(0.3),
+                      color: AppTheme.primaryGreen.withValues(alpha: 0.3),
                       width: 1,
                     ),
                   ),
@@ -1351,11 +1351,11 @@ class _HomeScreenState extends State<_HomeScreen> {
                                 ),
                                 decoration: BoxDecoration(
                                   color:
-                                      AppTheme.accentPurple.withOpacity(0.15),
+                                      AppTheme.accentPurple.withValues(alpha: 0.15),
                                   borderRadius: BorderRadius.circular(4),
                                   border: Border.all(
                                     color:
-                                        AppTheme.accentPurple.withOpacity(0.3),
+                                        AppTheme.accentPurple.withValues(alpha: 0.3),
                                     width: 0.5,
                                   ),
                                 ),
@@ -1416,10 +1416,10 @@ class _HomeScreenState extends State<_HomeScreen> {
                                   vertical: 2,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: AppTheme.accentBlue.withOpacity(0.15),
+                                  color: AppTheme.accentBlue.withValues(alpha: 0.15),
                                   borderRadius: BorderRadius.circular(4),
                                   border: Border.all(
-                                    color: AppTheme.accentBlue.withOpacity(0.3),
+                                    color: AppTheme.accentBlue.withValues(alpha: 0.3),
                                     width: 0.5,
                                   ),
                                 ),

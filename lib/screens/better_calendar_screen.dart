@@ -700,13 +700,13 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                AppTheme.primaryGreen.withOpacity(0.15),
-                AppTheme.accentBlue.withOpacity(0.1),
+                AppTheme.primaryGreen.withValues(alpha: 0.15),
+                AppTheme.accentBlue.withValues(alpha: 0.1),
               ],
             ),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: AppTheme.primaryGreen.withOpacity(0.3),
+              color: AppTheme.primaryGreen.withValues(alpha: 0.3),
               width: 1,
             ),
           ),
@@ -868,7 +868,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                                   ),
                                   todayDecoration: BoxDecoration(
                                     color:
-                                        AppTheme.primaryGreen.withOpacity(0.3),
+                                        AppTheme.primaryGreen.withValues(alpha: 0.3),
                                     borderRadius: BorderRadius.circular(8),
                                     border: Border.all(
                                         color: AppTheme.primaryGreen, width: 2),
@@ -1010,7 +1010,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                           const BorderRadius.vertical(top: Radius.circular(20)),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.3),
+                          color: Colors.black.withValues(alpha: 0.3),
                           blurRadius: 10,
                           offset: const Offset(0, -5),
                         ),
@@ -1330,7 +1330,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
         margin: const EdgeInsets.only(bottom: 2),
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
         decoration: BoxDecoration(
-          color: badgeColor.withOpacity(0.2),
+          color: badgeColor.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(2),
           // Red border for incomplete shifts, normal color otherwise
           border: Border.all(
@@ -1369,7 +1369,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
       margin: const EdgeInsets.only(bottom: 2),
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
       decoration: BoxDecoration(
-        color: badgeColor.withOpacity(0.2),
+        color: badgeColor.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(2),
         // Red border for incomplete shifts, normal color otherwise
         border: Border.all(
@@ -1584,7 +1584,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                             Text(
                               'Income',
                               style: TextStyle(
-                                color: Colors.white.withOpacity(0.7),
+                                color: Colors.white.withValues(alpha: 0.7),
                                 fontSize: 10,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -1623,7 +1623,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                             Text(
                               'Hours',
                               style: TextStyle(
-                                color: Colors.white.withOpacity(0.7),
+                                color: Colors.white.withValues(alpha: 0.7),
                                 fontSize: 10,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -1647,7 +1647,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.15),
+                          color: Colors.black.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
@@ -1674,7 +1674,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                       child: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.15),
+                          color: Colors.black.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: const Icon(
@@ -1720,7 +1720,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
           color: AppTheme.cardBackgroundLight,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: AppTheme.accentPurple.withOpacity(0.5),
+            color: AppTheme.accentPurple.withValues(alpha: 0.5),
             width: 1,
           ),
         ),
@@ -1731,7 +1731,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: AppTheme.accentPurple.withOpacity(0.2),
+                color: AppTheme.accentPurple.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
@@ -1785,7 +1785,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppTheme.accentPurple.withOpacity(0.2),
+                  color: AppTheme.accentPurple.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Row(
@@ -1853,7 +1853,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
           borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.2),
+              color: Colors.black.withValues(alpha: 0.2),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -1881,10 +1881,10 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                     width: 56,
                     height: 70,
                     decoration: BoxDecoration(
-                      color: accentColor.withOpacity(0.15),
+                      color: accentColor.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
                       border: Border.all(
-                        color: accentColor.withOpacity(0.3),
+                        color: accentColor.withValues(alpha: 0.3),
                         width: 1,
                       ),
                     ),
@@ -1951,7 +1951,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                                   vertical: 4,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: AppTheme.accentBlue.withOpacity(0.2),
+                                  color: AppTheme.accentBlue.withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(
@@ -1972,7 +1972,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                                   color: (shift.totalIncome > 0
                                           ? AppTheme.primaryGreen
                                           : AppTheme.accentRed)
-                                      .withOpacity(0.2),
+                                      .withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(
@@ -2024,10 +2024,10 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
           decoration: BoxDecoration(
-            color: AppTheme.accentPurple.withOpacity(0.15),
+            color: AppTheme.accentPurple.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(4),
             border: Border.all(
-              color: AppTheme.accentPurple.withOpacity(0.3),
+              color: AppTheme.accentPurple.withValues(alpha: 0.3),
               width: 0.5,
             ),
           ),
@@ -2084,10 +2084,10 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
           constraints: const BoxConstraints(maxWidth: 200),
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
           decoration: BoxDecoration(
-            color: AppTheme.accentBlue.withOpacity(0.15),
+            color: AppTheme.accentBlue.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(4),
             border: Border.all(
-              color: AppTheme.accentBlue.withOpacity(0.3),
+              color: AppTheme.accentBlue.withValues(alpha: 0.3),
               width: 0.5,
             ),
           ),
@@ -2241,13 +2241,13 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                AppTheme.primaryGreen.withOpacity(0.15),
-                AppTheme.accentBlue.withOpacity(0.1),
+                AppTheme.primaryGreen.withValues(alpha: 0.15),
+                AppTheme.accentBlue.withValues(alpha: 0.1),
               ],
             ),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: AppTheme.primaryGreen.withOpacity(0.3),
+              color: AppTheme.primaryGreen.withValues(alpha: 0.3),
               width: 1,
             ),
           ),
@@ -2305,7 +2305,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: isToday
-                        ? AppTheme.primaryGreen.withOpacity(0.1)
+                        ? AppTheme.primaryGreen.withValues(alpha: 0.1)
                         : AppTheme.cardBackground,
                     borderRadius: BorderRadius.circular(12),
                     border: isToday
@@ -2414,13 +2414,13 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
                               color: dayShifts.first.status == 'scheduled'
-                                  ? AppTheme.accentBlue.withOpacity(0.08)
-                                  : AppTheme.primaryGreen.withOpacity(0.08),
+                                  ? AppTheme.accentBlue.withValues(alpha: 0.08)
+                                  : AppTheme.primaryGreen.withValues(alpha: 0.08),
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
                                 color: dayShifts.first.status == 'scheduled'
-                                    ? AppTheme.accentBlue.withOpacity(0.3)
-                                    : AppTheme.primaryGreen.withOpacity(0.3),
+                                    ? AppTheme.accentBlue.withValues(alpha: 0.3)
+                                    : AppTheme.primaryGreen.withValues(alpha: 0.3),
                                 width: 1,
                               ),
                             ),
@@ -2597,13 +2597,13 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
                                 color: isScheduled
-                                    ? AppTheme.accentBlue.withOpacity(0.08)
-                                    : AppTheme.primaryGreen.withOpacity(0.08),
+                                    ? AppTheme.accentBlue.withValues(alpha: 0.08)
+                                    : AppTheme.primaryGreen.withValues(alpha: 0.08),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
                                   color: isScheduled
-                                      ? AppTheme.accentBlue.withOpacity(0.3)
-                                      : AppTheme.primaryGreen.withOpacity(0.3),
+                                      ? AppTheme.accentBlue.withValues(alpha: 0.3)
+                                      : AppTheme.primaryGreen.withValues(alpha: 0.3),
                                   width: 1,
                                 ),
                               ),
@@ -2778,13 +2778,13 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                AppTheme.primaryGreen.withOpacity(0.15),
-                AppTheme.accentBlue.withOpacity(0.1),
+                AppTheme.primaryGreen.withValues(alpha: 0.15),
+                AppTheme.accentBlue.withValues(alpha: 0.1),
               ],
             ),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: AppTheme.primaryGreen.withOpacity(0.3),
+              color: AppTheme.primaryGreen.withValues(alpha: 0.3),
               width: 1,
             ),
           ),
@@ -2904,7 +2904,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: isToday
-              ? AppTheme.primaryGreen.withOpacity(0.12)
+              ? AppTheme.primaryGreen.withValues(alpha: 0.12)
               : AppTheme.cardBackground,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
@@ -3013,13 +3013,13 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: dayShifts.first.status == 'scheduled'
-                        ? AppTheme.accentBlue.withOpacity(0.08)
-                        : AppTheme.primaryGreen.withOpacity(0.08),
+                        ? AppTheme.accentBlue.withValues(alpha: 0.08)
+                        : AppTheme.primaryGreen.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: dayShifts.first.status == 'scheduled'
-                          ? AppTheme.accentBlue.withOpacity(0.3)
-                          : AppTheme.primaryGreen.withOpacity(0.3),
+                          ? AppTheme.accentBlue.withValues(alpha: 0.3)
+                          : AppTheme.primaryGreen.withValues(alpha: 0.3),
                       width: 1,
                     ),
                   ),
@@ -3180,13 +3180,13 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: isScheduled
-                          ? AppTheme.accentBlue.withOpacity(0.08)
-                          : AppTheme.primaryGreen.withOpacity(0.08),
+                          ? AppTheme.accentBlue.withValues(alpha: 0.08)
+                          : AppTheme.primaryGreen.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color: isScheduled
-                            ? AppTheme.accentBlue.withOpacity(0.3)
-                            : AppTheme.primaryGreen.withOpacity(0.3),
+                            ? AppTheme.accentBlue.withValues(alpha: 0.3)
+                            : AppTheme.primaryGreen.withValues(alpha: 0.3),
                         width: 1,
                       ),
                     ),
@@ -3338,7 +3338,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
             fontWeight: FontWeight.bold,
             shadows: [
               Shadow(
-                color: Colors.black.withOpacity(0.3),
+                color: Colors.black.withValues(alpha: 0.3),
                 blurRadius: 2,
                 offset: const Offset(0, 1),
               ),
@@ -3376,13 +3376,13 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                AppTheme.primaryGreen.withOpacity(0.15),
-                AppTheme.accentBlue.withOpacity(0.1),
+                AppTheme.primaryGreen.withValues(alpha: 0.15),
+                AppTheme.accentBlue.withValues(alpha: 0.1),
               ],
             ),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: AppTheme.primaryGreen.withOpacity(0.3),
+              color: AppTheme.primaryGreen.withValues(alpha: 0.3),
               width: 1,
             ),
           ),
@@ -3452,7 +3452,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                               ? AppTheme.primaryGreen
                               : (monthShifts.isEmpty
                                   ? AppTheme.cardBackgroundLight
-                                  : AppTheme.primaryGreen.withOpacity(0.3)),
+                                  : AppTheme.primaryGreen.withValues(alpha: 0.3)),
                           width: isCurrentMonth
                               ? 2
                               : (monthShifts.isEmpty ? 1 : 1.5),

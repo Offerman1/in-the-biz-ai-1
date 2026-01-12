@@ -73,7 +73,7 @@ class _CollapsibleSectionState extends State<CollapsibleSection>
         color: AppTheme.cardBackground,
         borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
         border: Border.all(
-          color: _isExpanded ? color.withOpacity(0.3) : Colors.transparent,
+          color: _isExpanded ? color.withValues(alpha: 0.3) : Colors.transparent,
           width: 1,
         ),
       ),

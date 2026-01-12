@@ -1110,7 +1110,7 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
         color: AppTheme.cardBackground,
         borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
         border: Border.all(
-          color: AppTheme.accentOrange.withOpacity(0.3),
+          color: AppTheme.accentOrange.withValues(alpha: 0.3),
           width: 1,
         ),
       ),
@@ -1249,7 +1249,7 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: AppTheme.primaryGreen.withOpacity(0.2),
+                          color: AppTheme.primaryGreen.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
@@ -1320,7 +1320,7 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
                     color: AppTheme.darkBackground,
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: AppTheme.primaryGreen.withOpacity(0.3),
+                      color: AppTheme.primaryGreen.withValues(alpha: 0.3),
                       width: 1,
                     ),
                   ),
@@ -1398,7 +1398,7 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryGreen.withOpacity(0.15),
+                  color: AppTheme.primaryGreen.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: contact.imageUrl != null
@@ -1524,7 +1524,7 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
               color: AppTheme.cardBackgroundLight,
               borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
               border: Border.all(
-                color: AppTheme.textMuted.withOpacity(0.3),
+                color: AppTheme.textMuted.withValues(alpha: 0.3),
                 width: 1,
               ),
             ),
@@ -1608,10 +1608,10 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: AppTheme.accentPurple.withOpacity(0.15),
+                            color: AppTheme.accentPurple.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(4),
                             border: Border.all(
-                              color: AppTheme.accentPurple.withOpacity(0.3),
+                              color: AppTheme.accentPurple.withValues(alpha: 0.3),
                               width: 0.5,
                             ),
                           ),
@@ -1664,10 +1664,10 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: AppTheme.accentBlue.withOpacity(0.15),
+                            color: AppTheme.accentBlue.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(4),
                             border: Border.all(
-                              color: AppTheme.accentBlue.withOpacity(0.3),
+                              color: AppTheme.accentBlue.withValues(alpha: 0.3),
                               width: 0.5,
                             ),
                           ),
@@ -1711,10 +1711,10 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: AppTheme.accentOrange.withOpacity(0.15),
+                            color: AppTheme.accentOrange.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(4),
                             border: Border.all(
-                              color: AppTheme.accentOrange.withOpacity(0.3),
+                              color: AppTheme.accentOrange.withValues(alpha: 0.3),
                               width: 0.5,
                             ),
                           ),
@@ -1752,7 +1752,7 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
                       color: AppTheme.cardBackgroundLight,
                       borderRadius: BorderRadius.circular(4),
                       border: Border.all(
-                        color: AppTheme.textMuted.withOpacity(0.3),
+                        color: AppTheme.textMuted.withValues(alpha: 0.3),
                         width: 0.5,
                       ),
                     ),
@@ -2231,7 +2231,7 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: AppTheme.accentPurple.withOpacity(0.15),
+                  color: AppTheme.accentPurple.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
                 ),
                 child: Icon(Icons.access_time,
@@ -2311,7 +2311,7 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.15),
+            color: color.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
           ),
           child: Icon(icon, color: color, size: 20),
@@ -2352,7 +2352,7 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.15),
+            color: color.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
           ),
           child: Icon(icon, color: color, size: 20),
@@ -2805,7 +2805,7 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
                         vertical: 2,
                       ),
                       decoration: BoxDecoration(
-                        color: AppTheme.accentBlue.withOpacity(0.2),
+                        color: AppTheme.accentBlue.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(

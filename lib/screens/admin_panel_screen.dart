@@ -291,7 +291,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                   color: AppTheme.cardBackground,
                   borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
                   border: Border.all(
-                    color: AppTheme.accentBlue.withOpacity(0.3),
+                    color: AppTheme.accentBlue.withValues(alpha: 0.3),
                     width: 1,
                   ),
                 ),
@@ -357,7 +357,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                 color: AppTheme.cardBackground,
                 borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
                 border: Border.all(
-                  color: AppTheme.primaryGreen.withOpacity(0.3),
+                  color: AppTheme.primaryGreen.withValues(alpha: 0.3),
                   width: 1,
                 ),
               ),
@@ -405,7 +405,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                             side: BorderSide(
                               color: !_showUserList
                                   ? AppTheme.primaryGreen
-                                  : AppTheme.textSecondary.withOpacity(0.3),
+                                  : AppTheme.textSecondary.withValues(alpha: 0.3),
                               width: !_showUserList ? 2 : 1,
                             ),
                           ),
@@ -442,7 +442,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                             side: BorderSide(
                               color: _showUserList
                                   ? AppTheme.primaryGreen
-                                  : AppTheme.textSecondary.withOpacity(0.3),
+                                  : AppTheme.textSecondary.withValues(alpha: 0.3),
                               width: _showUserList ? 2 : 1,
                             ),
                           ),
@@ -544,11 +544,11 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: AppTheme.primaryGreen.withOpacity(0.1),
+                        color: AppTheme.primaryGreen.withValues(alpha: 0.1),
                         borderRadius:
                             BorderRadius.circular(AppTheme.radiusSmall),
                         border: Border.all(
-                          color: AppTheme.primaryGreen.withOpacity(0.3),
+                          color: AppTheme.primaryGreen.withValues(alpha: 0.3),
                         ),
                       ),
                       child: Row(
@@ -658,7 +658,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                                               ),
                                               decoration: BoxDecoration(
                                                 color: AppTheme.successColor
-                                                    .withOpacity(0.2),
+                                                    .withValues(alpha: 0.2),
                                                 borderRadius:
                                                     BorderRadius.circular(4),
                                                 border: Border.all(
@@ -785,7 +785,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                       borderRadius:
                           BorderRadius.circular(AppTheme.radiusMedium),
                       border: Border.all(
-                        color: AppTheme.primaryGreen.withOpacity(0.3),
+                        color: AppTheme.primaryGreen.withValues(alpha: 0.3),
                         width: 1,
                       ),
                     ),
@@ -794,7 +794,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: AppTheme.primaryGreen.withOpacity(0.15),
+                            color: AppTheme.primaryGreen.withValues(alpha: 0.15),
                             shape: BoxShape.circle,
                           ),
                           child: Icon(Icons.star,

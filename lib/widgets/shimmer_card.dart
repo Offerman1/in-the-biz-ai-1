@@ -89,7 +89,7 @@ class _ShimmerCardState extends State<ShimmerCard>
                 child: CustomPaint(
                   painter: ShimmerPainter(
                     animation: _controller,
-                    color: Colors.white.withOpacity(0.03), // Much more subtle
+                    color: Colors.white.withValues(alpha: 0.03), // Much more subtle
                   ),
                 ),
               ),
@@ -118,9 +118,9 @@ class ShimmerPainter extends CustomPainter {
       begin: Alignment.centerLeft,
       end: Alignment.centerRight,
       colors: [
-        color.withOpacity(0.0),
-        color.withOpacity(0.05), // Very subtle peak
-        color.withOpacity(0.0),
+        color.withValues(alpha: 0.0),
+        color.withValues(alpha: 0.05), // Very subtle peak
+        color.withValues(alpha: 0.0),
       ],
       stops: const [0.0, 0.5, 1.0],
     );

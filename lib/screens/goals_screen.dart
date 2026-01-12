@@ -212,13 +212,13 @@ class _GoalsScreenState extends State<GoalsScreen>
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                AppTheme.primaryGreen.withOpacity(0.1),
-                AppTheme.accentBlue.withOpacity(0.05),
+                AppTheme.primaryGreen.withValues(alpha: 0.1),
+                AppTheme.accentBlue.withValues(alpha: 0.05),
               ],
             ),
             borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
             border: Border.all(
-              color: AppTheme.primaryGreen.withOpacity(0.2),
+              color: AppTheme.primaryGreen.withValues(alpha: 0.2),
               width: 1,
             ),
           ),
@@ -264,15 +264,15 @@ class _GoalsScreenState extends State<GoalsScreen>
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  AppTheme.primaryGreen.withOpacity(0.25),
-                  AppTheme.accentBlue.withOpacity(0.15),
+                  AppTheme.primaryGreen.withValues(alpha: 0.25),
+                  AppTheme.accentBlue.withValues(alpha: 0.15),
                 ],
               )
             : null,
         boxShadow: [
           if (isComplete)
             BoxShadow(
-              color: AppTheme.primaryGreen.withOpacity(0.3),
+              color: AppTheme.primaryGreen.withValues(alpha: 0.3),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -280,13 +280,13 @@ class _GoalsScreenState extends State<GoalsScreen>
       ),
       child: Container(
         decoration: BoxDecoration(
-          color: hasGoal ? AppTheme.cardBackground : AppTheme.cardBackground.withOpacity(0.5),
+          color: hasGoal ? AppTheme.cardBackground : AppTheme.cardBackground.withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
           border: Border.all(
             color: isComplete
-                ? AppTheme.primaryGreen.withOpacity(0.5)
+                ? AppTheme.primaryGreen.withValues(alpha: 0.5)
                 : hasGoal
-                    ? AppTheme.primaryGreen.withOpacity(0.2)
+                    ? AppTheme.primaryGreen.withValues(alpha: 0.2)
                     : AppTheme.cardBackgroundLight,
             width: isComplete ? 2 : 1,
           ),
@@ -305,8 +305,8 @@ class _GoalsScreenState extends State<GoalsScreen>
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          AppTheme.primaryGreen.withOpacity(0.3),
-                          AppTheme.accentBlue.withOpacity(0.2),
+                          AppTheme.primaryGreen.withValues(alpha: 0.3),
+                          AppTheme.accentBlue.withValues(alpha: 0.2),
                         ],
                       )
                     : null,
@@ -315,7 +315,7 @@ class _GoalsScreenState extends State<GoalsScreen>
                 boxShadow: hasGoal
                     ? [
                         BoxShadow(
-                          color: AppTheme.primaryGreen.withOpacity(0.2),
+                          color: AppTheme.primaryGreen.withValues(alpha: 0.2),
                           blurRadius: 8,
                           offset: const Offset(0, 2),
                         ),
@@ -405,7 +405,7 @@ class _GoalsScreenState extends State<GoalsScreen>
                         Container(
                           padding: const EdgeInsets.all(6),
                           decoration: BoxDecoration(
-                            color: AppTheme.primaryGreen.withOpacity(0.2),
+                            color: AppTheme.primaryGreen.withValues(alpha: 0.2),
                             shape: BoxShape.circle,
                           ),
                           child: Icon(Icons.check_circle,
@@ -435,13 +435,13 @@ class _GoalsScreenState extends State<GoalsScreen>
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            AppTheme.primaryGreen.withOpacity(0.2),
-                            AppTheme.accentBlue.withOpacity(0.15),
+                            AppTheme.primaryGreen.withValues(alpha: 0.2),
+                            AppTheme.accentBlue.withValues(alpha: 0.15),
                           ],
                         ),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: AppTheme.primaryGreen.withOpacity(0.3),
+                          color: AppTheme.primaryGreen.withValues(alpha: 0.3),
                           width: 1,
                         ),
                       ),
@@ -481,7 +481,7 @@ class _GoalsScreenState extends State<GoalsScreen>
                             borderRadius: BorderRadius.circular(6),
                             boxShadow: [
                               BoxShadow(
-                                color: AppTheme.primaryGreen.withOpacity(0.4),
+                                color: AppTheme.primaryGreen.withValues(alpha: 0.4),
                                 blurRadius: 12,
                                 spreadRadius: 2,
                               ),
@@ -497,7 +497,7 @@ class _GoalsScreenState extends State<GoalsScreen>
                             gradient: LinearGradient(
                               colors: [
                                 AppTheme.cardBackgroundLight,
-                                AppTheme.cardBackgroundLight.withOpacity(0.5),
+                                AppTheme.cardBackgroundLight.withValues(alpha: 0.5),
                               ],
                             ),
                           ),
@@ -568,18 +568,18 @@ class _GoalsScreenState extends State<GoalsScreen>
                           gradient: LinearGradient(
                             colors: isComplete
                                 ? [
-                                    AppTheme.primaryGreen.withOpacity(0.3),
-                                    AppTheme.accentBlue.withOpacity(0.2),
+                                    AppTheme.primaryGreen.withValues(alpha: 0.3),
+                                    AppTheme.accentBlue.withValues(alpha: 0.2),
                                   ]
                                 : [
                                     AppTheme.cardBackgroundLight,
-                                    AppTheme.cardBackgroundLight.withOpacity(0.5),
+                                    AppTheme.cardBackgroundLight.withValues(alpha: 0.5),
                                   ],
                           ),
                           borderRadius: BorderRadius.circular(20),
                           border: isComplete
                               ? Border.all(
-                                  color: AppTheme.primaryGreen.withOpacity(0.4),
+                                  color: AppTheme.primaryGreen.withValues(alpha: 0.4),
                                   width: 1,
                                 )
                               : null,
@@ -633,18 +633,18 @@ class _GoalsScreenState extends State<GoalsScreen>
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                           colors: [
-                            AppTheme.primaryGreen.withOpacity(0.25),
-                            AppTheme.accentYellow.withOpacity(0.15),
+                            AppTheme.primaryGreen.withValues(alpha: 0.25),
+                            AppTheme.accentYellow.withValues(alpha: 0.15),
                           ],
                         ),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: AppTheme.primaryGreen.withOpacity(0.4),
+                          color: AppTheme.primaryGreen.withValues(alpha: 0.4),
                           width: 1.5,
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: AppTheme.primaryGreen.withOpacity(0.2),
+                            color: AppTheme.primaryGreen.withValues(alpha: 0.2),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),

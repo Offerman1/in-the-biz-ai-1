@@ -45,7 +45,7 @@ class FieldOrderSettings extends StatelessWidget {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: AppTheme.accentOrange.withOpacity(0.15),
+                    color: AppTheme.accentOrange.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(Icons.restore, color: AppTheme.accentOrange),
@@ -92,7 +92,7 @@ class FieldOrderSettings extends StatelessWidget {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: AppTheme.accentOrange.withOpacity(0.15),
+                    color: AppTheme.accentOrange.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(Icons.restore, color: AppTheme.accentOrange),
@@ -141,7 +141,7 @@ class FieldOrderSettings extends StatelessWidget {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: AppTheme.dangerColor.withOpacity(0.15),
+                    color: AppTheme.dangerColor.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(Icons.restart_alt, color: AppTheme.dangerColor),

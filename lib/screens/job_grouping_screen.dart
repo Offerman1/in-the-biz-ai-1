@@ -41,10 +41,10 @@ class _JobGroupingScreenState extends State<JobGroupingScreen> {
               margin: const EdgeInsets.all(16),
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppTheme.primaryGreen.withOpacity(0.1),
+                color: AppTheme.primaryGreen.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
                 border: Border.all(
-                  color: AppTheme.primaryGreen.withOpacity(0.3),
+                  color: AppTheme.primaryGreen.withValues(alpha: 0.3),
                   width: 1,
                 ),
               ),
@@ -125,7 +125,7 @@ class _JobGroupingScreenState extends State<JobGroupingScreen> {
                     margin: const EdgeInsets.only(bottom: 12),
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? AppTheme.primaryGreen.withOpacity(0.1)
+                          ? AppTheme.primaryGreen.withValues(alpha: 0.1)
                           : AppTheme.cardBackground,
                       borderRadius:
                           BorderRadius.circular(AppTheme.radiusMedium),
@@ -167,7 +167,7 @@ class _JobGroupingScreenState extends State<JobGroupingScreen> {
                 color: AppTheme.cardBackground,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
+                    color: Colors.black.withValues(alpha: 0.2),
                     blurRadius: 8,
                     offset: const Offset(0, -2),
                   ),
@@ -219,7 +219,7 @@ class _JobGroupingScreenState extends State<JobGroupingScreen> {
         color: AppTheme.cardBackground,
         borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
         border: Border.all(
-          color: AppTheme.primaryGreen.withOpacity(0.5),
+          color: AppTheme.primaryGreen.withValues(alpha: 0.5),
           width: 2,
         ),
       ),
@@ -252,7 +252,7 @@ class _JobGroupingScreenState extends State<JobGroupingScreen> {
               return Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryGreen.withOpacity(0.2),
+                  color: AppTheme.primaryGreen.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(

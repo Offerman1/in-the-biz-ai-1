@@ -79,11 +79,11 @@ class _MergeJobsScreenState extends State<MergeJobsScreen> {
                     margin: const EdgeInsets.all(16),
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryGreen.withOpacity(0.1),
+                      color: AppTheme.primaryGreen.withValues(alpha: 0.1),
                       borderRadius:
                           BorderRadius.circular(AppTheme.radiusMedium),
                       border: Border.all(
-                        color: AppTheme.primaryGreen.withOpacity(0.3),
+                        color: AppTheme.primaryGreen.withValues(alpha: 0.3),
                         width: 1,
                       ),
                     ),
@@ -126,7 +126,7 @@ class _MergeJobsScreenState extends State<MergeJobsScreen> {
                           margin: const EdgeInsets.only(bottom: 12),
                           decoration: BoxDecoration(
                             color: isSelected
-                                ? AppTheme.primaryGreen.withOpacity(0.1)
+                                ? AppTheme.primaryGreen.withValues(alpha: 0.1)
                                 : AppTheme.cardBackground,
                             borderRadius:
                                 BorderRadius.circular(AppTheme.radiusMedium),
@@ -167,7 +167,7 @@ class _MergeJobsScreenState extends State<MergeJobsScreen> {
                                         horizontal: 6, vertical: 2),
                                     decoration: BoxDecoration(
                                       color: AppTheme.primaryGreen
-                                          .withOpacity(0.2),
+                                          .withValues(alpha: 0.2),
                                       borderRadius: BorderRadius.circular(4),
                                     ),
                                     child: Text(
@@ -214,7 +214,7 @@ class _MergeJobsScreenState extends State<MergeJobsScreen> {
                       color: AppTheme.cardBackground,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
+                          color: Colors.black.withValues(alpha: 0.2),
                           blurRadius: 8,
                           offset: const Offset(0, -2),
                         ),
@@ -270,7 +270,7 @@ class _MergeJobsScreenState extends State<MergeJobsScreen> {
                                   backgroundColor: AppTheme.primaryGreen,
                                   foregroundColor: Colors.white,
                                   disabledBackgroundColor:
-                                      AppTheme.primaryGreen.withOpacity(0.3),
+                                      AppTheme.primaryGreen.withValues(alpha: 0.3),
                                   padding:
                                       const EdgeInsets.symmetric(vertical: 16),
                                 ),
@@ -461,7 +461,7 @@ class _MergeJobDialogState extends State<_MergeJobDialog> {
                         const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? AppTheme.primaryGreen.withOpacity(0.2)
+                          ? AppTheme.primaryGreen.withValues(alpha: 0.2)
                           : AppTheme.darkBackground,
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(

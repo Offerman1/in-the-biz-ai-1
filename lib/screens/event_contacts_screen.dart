@@ -396,7 +396,7 @@ class _EventContactsScreenState extends State<EventContactsScreen> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -417,7 +417,7 @@ class _EventContactsScreenState extends State<EventContactsScreen> {
                   width: 50,
                   height: 50,
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryGreen.withOpacity(0.15),
+                    color: AppTheme.primaryGreen.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(25),
                   ),
                   child: contact.imageUrl != null
@@ -566,7 +566,7 @@ class _EventContactsScreenState extends State<EventContactsScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: AppTheme.accentPurple.withOpacity(0.15),
+        color: AppTheme.accentPurple.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
@@ -663,7 +663,7 @@ class _EventContactsScreenState extends State<EventContactsScreen> {
           width: 22,
           height: 22,
           decoration: BoxDecoration(
-            color: color.withOpacity(0.15),
+            color: color.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(4),
           ),
           child: Icon(icon, size: 14, color: color),

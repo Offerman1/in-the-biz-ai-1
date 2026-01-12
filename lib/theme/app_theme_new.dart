@@ -30,12 +30,12 @@ class AppTheme {
   static Color get chartGreen1 => const Color(0xFF4CAF50);
   static Color get chartGreen2 => const Color(0xFF81C784);
   static Color get chartGreen3 => const Color(0xFFA5D6A7);
-  static Color get shadowColor => Colors.black.withOpacity(0.3);
-  static Color get overlayColor => Colors.black.withOpacity(0.4);
+  static Color get shadowColor => Colors.black.withValues(alpha: 0.3);
+  static Color get overlayColor => Colors.black.withValues(alpha: 0.4);
 
   // Gradients
   static LinearGradient get greenGradient => LinearGradient(
-        colors: [primaryGreen, primaryGreen.withOpacity(0.8)],
+        colors: [primaryGreen, primaryGreen.withValues(alpha: 0.8)],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       );
