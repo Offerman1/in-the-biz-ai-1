@@ -16,7 +16,10 @@ import 'scan_verification_screen.dart';
 import 'package:intl/intl.dart';
 
 class AssistantScreen extends StatefulWidget {
-  const AssistantScreen({super.key});
+  /// Optional initial message to send automatically when screen opens
+  final String? initialMessage;
+
+  const AssistantScreen({super.key, this.initialMessage});
 
   @override
   State<AssistantScreen> createState() => _AssistantScreenState();
@@ -37,7 +40,17 @@ class _AssistantScreenState extends State<AssistantScreen> {
   void initState() {
     super.initState();
     _loadUserContext();
-    _loadChatHistory();
+    _loadChatHistory().then((_) {
+      // If there's an initial message, send it after chat loads
+      if (widget.initialMessage != null && widget.initialMessage!.isNotEmpty) {
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (mounted) {
+            _messageController.text = widget.initialMessage!;
+            _sendMessage();
+          }
+        });
+      }
+    });
   }
 
   Future<void> _loadUserContext() async {

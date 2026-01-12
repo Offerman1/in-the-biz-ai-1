@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart' show kIsWeb, kDebugMode;
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../main.dart' show appVersion;
 import '../providers/shift_provider.dart';
 import '../services/database_service.dart';
@@ -34,6 +35,7 @@ import 'invoices_receipts_screen.dart';
 import 'admin_panel_screen.dart';
 import 'all_documents_screen.dart';
 import 'all_shifts_screen.dart';
+import 'assistant_screen.dart';
 import '../services/subscription_service.dart';
 import '../services/quickbooks_service.dart';
 import 'paywall_screen.dart';
@@ -554,6 +556,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _buildDebugProToggle(),
           const SizedBox(height: 24),
         ],
+
+        // Help & Support Section
+        _buildSectionHeader('HELP & SUPPORT'),
+        const SizedBox(height: 12),
+        _buildHelpSupportSection(),
+
+        const SizedBox(height: 24),
 
         // Account Section
         _buildSectionHeader('ACCOUNT'),
@@ -2147,6 +2156,136 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHelpSupportSection() {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackground,
+        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+      ),
+      child: Column(
+        children: [
+          // Contact Support
+          ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppTheme.accentBlue.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(Icons.support_agent,
+                  color: AppTheme.accentBlue, size: 20),
+            ),
+            title: Text('Contact Support', style: AppTheme.bodyMedium),
+            subtitle: Text('Get help with any issues',
+                style: AppTheme.labelSmall.copyWith(color: AppTheme.textMuted)),
+            trailing: Icon(Icons.arrow_forward_ios,
+                size: 16, color: AppTheme.textMuted),
+            onTap: () =>
+                _launchEmail('support@inthebiz.app', 'Support Request'),
+          ),
+          Divider(height: 1, color: AppTheme.cardBackgroundLight),
+          // Suggest a Feature
+          ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryGreen.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(Icons.lightbulb_outline,
+                  color: AppTheme.primaryGreen, size: 20),
+            ),
+            title: Text('Suggest a Feature', style: AppTheme.bodyMedium),
+            subtitle: Text('Share your ideas with us',
+                style: AppTheme.labelSmall.copyWith(color: AppTheme.textMuted)),
+            trailing: Icon(Icons.arrow_forward_ios,
+                size: 16, color: AppTheme.textMuted),
+            onTap: _openFeatureSuggestion,
+          ),
+          Divider(height: 1, color: AppTheme.cardBackgroundLight),
+          // Privacy Policy
+          ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppTheme.textMuted.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(Icons.privacy_tip_outlined,
+                  color: AppTheme.textMuted, size: 20),
+            ),
+            title: Text('Privacy Policy', style: AppTheme.bodyMedium),
+            trailing: Icon(Icons.arrow_forward_ios,
+                size: 16, color: AppTheme.textMuted),
+            onTap: () => _launchUrl('https://inthebiz.app/privacy-policy.html'),
+          ),
+          Divider(height: 1, color: AppTheme.cardBackgroundLight),
+          // Terms of Service
+          ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppTheme.textMuted.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(Icons.description_outlined,
+                  color: AppTheme.textMuted, size: 20),
+            ),
+            title: Text('Terms of Service', style: AppTheme.bodyMedium),
+            trailing: Icon(Icons.arrow_forward_ios,
+                size: 16, color: AppTheme.textMuted),
+            onTap: () => _launchUrl('https://inthebiz.app/eula.html'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _launchEmail(String email, String subject) async {
+    final uri = Uri(
+      scheme: 'mailto',
+      path: email,
+      queryParameters: {'subject': subject},
+    );
+    try {
+      await launchUrl(uri);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Email: $email'),
+            backgroundColor: AppTheme.primaryGreen,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _launchUrl(String url) async {
+    try {
+      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Could not open link'),
+            backgroundColor: AppTheme.accentRed,
+          ),
+        );
+      }
+    }
+  }
+
+  void _openFeatureSuggestion() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const AssistantScreen(
+          initialMessage: "I'd like to suggest a feature for the app.",
         ),
       ),
     );

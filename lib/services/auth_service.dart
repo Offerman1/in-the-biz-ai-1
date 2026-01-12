@@ -154,6 +154,14 @@ class AuthService {
     await _supabase.auth.resetPasswordForEmail(email);
   }
 
+  /// Resend confirmation email
+  static Future<void> resendConfirmationEmail(String email) async {
+    await _supabase.auth.resend(
+      type: OtpType.signup,
+      email: email,
+    );
+  }
+
   /// Get user display name
   static String? get displayName {
     final user = currentUser;

@@ -690,15 +690,22 @@ class ThemeProvider extends ChangeNotifier {
   ThemeData getThemeData() {
     return ThemeData(
       useMaterial3: true,
-      brightness: Brightness.dark,
+      brightness: isLightBackground ? Brightness.light : Brightness.dark,
       scaffoldBackgroundColor: darkBackground,
       primaryColor: primaryColor,
-      colorScheme: ColorScheme.dark(
-        primary: primaryColor,
-        secondary: primaryColor,
-        surface: cardBackground,
-        error: accentRed,
-      ),
+      colorScheme: isLightBackground
+          ? ColorScheme.light(
+              primary: primaryColor,
+              secondary: primaryColor,
+              surface: cardBackground,
+              error: accentRed,
+            )
+          : ColorScheme.dark(
+              primary: primaryColor,
+              secondary: primaryColor,
+              surface: cardBackground,
+              error: accentRed,
+            ),
       appBarTheme: AppBarTheme(
         backgroundColor: darkBackground,
         foregroundColor: isLightBackground ? Colors.black87 : Colors.white,
@@ -726,6 +733,23 @@ class ThemeProvider extends ChangeNotifier {
           backgroundColor: primaryColor,
           foregroundColor: Colors.black,
         ),
+      ),
+      // Input decoration theme for text fields
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: cardBackgroundLight,
+        hintStyle: TextStyle(
+          color: isLightBackground ? Colors.black54 : Colors.white54,
+        ),
+        labelStyle: TextStyle(
+          color: isLightBackground ? Colors.black87 : Colors.white,
+        ),
+      ),
+      // Text selection theme for cursor and selection
+      textSelectionTheme: TextSelectionThemeData(
+        cursorColor: primaryColor,
+        selectionColor: primaryColor.withOpacity(0.3),
+        selectionHandleColor: primaryColor,
       ),
     );
   }

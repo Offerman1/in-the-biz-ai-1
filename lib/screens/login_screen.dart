@@ -24,6 +24,8 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
   bool _isSignUp = false;
   String? _errorMessage;
+  bool _showResendConfirmation = false; // Show resend button after signup
+  bool _isResending = false; // Loading state for resend
 
   @override
   void initState() {
@@ -137,6 +139,7 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
+      _showResendConfirmation = false;
     });
 
     try {
@@ -146,10 +149,14 @@ class _LoginScreenState extends State<LoginScreen> {
           password: _passwordController.text,
         );
         if (mounted) {
+          setState(() {
+            _showResendConfirmation = true; // Show resend button
+          });
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Check your email to confirm your account!'),
               backgroundColor: AppTheme.primaryGreen,
+              duration: Duration(seconds: 5),
             ),
           );
         }
@@ -165,12 +172,77 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       }
     } catch (e) {
+      final errorStr = e.toString().replaceAll('Exception: ', '');
       setState(() {
-        _errorMessage = e.toString().replaceAll('Exception: ', '');
+        _errorMessage = _friendlyErrorMessage(errorStr);
+        // If error mentions email confirmation, show resend button
+        if (errorStr.toLowerCase().contains('confirm') ||
+            errorStr.toLowerCase().contains('verify') ||
+            errorStr.toLowerCase().contains('email')) {
+          _showResendConfirmation = true;
+        }
       });
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  /// Convert technical error messages to user-friendly ones
+  String _friendlyErrorMessage(String error) {
+    if (error.contains('AuthRetryableFetchException')) {
+      return 'We\'re having trouble connecting. Please check your internet and try again.';
+    }
+    if (error.contains('Invalid login credentials')) {
+      return 'Invalid email or password. Please try again.';
+    }
+    if (error.contains('Email not confirmed')) {
+      return 'Please confirm your email before signing in. Check your inbox!';
+    }
+    if (error.contains('User already registered')) {
+      return 'This email is already registered. Try signing in instead.';
+    }
+    return error;
+  }
+
+  /// Resend confirmation email
+  Future<void> _resendConfirmationEmail() async {
+    final email = _emailController.text.trim();
+    if (email.isEmpty || !email.contains('@')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Please enter a valid email address'),
+          backgroundColor: AppTheme.accentYellow,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isResending = true);
+
+    try {
+      await AuthService.resendConfirmationEmail(email);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Confirmation email sent! Check your inbox.'),
+            backgroundColor: AppTheme.primaryGreen,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Could not send email. Please try again later.'),
+            backgroundColor: AppTheme.accentRed,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isResending = false);
       }
     }
   }
@@ -402,6 +474,63 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
 
               if (_errorMessage != null) const SizedBox(height: 16),
+
+              // Resend Confirmation Email Button (shows after signup or confirmation-related errors)
+              if (_showResendConfirmation)
+                Container(
+                  margin: const EdgeInsets.only(bottom: 16),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryGreen.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                    border: Border.all(
+                        color: AppTheme.primaryGreen.withOpacity(0.3)),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.mark_email_read,
+                              color: AppTheme.primaryGreen, size: 24),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'Didn\'t receive the email? Check your spam folder or resend it.',
+                              style: AppTheme.bodyMedium
+                                  .copyWith(color: AppTheme.textSecondary),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed:
+                              _isResending ? null : _resendConfirmationEmail,
+                          icon: _isResending
+                              ? SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: AppTheme.primaryGreen,
+                                  ),
+                                )
+                              : Icon(Icons.send, size: 18),
+                          label: Text(_isResending
+                              ? 'Sending...'
+                              : 'Resend Confirmation Email'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppTheme.primaryGreen,
+                            side: BorderSide(color: AppTheme.primaryGreen),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
 
               // Sign In / Sign Up Button
               Center(
