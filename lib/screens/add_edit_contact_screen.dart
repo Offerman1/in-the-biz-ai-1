@@ -631,7 +631,7 @@ class _AddEditContactScreenState extends State<AddEditContactScreen> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           if (_isScanning)
-                            SizedBox(
+                            const SizedBox(
                               width: 20,
                               height: 20,
                               child: CircularProgressIndicator(
@@ -643,7 +643,7 @@ class _AddEditContactScreenState extends State<AddEditContactScreen> {
                             Stack(
                               clipBehavior: Clip.none,
                               children: [
-                                Icon(
+                                const Icon(
                                   Icons.camera_alt,
                                   color: Colors.white,
                                   size: 22,
@@ -741,7 +741,7 @@ class _AddEditContactScreenState extends State<AddEditContactScreen> {
                                   width: 3,
                                 ),
                               ),
-                              child: Icon(
+                              child: const Icon(
                                 Icons.camera_alt,
                                 size: 18,
                                 color: Colors.black,
@@ -872,7 +872,7 @@ class _AddEditContactScreenState extends State<AddEditContactScreen> {
                 ),
               ),
               child: _isSaving
-                  ? SizedBox(
+                  ? const SizedBox(
                       width: 20,
                       height: 20,
                       child: CircularProgressIndicator(
@@ -1032,7 +1032,7 @@ class _AddEditContactScreenState extends State<AddEditContactScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not open phone app')),
+          const SnackBar(content: Text('Could not open phone app')),
         );
       }
     }
@@ -1045,7 +1045,7 @@ class _AddEditContactScreenState extends State<AddEditContactScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not open email app')),
+          const SnackBar(content: Text('Could not open email app')),
         );
       }
     }
@@ -1062,7 +1062,7 @@ class _AddEditContactScreenState extends State<AddEditContactScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not open browser')),
+          const SnackBar(content: Text('Could not open browser')),
         );
       }
     }
@@ -1153,7 +1153,7 @@ class _AddEditContactScreenState extends State<AddEditContactScreen> {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
             child: DropdownButtonFormField<ContactRole>(
-              value: _selectedRole,
+              initialValue: _selectedRole,
               dropdownColor: AppTheme.cardBackground,
               decoration: InputDecoration(
                 filled: true,

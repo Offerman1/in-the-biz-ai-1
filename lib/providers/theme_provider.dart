@@ -29,7 +29,7 @@ class ThemeProvider extends ChangeNotifier {
   Color textPrimary = const Color(0xFFFFFFFF);
   Color textSecondary = const Color(0xFFB3B3B3);
   Color textMuted = const Color(0xFF666666);
-  Color accentRed = const Color(0xFF3B30);
+  Color accentRed = const Color(0x00ff3b30);
   Color accentBlue = const Color(0xFF007AFF);
   Color accentYellow = const Color(0xFFFFCC00);
   Color accentOrange = const Color(0xFFFF9500);

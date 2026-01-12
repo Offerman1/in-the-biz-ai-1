@@ -140,7 +140,7 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('✗ Failed to grant Pro access. User may not exist.'),
+            content: const Text('✗ Failed to grant Pro access. User may not exist.'),
             backgroundColor: AppTheme.dangerColor,
           ),
         );

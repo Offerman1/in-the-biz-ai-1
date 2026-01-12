@@ -71,8 +71,9 @@ enum ConfidenceLevel {
 
   static ConfidenceLevel fromScore(double score) {
     if (score >= ConfidenceLevel.high.threshold) return ConfidenceLevel.high;
-    if (score >= ConfidenceLevel.medium.threshold)
+    if (score >= ConfidenceLevel.medium.threshold) {
       return ConfidenceLevel.medium;
+    }
     return ConfidenceLevel.low;
   }
 }

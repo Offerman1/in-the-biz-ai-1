@@ -246,7 +246,7 @@ class _AddFieldPickerState extends State<AddFieldPicker> {
               Padding(
                 padding: const EdgeInsets.only(right: 8),
                 child: FilterChip(
-                  label: Text('All'),
+                  label: const Text('All'),
                   selected: _selectedCategory == null,
                   onSelected: (selected) {
                     setState(() => _selectedCategory = null);

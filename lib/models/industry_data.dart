@@ -1,5 +1,6 @@
 /// Shared industry and job role data used across onboarding and job creation screens
 /// This ensures consistency between guided flow (onboarding) and manual flow (add job)
+library;
 
 class IndustryData {
   static const List<String> industries = [

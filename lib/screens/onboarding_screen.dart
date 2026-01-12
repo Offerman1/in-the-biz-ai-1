@@ -330,7 +330,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               backgroundColor: AppTheme.darkBackground,
               title: Text(_getPageTitle(), style: AppTheme.titleLarge),
               leading: IconButton(
-                icon: Icon(Icons.close),
+                icon: const Icon(Icons.close),
                 onPressed: () => Navigator.pop(context),
               ),
             )
@@ -1871,7 +1871,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       subtitle: Text(subtitle, style: AppTheme.labelSmall),
       trailing: Switch(
         value: value,
-        activeColor: AppTheme.primaryGreen,
+        activeThumbColor: AppTheme.primaryGreen,
         onChanged: onChanged,
       ),
       dense: true,
@@ -2106,7 +2106,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
               Switch(
                 value: isEnabled,
-                activeColor: AppTheme.primaryGreen,
+                activeThumbColor: AppTheme.primaryGreen,
                 onChanged: (value) {
                   setState(() {
                     if (value) {
@@ -2136,7 +2136,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     keyboardType: TextInputType.number,
                     style: AppTheme.titleMedium
                         .copyWith(color: AppTheme.primaryGreen),
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       border: InputBorder.none,
                       hintText: '0',
                       isDense: true,

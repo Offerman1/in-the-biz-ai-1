@@ -1,6 +1,7 @@
 /// Tax Estimation Service
 /// Provides estimated tax calculations for service industry workers
 /// Note: This is for estimation only - not tax advice!
+library;
 
 class TaxEstimationService {
   // 2024 Federal Tax Brackets (Single)

@@ -249,7 +249,6 @@ class AppTheme {
           primary: primaryGreen,
           secondary: primaryGreen,
           surface: cardBackground,
-          background: darkBackground,
           error: accentRed,
         ),
         appBarTheme: AppBarTheme(

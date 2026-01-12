@@ -150,7 +150,7 @@ class _CalendarSyncScreenState extends State<CalendarSyncScreen> {
                     backgroundColor: AppTheme.primaryGreen,
                     foregroundColor: Colors.black,
                   ),
-                  child: Text('Go to Login'),
+                  child: const Text('Go to Login'),
                 ),
               ],
             ),
@@ -187,7 +187,7 @@ class _CalendarSyncScreenState extends State<CalendarSyncScreen> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content:
-                    Text('Failed to access Google Calendar. Please try again.'),
+                    const Text('Failed to access Google Calendar. Please try again.'),
                 backgroundColor: AppTheme.accentRed,
               ),
             );
@@ -222,7 +222,7 @@ class _CalendarSyncScreenState extends State<CalendarSyncScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Calendar permission is required to sync schedules'),
+            content: const Text('Calendar permission is required to sync schedules'),
             backgroundColor: AppTheme.accentRed,
           ),
         );
@@ -933,7 +933,7 @@ class _CalendarSyncScreenState extends State<CalendarSyncScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('No shifts selected'),
+            content: const Text('No shifts selected'),
             backgroundColor: AppTheme.accentRed,
           ),
         );
@@ -952,7 +952,7 @@ class _CalendarSyncScreenState extends State<CalendarSyncScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('No work shifts found'),
+            content: const Text('No work shifts found'),
             backgroundColor: AppTheme.accentRed,
           ),
         );
@@ -999,7 +999,7 @@ class _CalendarSyncScreenState extends State<CalendarSyncScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('No job mappings created'),
+              content: const Text('No job mappings created'),
               backgroundColor: AppTheme.accentRed,
             ),
           );
@@ -1578,7 +1578,7 @@ class _CalendarSyncScreenState extends State<CalendarSyncScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('No work shifts found in calendar'),
+            content: const Text('No work shifts found in calendar'),
             backgroundColor: AppTheme.accentRed,
           ),
         );
@@ -1956,7 +1956,7 @@ class _CalendarSyncScreenState extends State<CalendarSyncScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      '${displaySeconds}-second ad plays here',
+                      '$displaySeconds-second ad plays here',
                       style: AppTheme.bodyMedium.copyWith(
                         color: AppTheme.textSecondary,
                       ),

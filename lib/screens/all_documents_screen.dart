@@ -468,7 +468,7 @@ class _AllDocumentsScreenState extends State<AllDocumentsScreen> {
                   ],
                 ),
               ),
-              PopupMenuItem(
+              const PopupMenuItem(
                 value: 'delete',
                 child: Row(
                   children: [
@@ -524,14 +524,14 @@ class _AllDocumentsScreenState extends State<AllDocumentsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('Cancel'),
+            child: const Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.dangerColor,
             ),
-            child: Text('Delete'),
+            child: const Text('Delete'),
           ),
         ],
       ),
@@ -544,7 +544,7 @@ class _AllDocumentsScreenState extends State<AllDocumentsScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Document deleted'),
+              content: const Text('Document deleted'),
               backgroundColor: AppTheme.primaryGreen,
             ),
           );

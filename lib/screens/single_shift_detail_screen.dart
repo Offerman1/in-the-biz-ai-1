@@ -1025,7 +1025,7 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
       switch (sectionKey) {
         case 'earnings_section':
           widgets.add(Padding(
-            key: ValueKey('earnings_section'),
+            key: const ValueKey('earnings_section'),
             padding: const EdgeInsets.only(bottom: 20),
             child: _buildBreakdownCard(),
           ));
@@ -1033,7 +1033,7 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
 
         case 'event_details_section':
           widgets.add(Padding(
-            key: ValueKey('event_details_section'),
+            key: const ValueKey('event_details_section'),
             padding: const EdgeInsets.only(bottom: 20),
             child: _buildBEOSection(),
           ));
@@ -1041,7 +1041,7 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
 
         case 'work_details_section':
           widgets.add(Padding(
-            key: ValueKey('work_details_section'),
+            key: const ValueKey('work_details_section'),
             padding: const EdgeInsets.only(bottom: 20),
             child: _buildWorkDetailsCard(),
           ));
@@ -1049,7 +1049,7 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
 
         case 'time_section':
           widgets.add(Padding(
-            key: ValueKey('time_section'),
+            key: const ValueKey('time_section'),
             padding: const EdgeInsets.only(bottom: 20),
             child: _buildAdditionalEarningsCard(),
           ));
@@ -1057,7 +1057,7 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
 
         case 'documentation_section':
           widgets.add(Padding(
-            key: ValueKey('documentation_section'),
+            key: const ValueKey('documentation_section'),
             padding: const EdgeInsets.only(bottom: 20),
             child: _buildNotesCard(),
           ));
@@ -1066,7 +1066,7 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
         case 'photos_section':
           if (shift.imageUrl != null && shift.imageUrl!.isNotEmpty) {
             widgets.add(Padding(
-              key: ValueKey('photos_section'),
+              key: const ValueKey('photos_section'),
               padding: const EdgeInsets.only(bottom: 20),
               child: _buildPhotosCard(context),
             ));
@@ -1075,7 +1075,7 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
 
         case 'attachments_section':
           widgets.add(Padding(
-            key: ValueKey('attachments_section'),
+            key: const ValueKey('attachments_section'),
             padding: const EdgeInsets.only(bottom: 20),
             child: _buildAttachmentsCard(),
           ));
@@ -1083,7 +1083,7 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
 
         case 'event_team_section':
           widgets.add(Padding(
-            key: ValueKey('event_team_section'),
+            key: const ValueKey('event_team_section'),
             padding: const EdgeInsets.only(bottom: 20),
             child: _buildEventTeamSection(),
           ));
@@ -1092,7 +1092,7 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
         case 'checkout_section':
           if (shift.checkoutId != null) {
             widgets.add(Padding(
-              key: ValueKey('checkout_section'),
+              key: const ValueKey('checkout_section'),
               padding: const EdgeInsets.only(bottom: 20),
               child: _buildCheckoutSection(),
             ));

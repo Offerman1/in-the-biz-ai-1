@@ -1143,7 +1143,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
     return Container(
       // CRITICAL FIX: Use Container with constraints instead of SizedBox.expand
       // This prevents the duplication bug when drawer squeezes the calendar
-      constraints: BoxConstraints(
+      constraints: const BoxConstraints(
         minHeight: 40, // Minimum height to prevent complete collapse
         minWidth: 30, // Minimum width for day number
       ),
@@ -1629,7 +1629,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                               ),
                             ),
                             Text(
-                              '${totalHours.toStringAsFixed(1)}',
+                              totalHours.toStringAsFixed(1),
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 18,
@@ -2255,7 +2255,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _buildWeekStat('Income', currencyFormat.format(monthIncome)),
-              _buildWeekStat('Hours', '${monthHours.toStringAsFixed(1)}'),
+              _buildWeekStat('Hours', monthHours.toStringAsFixed(1)),
               _buildWeekStat('Shifts', '${monthShifts.length}'),
             ],
           ),
@@ -2724,7 +2724,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                               ),
                             ),
                           );
-                        }).toList(),
+                        }),
                         // "+X more" indicator
                         if (dayShifts.length > 2)
                           Padding(
@@ -3299,7 +3299,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                     ),
                   ),
                 );
-              }).toList(),
+              }),
               // "+X more" indicator
               if (dayShifts.length > 2)
                 Padding(
@@ -3404,9 +3404,9 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
 
               // Calculate card dimensions that fill the space
               // 4 rows of cards (12 months / 3 columns = 4 rows)
-              final spacing = 12.0;
-              final padding = 16.0;
-              final totalVerticalSpacing = spacing * 3; // 3 gaps between 4 rows
+              const spacing = 12.0;
+              const padding = 16.0;
+              const totalVerticalSpacing = spacing * 3; // 3 gaps between 4 rows
               final cardHeight = (constraints.maxHeight -
                       totalVerticalSpacing -
                       (padding * 2)) /

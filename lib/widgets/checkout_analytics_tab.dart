@@ -311,8 +311,8 @@ class _CheckoutAnalyticsTabState extends State<CheckoutAnalyticsTab> {
             height: 200,
             child: LineChart(
               LineChartData(
-                gridData: FlGridData(show: false),
-                titlesData: FlTitlesData(show: false),
+                gridData: const FlGridData(show: false),
+                titlesData: const FlTitlesData(show: false),
                 borderData: FlBorderData(show: false),
                 lineBarsData: [
                   // Sales line
@@ -326,7 +326,7 @@ class _CheckoutAnalyticsTabState extends State<CheckoutAnalyticsTab> {
                     isCurved: true,
                     color: AppTheme.accentBlue,
                     barWidth: 3,
-                    dotData: FlDotData(show: false),
+                    dotData: const FlDotData(show: false),
                   ),
                   // Tips line
                   LineChartBarData(
@@ -339,7 +339,7 @@ class _CheckoutAnalyticsTabState extends State<CheckoutAnalyticsTab> {
                     isCurved: true,
                     color: AppTheme.primaryGreen,
                     barWidth: 3,
-                    dotData: FlDotData(show: false),
+                    dotData: const FlDotData(show: false),
                   ),
                 ],
               ),
@@ -438,7 +438,7 @@ class _CheckoutAnalyticsTabState extends State<CheckoutAnalyticsTab> {
                 ],
               ),
             );
-          }).toList(),
+          }),
         ],
       ),
     );
@@ -503,7 +503,7 @@ class _CheckoutAnalyticsTabState extends State<CheckoutAnalyticsTab> {
                 ],
               ),
             );
-          }).toList(),
+          }),
         ],
       ),
     );

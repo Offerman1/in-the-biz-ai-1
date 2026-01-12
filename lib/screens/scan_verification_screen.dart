@@ -994,14 +994,14 @@ class _ScanVerificationScreenState extends State<ScanVerificationScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Row(
+            content: const Row(
               children: [
-                const Icon(Icons.check_circle, color: Colors.white),
-                const SizedBox(width: 12),
+                Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     'BEO saved! It will appear on your calendar.',
-                    style: const TextStyle(color: Colors.white),
+                    style: TextStyle(color: Colors.white),
                   ),
                 ),
               ],
@@ -1069,11 +1069,11 @@ class _ScanVerificationScreenState extends State<ScanVerificationScreen> {
         if (result == true) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Row(
+              content: const Row(
                 children: [
-                  const Icon(Icons.check_circle, color: Colors.white),
-                  const SizedBox(width: 12),
-                  const Expanded(
+                  Icon(Icons.check_circle, color: Colors.white),
+                  SizedBox(width: 12),
+                  Expanded(
                     child: Text(
                       'BEO saved & Shift created!',
                       style: TextStyle(color: Colors.white),
@@ -1406,7 +1406,7 @@ class _ScanVerificationScreenState extends State<ScanVerificationScreen> {
             ),
           ),
         );
-      }).toList(),
+      }),
     ];
   }
 

@@ -776,13 +776,11 @@ class DatabaseService {
         .maybeSingle();
 
     // Create if doesn't exist
-    if (response == null) {
-      response = await _supabase
+    response ??= await _supabase
           .from('user_settings')
           .insert({'user_id': userId})
           .select()
           .single();
-    }
 
     return response;
   }

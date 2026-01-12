@@ -58,7 +58,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
           try {
             final user = event.user;
-            final googleAuth = await user.authentication;
+            final googleAuth = user.authentication;
 
             if (googleAuth.idToken != null) {
               // No nonce - simpler flow
@@ -114,9 +114,9 @@ class _LoginScreenState extends State<LoginScreen> {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Signed in successfully!'),
+                content: const Text('Signed in successfully!'),
                 backgroundColor: AppTheme.primaryGreen,
-                duration: Duration(seconds: 2),
+                duration: const Duration(seconds: 2),
               ),
             );
           }
@@ -154,9 +154,9 @@ class _LoginScreenState extends State<LoginScreen> {
           });
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Check your email to confirm your account!'),
+              content: const Text('Check your email to confirm your account!'),
               backgroundColor: AppTheme.primaryGreen,
-              duration: Duration(seconds: 5),
+              duration: const Duration(seconds: 5),
             ),
           );
         }
@@ -212,7 +212,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (email.isEmpty || !email.contains('@')) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Please enter a valid email address'),
+          content: const Text('Please enter a valid email address'),
           backgroundColor: AppTheme.accentYellow,
         ),
       );
@@ -226,7 +226,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Confirmation email sent! Check your inbox.'),
+            content: const Text('Confirmation email sent! Check your inbox.'),
             backgroundColor: AppTheme.primaryGreen,
           ),
         );
@@ -235,7 +235,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Could not send email. Please try again later.'),
+            content: const Text('Could not send email. Please try again later.'),
             backgroundColor: AppTheme.accentRed,
           ),
         );
@@ -303,7 +303,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 Shadow(
                                   color: AppTheme.primaryGreen.withOpacity(0.5),
                                   blurRadius: 8,
-                                  offset: Offset(0, 2),
+                                  offset: const Offset(0, 2),
                                 ),
                               ],
                             ),
@@ -461,7 +461,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           Clipboard.setData(
                               ClipboardData(text: _errorMessage!));
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
+                            const SnackBar(
                               content: Text('Error copied to clipboard'),
                               duration: Duration(seconds: 2),
                             ),
@@ -517,7 +517,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     color: AppTheme.primaryGreen,
                                   ),
                                 )
-                              : Icon(Icons.send, size: 18),
+                              : const Icon(Icons.send, size: 18),
                           label: Text(_isResending
                               ? 'Sending...'
                               : 'Resend Confirmation Email'),
@@ -659,7 +659,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   },
                 ),
                 const SizedBox(width: 16),
-                Text(
+                const Text(
                   'Continue with Google',
                   style: TextStyle(
                     color: Colors.black87,

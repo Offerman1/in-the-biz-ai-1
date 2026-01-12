@@ -53,15 +53,15 @@ class _StatsWithCheckoutTabState extends State<StatsWithCheckoutTab>
       ),
       body: TabBarView(
         controller: _tabController,
-        children: [
+        children: const [
           // Original Stats Screen content (without AppBar)
-          const StatsScreen(),
+          StatsScreen(),
 
           // Checkout Analytics Tab
-          const CheckoutAnalyticsTab(),
+          CheckoutAnalyticsTab(),
 
           // Paychecks Tab
-          const PaychecksTab(),
+          PaychecksTab(),
         ],
       ),
     );

@@ -629,8 +629,8 @@ class _PaychecksTabState extends State<PaychecksTab> {
         Expanded(
           child: OutlinedButton.icon(
             onPressed: () => _navigateToPaycheckScanner(),
-            icon: Icon(Icons.document_scanner, size: 18),
-            label: Text('Scan Paycheck'),
+            icon: const Icon(Icons.document_scanner, size: 18),
+            label: const Text('Scan Paycheck'),
             style: OutlinedButton.styleFrom(
               foregroundColor: AppTheme.primaryGreen,
               side: BorderSide(color: AppTheme.primaryGreen.withOpacity(0.5)),
@@ -642,8 +642,8 @@ class _PaychecksTabState extends State<PaychecksTab> {
         Expanded(
           child: OutlinedButton.icon(
             onPressed: _showManualPaycheckForm,
-            icon: Icon(Icons.edit_note, size: 18),
-            label: Text('Add Manually'),
+            icon: const Icon(Icons.edit_note, size: 18),
+            label: const Text('Add Manually'),
             style: OutlinedButton.styleFrom(
               foregroundColor: AppTheme.accentBlue,
               side: BorderSide(color: AppTheme.accentBlue.withOpacity(0.5)),
@@ -675,7 +675,7 @@ class _PaychecksTabState extends State<PaychecksTab> {
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Paycheck added!'),
+                  content: const Text('Paycheck added!'),
                   backgroundColor: AppTheme.successColor,
                 ),
               );
@@ -713,7 +713,7 @@ class _PaychecksTabState extends State<PaychecksTab> {
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Paycheck scanned! Processing...'),
+                    content: const Text('Paycheck scanned! Processing...'),
                     backgroundColor: AppTheme.successColor,
                   ),
                 );
@@ -752,9 +752,9 @@ class _ManualPaycheckFormState extends State<ManualPaycheckForm> {
   final _ficaController = TextEditingController();
   final _medicareController = TextEditingController();
 
-  DateTime _payPeriodStart = DateTime.now().subtract(Duration(days: 14));
+  DateTime _payPeriodStart = DateTime.now().subtract(const Duration(days: 14));
   DateTime _payPeriodEnd = DateTime.now();
-  DateTime _payDate = DateTime.now();
+  final DateTime _payDate = DateTime.now();
 
   @override
   void dispose() {
@@ -849,8 +849,9 @@ class _ManualPaycheckFormState extends State<ManualPaycheckForm> {
                               firstDate: DateTime(2020),
                               lastDate: DateTime.now(),
                             );
-                            if (picked != null)
+                            if (picked != null) {
                               setState(() => _payPeriodStart = picked);
+                            }
                           },
                         ),
                       ),
@@ -872,8 +873,9 @@ class _ManualPaycheckFormState extends State<ManualPaycheckForm> {
                               firstDate: DateTime(2020),
                               lastDate: DateTime.now(),
                             );
-                            if (picked != null)
+                            if (picked != null) {
                               setState(() => _payPeriodEnd = picked);
+                            }
                           },
                         ),
                       ),
@@ -895,7 +897,7 @@ class _ManualPaycheckFormState extends State<ManualPaycheckForm> {
                           ),
                           style: AppTheme.bodyMedium,
                           keyboardType:
-                              TextInputType.numberWithOptions(decimal: true),
+                              const TextInputType.numberWithOptions(decimal: true),
                           validator: (v) =>
                               v?.isEmpty ?? true ? 'Required' : null,
                         ),
@@ -912,7 +914,7 @@ class _ManualPaycheckFormState extends State<ManualPaycheckForm> {
                           ),
                           style: AppTheme.bodyMedium,
                           keyboardType:
-                              TextInputType.numberWithOptions(decimal: true),
+                              const TextInputType.numberWithOptions(decimal: true),
                         ),
                       ),
                     ],
@@ -930,7 +932,7 @@ class _ManualPaycheckFormState extends State<ManualPaycheckForm> {
                     ),
                     style: AppTheme.bodyMedium,
                     keyboardType:
-                        TextInputType.numberWithOptions(decimal: true),
+                        const TextInputType.numberWithOptions(decimal: true),
                   ),
                   const SizedBox(height: 24),
 
@@ -953,7 +955,7 @@ class _ManualPaycheckFormState extends State<ManualPaycheckForm> {
                           ),
                           style: AppTheme.bodyMedium,
                           keyboardType:
-                              TextInputType.numberWithOptions(decimal: true),
+                              const TextInputType.numberWithOptions(decimal: true),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -968,7 +970,7 @@ class _ManualPaycheckFormState extends State<ManualPaycheckForm> {
                           ),
                           style: AppTheme.bodyMedium,
                           keyboardType:
-                              TextInputType.numberWithOptions(decimal: true),
+                              const TextInputType.numberWithOptions(decimal: true),
                         ),
                       ),
                     ],
@@ -987,7 +989,7 @@ class _ManualPaycheckFormState extends State<ManualPaycheckForm> {
                           ),
                           style: AppTheme.bodyMedium,
                           keyboardType:
-                              TextInputType.numberWithOptions(decimal: true),
+                              const TextInputType.numberWithOptions(decimal: true),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -1002,7 +1004,7 @@ class _ManualPaycheckFormState extends State<ManualPaycheckForm> {
                           ),
                           style: AppTheme.bodyMedium,
                           keyboardType:
-                              TextInputType.numberWithOptions(decimal: true),
+                              const TextInputType.numberWithOptions(decimal: true),
                         ),
                       ),
                     ],
@@ -1044,7 +1046,7 @@ class _ManualPaycheckFormState extends State<ManualPaycheckForm> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: Text('Save Paycheck',
+                    child: const Text('Save Paycheck',
                         style: TextStyle(
                             fontSize: 16, fontWeight: FontWeight.bold)),
                   ),

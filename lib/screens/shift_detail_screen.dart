@@ -450,7 +450,7 @@ class _ShiftDetailScreenState extends State<ShiftDetailScreen>
               pinned: true,
               backgroundColor: AppTheme.darkBackground,
               leading: IconButton(
-                icon: Icon(Icons.arrow_back_ios),
+                icon: const Icon(Icons.arrow_back_ios),
                 onPressed: () {
                   if (_hasUnsavedChanges) {
                     _showUnsavedChangesDialog();
@@ -489,7 +489,7 @@ class _ShiftDetailScreenState extends State<ShiftDetailScreen>
                     },
                   ),
                 IconButton(
-                  icon: Icon(Icons.edit_outlined),
+                  icon: const Icon(Icons.edit_outlined),
                   onPressed: () {
                     Navigator.push(
                       context,
@@ -1325,7 +1325,7 @@ class _ShiftDetailScreenState extends State<ShiftDetailScreen>
                       context, true); // Return to previous screen with result
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Shift deleted'),
+                      content: const Text('Shift deleted'),
                       backgroundColor: AppTheme.successColor,
                     ),
                   );

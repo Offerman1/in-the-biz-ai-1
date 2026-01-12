@@ -461,7 +461,7 @@ class _AssistantScreenState extends State<AssistantScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               // Use the exact same AnimatedLogo from dashboard
-              AnimatedLogo(isTablet: false),
+              const AnimatedLogo(isTablet: false),
               const SizedBox(height: 2),
               // "Personal Assistant" badge (like "TIPS AND INCOME TRACKER")
               Container(
@@ -482,7 +482,7 @@ class _AssistantScreenState extends State<AssistantScreen> {
                   ).createShader(bounds),
                   child: Text(
                     _isLoading ? 'TYPING...' : 'PERSONAL ASSISTANT',
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 9,
                       fontWeight: FontWeight.w700,

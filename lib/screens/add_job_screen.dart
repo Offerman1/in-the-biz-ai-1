@@ -362,7 +362,7 @@ class _AddJobScreenState extends State<AddJobScreen> {
     if (jobName.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Please enter a job name'),
+          content: const Text('Please enter a job name'),
           backgroundColor: AppTheme.accentRed,
         ),
       );
@@ -619,7 +619,7 @@ class _AddJobScreenState extends State<AddJobScreen> {
 
             // Industry Dropdown (SECOND)
             DropdownButtonFormField<String>(
-              value: _selectedIndustry,
+              initialValue: _selectedIndustry,
               decoration: InputDecoration(
                 hintText:
                     _selectedIndustry == null ? 'Select an industry' : null,
@@ -950,7 +950,7 @@ class _AddJobScreenState extends State<AddJobScreen> {
                       TextField(
                         controller: _tipoutPercentController,
                         keyboardType:
-                            TextInputType.numberWithOptions(decimal: true),
+                            const TextInputType.numberWithOptions(decimal: true),
                         style: AppTheme.bodyMedium,
                         decoration: InputDecoration(
                           hintText: '0',
@@ -1484,7 +1484,7 @@ class _AddJobScreenState extends State<AddJobScreen> {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: AppTheme.primaryGreen,
+            activeThumbColor: AppTheme.primaryGreen,
           ),
         ],
       ),

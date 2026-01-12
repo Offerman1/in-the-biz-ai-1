@@ -1,5 +1,6 @@
 /// Global currency and language constants for internationalization
 /// Supports top 50 currencies and languages worldwide
+library;
 
 /// Currency model with code, symbol, and display name
 class Currency {

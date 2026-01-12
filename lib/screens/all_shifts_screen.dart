@@ -45,7 +45,7 @@ class _AllShiftsScreenState extends State<AllShiftsScreen> {
 
   // Selection state
   bool _isSelectionMode = false;
-  Set<String> _selectedShiftIds = {};
+  final Set<String> _selectedShiftIds = {};
 
   // Loading states
   bool _isProcessingBulk = false;
@@ -362,7 +362,7 @@ class _AllShiftsScreenState extends State<AllShiftsScreen> {
             children: [
               Expanded(
                 child: DropdownButtonFormField<String>(
-                  value: _selectedDateFilter,
+                  initialValue: _selectedDateFilter,
                   decoration: InputDecoration(
                     filled: true,
                     fillColor: AppTheme.cardBackground,
@@ -376,8 +376,9 @@ class _AllShiftsScreenState extends State<AllShiftsScreen> {
                   dropdownColor: AppTheme.cardBackground,
                   style: AppTheme.bodyMedium,
                   onChanged: (value) {
-                    if (value != null)
+                    if (value != null) {
                       setState(() => _selectedDateFilter = value);
+                    }
                   },
                   items: _dateFilters
                       .map((filter) => DropdownMenuItem<String>(
@@ -391,7 +392,7 @@ class _AllShiftsScreenState extends State<AllShiftsScreen> {
               // Job filter
               Expanded(
                 child: DropdownButtonFormField<String?>(
-                  value: _selectedJobFilter,
+                  initialValue: _selectedJobFilter,
                   decoration: InputDecoration(
                     filled: true,
                     fillColor: AppTheme.cardBackground,
@@ -573,7 +574,7 @@ class _AllShiftsScreenState extends State<AllShiftsScreen> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.flash_on, color: Colors.white, size: 18),
+                      const Icon(Icons.flash_on, color: Colors.white, size: 18),
                       const SizedBox(width: 8),
                       Text(
                         'Actions',
@@ -583,7 +584,7 @@ class _AllShiftsScreenState extends State<AllShiftsScreen> {
                         ),
                       ),
                       const SizedBox(width: 4),
-                      Icon(Icons.arrow_drop_down,
+                      const Icon(Icons.arrow_drop_down,
                           color: Colors.white, size: 20),
                     ],
                   ),
@@ -608,7 +609,7 @@ class _AllShiftsScreenState extends State<AllShiftsScreen> {
                         Icon(Icons.download,
                             color: AppTheme.accentBlue, size: 20),
                         const SizedBox(width: 12),
-                        Text('Export'),
+                        const Text('Export'),
                       ],
                     ),
                   ),
@@ -619,7 +620,7 @@ class _AllShiftsScreenState extends State<AllShiftsScreen> {
                         Icon(Icons.work,
                             color: AppTheme.accentPurple, size: 20),
                         const SizedBox(width: 12),
-                        Text('Change Job'),
+                        const Text('Change Job'),
                       ],
                     ),
                   ),
@@ -630,7 +631,7 @@ class _AllShiftsScreenState extends State<AllShiftsScreen> {
                         Icon(Icons.calendar_today,
                             color: AppTheme.accentOrange, size: 20),
                         const SizedBox(width: 12),
-                        Text('Move Date'),
+                        const Text('Move Date'),
                       ],
                     ),
                   ),
@@ -641,7 +642,7 @@ class _AllShiftsScreenState extends State<AllShiftsScreen> {
                         Icon(Icons.attach_money,
                             color: AppTheme.primaryGreen, size: 20),
                         const SizedBox(width: 12),
-                        Text('Adjust Pay'),
+                        const Text('Adjust Pay'),
                       ],
                     ),
                   ),
@@ -1176,14 +1177,14 @@ class _AllShiftsScreenState extends State<AllShiftsScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: Text('Cancel'),
+              child: const Text('Cancel'),
             ),
             ElevatedButton(
               onPressed: () => Navigator.pop(context, true),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.dangerColor,
               ),
-              child: Text('Delete'),
+              child: const Text('Delete'),
             ),
           ],
         ),
@@ -1452,19 +1453,19 @@ class _AllShiftsScreenState extends State<AllShiftsScreen> {
                 mainAxisAlignment: pw.MainAxisAlignment.spaceAround,
                 children: [
                   pw.Column(children: [
-                    pw.Text('Total Income', style: pw.TextStyle(fontSize: 10)),
+                    pw.Text('Total Income', style: const pw.TextStyle(fontSize: 10)),
                     pw.Text('\$${totalIncome.toStringAsFixed(2)}',
                         style: pw.TextStyle(
                             fontSize: 16, fontWeight: pw.FontWeight.bold)),
                   ]),
                   pw.Column(children: [
-                    pw.Text('Total Hours', style: pw.TextStyle(fontSize: 10)),
+                    pw.Text('Total Hours', style: const pw.TextStyle(fontSize: 10)),
                     pw.Text('${totalHours.toStringAsFixed(1)}h',
                         style: pw.TextStyle(
                             fontSize: 16, fontWeight: pw.FontWeight.bold)),
                   ]),
                   pw.Column(children: [
-                    pw.Text('Total Tips', style: pw.TextStyle(fontSize: 10)),
+                    pw.Text('Total Tips', style: const pw.TextStyle(fontSize: 10)),
                     pw.Text(
                         '\$${(totalCashTips + totalCreditTips).toStringAsFixed(2)}',
                         style: pw.TextStyle(
@@ -1580,7 +1581,7 @@ class _AllShiftsScreenState extends State<AllShiftsScreen> {
                       .copyWith(fontWeight: FontWeight.w600)),
               const SizedBox(height: 8),
               DropdownButtonFormField<String?>(
-                value: newJobId,
+                initialValue: newJobId,
                 decoration: InputDecoration(
                   filled: true,
                   fillColor: AppTheme.cardBackgroundLight,
@@ -1605,7 +1606,7 @@ class _AllShiftsScreenState extends State<AllShiftsScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: Text('Cancel'),
+              child: const Text('Cancel'),
             ),
             ElevatedButton(
               onPressed:
@@ -1613,7 +1614,7 @@ class _AllShiftsScreenState extends State<AllShiftsScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.primaryGreen,
               ),
-              child: Text('Apply'),
+              child: const Text('Apply'),
             ),
           ],
         ),
@@ -1700,7 +1701,7 @@ class _AllShiftsScreenState extends State<AllShiftsScreen> {
                     setDialogState(() => newDate = picked);
                   }
                 },
-                icon: Icon(Icons.calendar_today),
+                icon: const Icon(Icons.calendar_today),
                 label: Text(
                   newDate != null
                       ? DateFormat('MMM d, yyyy').format(newDate!)
@@ -1716,7 +1717,7 @@ class _AllShiftsScreenState extends State<AllShiftsScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: Text('Cancel'),
+              child: const Text('Cancel'),
             ),
             ElevatedButton(
               onPressed:
@@ -1724,7 +1725,7 @@ class _AllShiftsScreenState extends State<AllShiftsScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.primaryGreen,
               ),
-              child: Text('Move'),
+              child: const Text('Move'),
             ),
           ],
         ),
@@ -1839,7 +1840,7 @@ class _AllShiftsScreenState extends State<AllShiftsScreen> {
               const SizedBox(height: 8),
               TextField(
                 controller: amountController,
-                keyboardType: TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 decoration: InputDecoration(
                   labelText: adjustType == 'add'
                       ? 'Amount to add (\$)'
@@ -1861,14 +1862,14 @@ class _AllShiftsScreenState extends State<AllShiftsScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: Text('Cancel'),
+              child: const Text('Cancel'),
             ),
             ElevatedButton(
               onPressed: () => Navigator.pop(context, true),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.primaryGreen,
               ),
-              child: Text('Apply'),
+              child: const Text('Apply'),
             ),
           ],
         ),

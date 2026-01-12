@@ -90,7 +90,7 @@ class BeoPdfService {
                 if (companyName != null && companyName.isNotEmpty)
                   pw.Text(
                     companyName,
-                    style: pw.TextStyle(
+                    style: const pw.TextStyle(
                       fontSize: 14,
                       color: PdfColors.grey600,
                     ),

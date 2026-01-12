@@ -33,7 +33,7 @@ class VisionScannerService {
       final file = platform.getFileForUpload(imagePaths[i]);
       final fileExt = imagePaths[i].split('.').last;
       final fileName =
-          '${userId}/${DateTime.now().millisecondsSinceEpoch}_page${i + 1}.$fileExt';
+          '$userId/${DateTime.now().millisecondsSinceEpoch}_page${i + 1}.$fileExt';
 
       // Upload to Supabase Storage
       await _supabase.storage.from(bucketName).upload(

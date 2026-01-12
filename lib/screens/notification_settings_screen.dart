@@ -189,7 +189,7 @@ class _NotificationSettingsScreenState
       child: SwitchListTile(
         value: value,
         onChanged: onChanged,
-        activeColor: AppTheme.primaryGreen,
+        activeThumbColor: AppTheme.primaryGreen,
         title: Row(
           children: [
             Container(

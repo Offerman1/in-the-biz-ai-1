@@ -738,8 +738,9 @@ ${data['period']} Summary:
   Future<Map<String, dynamic>> getInvoiceTotals(
       {String period = 'year'}) async {
     final userId = _db.supabase.auth.currentUser?.id;
-    if (userId == null)
+    if (userId == null) {
       return {'total': 0, 'count': 0, 'paid': 0, 'pending': 0};
+    }
 
     final now = DateTime.now();
     DateTime startDate;
@@ -927,7 +928,7 @@ ${data['period']} Summary:
   /// Get YTD paycheck totals
   Future<Map<String, dynamic>> getPaycheckYTDTotals() async {
     final userId = _db.supabase.auth.currentUser?.id;
-    if (userId == null)
+    if (userId == null) {
       return {
         'ytdGross': 0,
         'ytdFederalTax': 0,
@@ -937,6 +938,7 @@ ${data['period']} Summary:
         'ytdNet': 0,
         'count': 0
       };
+    }
 
     final now = DateTime.now();
     final yearStart = DateTime(now.year, 1, 1);

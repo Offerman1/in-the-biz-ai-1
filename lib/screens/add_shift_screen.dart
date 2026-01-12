@@ -1,4 +1,3 @@
-import 'dart:typed_data';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
@@ -789,7 +788,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => SettingsScreen(),
+                    builder: (_) => const SettingsScreen(),
                   ),
                 );
               },
@@ -1449,7 +1448,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
       SnackBar(
         content: Row(
           children: [
-            SizedBox(
+            const SizedBox(
               width: 20,
               height: 20,
               child: CircularProgressIndicator(
@@ -2652,7 +2651,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
       switch (sectionKey) {
         case 'time_section':
           widgets.add(Padding(
-            key: ValueKey('time_section'),
+            key: const ValueKey('time_section'),
             padding: const EdgeInsets.only(bottom: 16),
             child: _buildTimeSection(),
           ));
@@ -2661,7 +2660,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
         case 'earnings_section':
           if (_template!.showTips || _template!.showCommission) {
             widgets.add(Padding(
-              key: ValueKey('earnings_section'),
+              key: const ValueKey('earnings_section'),
               padding: const EdgeInsets.only(bottom: 16),
               child: _buildEarningsSection(),
             ));
@@ -2673,7 +2672,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
               _template!.showHostess ||
               _template!.showGuestCount) {
             widgets.add(Padding(
-              key: ValueKey('event_details_section'),
+              key: const ValueKey('event_details_section'),
               padding: const EdgeInsets.only(bottom: 16),
               child: _buildEventDetailsSection(),
             ));
@@ -2686,7 +2685,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
               _template!.showProjectName ||
               _template!.showMileage) {
             widgets.add(Padding(
-              key: ValueKey('work_details_section'),
+              key: const ValueKey('work_details_section'),
               padding: const EdgeInsets.only(bottom: 16),
               child: _buildWorkDetailsSection(),
             ));
@@ -2696,7 +2695,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
         case 'documentation_section':
           if (_template!.showNotes || _template!.showPhotos) {
             widgets.add(Padding(
-              key: ValueKey('documentation_section'),
+              key: const ValueKey('documentation_section'),
               padding: const EdgeInsets.only(bottom: 16),
               child: _buildDocumentationSection(),
             ));
@@ -2706,7 +2705,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
         case 'attachments_section':
           if (widget.existingShift != null) {
             widgets.add(Padding(
-              key: ValueKey('attachments_section'),
+              key: const ValueKey('attachments_section'),
               padding: const EdgeInsets.only(bottom: 16),
               child: _buildAttachmentsSection(),
             ));
@@ -2716,7 +2715,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
         case 'event_team_section':
           if (widget.existingShift != null) {
             widgets.add(Padding(
-              key: ValueKey('event_team_section'),
+              key: const ValueKey('event_team_section'),
               padding: const EdgeInsets.only(bottom: 16),
               child: _buildEventTeamSection(),
             ));
@@ -2726,7 +2725,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
         case 'invoices_section':
           if (_template!.showInvoices) {
             widgets.add(Padding(
-              key: ValueKey('invoices_section'),
+              key: const ValueKey('invoices_section'),
               padding: const EdgeInsets.only(bottom: 16),
               child: _buildInvoicesSection(),
             ));
@@ -2736,7 +2735,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
         case 'receipts_section':
           if (_template!.showReceipts) {
             widgets.add(Padding(
-              key: ValueKey('receipts_section'),
+              key: const ValueKey('receipts_section'),
               padding: const EdgeInsets.only(bottom: 16),
               child: _buildReceiptsSection(),
             ));
@@ -3579,7 +3578,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
             'Create multiple scheduled shifts',
             style: AppTheme.bodyMedium.copyWith(color: AppTheme.textMuted),
           ),
-          activeColor: AppTheme.primaryGreen,
+          activeThumbColor: AppTheme.primaryGreen,
         ),
 
         if (_isRecurring) ...[
@@ -3800,7 +3799,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
                         child: TextFormField(
                           controller: _tipoutPercentController,
                           keyboardType:
-                              TextInputType.numberWithOptions(decimal: true),
+                              const TextInputType.numberWithOptions(decimal: true),
                           style: AppTheme.bodyMedium,
                           decoration: InputDecoration(
                             hintText: 'Tip out % (e.g., 2.5)',
@@ -6012,7 +6011,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => PaywallScreen()),
+                  MaterialPageRoute(builder: (context) => const PaywallScreen()),
                 );
               },
             ),
@@ -6316,8 +6315,8 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
             Expanded(
               child: OutlinedButton.icon(
                 onPressed: () => _handleScanTypeSelected(ScanType.invoice),
-                icon: Icon(Icons.document_scanner, size: 18),
-                label: Text('Scan'),
+                icon: const Icon(Icons.document_scanner, size: 18),
+                label: const Text('Scan'),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppTheme.accentBlue,
                   side: BorderSide(color: AppTheme.accentBlue.withOpacity(0.5)),
@@ -6329,8 +6328,8 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
             Expanded(
               child: OutlinedButton.icon(
                 onPressed: _pickInvoiceFile,
-                icon: Icon(Icons.upload_file, size: 18),
-                label: Text('Upload'),
+                icon: const Icon(Icons.upload_file, size: 18),
+                label: const Text('Upload'),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppTheme.accentPurple,
                   side:
@@ -6343,8 +6342,8 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
             Expanded(
               child: OutlinedButton.icon(
                 onPressed: _showManualInvoiceForm,
-                icon: Icon(Icons.edit_note, size: 18),
-                label: Text('Manual'),
+                icon: const Icon(Icons.edit_note, size: 18),
+                label: const Text('Manual'),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppTheme.primaryGreen,
                   side:
@@ -6401,8 +6400,8 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
             Expanded(
               child: OutlinedButton.icon(
                 onPressed: () => _handleScanTypeSelected(ScanType.receipt),
-                icon: Icon(Icons.document_scanner, size: 18),
-                label: Text('Scan'),
+                icon: const Icon(Icons.document_scanner, size: 18),
+                label: const Text('Scan'),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppTheme.accentOrange,
                   side:
@@ -6415,8 +6414,8 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
             Expanded(
               child: OutlinedButton.icon(
                 onPressed: _pickReceiptFile,
-                icon: Icon(Icons.upload_file, size: 18),
-                label: Text('Upload'),
+                icon: const Icon(Icons.upload_file, size: 18),
+                label: const Text('Upload'),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppTheme.accentPurple,
                   side:
@@ -6429,8 +6428,8 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
             Expanded(
               child: OutlinedButton.icon(
                 onPressed: _showManualReceiptForm,
-                icon: Icon(Icons.edit_note, size: 18),
-                label: Text('Manual'),
+                icon: const Icon(Icons.edit_note, size: 18),
+                label: const Text('Manual'),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppTheme.primaryGreen,
                   side:
@@ -6488,7 +6487,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
         // Show loading
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Row(
+            content: const Row(
               children: [
                 SizedBox(
                   width: 20,
@@ -6498,7 +6497,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
                     valueColor: AlwaysStoppedAnimation(Colors.white),
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
                 Text('Uploading invoice...'),
               ],
             ),
@@ -6538,7 +6537,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Invoice uploaded! Edit to add details.'),
+              content: const Text('Invoice uploaded! Edit to add details.'),
               backgroundColor: AppTheme.successColor,
             ),
           );
@@ -6572,7 +6571,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
         // Show loading
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Row(
+            content: const Row(
               children: [
                 SizedBox(
                   width: 20,
@@ -6582,7 +6581,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
                     valueColor: AlwaysStoppedAnimation(Colors.white),
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
                 Text('Uploading receipt...'),
               ],
             ),
@@ -6622,7 +6621,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Receipt uploaded! Edit to add details.'),
+              content: const Text('Receipt uploaded! Edit to add details.'),
               backgroundColor: AppTheme.successColor,
             ),
           );
@@ -6674,7 +6673,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Invoice added!'),
+                  content: const Text('Invoice added!'),
                   backgroundColor: AppTheme.successColor,
                 ),
               );
@@ -6712,7 +6711,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Receipt added!'),
+                  content: const Text('Receipt added!'),
                   backgroundColor: AppTheme.successColor,
                 ),
               );
@@ -6857,7 +6856,7 @@ class _ManualInvoiceFormState extends State<_ManualInvoiceForm> {
                     ),
                     style: AppTheme.bodyMedium,
                     keyboardType:
-                        TextInputType.numberWithOptions(decimal: true),
+                        const TextInputType.numberWithOptions(decimal: true),
                     validator: (v) => v?.isEmpty ?? true ? 'Required' : null,
                   ),
                   const SizedBox(height: 16),
@@ -6911,7 +6910,7 @@ class _ManualInvoiceFormState extends State<_ManualInvoiceForm> {
                       final picked = await showDatePicker(
                         context: context,
                         initialDate:
-                            _dueDate ?? DateTime.now().add(Duration(days: 30)),
+                            _dueDate ?? DateTime.now().add(const Duration(days: 30)),
                         firstDate: DateTime(2020),
                         lastDate: DateTime(2030),
                       );
@@ -6921,13 +6920,13 @@ class _ManualInvoiceFormState extends State<_ManualInvoiceForm> {
                   const SizedBox(height: 16),
                   // Status
                   DropdownButtonFormField<String>(
-                    value: _status,
+                    initialValue: _status,
                     decoration: InputDecoration(
                       labelText: 'Status',
                       prefixIcon:
                           Icon(Icons.flag, color: AppTheme.accentPurple),
                     ),
-                    items: [
+                    items: const [
                       DropdownMenuItem(value: 'draft', child: Text('Draft')),
                       DropdownMenuItem(value: 'sent', child: Text('Sent')),
                       DropdownMenuItem(value: 'paid', child: Text('Paid')),
@@ -6962,7 +6961,7 @@ class _ManualInvoiceFormState extends State<_ManualInvoiceForm> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: Text('Save Invoice',
+                    child: const Text('Save Invoice',
                         style: TextStyle(
                             fontSize: 16, fontWeight: FontWeight.bold)),
                   ),
@@ -7086,7 +7085,7 @@ class _ManualReceiptFormState extends State<_ManualReceiptForm> {
                     ),
                     style: AppTheme.bodyMedium,
                     keyboardType:
-                        TextInputType.numberWithOptions(decimal: true),
+                        const TextInputType.numberWithOptions(decimal: true),
                     validator: (v) => v?.isEmpty ?? true ? 'Required' : null,
                   ),
                   const SizedBox(height: 16),
@@ -7101,12 +7100,12 @@ class _ManualReceiptFormState extends State<_ManualReceiptForm> {
                     ),
                     style: AppTheme.bodyMedium,
                     keyboardType:
-                        TextInputType.numberWithOptions(decimal: true),
+                        const TextInputType.numberWithOptions(decimal: true),
                   ),
                   const SizedBox(height: 16),
                   // Expense Category
                   DropdownButtonFormField<String>(
-                    value: _expenseCategory,
+                    initialValue: _expenseCategory,
                     decoration: InputDecoration(
                       labelText: 'Expense Category',
                       prefixIcon:
@@ -7124,13 +7123,13 @@ class _ManualReceiptFormState extends State<_ManualReceiptForm> {
                   const SizedBox(height: 16),
                   // Payment Method
                   DropdownButtonFormField<String>(
-                    value: _paymentMethod,
+                    initialValue: _paymentMethod,
                     decoration: InputDecoration(
                       labelText: 'Payment Method',
                       prefixIcon:
                           Icon(Icons.payment, color: AppTheme.accentBlue),
                     ),
-                    items: [
+                    items: const [
                       DropdownMenuItem(value: 'cash', child: Text('Cash')),
                       DropdownMenuItem(
                           value: 'credit_card', child: Text('Credit Card')),
@@ -7178,7 +7177,7 @@ class _ManualReceiptFormState extends State<_ManualReceiptForm> {
                     ),
                     value: _isTaxDeductible,
                     onChanged: (v) => setState(() => _isTaxDeductible = v),
-                    activeColor: AppTheme.primaryGreen,
+                    activeThumbColor: AppTheme.primaryGreen,
                   ),
                   const SizedBox(height: 16),
                   // Notes
@@ -7219,7 +7218,7 @@ class _ManualReceiptFormState extends State<_ManualReceiptForm> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: Text('Save Receipt',
+                    child: const Text('Save Receipt',
                         style: TextStyle(
                             fontSize: 16, fontWeight: FontWeight.bold)),
                   ),

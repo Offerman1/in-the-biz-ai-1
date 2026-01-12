@@ -102,7 +102,7 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen> {
       appBar: AppBar(
         backgroundColor: Colors.black,
         leading: IconButton(
-          icon: Icon(Icons.close, color: Colors.white),
+          icon: const Icon(Icons.close, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -122,7 +122,7 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen> {
                         color: Colors.white,
                       ),
                     )
-                  : Icon(Icons.delete_outline, color: Colors.white),
+                  : const Icon(Icons.delete_outline, color: Colors.white),
               onPressed: _isDeleting ? null : _deletePhoto,
             ),
         ],

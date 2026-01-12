@@ -1,5 +1,6 @@
 /// Represents a contact/vendor associated with events
 /// Can be linked to a specific shift or be a general directory contact
+library;
 
 enum ContactRole {
   dj,

@@ -254,7 +254,7 @@ class _MergeJobsScreenState extends State<MergeJobsScreen> {
                                         ? _showMergeDialog
                                         : null,
                                 icon: _isMerging
-                                    ? SizedBox(
+                                    ? const SizedBox(
                                         width: 20,
                                         height: 20,
                                         child: CircularProgressIndicator(
@@ -589,7 +589,7 @@ class _MergeJobDialogState extends State<_MergeJobDialog> {
             if (_nameController.text.trim().isEmpty) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Please enter a job name'),
+                  content: const Text('Please enter a job name'),
                   backgroundColor: AppTheme.accentRed,
                 ),
               );

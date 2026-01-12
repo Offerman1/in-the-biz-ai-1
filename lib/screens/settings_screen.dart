@@ -255,7 +255,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Navigator.pop(context);
                 },
               );
-            }).toList(),
+            }),
             const SizedBox(height: 16),
           ],
         ),
@@ -370,7 +370,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (activeJobs.length < 2) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('You need at least 2 jobs to merge'),
+          content: const Text('You need at least 2 jobs to merge'),
           backgroundColor: AppTheme.accentYellow,
         ),
       );
@@ -441,7 +441,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     .copyWith(color: AppTheme.adaptiveTextColor)),
             actions: [
               IconButton(
-                icon: Icon(Icons.refresh),
+                icon: const Icon(Icons.refresh),
                 tooltip: 'Refresh Data',
                 onPressed: () async {
                   setState(() => _isLoading = true);
@@ -457,9 +457,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Data refreshed'),
+                        content: const Text('Data refreshed'),
                         backgroundColor: AppTheme.primaryGreen,
-                        duration: Duration(seconds: 2),
+                        duration: const Duration(seconds: 2),
                       ),
                     );
                   }
@@ -480,7 +480,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               unselectedLabelStyle: AppTheme.labelSmall.copyWith(
                 fontSize: 11,
               ),
-              tabs: [
+              tabs: const [
                 Tab(icon: Icon(Icons.settings, size: 16), text: 'General'),
                 Tab(icon: Icon(Icons.work, size: 16), text: 'Jobs & Data'),
                 Tab(
@@ -732,7 +732,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   // All Jobs chip (always visible)
                   FilterChip(
                     selected: _selectedTaxJobId == null,
-                    label: Text('All Jobs'),
+                    label: const Text('All Jobs'),
                     onSelected: (selected) {
                       setState(() {
                         _selectedTaxJobId = null;
@@ -961,15 +961,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
         ),
-        child: Row(
+        child: const Row(
           children: [
-            const Icon(Icons.star, color: Colors.white, size: 32),
-            const SizedBox(width: 16),
+            Icon(Icons.star, color: Colors.white, size: 32),
+            SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Upgrade to Pro',
                     style: TextStyle(
                       color: Colors.white,
@@ -977,8 +977,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  const Text(
+                  SizedBox(height: 4),
+                  Text(
                     'Remove ads, unlimited AI, and more!',
                     style: TextStyle(
                       color: Colors.white,
@@ -988,7 +988,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ],
               ),
             ),
-            const Icon(Icons.arrow_forward_ios, color: Colors.white, size: 16),
+            Icon(Icons.arrow_forward_ios, color: Colors.white, size: 16),
           ],
         ),
       ),
@@ -2273,7 +2273,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Could not open link'),
+            content: const Text('Could not open link'),
             backgroundColor: AppTheme.accentRed,
           ),
         );
@@ -2845,7 +2845,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 backgroundColor: AppTheme.dangerColor,
                 foregroundColor: Colors.white,
               ),
-              child: Text('Delete Forever'),
+              child: const Text('Delete Forever'),
             ),
           ],
         ),
@@ -2912,7 +2912,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (deletedJobs.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('No archived jobs to restore'),
+            content: const Text('No archived jobs to restore'),
             backgroundColor: AppTheme.textMuted,
           ),
         );
@@ -2983,10 +2983,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         }
                       }
                     },
-                    child: Text('Restore', style: AppTheme.bodyMedium),
                     style: TextButton.styleFrom(
                       foregroundColor: AppTheme.primaryGreen,
                     ),
+                    child: Text('Restore', style: AppTheme.bodyMedium),
                   ),
                 );
               },
@@ -3029,7 +3029,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           if (calendarTitles.isEmpty) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('No calendar shifts found to group'),
+                content: const Text('No calendar shifts found to group'),
                 backgroundColor: AppTheme.accentYellow,
               ),
             );
@@ -3053,7 +3053,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Job groups saved successfully'),
+                content: const Text('Job groups saved successfully'),
                 backgroundColor: AppTheme.primaryGreen,
               ),
             );
@@ -3106,7 +3106,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             trailing: Switch(
               value: _isAutoSyncEnabled,
-              activeColor: AppTheme.primaryGreen,
+              activeThumbColor: AppTheme.primaryGreen,
               onChanged: _setAutoSyncPreference,
             ),
           ),
@@ -3135,7 +3135,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   if (result == true && mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text(kIsWeb
+                        content: const Text(kIsWeb
                             ? 'Shifts synced to Google Calendar'
                             : 'Shifts synced to calendar'),
                         backgroundColor: AppTheme.primaryGreen,
@@ -3214,7 +3214,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   if (result == true && mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text(kIsWeb
+                        content: const Text(kIsWeb
                             ? 'Events removed from Google Calendar'
                             : 'Events removed from calendar'),
                         backgroundColor: AppTheme.accentOrange,
@@ -3670,7 +3670,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           children: [
             TextField(
               controller: codeController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Authorization Code',
                 hintText: 'Paste code from QuickBooks',
                 border: OutlineInputBorder(),
@@ -3680,7 +3680,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 16),
             TextField(
               controller: realmIdController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Realm ID (Company ID)',
                 hintText: 'Found in URL after authorization',
                 border: OutlineInputBorder(),
@@ -3849,7 +3849,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         onTap: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => AdminPanelScreen()),
+            MaterialPageRoute(builder: (context) => const AdminPanelScreen()),
           );
         },
       ),
@@ -3900,7 +3900,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   );
                 }
               },
-              activeColor: AppTheme.accentOrange,
+              activeThumbColor: AppTheme.accentOrange,
             ),
           ),
         );

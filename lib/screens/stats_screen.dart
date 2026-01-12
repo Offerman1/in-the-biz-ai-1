@@ -304,17 +304,17 @@ class _StatsScreenState extends State<StatsScreen> {
                               },
                             ),
                           ),
-                          leftTitles: AxisTitles(
+                          leftTitles: const AxisTitles(
                             sideTitles: SideTitles(showTitles: false),
                           ),
-                          topTitles: AxisTitles(
+                          topTitles: const AxisTitles(
                             sideTitles: SideTitles(showTitles: false),
                           ),
-                          rightTitles: AxisTitles(
+                          rightTitles: const AxisTitles(
                             sideTitles: SideTitles(showTitles: false),
                           ),
                         ),
-                        gridData: FlGridData(show: false),
+                        gridData: const FlGridData(show: false),
                         borderData: FlBorderData(show: false),
                         barGroups: List.generate(4, (index) {
                           final week = index + 1;
@@ -535,7 +535,7 @@ class _StatsScreenState extends State<StatsScreen> {
                   Divider(color: AppTheme.cardBackgroundLight, height: 24),
                   _buildAllTimeStat(
                     'Total Hours',
-                    '${shifts.fold(0.0, (sum, s) => sum + s.hoursWorked).toStringAsFixed(0)}',
+                    shifts.fold(0.0, (sum, s) => sum + s.hoursWorked).toStringAsFixed(0),
                     Icons.schedule_outlined,
                   ),
                 ],
@@ -631,9 +631,9 @@ class _StatsScreenState extends State<StatsScreen> {
               },
             ),
           ),
-          leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
         ),
         borderData: FlBorderData(show: false),
         lineBarsData: [
@@ -1374,8 +1374,8 @@ class _StatsScreenState extends State<StatsScreen> {
           const SizedBox(height: 12),
           TextButton.icon(
             onPressed: () {},
-            icon: Icon(Icons.add, size: 16),
-            label: Text('Set Goals'),
+            icon: const Icon(Icons.add, size: 16),
+            label: const Text('Set Goals'),
             style: TextButton.styleFrom(foregroundColor: AppTheme.primaryGreen),
           ),
         ],

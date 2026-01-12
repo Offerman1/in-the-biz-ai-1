@@ -530,10 +530,10 @@ class _HomeScreenState extends State<_HomeScreen> {
                                         ScaffoldMessenger.of(context)
                                             .showSnackBar(
                                           SnackBar(
-                                            content: Text('Data refreshed'),
+                                            content: const Text('Data refreshed'),
                                             backgroundColor:
                                                 AppTheme.primaryGreen,
-                                            duration: Duration(seconds: 2),
+                                            duration: const Duration(seconds: 2),
                                           ),
                                         );
                                       }
@@ -631,7 +631,7 @@ class _HomeScreenState extends State<_HomeScreen> {
                                               color: AppTheme.primaryGreen,
                                               size: 16)
                                         else
-                                          SizedBox(width: 16),
+                                          const SizedBox(width: 16),
                                         const SizedBox(width: 8),
                                         Text(
                                           jobName,
@@ -725,7 +725,7 @@ class _HomeScreenState extends State<_HomeScreen> {
                             child: LinearProgressIndicator(
                               value: goalPercent,
                               backgroundColor: Colors.transparent,
-                              valueColor: AlwaysStoppedAnimation<Color>(
+                              valueColor: const AlwaysStoppedAnimation<Color>(
                                 Colors.transparent,
                               ),
                               minHeight: 32,
@@ -770,7 +770,7 @@ class _HomeScreenState extends State<_HomeScreen> {
                                       Shadow(
                                         color: Colors.black.withOpacity(0.3),
                                         blurRadius: 2,
-                                        offset: Offset(0, 1),
+                                        offset: const Offset(0, 1),
                                       ),
                                     ],
                                   ),
@@ -786,7 +786,7 @@ class _HomeScreenState extends State<_HomeScreen> {
                                       Shadow(
                                         color: Colors.black.withOpacity(0.3),
                                         blurRadius: 2,
-                                        offset: Offset(0, 1),
+                                        offset: const Offset(0, 1),
                                       ),
                                     ],
                                   ),
@@ -909,7 +909,7 @@ class _HomeScreenState extends State<_HomeScreen> {
                 Expanded(
                   child: _buildQuickStatCard(
                     'Hours',
-                    '${periodShifts.fold(0.0, (sum, s) => sum + s.hoursWorked).toStringAsFixed(0)}',
+                    periodShifts.fold(0.0, (sum, s) => sum + s.hoursWorked).toStringAsFixed(0),
                     Icons.schedule_outlined,
                   ),
                 ),

@@ -67,17 +67,13 @@ class AuthService {
         serverClientId: _webClientId,
       );
 
-      final GoogleSignInAccount? googleUser =
+      final GoogleSignInAccount googleUser =
           await GoogleSignIn.instance.authenticate();
 
-      if (googleUser == null) {
-        throw Exception('Google sign-in was cancelled');
-      }
+      final GoogleSignInAuthentication googleAuth =
+          googleUser.authentication;
 
-      final GoogleSignInAuthentication? googleAuth =
-          await googleUser.authentication;
-
-      if (googleAuth?.idToken == null) {
+      if (googleAuth.idToken == null) {
         throw Exception('Failed to get Google ID token');
       }
 
@@ -86,7 +82,7 @@ class AuthService {
       try {
         final response = await _supabase.auth.signInWithIdToken(
           provider: OAuthProvider.google,
-          idToken: googleAuth!.idToken!,
+          idToken: googleAuth.idToken!,
         );
         return response;
       } catch (e) {
