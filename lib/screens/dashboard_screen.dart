@@ -38,8 +38,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void initState() {
     super.initState();
     _selectedIndex = widget.initialIndex;
-    Future.microtask(
-        () => Provider.of<ShiftProvider>(context, listen: false).loadShifts());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      Provider.of<ShiftProvider>(context, listen: false).loadShifts();
+    });
   }
 
   final List<Widget> _screens = [
@@ -473,7 +475,8 @@ class _HomeScreenState extends State<_HomeScreen> {
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 6, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: AppTheme.textPrimary.withValues(alpha: 0.1),
+                                  color: AppTheme.textPrimary
+                                      .withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: ShaderMask(
@@ -530,10 +533,12 @@ class _HomeScreenState extends State<_HomeScreen> {
                                         ScaffoldMessenger.of(context)
                                             .showSnackBar(
                                           SnackBar(
-                                            content: const Text('Data refreshed'),
+                                            content:
+                                                const Text('Data refreshed'),
                                             backgroundColor:
                                                 AppTheme.primaryGreen,
-                                            duration: const Duration(seconds: 2),
+                                            duration:
+                                                const Duration(seconds: 2),
                                           ),
                                         );
                                       }
@@ -713,10 +718,12 @@ class _HomeScreenState extends State<_HomeScreen> {
                         Container(
                           height: 32,
                           decoration: BoxDecoration(
-                            color: AppTheme.primaryGreen.withValues(alpha: 0.25),
+                            color:
+                                AppTheme.primaryGreen.withValues(alpha: 0.25),
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                              color: AppTheme.primaryGreen.withValues(alpha: 0.4),
+                              color:
+                                  AppTheme.primaryGreen.withValues(alpha: 0.4),
                               width: 1,
                             ),
                           ),
@@ -768,7 +775,8 @@ class _HomeScreenState extends State<_HomeScreen> {
                                     fontWeight: FontWeight.w700,
                                     shadows: [
                                       Shadow(
-                                        color: Colors.black.withValues(alpha: 0.3),
+                                        color:
+                                            Colors.black.withValues(alpha: 0.3),
                                         blurRadius: 2,
                                         offset: const Offset(0, 1),
                                       ),
@@ -784,7 +792,8 @@ class _HomeScreenState extends State<_HomeScreen> {
                                     fontWeight: FontWeight.w700,
                                     shadows: [
                                       Shadow(
-                                        color: Colors.black.withValues(alpha: 0.3),
+                                        color:
+                                            Colors.black.withValues(alpha: 0.3),
                                         blurRadius: 2,
                                         offset: const Offset(0, 1),
                                       ),
@@ -830,12 +839,16 @@ class _HomeScreenState extends State<_HomeScreen> {
                             gradient: LinearGradient(
                               colors: percentChange >= 0
                                   ? [
-                                      AppTheme.primaryGreen.withValues(alpha: 0.25),
-                                      AppTheme.primaryGreen.withValues(alpha: 0.15),
+                                      AppTheme.primaryGreen
+                                          .withValues(alpha: 0.25),
+                                      AppTheme.primaryGreen
+                                          .withValues(alpha: 0.15),
                                     ]
                                   : [
-                                      AppTheme.accentRed.withValues(alpha: 0.25),
-                                      AppTheme.accentRed.withValues(alpha: 0.15),
+                                      AppTheme.accentRed
+                                          .withValues(alpha: 0.25),
+                                      AppTheme.accentRed
+                                          .withValues(alpha: 0.15),
                                     ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
@@ -872,7 +885,8 @@ class _HomeScreenState extends State<_HomeScreen> {
                                   fontWeight: FontWeight.w700,
                                   shadows: [
                                     Shadow(
-                                      color: Colors.black.withValues(alpha: 0.3),
+                                      color:
+                                          Colors.black.withValues(alpha: 0.3),
                                       blurRadius: 2,
                                       offset: const Offset(0, 1),
                                     ),
@@ -909,7 +923,9 @@ class _HomeScreenState extends State<_HomeScreen> {
                 Expanded(
                   child: _buildQuickStatCard(
                     'Hours',
-                    periodShifts.fold(0.0, (sum, s) => sum + s.hoursWorked).toStringAsFixed(0),
+                    periodShifts
+                        .fold(0.0, (sum, s) => sum + s.hoursWorked)
+                        .toStringAsFixed(0),
                     Icons.schedule_outlined,
                   ),
                 ),
@@ -1350,12 +1366,12 @@ class _HomeScreenState extends State<_HomeScreen> {
                                   vertical: 2,
                                 ),
                                 decoration: BoxDecoration(
-                                  color:
-                                      AppTheme.accentPurple.withValues(alpha: 0.15),
+                                  color: AppTheme.accentPurple
+                                      .withValues(alpha: 0.15),
                                   borderRadius: BorderRadius.circular(4),
                                   border: Border.all(
-                                    color:
-                                        AppTheme.accentPurple.withValues(alpha: 0.3),
+                                    color: AppTheme.accentPurple
+                                        .withValues(alpha: 0.3),
                                     width: 0.5,
                                   ),
                                 ),
@@ -1416,10 +1432,12 @@ class _HomeScreenState extends State<_HomeScreen> {
                                   vertical: 2,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: AppTheme.accentBlue.withValues(alpha: 0.15),
+                                  color: AppTheme.accentBlue
+                                      .withValues(alpha: 0.15),
                                   borderRadius: BorderRadius.circular(4),
                                   border: Border.all(
-                                    color: AppTheme.accentBlue.withValues(alpha: 0.3),
+                                    color: AppTheme.accentBlue
+                                        .withValues(alpha: 0.3),
                                     width: 0.5,
                                   ),
                                 ),

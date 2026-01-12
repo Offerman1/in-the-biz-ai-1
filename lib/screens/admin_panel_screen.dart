@@ -140,7 +140,8 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('✗ Failed to grant Pro access. User may not exist.'),
+            content:
+                const Text('✗ Failed to grant Pro access. User may not exist.'),
             backgroundColor: AppTheme.dangerColor,
           ),
         );
@@ -190,25 +191,24 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
       }
     }
 
-    if (mounted) {
-      await _loadProUsers();
+    if (!mounted) return;
+    await _loadProUsers();
 
-      if (failCount == 0) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-                '✓ Successfully updated Pro access for $successCount user(s)'),
-            backgroundColor: AppTheme.successColor,
-          ),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('⚠ Updated $successCount user(s), $failCount failed'),
-            backgroundColor: AppTheme.accentOrange,
-          ),
-        );
-      }
+    if (failCount == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+              '✓ Successfully updated Pro access for $successCount user(s)'),
+          backgroundColor: AppTheme.successColor,
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('⚠ Updated $successCount user(s), $failCount failed'),
+          backgroundColor: AppTheme.accentOrange,
+        ),
+      );
     }
   }
 
@@ -405,7 +405,8 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                             side: BorderSide(
                               color: !_showUserList
                                   ? AppTheme.primaryGreen
-                                  : AppTheme.textSecondary.withValues(alpha: 0.3),
+                                  : AppTheme.textSecondary
+                                      .withValues(alpha: 0.3),
                               width: !_showUserList ? 2 : 1,
                             ),
                           ),
@@ -442,7 +443,8 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                             side: BorderSide(
                               color: _showUserList
                                   ? AppTheme.primaryGreen
-                                  : AppTheme.textSecondary.withValues(alpha: 0.3),
+                                  : AppTheme.textSecondary
+                                      .withValues(alpha: 0.3),
                               width: _showUserList ? 2 : 1,
                             ),
                           ),
@@ -794,7 +796,8 @@ class _AdminPanelScreenState extends State<AdminPanelScreen> {
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: AppTheme.primaryGreen.withValues(alpha: 0.15),
+                            color:
+                                AppTheme.primaryGreen.withValues(alpha: 0.15),
                             shape: BoxShape.circle,
                           ),
                           child: Icon(Icons.star,

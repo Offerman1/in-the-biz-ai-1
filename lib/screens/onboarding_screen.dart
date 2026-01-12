@@ -662,6 +662,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         final file = result.files.first;
 
         // Show loading dialog
+        if (!mounted) return;
         showDialog(
           context: context,
           barrierDismissible: false,

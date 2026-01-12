@@ -342,6 +342,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     if (choice == 'onboarding') {
       // Use guided onboarding
+      if (!mounted) return;
       final result = await Navigator.push<bool>(
         context,
         MaterialPageRoute(
@@ -353,6 +354,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       }
     } else {
       // Use quick add
+      if (!mounted) return;
       final result = await Navigator.push<Job>(
         context,
         MaterialPageRoute(builder: (context) => const AddJobScreen()),
@@ -764,7 +766,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         _calculateTax();
                       },
                       backgroundColor: AppTheme.cardBackgroundLight,
-                      selectedColor: AppTheme.primaryGreen.withValues(alpha: 0.2),
+                      selectedColor:
+                          AppTheme.primaryGreen.withValues(alpha: 0.2),
                       checkmarkColor: AppTheme.primaryGreen,
                       labelStyle: AppTheme.bodyMedium.copyWith(
                         color: _selectedTaxJobId == activeJobs[0]['id']
@@ -1313,7 +1316,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
             border: isDefault
                 ? Border.all(
-                    color: AppTheme.primaryGreen.withValues(alpha: 0.5), width: 2)
+                    color: AppTheme.primaryGreen.withValues(alpha: 0.5),
+                    width: 2)
                 : null,
           ),
           child: Material(
@@ -1350,8 +1354,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 6, vertical: 2),
                                   decoration: BoxDecoration(
-                                    color:
-                                        AppTheme.primaryGreen.withValues(alpha: 0.2),
+                                    color: AppTheme.primaryGreen
+                                        .withValues(alpha: 0.2),
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: Row(
@@ -2784,8 +2788,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 decoration: BoxDecoration(
                   color: AppTheme.dangerColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
-                  border:
-                      Border.all(color: AppTheme.dangerColor.withValues(alpha: 0.3)),
+                  border: Border.all(
+                      color: AppTheme.dangerColor.withValues(alpha: 0.3)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

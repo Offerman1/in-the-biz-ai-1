@@ -425,6 +425,7 @@ class _GroupNamingDialogState extends State<_GroupNamingDialog> {
 
       final jobData = await db.createJob(job);
 
+      if (!mounted) return;
       Navigator.of(context).pop({
         'name': _nameController.text.trim(),
         'job': jobData,

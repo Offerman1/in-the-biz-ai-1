@@ -368,6 +368,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
 
                           setState(() => _isSyncing = false);
 
+                          if (!mounted) return;
                           if (newShiftsCount > 0) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
@@ -519,6 +520,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
 
                             setState(() => _isSyncing = false);
 
+                            if (!mounted) return;
                             if (newShiftsCount > 0) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(

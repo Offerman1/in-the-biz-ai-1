@@ -401,6 +401,7 @@ class _AssistantScreenState extends State<AssistantScreen> {
         );
 
         // Refresh shifts
+        if (!mounted) return;
         final shiftProvider =
             Provider.of<ShiftProvider>(context, listen: false);
         await shiftProvider.loadShifts();
@@ -596,7 +597,8 @@ class _AssistantScreenState extends State<AssistantScreen> {
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: AppTheme.primaryGreen.withValues(alpha: 0.3),
+                              color:
+                                  AppTheme.primaryGreen.withValues(alpha: 0.3),
                               blurRadius: 8,
                               offset: const Offset(0, 2),
                             ),
@@ -615,7 +617,8 @@ class _AssistantScreenState extends State<AssistantScreen> {
                     Expanded(
                       child: Container(
                         decoration: BoxDecoration(
-                          color: AppTheme.cardBackgroundLight.withValues(alpha: 0.9),
+                          color: AppTheme.cardBackgroundLight
+                              .withValues(alpha: 0.9),
                           borderRadius: BorderRadius.circular(24),
                           boxShadow: [
                             BoxShadow(
@@ -655,15 +658,16 @@ class _AssistantScreenState extends State<AssistantScreen> {
                         decoration: BoxDecoration(
                           gradient: _isLoading ? null : AppTheme.greenGradient,
                           color: _isLoading
-                              ? AppTheme.cardBackgroundLight.withValues(alpha: 0.9)
+                              ? AppTheme.cardBackgroundLight
+                                  .withValues(alpha: 0.9)
                               : null,
                           shape: BoxShape.circle,
                           boxShadow: _isLoading
                               ? []
                               : [
                                   BoxShadow(
-                                    color:
-                                        AppTheme.primaryGreen.withValues(alpha: 0.3),
+                                    color: AppTheme.primaryGreen
+                                        .withValues(alpha: 0.3),
                                     blurRadius: 8,
                                     offset: const Offset(0, 2),
                                   ),
