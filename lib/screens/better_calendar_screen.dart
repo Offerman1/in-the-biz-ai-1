@@ -40,6 +40,15 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
   // Scroll controller for month list view
   final ScrollController _monthListScrollController = ScrollController();
 
+  // Pinch-to-zoom state for calendar
+  // We use a simple approach: track scale and a single translation offset
+  double _calendarScale = 1.0;
+  double _baseScale = 1.0;
+  Offset _offset = Offset.zero; // Current translation offset
+  Offset _baseOffset = Offset.zero; // Offset at gesture start
+  Offset _startFocalPoint = Offset.zero; // Focal point when gesture started
+  bool _isZooming = false; // Track if this is a zoom gesture (2+ fingers)
+
   // Filter state
   String? _selectedJobId; // null = All Jobs
   String _moneyDisplayMode = MoneyDisplayMode.takeHomePay.name; // Default
@@ -51,6 +60,18 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
   bool _isSyncing = false;
 
   final currencyFormat = NumberFormat.currency(symbol: '\$', decimalDigits: 0);
+
+  /// Reset zoom to default (1x) and focal point to center
+  void _resetZoom() {
+    setState(() {
+      _calendarScale = 1.0;
+      _baseScale = 1.0;
+      _offset = Offset.zero;
+      _baseOffset = Offset.zero;
+      _startFocalPoint = Offset.zero;
+      _isZooming = false;
+    });
+  }
 
   @override
   void dispose() {
@@ -579,6 +600,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
     return Expanded(
       child: GestureDetector(
         onTap: () {
+          _resetZoom(); // Reset zoom when changing view mode
           setState(() {
             _viewMode = mode;
             _isDrawerExpanded = false;
@@ -692,7 +714,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _buildWeekStat('Income', currencyFormat.format(monthIncome)),
-              _buildWeekStat('Hours', '${monthHours.toStringAsFixed(1)}h'),
+              _buildWeekStat('Hours', monthHours.toStringAsFixed(1)),
               _buildWeekStat('Shifts', '${monthShifts.length}'),
             ],
           ),
@@ -727,113 +749,229 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                     // Calculate row height to fill space naturally (no clamps)
                     final dynamicRowHeight = availableHeight / numberOfWeeks;
 
-                    return Container(
-                      color: AppTheme.darkBackground,
-                      child: OverflowBox(
-                        alignment: Alignment.topCenter,
-                        maxHeight: double.infinity,
-                        child: ClipRect(
-                          child: TableCalendar(
-                            firstDay: DateTime(2020),
-                            lastDay: DateTime(2030),
-                            focusedDay: _focusedDay,
-                            selectedDayPredicate: (day) =>
-                                isSameDay(_selectedDay, day),
-                            calendarFormat: CalendarFormat.month,
-                            startingDayOfWeek: StartingDayOfWeek.sunday,
-                            headerVisible: false,
-                            sixWeekMonthsEnforced:
-                                false, // Only show needed rows
-                            rowHeight: dynamicRowHeight,
-                            daysOfWeekHeight: 40,
-                            daysOfWeekStyle: DaysOfWeekStyle(
-                              weekdayStyle: AppTheme.labelLarge,
-                              weekendStyle: AppTheme.labelLarge,
-                            ),
-                            calendarStyle: CalendarStyle(
-                              cellMargin: const EdgeInsets.all(2),
-                              cellPadding: EdgeInsets.zero,
-                              defaultDecoration: BoxDecoration(
-                                color: AppTheme.cardBackground,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              selectedDecoration: BoxDecoration(
-                                color: AppTheme.primaryGreen,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              todayDecoration: BoxDecoration(
-                                color: AppTheme.primaryGreen.withOpacity(0.3),
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                    color: AppTheme.primaryGreen, width: 2),
-                              ),
-                              outsideDecoration: BoxDecoration(
-                                color: AppTheme.darkBackground,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                            calendarBuilders: CalendarBuilders(
-                              defaultBuilder: (context, day, focusedDay) {
-                                return _buildDayCell(day, shiftsByDate, false,
-                                    false, dynamicRowHeight, _isDrawerExpanded,
-                                    beosByDate: beosByDate);
-                              },
-                              selectedBuilder: (context, day, focusedDay) {
-                                return _buildDayCell(day, shiftsByDate, true,
-                                    false, dynamicRowHeight, _isDrawerExpanded,
-                                    beosByDate: beosByDate);
-                              },
-                              todayBuilder: (context, day, focusedDay) {
-                                return _buildDayCell(day, shiftsByDate, false,
-                                    true, dynamicRowHeight, _isDrawerExpanded,
-                                    beosByDate: beosByDate);
-                              },
-                              outsideBuilder: (context, day, focusedDay) {
-                                return _buildDayCell(day, shiftsByDate, false,
-                                    false, dynamicRowHeight, _isDrawerExpanded,
-                                    beosByDate: beosByDate);
-                              },
-                              disabledBuilder: (context, day, focusedDay) {
-                                return _buildDayCell(day, shiftsByDate, false,
-                                    false, dynamicRowHeight, _isDrawerExpanded,
-                                    beosByDate: beosByDate);
-                              },
-                            ),
-                            onDaySelected: (selectedDay, focusedDay) {
-                              final normalizedDay = DateTime(selectedDay.year,
-                                  selectedDay.month, selectedDay.day);
-                              final hasShifts =
-                                  shiftsByDate.containsKey(normalizedDay);
-                              final hasBeos =
-                                  beosByDate.containsKey(normalizedDay);
+                    // Pinch-to-zoom: TableCalendar gestures disabled, we handle everything
+                    // 1 finger horizontal swipe = change month
+                    // 2 fingers pinch = zoom to focal point
+                    return GestureDetector(
+                      onScaleStart: (details) {
+                        _baseScale = _calendarScale;
+                        _baseOffset = _offset;
+                        _startFocalPoint = details.localFocalPoint;
+                        _isZooming = details.pointerCount >= 2;
+                      },
+                      onScaleUpdate: (details) {
+                        // Track if we have 2+ fingers at any point
+                        if (details.pointerCount >= 2) {
+                          _isZooming = true;
+                        }
 
-                              if (!hasShifts && !hasBeos) {
-                                // Empty day - go directly to add shift with selected date
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => AddShiftScreen(
-                                            preselectedDate: selectedDay,
-                                          )),
-                                );
-                              } else {
-                                // Has shifts - expand drawer
-                                setState(() {
-                                  _selectedDay = selectedDay;
-                                  _focusedDay = focusedDay;
-                                  _isDrawerExpanded = true;
-                                });
-                              }
-                            },
-                            onPageChanged: (focusedDay) {
+                        if (_isZooming && details.pointerCount >= 2) {
+                          setState(() {
+                            // Calculate new scale
+                            final newScale =
+                                (_baseScale * details.scale).clamp(1.0, 2.5);
+
+                            // Calculate offset to zoom around focal point
+                            // Formula: new_offset = focal - (focal - old_offset) * (new_scale / old_scale)
+                            // This keeps the point under fingers stationary during zoom
+                            final focalPoint = details.localFocalPoint;
+
+                            // How much the focal point moved (for panning)
+                            final focalDelta = focalPoint - _startFocalPoint;
+
+                            // Scale change ratio
+                            final scaleChange = newScale / _baseScale;
+
+                            // New offset: start from base, apply scale change around start focal, then add pan
+                            _offset = _startFocalPoint -
+                                (_startFocalPoint - _baseOffset) * scaleChange +
+                                focalDelta;
+
+                            _calendarScale = newScale;
+                          });
+                        }
+                      },
+                      onScaleEnd: (details) {
+                        // Only handle swipe if it was NOT a zoom gesture and not zoomed in
+                        if (!_isZooming && _calendarScale == 1.0) {
+                          // This was a 1-finger gesture, check for swipe
+                          // Use velocity if available, otherwise use distance
+                          if (details.velocity.pixelsPerSecond.dx.abs() > 100) {
+                            if (details.velocity.pixelsPerSecond.dx < -100) {
+                              // Swipe left = next month
                               setState(() {
-                                _focusedDay = focusedDay;
+                                _focusedDay = DateTime(
+                                  _focusedDay.year,
+                                  _focusedDay.month + 1,
+                                  1,
+                                );
                               });
-                            },
-                          ),
-                        ),
-                      ),
-                    );
+                            } else if (details.velocity.pixelsPerSecond.dx >
+                                100) {
+                              // Swipe right = previous month
+                              setState(() {
+                                _focusedDay = DateTime(
+                                  _focusedDay.year,
+                                  _focusedDay.month - 1,
+                                  1,
+                                );
+                              });
+                            }
+                          }
+                        }
+                        _baseScale = _calendarScale;
+                        _baseOffset = _offset;
+                        _isZooming = false;
+                      },
+                      child: Transform(
+                        transform: Matrix4.identity()
+                          ..translate(_offset.dx, _offset.dy)
+                          ..scale(_calendarScale),
+                        child: Container(
+                          width: constraints.maxWidth,
+                          height: constraints.maxHeight,
+                          color: AppTheme.darkBackground,
+                          child: OverflowBox(
+                            alignment: Alignment.topCenter,
+                            maxHeight: double.infinity,
+                            child: ClipRect(
+                              child: TableCalendar(
+                                // Disable swipe gestures to allow pinch-zoom
+                                // Month navigation is handled by header arrows
+                                availableGestures: AvailableGestures.none,
+                                firstDay: DateTime(2020),
+                                lastDay: DateTime(2030),
+                                focusedDay: _focusedDay,
+                                selectedDayPredicate: (day) =>
+                                    isSameDay(_selectedDay, day),
+                                calendarFormat: CalendarFormat.month,
+                                startingDayOfWeek: StartingDayOfWeek.sunday,
+                                headerVisible: false,
+                                sixWeekMonthsEnforced:
+                                    false, // Only show needed rows
+                                rowHeight: dynamicRowHeight,
+                                daysOfWeekHeight: 40,
+                                daysOfWeekStyle: DaysOfWeekStyle(
+                                  weekdayStyle: AppTheme.labelLarge,
+                                  weekendStyle: AppTheme.labelLarge,
+                                ),
+                                calendarStyle: CalendarStyle(
+                                  cellMargin: const EdgeInsets.all(2),
+                                  cellPadding: EdgeInsets.zero,
+                                  defaultDecoration: BoxDecoration(
+                                    color: AppTheme.cardBackground,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  selectedDecoration: BoxDecoration(
+                                    color: AppTheme.primaryGreen,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  todayDecoration: BoxDecoration(
+                                    color:
+                                        AppTheme.primaryGreen.withOpacity(0.3),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                        color: AppTheme.primaryGreen, width: 2),
+                                  ),
+                                  outsideDecoration: BoxDecoration(
+                                    color: AppTheme.darkBackground,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                                calendarBuilders: CalendarBuilders(
+                                  defaultBuilder: (context, day, focusedDay) {
+                                    return _buildDayCell(
+                                        day,
+                                        shiftsByDate,
+                                        false,
+                                        false,
+                                        dynamicRowHeight,
+                                        _isDrawerExpanded,
+                                        beosByDate: beosByDate);
+                                  },
+                                  selectedBuilder: (context, day, focusedDay) {
+                                    return _buildDayCell(
+                                        day,
+                                        shiftsByDate,
+                                        true,
+                                        false,
+                                        dynamicRowHeight,
+                                        _isDrawerExpanded,
+                                        beosByDate: beosByDate);
+                                  },
+                                  todayBuilder: (context, day, focusedDay) {
+                                    return _buildDayCell(
+                                        day,
+                                        shiftsByDate,
+                                        false,
+                                        true,
+                                        dynamicRowHeight,
+                                        _isDrawerExpanded,
+                                        beosByDate: beosByDate);
+                                  },
+                                  outsideBuilder: (context, day, focusedDay) {
+                                    return _buildDayCell(
+                                        day,
+                                        shiftsByDate,
+                                        false,
+                                        false,
+                                        dynamicRowHeight,
+                                        _isDrawerExpanded,
+                                        beosByDate: beosByDate);
+                                  },
+                                  disabledBuilder: (context, day, focusedDay) {
+                                    return _buildDayCell(
+                                        day,
+                                        shiftsByDate,
+                                        false,
+                                        false,
+                                        dynamicRowHeight,
+                                        _isDrawerExpanded,
+                                        beosByDate: beosByDate);
+                                  },
+                                ),
+                                onDaySelected: (selectedDay, focusedDay) {
+                                  final normalizedDay = DateTime(
+                                      selectedDay.year,
+                                      selectedDay.month,
+                                      selectedDay.day);
+                                  final hasShifts =
+                                      shiftsByDate.containsKey(normalizedDay);
+                                  final hasBeos =
+                                      beosByDate.containsKey(normalizedDay);
+
+                                  if (!hasShifts && !hasBeos) {
+                                    // Empty day - go directly to add shift with selected date
+                                    _resetZoom(); // Reset zoom when navigating
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) => AddShiftScreen(
+                                                preselectedDate: selectedDay,
+                                              )),
+                                    );
+                                  } else {
+                                    // Has shifts - expand drawer
+                                    _resetZoom(); // Reset zoom when opening drawer
+                                    setState(() {
+                                      _selectedDay = selectedDay;
+                                      _focusedDay = focusedDay;
+                                      _isDrawerExpanded = true;
+                                    });
+                                  }
+                                },
+                                onPageChanged: (focusedDay) {
+                                  _resetZoom(); // Reset zoom when changing month
+                                  setState(() {
+                                    _focusedDay = focusedDay;
+                                  });
+                                },
+                              ), // Closing for TableCalendar
+                            ), // Closing for ClipRect
+                          ), // Closing for OverflowBox
+                        ), // Closing for Container
+                      ), // Closing for Transform.scale
+                    ); // Closing for GestureDetector
                   },
                 ),
               ),
@@ -1022,52 +1160,59 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
       ),
       clipBehavior: Clip.hardEdge,
       child: isExtremelySqueezed
-          // EXTREMELY SQUEEZED: Just show day number + dots (NO FittedBox to prevent duplication)
-          ? Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text(
-                  '${day.day}',
-                  style: TextStyle(
-                    color: textColor,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 10,
+          // EXTREMELY SQUEEZED: FittedBox scales ALL cells uniformly
+          // All cells have same structure (day + dot row) for consistent sizing
+          ? FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    '${day.day}',
+                    style: TextStyle(
+                      color: textColor,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                    ),
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.clip,
-                ),
-                if (sortedShifts.isNotEmpty || visibleBeos.isNotEmpty) ...[
                   const SizedBox(height: 2),
+                  // Dot row - always present for uniform sizing
+                  // Dot visible only for single shifts, invisible/transparent for doubles+
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      if (sortedShifts.isNotEmpty)
-                        Container(
-                          width: 4,
-                          height: 4,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: hasIncompleteShift
-                                ? AppTheme.accentOrange
-                                : AppTheme.primaryGreen,
-                          ),
+                      Container(
+                        width: 5,
+                        height: 5,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          // Show colored dot for single shift, transparent for none or doubles+
+                          color: (sortedShifts.length == 1)
+                              ? (hasIncompleteShift
+                                  ? AppTheme.accentOrange
+                                  : AppTheme.primaryGreen)
+                              : Colors.transparent,
                         ),
-                      if (sortedShifts.isNotEmpty && visibleBeos.isNotEmpty)
+                      ),
+                      // BEO dot - show if BEOs exist and single or no shifts
+                      if (visibleBeos.isNotEmpty) ...[
                         const SizedBox(width: 2),
-                      if (visibleBeos.isNotEmpty)
                         Container(
-                          width: 4,
-                          height: 4,
+                          width: 5,
+                          height: 5,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: AppTheme.accentPurple, // Purple for BEOs
+                            color: sortedShifts.length <= 1
+                                ? AppTheme.accentPurple
+                                : Colors.transparent,
                           ),
                         ),
+                      ],
                     ],
                   ),
                 ],
-              ],
+              ),
             )
           // NORMAL/SQUEEZED: Show full content
           : Column(
@@ -1089,33 +1234,20 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                       ),
                     ),
 
-                    // Daily total + warning icon (right side)
+                    // Daily total (right side) - RED if any incomplete shifts
                     if (sortedShifts.isNotEmpty && showDollarAmount)
                       Flexible(
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (totalIncome > 0)
-                              Flexible(
-                                child: Text(
-                                  currencyFormat.format(totalIncome),
-                                  style: TextStyle(
-                                    color: AppTheme.primaryGreen,
-                                    fontSize: totalFontSize,
-                                    fontWeight: FontWeight.w900,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            if (hasIncompleteShift && !isSqueezed) ...[
-                              const SizedBox(width: 2),
-                              Icon(
-                                Icons.warning,
-                                color: AppTheme.accentOrange,
-                                size: 12,
-                              ),
-                            ],
-                          ],
+                        child: Text(
+                          currencyFormat.format(totalIncome),
+                          style: TextStyle(
+                            // Red if incomplete shifts exist, green otherwise
+                            color: hasIncompleteShift
+                                ? AppTheme.accentRed
+                                : AppTheme.primaryGreen,
+                            fontSize: totalFontSize,
+                            fontWeight: FontWeight.w900,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                   ],
@@ -1134,7 +1266,8 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                       padding: EdgeInsets.zero,
                       itemBuilder: (context, index) {
                         final shift = sortedShifts[index];
-                        return _buildShiftBadge(shift, normalizedDay);
+                        return _buildShiftBadge(
+                            shift, normalizedDay, sortedShifts.length);
                       },
                     ),
                   ),
@@ -1156,7 +1289,9 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
   }
 
   // Helper method to build individual shift badge
-  Widget _buildShiftBadge(Shift shift, DateTime shiftDate) {
+  // totalShiftsForDay: controls layout - stacked for 1-2 shifts, compact for 3+
+  Widget _buildShiftBadge(
+      Shift shift, DateTime shiftDate, int totalShiftsForDay) {
     final today =
         DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
     final isPast = shiftDate.isBefore(today);
@@ -1175,24 +1310,60 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
       badgeColor = AppTheme.primaryGreen; // Green for past/completed
     }
 
-    final amount = shift.getDisplayAmount(_moneyDisplayMode);
     final hasTime = shift.startTime != null && shift.endTime != null;
 
-    // UPDATED LOGIC:
-    // FUTURE shifts → Always show TIME (blue)
-    // PAST shifts → Show MONEY if user added earnings, otherwise show TIME
-    final hasEarnings = amount > 0;
+    // Use stacked layout for 1-2 shifts (more readable), compact for 3+
+    final useStackedTime = totalShiftsForDay <= 2 && hasTime;
 
-    final showMoney = !isFuture && hasEarnings;
-    final showTime = (isFuture || !hasEarnings) && hasTime;
+    // ALWAYS show time on calendar badges - money is shown in the modal
+    final showTime = hasTime; // Always show time if available
 
     // Responsive badge sizing for tablet
     final screenWidth = MediaQuery.of(context).size.width;
     final isTablet = screenWidth > 600;
     final badgeHeight = isTablet ? 22.0 : 14.0;
     final badgeFontSize = isTablet ? 12.0 : 8.0;
-    final iconSize = isTablet ? 16.0 : 10.0;
 
+    // Stacked layout for 1-2 shifts: time on two lines for better readability
+    if (useStackedTime && showTime) {
+      return Container(
+        margin: const EdgeInsets.only(bottom: 2),
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+        decoration: BoxDecoration(
+          color: badgeColor.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(2),
+          // Red border for incomplete shifts, normal color otherwise
+          border: Border.all(
+            color: isIncomplete ? AppTheme.accentRed : badgeColor,
+            width: isIncomplete ? 1.5 : 0.5,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '${_formatTimeShort(shift.startTime!)} -',
+              style: TextStyle(
+                color: badgeColor,
+                fontSize: badgeFontSize,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            Text(
+              _formatTimeShort(shift.endTime!),
+              style: TextStyle(
+                color: badgeColor,
+                fontSize: badgeFontSize,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Compact single-line layout for 3+ shifts or money display
     return Container(
       height: badgeHeight,
       margin: const EdgeInsets.only(bottom: 2),
@@ -1200,48 +1371,37 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
       decoration: BoxDecoration(
         color: badgeColor.withOpacity(0.2),
         borderRadius: BorderRadius.circular(2),
-        border: Border.all(color: badgeColor, width: 0.5),
+        // Red border for incomplete shifts, normal color otherwise
+        border: Border.all(
+          color: isIncomplete ? AppTheme.accentRed : badgeColor,
+          width: isIncomplete ? 1.5 : 0.5,
+        ),
       ),
       child: Row(
         children: [
-          // Time range (ONLY for future shifts)
+          // Time range (compact single line for 3+ shifts)
           if (showTime)
             Expanded(
-              child: Text(
-                '${_formatTimeShort(shift.startTime!)}-${_formatTimeShort(shift.endTime!)}',
-                style: TextStyle(
-                  color: badgeColor,
-                  fontSize: badgeFontSize,
-                  fontWeight: FontWeight.w600,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  '${_formatTimeShort(shift.startTime!)}-${_formatTimeShort(shift.endTime!)}',
+                  style: TextStyle(
+                    color: badgeColor,
+                    fontSize: badgeFontSize,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-                overflow: TextOverflow.ellipsis,
               ),
-            ),
-
-          // Amount (ONLY for past/completed shifts)
-          if (showMoney)
-            Text(
-              '\$${amount.toStringAsFixed(0)}',
-              style: TextStyle(
-                color: badgeColor,
-                fontSize: badgeFontSize,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-
-          // Warning icon for incomplete
-          if (isIncomplete)
-            Icon(
-              Icons.warning_amber,
-              color: AppTheme.accentOrange,
-              size: iconSize,
             ),
         ],
       ),
     );
   }
 
-  // Helper to format time with full minutes (e.g., "5:30 PM" -> "5:30P")
+  // Helper to format time smartly (e.g., "5:00 PM" -> "5P", "5:30 PM" -> "5:30P")
+  // Only shows minutes if they're not :00
   String _formatTimeShort(String time) {
     try {
       final parts = time.split(':');
@@ -1265,9 +1425,11 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
         hour -= 12;
       }
 
+      // Single letter: A or P (not AM/PM) to save space
       final periodChar = isPM ? 'P' : 'A';
       final minuteDisplay = minute.toString().padLeft(2, '0');
 
+      // Always show full format: 3:00A, 11:30P
       return '$hour:$minuteDisplay$periodChar';
     } catch (e) {
       return time.substring(0, time.length > 6 ? 6 : time.length);
@@ -1780,7 +1942,9 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                               ),
                             ),
                             const SizedBox(width: 12),
-                            if (isScheduled)
+                            // Show 'Scheduled' only for FUTURE shifts, otherwise show earnings
+                            if (isScheduled &&
+                                shift.date.isAfter(DateTime.now()))
                               Container(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 8,
@@ -1799,13 +1963,29 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                                 ),
                               )
                             else
-                              Text(
-                                shift.totalIncome == 0
-                                    ? '\$0'
-                                    : currencyFormat.format(shift.totalIncome),
-                                style: AppTheme.bodyLarge.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                  color: AppTheme.primaryGreen,
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: (shift.totalIncome > 0
+                                          ? AppTheme.primaryGreen
+                                          : AppTheme.accentRed)
+                                      .withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  shift.totalIncome == 0
+                                      ? '\$0'
+                                      : currencyFormat
+                                          .format(shift.totalIncome),
+                                  style: AppTheme.labelMedium.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    color: shift.totalIncome > 0
+                                        ? AppTheme.primaryGreen
+                                        : AppTheme.accentRed,
+                                  ),
                                 ),
                               ),
                           ],
@@ -2101,6 +2281,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
 
               return GestureDetector(
                 onTap: () {
+                  _resetZoom(); // Reset zoom when tapping a day
                   if (dayShifts.isEmpty) {
                     Navigator.push(
                       context,
@@ -2611,7 +2792,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _buildWeekStat('Income', currencyFormat.format(totalIncome)),
-              _buildWeekStat('Hours', '${totalHours.toStringAsFixed(1)}h'),
+              _buildWeekStat('Hours', totalHours.toStringAsFixed(1)),
               _buildWeekStat('Shifts', '${weekShifts.length}'),
             ],
           ),
@@ -2698,6 +2879,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
   ) {
     return GestureDetector(
       onTap: () {
+        _resetZoom(); // Reset zoom when tapping a day
         if (dayShifts.isEmpty) {
           Navigator.push(
             context,
@@ -3208,7 +3390,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _buildWeekStat('Income', currencyFormat.format(yearIncome)),
-              _buildWeekStat('Hours', '${yearHours.toStringAsFixed(1)}h'),
+              _buildWeekStat('Hours', yearHours.toStringAsFixed(1)),
               _buildWeekStat('Shifts', '${yearShifts.length}'),
             ],
           ),

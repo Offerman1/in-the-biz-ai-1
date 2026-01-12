@@ -1031,8 +1031,15 @@ class _HomeScreenState extends State<_HomeScreen> {
                             await _loadGoal();
                           }
                         },
-                        icon: const Icon(Icons.add),
-                        label: const Text('Add Shift'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.primaryGreen,
+                          foregroundColor: Colors.white,
+                        ),
+                        icon: const Icon(Icons.add, color: Colors.white),
+                        label: const Text(
+                          'Add Shift',
+                          style: TextStyle(color: Colors.white),
+                        ),
                       ),
                     ],
                   ),

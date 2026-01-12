@@ -1,27 +1,40 @@
 ---
 description: AI rules derived by SpecStory from the project AI interaction history
-globs: *
+applyTo: "*"
 ---
 
 # In The Biz AI – Copilot Instructions
 
 **Knowledge cutoff:** June 2024  
-**Current date:** January 3, 2026
-
----
-description: AI rules derived by SpecStory from the project AI interaction history
----
-
-# In The Biz AI - Copilot Instructions
-
-**Knowledge cutoff:** June 2024
-**Current date:** January 3, 2026
-
-**These instructions are automatically applied to every Copilot chat session.**  
+**Current date:** January 12, 2026
 
 ---
 
-## 🚨 CRITICAL WEB DEPLOYMENT RULE - READ THIS FIRST 🚨
+## 🚨 CRITICAL: HOW TO CHECK FOR ERRORS - READ THIS FIRST 🚨
+
+**NEVER check errors for a specific file. ALWAYS check the FULL WORKSPACE.**
+
+### ❌ WRONG WAY (misses warnings, shows "No errors found" when there ARE problems):
+```
+get_errors with filePaths: ["path/to/file.dart"]
+```
+
+### ✅ CORRECT WAY (shows ALL errors AND warnings):
+```
+get_errors with NO filePaths parameter (omit it entirely)
+```
+
+**Why this matters:**
+- Checking a specific file only returns ERRORS, not WARNINGS
+- Checking full workspace returns BOTH errors AND warnings
+- Unused variables, missing imports, and other issues are WARNINGS
+- You MUST see warnings to properly fix code
+
+**After EVERY edit, run get_errors with NO filePaths to check the full workspace.**
+
+---
+
+## 🚨 CRITICAL WEB DEPLOYMENT RULE 🚨
 
 **DEPLOYMENT TARGET: Vercel (main branch) - NOT GitHub Pages**
 

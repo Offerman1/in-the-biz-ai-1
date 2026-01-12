@@ -392,6 +392,13 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
     try {
       await _db.updateShift(_editableShift);
 
+      // Auto-refresh calendar/shifts after every save
+      if (mounted) {
+        final shiftProvider =
+            Provider.of<ShiftProvider>(context, listen: false);
+        await shiftProvider.loadShifts();
+      }
+
       if (mounted) {
         setState(() {
           _hasUnsavedChanges = false;
@@ -404,7 +411,8 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
               children: [
                 Icon(Icons.check_circle, color: AppTheme.primaryGreen),
                 const SizedBox(width: 8),
-                const Text('Changes saved'),
+                Text('Changes saved',
+                    style: TextStyle(color: AppTheme.textPrimary)),
               ],
             ),
             backgroundColor: AppTheme.cardBackground,
