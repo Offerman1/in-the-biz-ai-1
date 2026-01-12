@@ -79,6 +79,55 @@ class _ScanVerificationScreenState extends State<ScanVerificationScreen> {
     }
   }
 
+  /// Convert military time (e.g., "15:30" or "1530") to 12-hour format (e.g., "3:30 PM")
+  String _formatTimeDisplay(String? timeValue) {
+    if (timeValue == null || timeValue.isEmpty) return '';
+
+    try {
+      String normalized = timeValue.trim();
+
+      // Handle various formats: "15:30", "1530", "15:30:00", "3:30 PM" (already formatted)
+      if (normalized.toLowerCase().contains('am') ||
+          normalized.toLowerCase().contains('pm')) {
+        // Already in 12-hour format
+        return normalized;
+      }
+
+      int hour;
+      int minute;
+
+      if (normalized.contains(':')) {
+        final parts = normalized.split(':');
+        hour = int.parse(parts[0]);
+        minute = int.parse(parts[1]);
+      } else if (normalized.length == 4) {
+        // Format: "1530"
+        hour = int.parse(normalized.substring(0, 2));
+        minute = int.parse(normalized.substring(2, 4));
+      } else if (normalized.length == 3) {
+        // Format: "930" (9:30)
+        hour = int.parse(normalized.substring(0, 1));
+        minute = int.parse(normalized.substring(1, 3));
+      } else {
+        return timeValue; // Can't parse, return original
+      }
+
+      // Convert to 12-hour format
+      final period = hour >= 12 ? 'PM' : 'AM';
+      final displayHour = hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour);
+      final displayMinute = minute.toString().padLeft(2, '0');
+
+      return '$displayHour:$displayMinute $period';
+    } catch (e) {
+      return timeValue; // Return original if parsing fails
+    }
+  }
+
+  /// Check if a field key is a time field
+  bool _isTimeField(String fieldKey) {
+    return fieldKey.contains('time') || fieldKey.contains('Time');
+  }
+
   /// Build a single field row with label, value, and confidence badge
   /// ALWAYS shows the field - if empty, user can fill it in
   Widget _buildFieldRow(String label, String fieldKey,
@@ -162,7 +211,10 @@ class _ScanVerificationScreenState extends State<ScanVerificationScreen> {
                   Expanded(
                     child: Text(
                       hasValue
-                          ? value.toString() + (suffix ?? '')
+                          ? (_isTimeField(fieldKey)
+                                  ? _formatTimeDisplay(value.toString())
+                                  : value.toString()) +
+                              (suffix ?? '')
                           : 'Tap to enter ${label.toLowerCase()}',
                       style: AppTheme.bodyMedium.copyWith(
                         color: hasValue

@@ -909,7 +909,7 @@ class _HomeScreenState extends State<_HomeScreen> {
                 Expanded(
                   child: _buildQuickStatCard(
                     'Hours',
-                    '${periodShifts.fold(0.0, (sum, s) => sum + s.hoursWorked).toStringAsFixed(0)}h',
+                    '${periodShifts.fold(0.0, (sum, s) => sum + s.hoursWorked).toStringAsFixed(0)}',
                     Icons.schedule_outlined,
                   ),
                 ),
@@ -1268,7 +1268,7 @@ class _HomeScreenState extends State<_HomeScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        DateFormat('MMM').format(shift.date).toUpperCase(),
+                        DateFormat('E').format(shift.date),
                         style: AppTheme.labelSmall.copyWith(
                           color: AppTheme.textSecondary,
                           fontSize: 10,
@@ -1284,7 +1284,9 @@ class _HomeScreenState extends State<_HomeScreen> {
                         ),
                       ),
                       Text(
-                        DateFormat('y').format(shift.date),
+                        shift.date.year == DateTime.now().year
+                            ? DateFormat('MMM').format(shift.date)
+                            : DateFormat("MMM ''yy").format(shift.date),
                         style: AppTheme.labelSmall.copyWith(
                           color: AppTheme.textSecondary,
                           fontSize: 9,

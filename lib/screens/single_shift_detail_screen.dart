@@ -1524,7 +1524,7 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  DateFormat('MMM').format(shift.date).toUpperCase(),
+                  DateFormat('E').format(shift.date),
                   style: AppTheme.labelSmall.copyWith(
                     color: AppTheme.textSecondary,
                     fontSize: 10,
@@ -1540,7 +1540,9 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
                   ),
                 ),
                 Text(
-                  DateFormat('y').format(shift.date),
+                  shift.date.year == DateTime.now().year
+                      ? DateFormat('MMM').format(shift.date)
+                      : DateFormat("MMM ''yy").format(shift.date),
                   style: AppTheme.labelSmall.copyWith(
                     color: AppTheme.textSecondary,
                     fontSize: 9,

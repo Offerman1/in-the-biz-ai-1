@@ -1241,22 +1241,36 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
     );
   }
 
-  // Helper to format time (e.g., "5:00 PM" -> "5p")
+  // Helper to format time with full minutes (e.g., "5:30 PM" -> "5:30P")
   String _formatTimeShort(String time) {
     try {
       final parts = time.split(':');
       if (parts.isEmpty) return time;
       var hour = int.parse(parts[0]);
-      final isPM = time.toUpperCase().contains('PM');
-      if (isPM && hour != 12) hour += 12;
-      if (!isPM && hour == 12) hour = 0;
+      // Extract minutes, handling various formats
+      String minuteStr = '00';
+      if (parts.length > 1) {
+        // Remove AM/PM from minute part if present
+        minuteStr = parts[1].replaceAll(RegExp(r'[APMapm\s]'), '');
+        if (minuteStr.length > 2) minuteStr = minuteStr.substring(0, 2);
+      }
+      final minute = int.tryParse(minuteStr) ?? 0;
 
-      if (hour == 0) return '12a';
-      if (hour < 12) return '${hour}a';
-      if (hour == 12) return '12p';
-      return '${hour - 12}p';
+      final isPM = time.toUpperCase().contains('PM') || hour >= 12;
+
+      // Convert 24-hour to 12-hour if needed
+      if (hour == 0) {
+        hour = 12;
+      } else if (hour > 12) {
+        hour -= 12;
+      }
+
+      final periodChar = isPM ? 'P' : 'A';
+      final minuteDisplay = minute.toString().padLeft(2, '0');
+
+      return '$hour:$minuteDisplay$periodChar';
     } catch (e) {
-      return time.substring(0, time.length > 3 ? 3 : time.length);
+      return time.substring(0, time.length > 6 ? 6 : time.length);
     }
   }
 
@@ -1453,7 +1467,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                               ),
                             ),
                             Text(
-                              '${totalHours.toStringAsFixed(1)}h',
+                              '${totalHours.toStringAsFixed(1)}',
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 18,
@@ -1716,7 +1730,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          DateFormat('MMM').format(shift.date).toUpperCase(),
+                          DateFormat('E').format(shift.date),
                           style: AppTheme.labelSmall.copyWith(
                             color: accentColor,
                             fontSize: 10,
@@ -1732,7 +1746,9 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                           ),
                         ),
                         Text(
-                          DateFormat('y').format(shift.date),
+                          shift.date.year == DateTime.now().year
+                              ? DateFormat('MMM').format(shift.date)
+                              : DateFormat("MMM ''yy").format(shift.date),
                           style: AppTheme.labelSmall.copyWith(
                             color: accentColor,
                             fontSize: 9,
@@ -2059,7 +2075,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _buildWeekStat('Income', currencyFormat.format(monthIncome)),
-              _buildWeekStat('Hours', '${monthHours.toStringAsFixed(1)}h'),
+              _buildWeekStat('Hours', '${monthHours.toStringAsFixed(1)}'),
               _buildWeekStat('Shifts', '${monthShifts.length}'),
             ],
           ),
