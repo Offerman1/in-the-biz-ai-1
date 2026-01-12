@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uuid/uuid.dart';
 import '../theme/app_theme.dart';
 import '../models/vision_scan.dart';
 import '../models/beo_event.dart';
@@ -6,6 +7,7 @@ import '../services/database_service.dart';
 import '../services/beo_event_service.dart';
 import 'add_shift_screen.dart';
 import 'add_edit_contact_screen.dart';
+import 'dart:typed_data';
 
 /// Universal verification screen for all AI scan types
 /// Shows extracted data with confidence badges for user review before saving
@@ -16,6 +18,9 @@ class ScanVerificationScreen extends StatefulWidget {
   final Function(Map<String, dynamic>) onConfirm;
   final Function()? onRetry;
   final String? existingCheckoutId;
+  final List<String>? imagePaths; // Image paths from scan session
+  final List<Uint8List>? imageBytes; // Image bytes for web compatibility
+  final List<String>? mimeTypes; // MIME types for web images
 
   const ScanVerificationScreen({
     super.key,
@@ -25,6 +30,9 @@ class ScanVerificationScreen extends StatefulWidget {
     required this.onConfirm,
     this.onRetry,
     this.existingCheckoutId,
+    this.imagePaths,
+    this.imageBytes,
+    this.mimeTypes,
   });
 
   @override
@@ -981,12 +989,27 @@ class _ScanVerificationScreenState extends State<ScanVerificationScreen> {
     setState(() => _isSavingBeo = true);
 
     try {
-      // Create BeoEvent from extracted data
-      final beoEvent = BeoEvent.fromJson({
+      final userId = _db.supabase.auth.currentUser?.id;
+      if (userId == null) {
+        throw Exception('User not logged in');
+      }
+
+      // Ensure required fields are present
+      final beoData = {
         ..._editableData,
+        'id': _editableData['id'] ?? const Uuid().v4(),
+        'user_id': userId,
+        'event_date': _editableData['event_date'] ??
+            DateTime.now().toIso8601String().split('T')[0],
+        'event_name': _editableData['event_name'] ?? 'Untitled Event',
         'is_standalone': true,
         'created_manually': false,
-      });
+        'created_at': DateTime.now().toIso8601String(),
+        'updated_at': DateTime.now().toIso8601String(),
+      };
+
+      // Create BeoEvent from extracted data
+      final beoEvent = BeoEvent.fromJson(beoData);
 
       // Save to database
       await _beoService.createBeoEvent(beoEvent);
@@ -1033,12 +1056,27 @@ class _ScanVerificationScreenState extends State<ScanVerificationScreen> {
     setState(() => _isCreatingShift = true);
 
     try {
-      // First, save the BEO event
-      final beoEvent = BeoEvent.fromJson({
+      final userId = _db.supabase.auth.currentUser?.id;
+      if (userId == null) {
+        throw Exception('User not logged in');
+      }
+
+      // Ensure required fields are present
+      final beoData = {
         ..._editableData,
+        'id': _editableData['id'] ?? const Uuid().v4(),
+        'user_id': userId,
+        'event_date': _editableData['event_date'] ??
+            DateTime.now().toIso8601String().split('T')[0],
+        'event_name': _editableData['event_name'] ?? 'Untitled Event',
         'is_standalone': false, // Will be linked to a shift
         'created_manually': false,
-      });
+        'created_at': DateTime.now().toIso8601String(),
+        'updated_at': DateTime.now().toIso8601String(),
+      };
+
+      // First, save the BEO event
+      final beoEvent = BeoEvent.fromJson(beoData);
 
       final savedBeo = await _beoService.createBeoEvent(beoEvent);
 

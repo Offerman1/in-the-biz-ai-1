@@ -2,7 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../theme/app_theme.dart';
 import '../services/database_service.dart';
+import '../services/vision_scanner_service.dart';
+import '../models/vision_scan.dart';
 import 'beo_detail_screen.dart';
+import 'document_scanner_screen.dart';
+import 'scan_verification_screen.dart';
 import '../models/beo_event.dart';
 
 /// Event Portfolio Gallery for Event Planners
@@ -16,6 +20,7 @@ class EventPortfolioScreen extends StatefulWidget {
 
 class _EventPortfolioScreenState extends State<EventPortfolioScreen> {
   final DatabaseService _db = DatabaseService();
+  final VisionScannerService _visionScanner = VisionScannerService();
   bool _isLoading = true;
   List<Map<String, dynamic>> _events = [];
   String _selectedFilter = 'All'; // All, Wedding, Corporate, Birthday, Other
@@ -113,15 +118,202 @@ class _EventPortfolioScreenState extends State<EventPortfolioScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: _createNewBeo,
+        onPressed: _showAddBeoOptions,
         backgroundColor: AppTheme.primaryGreen,
         icon: const Icon(Icons.add, color: Colors.white),
         label: const Text(
-          'Create BEO',
+          'Add BEO',
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
       ),
     );
+  }
+
+  /// Show options to add BEO (Scan or Create manually)
+  void _showAddBeoOptions() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppTheme.cardBackground,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Handle bar
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppTheme.textMuted,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Title
+              Text(
+                'Add BEO',
+                style: AppTheme.titleMedium.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Scan BEO option
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppTheme.accentPurple.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(Icons.auto_awesome, color: AppTheme.accentPurple),
+                ),
+                title: Text('Scan BEO',
+                    style: AppTheme.bodyLarge
+                        .copyWith(fontWeight: FontWeight.w600)),
+                subtitle: Text('Use AI to extract data from photos',
+                    style:
+                        AppTheme.bodySmall.copyWith(color: AppTheme.textMuted)),
+                trailing: Icon(Icons.chevron_right, color: AppTheme.textMuted),
+                onTap: () {
+                  Navigator.pop(context);
+                  _scanBeo();
+                },
+              ),
+
+              const SizedBox(height: 8),
+
+              // Create manually option
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryGreen.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child:
+                      Icon(Icons.edit_document, color: AppTheme.primaryGreen),
+                ),
+                title: Text('Create Manually',
+                    style: AppTheme.bodyLarge
+                        .copyWith(fontWeight: FontWeight.w600)),
+                subtitle: Text('Enter BEO details by hand',
+                    style:
+                        AppTheme.bodySmall.copyWith(color: AppTheme.textMuted)),
+                trailing: Icon(Icons.chevron_right, color: AppTheme.textMuted),
+                onTap: () {
+                  Navigator.pop(context);
+                  _createNewBeo();
+                },
+              ),
+
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Scan BEO using AI Vision
+  Future<void> _scanBeo() async {
+    // Open document scanner
+    final session = await Navigator.push<DocumentScanSession>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DocumentScannerScreen(
+          scanType: ScanType.beo,
+          onScanComplete: (session) {
+            Navigator.pop(context, session);
+          },
+        ),
+      ),
+    );
+
+    if (session == null || !mounted) return;
+
+    // Show processing indicator
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: AppTheme.textPrimary,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Text('Analyzing BEO with AI...'),
+          ],
+        ),
+        duration: const Duration(seconds: 30),
+        backgroundColor: AppTheme.cardBackground,
+      ),
+    );
+
+    try {
+      final userId = _db.supabase.auth.currentUser!.id;
+
+      // Analyze with AI
+      Map<String, dynamic> result;
+      if (session.hasBytes && session.imageBytes != null) {
+        // Web: use bytes directly
+        result = await _visionScanner.analyzeBEOFromBytes(
+          session.imageBytes!,
+          userId,
+          mimeTypes: session.mimeTypes,
+        );
+      } else {
+        // Mobile: use file paths
+        result = await _visionScanner.analyzeBEO(
+          session.imagePaths,
+          userId,
+        );
+      }
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).clearSnackBars();
+
+      // Show verification screen
+      final confirmed = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ScanVerificationScreen(
+            scanType: ScanType.beo,
+            extractedData: result['data'] as Map<String, dynamic>,
+            confidenceScores:
+                result['data']['ai_confidence_scores'] as Map<String, dynamic>?,
+            imagePaths: session.imagePaths,
+            onConfirm: (data) {
+              // Data is already saved by verification screen
+              Navigator.pop(context, true);
+            },
+          ),
+        ),
+      );
+
+      if (confirmed == true) {
+        _loadEvents(); // Refresh the list
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).clearSnackBars();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to analyze BEO: $e'),
+            backgroundColor: AppTheme.dangerColor,
+          ),
+        );
+      }
+    }
   }
 
   Widget _buildFilterChips() {
@@ -230,7 +422,8 @@ class _EventPortfolioScreenState extends State<EventPortfolioScreen> {
         decoration: BoxDecoration(
           color: AppTheme.cardBackground,
           borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-          border: Border.all(color: AppTheme.primaryGreen.withValues(alpha: 0.2)),
+          border:
+              Border.all(color: AppTheme.primaryGreen.withValues(alpha: 0.2)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

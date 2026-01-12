@@ -9,12 +9,14 @@ import 'package:share_plus/share_plus.dart';
 import '../models/shift.dart';
 import '../models/event_contact.dart';
 import '../models/shift_attachment.dart';
+import '../models/beo_event.dart';
 import '../providers/shift_provider.dart';
 import '../providers/field_order_provider.dart';
 import '../screens/add_shift_screen.dart';
 import '../screens/event_contacts_screen.dart';
 import '../screens/add_edit_contact_screen.dart';
 import '../services/database_service.dart';
+import '../services/beo_event_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/hero_card.dart';
 import '../widgets/navigation_wrapper.dart';
@@ -44,6 +46,12 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
   List<ShiftAttachment> _attachments = [];
   bool _isLoadingAttachments = false;
   bool _isUploadingAttachment = false;
+
+  // Linked BEO Event
+  BeoEvent? _linkedBeoEvent;
+  bool _isLoadingBeo = false;
+  bool _isBeoExpanded = false;
+  final BeoEventService _beoService = BeoEventService();
 
   // Inline editing state
   late Shift _editableShift;
@@ -154,6 +162,29 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
     _loadJobName();
     _loadEventContacts();
     _loadAttachments();
+    _loadLinkedBeoEvent();
+  }
+
+  /// Load linked BEO event if shift has beoEventId
+  Future<void> _loadLinkedBeoEvent() async {
+    if (_editableShift.beoEventId == null) return;
+
+    setState(() => _isLoadingBeo = true);
+
+    try {
+      final beo = await _beoService.getBeoEventById(_editableShift.beoEventId!);
+      if (mounted) {
+        setState(() {
+          _linkedBeoEvent = beo;
+          _isLoadingBeo = false;
+        });
+      }
+    } catch (e) {
+      print('Error loading linked BEO: $e');
+      if (mounted) {
+        setState(() => _isLoadingBeo = false);
+      }
+    }
   }
 
   void _initializeControllers() {
@@ -1608,10 +1639,12 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: AppTheme.accentPurple.withValues(alpha: 0.15),
+                            color:
+                                AppTheme.accentPurple.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(4),
                             border: Border.all(
-                              color: AppTheme.accentPurple.withValues(alpha: 0.3),
+                              color:
+                                  AppTheme.accentPurple.withValues(alpha: 0.3),
                               width: 0.5,
                             ),
                           ),
@@ -1711,10 +1744,12 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: AppTheme.accentOrange.withValues(alpha: 0.15),
+                            color:
+                                AppTheme.accentOrange.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(4),
                             border: Border.all(
-                              color: AppTheme.accentOrange.withValues(alpha: 0.3),
+                              color:
+                                  AppTheme.accentOrange.withValues(alpha: 0.3),
                               width: 0.5,
                             ),
                           ),
@@ -1904,7 +1939,7 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
           ),
           const SizedBox(height: 20),
 
-          // Two-column layout for BEO details
+          // Two-column layout for basic BEO details
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -1972,6 +2007,419 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
                 ),
               ),
             ],
+          ),
+
+          // Show linked BEO details if available
+          if (_linkedBeoEvent != null || _isLoadingBeo) ...[
+            const SizedBox(height: 24),
+            Divider(color: AppTheme.cardBackgroundLight, thickness: 1),
+            const SizedBox(height: 16),
+            _buildExpandableBeoDetails(),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// Build the expandable section showing ALL BEO fields
+  Widget _buildExpandableBeoDetails() {
+    if (_isLoadingBeo) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: CircularProgressIndicator(color: AppTheme.primaryGreen),
+        ),
+      );
+    }
+
+    final beo = _linkedBeoEvent;
+    if (beo == null) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Expand/Collapse toggle
+        InkWell(
+          onTap: () => setState(() => _isBeoExpanded = !_isBeoExpanded),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Row(
+              children: [
+                Icon(
+                  _isBeoExpanded ? Icons.expand_less : Icons.expand_more,
+                  color: AppTheme.accentPurple,
+                  size: 24,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  _isBeoExpanded
+                      ? 'Hide Full BEO Details'
+                      : 'Show Full BEO Details',
+                  style: AppTheme.bodyMedium.copyWith(
+                    color: AppTheme.accentPurple,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const Spacer(),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppTheme.accentPurple.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    'SCANNED BEO',
+                    style: AppTheme.labelSmall.copyWith(
+                      color: AppTheme.accentPurple,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 10,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        // Expanded BEO details
+        if (_isBeoExpanded) ...[
+          const SizedBox(height: 16),
+
+          // SECTION 1: Event Identity & Contacts
+          _buildBeoSectionHeader('EVENT DETAILS', Icons.event),
+          _buildBeoFieldGrid([
+            ('Event Type', beo.eventType),
+            ('Post As', beo.postAs),
+            ('Venue', beo.venueName),
+            ('Venue Address', beo.venueAddress),
+            ('Function Space', beo.functionSpace),
+            ('Account Name', beo.accountName),
+          ]),
+
+          const SizedBox(height: 20),
+          _buildBeoSectionHeader('CLIENT CONTACT', Icons.person),
+          _buildBeoFieldGrid([
+            ('Primary Contact', beo.primaryContactName),
+            ('Phone', beo.primaryContactPhone),
+            ('Email', beo.primaryContactEmail),
+          ]),
+
+          const SizedBox(height: 20),
+          _buildBeoSectionHeader('INTERNAL CONTACTS', Icons.people),
+          _buildBeoFieldGrid([
+            ('Sales Manager', beo.salesManagerName),
+            ('Sales Phone', beo.salesManagerPhone),
+            ('Sales Email', beo.salesManagerEmail),
+            ('Catering Manager', beo.cateringManagerName),
+            ('Catering Phone', beo.cateringManagerPhone),
+          ]),
+
+          // SECTION 2: Timeline & Logistics
+          const SizedBox(height: 20),
+          _buildBeoSectionHeader('TIMELINE', Icons.schedule),
+          _buildBeoFieldGrid([
+            (
+              'Setup Date',
+              beo.setupDate != null
+                  ? DateFormat('MMM d, yyyy').format(beo.setupDate!)
+                  : null
+            ),
+            (
+              'Teardown Date',
+              beo.teardownDate != null
+                  ? DateFormat('MMM d, yyyy').format(beo.teardownDate!)
+                  : null
+            ),
+            ('Load-In Time', beo.loadInTime),
+            ('Setup Time', beo.setupTime),
+            ('Guest Arrival', beo.guestArrivalTime),
+            ('Event Start', beo.eventStartTime),
+            ('Event End', beo.eventEndTime),
+            ('Breakdown Time', beo.breakdownTime),
+            ('Load-Out Time', beo.loadOutTime),
+          ]),
+
+          // SECTION 3: Guest Counts
+          const SizedBox(height: 20),
+          _buildBeoSectionHeader('GUEST COUNTS', Icons.groups),
+          _buildBeoFieldGrid([
+            ('Expected', beo.guestCountExpected?.toString()),
+            ('Confirmed', beo.guestCountConfirmed?.toString()),
+            ('Adults', beo.adultCount?.toString()),
+            ('Children', beo.childCount?.toString()),
+            ('Vendor Meals', beo.vendorMealCount?.toString()),
+          ]),
+
+          // SECTION 4: Financials
+          const SizedBox(height: 20),
+          _buildBeoSectionHeader('FINANCIALS', Icons.attach_money),
+          _buildBeoFieldGrid([
+            (
+              'Food Total',
+              beo.foodTotal != null
+                  ? '\$${beo.foodTotal!.toStringAsFixed(2)}'
+                  : null
+            ),
+            (
+              'Beverage Total',
+              beo.beverageTotal != null
+                  ? '\$${beo.beverageTotal!.toStringAsFixed(2)}'
+                  : null
+            ),
+            (
+              'Labor Total',
+              beo.laborTotal != null
+                  ? '\$${beo.laborTotal!.toStringAsFixed(2)}'
+                  : null
+            ),
+            (
+              'Room Rental',
+              beo.roomRental != null
+                  ? '\$${beo.roomRental!.toStringAsFixed(2)}'
+                  : null
+            ),
+            (
+              'Equipment Rental',
+              beo.equipmentRental != null
+                  ? '\$${beo.equipmentRental!.toStringAsFixed(2)}'
+                  : null
+            ),
+            (
+              'Subtotal',
+              beo.subtotal != null
+                  ? '\$${beo.subtotal!.toStringAsFixed(2)}'
+                  : null
+            ),
+            (
+              'Service Charge %',
+              beo.serviceChargePercent != null
+                  ? '${beo.serviceChargePercent!.toStringAsFixed(1)}%'
+                  : null
+            ),
+            (
+              'Service Charge',
+              beo.serviceChargeAmount != null
+                  ? '\$${beo.serviceChargeAmount!.toStringAsFixed(2)}'
+                  : null
+            ),
+            (
+              'Tax %',
+              beo.taxPercent != null
+                  ? '${beo.taxPercent!.toStringAsFixed(2)}%'
+                  : null
+            ),
+            (
+              'Tax Amount',
+              beo.taxAmount != null
+                  ? '\$${beo.taxAmount!.toStringAsFixed(2)}'
+                  : null
+            ),
+            (
+              'Gratuity',
+              beo.gratuityAmount != null
+                  ? '\$${beo.gratuityAmount!.toStringAsFixed(2)}'
+                  : null
+            ),
+            (
+              'Grand Total',
+              beo.grandTotal != null
+                  ? '\$${beo.grandTotal!.toStringAsFixed(2)}'
+                  : null
+            ),
+            (
+              'Deposits Paid',
+              beo.depositsPaid != null
+                  ? '\$${beo.depositsPaid!.toStringAsFixed(2)}'
+                  : null
+            ),
+            (
+              'Deposit Amount',
+              beo.depositAmount != null
+                  ? '\$${beo.depositAmount!.toStringAsFixed(2)}'
+                  : null
+            ),
+            (
+              'Balance Due',
+              beo.balanceDue != null
+                  ? '\$${beo.balanceDue!.toStringAsFixed(2)}'
+                  : null
+            ),
+            (
+              'Commission %',
+              beo.commissionPercentage != null
+                  ? '${beo.commissionPercentage!.toStringAsFixed(1)}%'
+                  : null
+            ),
+            (
+              'Commission',
+              beo.commissionAmount != null
+                  ? '\$${beo.commissionAmount!.toStringAsFixed(2)}'
+                  : null
+            ),
+          ]),
+
+          // SECTION 5: Food & Beverage
+          const SizedBox(height: 20),
+          _buildBeoSectionHeader('FOOD & BEVERAGE', Icons.restaurant),
+          _buildBeoFieldGrid([
+            ('Menu Style', beo.menuStyle),
+            ('Menu Items', beo.menuItems),
+            ('Dietary Restrictions', beo.dietaryRestrictions),
+          ]),
+
+          // SECTION 6: Setup & Decor
+          if (beo.decorNotes != null || beo.floorPlanNotes != null) ...[
+            const SizedBox(height: 20),
+            _buildBeoSectionHeader('SETUP & DECOR', Icons.design_services),
+            _buildBeoFieldGrid([
+              ('Decor Notes', beo.decorNotes),
+              ('Floor Plan', beo.floorPlanNotes),
+            ]),
+          ],
+
+          // SECTION 7: Staffing
+          if (beo.staffingRequirements != null) ...[
+            const SizedBox(height: 20),
+            _buildBeoSectionHeader('STAFFING', Icons.badge),
+            _buildBeoFieldGrid([
+              ('Requirements', beo.staffingRequirements),
+            ]),
+          ],
+
+          // SECTION 9: Billing & Legal
+          const SizedBox(height: 20),
+          _buildBeoSectionHeader('BILLING & LEGAL', Icons.gavel),
+          _buildBeoFieldGrid([
+            ('Payment Method', beo.paymentMethod),
+            ('Cancellation Policy', beo.cancellationPolicy),
+            (
+              'Client Signed',
+              beo.clientSignatureDate != null
+                  ? DateFormat('MMM d, yyyy').format(beo.clientSignatureDate!)
+                  : null
+            ),
+            (
+              'Venue Signed',
+              beo.venueSignatureDate != null
+                  ? DateFormat('MMM d, yyyy').format(beo.venueSignatureDate!)
+                  : null
+            ),
+          ]),
+
+          // SECTION 10: Notes
+          if (beo.specialRequests != null || beo.formattedNotes != null) ...[
+            const SizedBox(height: 20),
+            _buildBeoSectionHeader('NOTES', Icons.notes),
+            if (beo.specialRequests != null) ...[
+              _buildBeoNoteField('Special Requests', beo.specialRequests!),
+            ],
+            if (beo.formattedNotes != null) ...[
+              const SizedBox(height: 12),
+              _buildBeoNoteField('Additional Notes', beo.formattedNotes!),
+            ],
+          ],
+        ],
+      ],
+    );
+  }
+
+  Widget _buildBeoSectionHeader(String title, IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: [
+          Icon(icon, color: AppTheme.textMuted, size: 18),
+          const SizedBox(width: 8),
+          Text(
+            title,
+            style: AppTheme.labelSmall.copyWith(
+              color: AppTheme.textMuted,
+              letterSpacing: 1.5,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBeoFieldGrid(List<(String, String?)> fields) {
+    // Filter out null or empty values
+    final nonEmptyFields =
+        fields.where((f) => f.$2 != null && f.$2!.isNotEmpty).toList();
+
+    if (nonEmptyFields.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.only(left: 26),
+        child: Text(
+          'No data available',
+          style: AppTheme.bodySmall.copyWith(
+            color: AppTheme.textMuted,
+            fontStyle: FontStyle.italic,
+          ),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(left: 26),
+      child: Wrap(
+        spacing: 24,
+        runSpacing: 12,
+        children: nonEmptyFields
+            .map((field) => SizedBox(
+                  width: 150,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        field.$1,
+                        style: AppTheme.labelSmall.copyWith(
+                          color: AppTheme.textMuted,
+                          fontSize: 10,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        field.$2!,
+                        style: AppTheme.bodyMedium.copyWith(
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ))
+            .toList(),
+      ),
+    );
+  }
+
+  Widget _buildBeoNoteField(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 26),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: AppTheme.labelSmall.copyWith(
+              color: AppTheme.textMuted,
+              fontSize: 10,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppTheme.darkBackground,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              value,
+              style: AppTheme.bodyMedium,
+            ),
           ),
         ],
       ),

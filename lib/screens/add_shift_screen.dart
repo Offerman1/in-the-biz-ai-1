@@ -753,8 +753,8 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
               decoration: BoxDecoration(
                 color: AppTheme.primaryGreen.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
-                border:
-                    Border.all(color: AppTheme.primaryGreen.withValues(alpha: 0.3)),
+                border: Border.all(
+                    color: AppTheme.primaryGreen.withValues(alpha: 0.3)),
               ),
               child: Row(
                 children: [
@@ -1537,6 +1537,9 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
             extractedData: result['data'] as Map<String, dynamic>,
             confidenceScores:
                 result['data']['ai_confidence_scores'] as Map<String, dynamic>?,
+            imagePaths: session.imagePaths,
+            imageBytes: session.imageBytes,
+            mimeTypes: session.mimeTypes,
             onConfirm: (data) async {
               // Store the BEO Event ID to link with shift
               setState(() {
@@ -3471,7 +3474,8 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
             decoration: BoxDecoration(
               color: AppTheme.primaryGreen.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
-              border: Border.all(color: AppTheme.primaryGreen.withValues(alpha: 0.3)),
+              border: Border.all(
+                  color: AppTheme.primaryGreen.withValues(alpha: 0.3)),
             ),
             child: Row(
               children: [
@@ -3609,7 +3613,8 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
             decoration: BoxDecoration(
               color: AppTheme.primaryGreen.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
-              border: Border.all(color: AppTheme.primaryGreen.withValues(alpha: 0.3)),
+              border: Border.all(
+                  color: AppTheme.primaryGreen.withValues(alpha: 0.3)),
             ),
             child: Row(
               children: [
@@ -3798,8 +3803,8 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
                       Expanded(
                         child: TextFormField(
                           controller: _tipoutPercentController,
-                          keyboardType:
-                              const TextInputType.numberWithOptions(decimal: true),
+                          keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true),
                           style: AppTheme.bodyMedium,
                           decoration: InputDecoration(
                             hintText: 'Tip out % (e.g., 2.5)',
@@ -6011,7 +6016,8 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const PaywallScreen()),
+                  MaterialPageRoute(
+                      builder: (context) => const PaywallScreen()),
                 );
               },
             ),
@@ -6319,7 +6325,8 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
                 label: const Text('Scan'),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppTheme.accentBlue,
-                  side: BorderSide(color: AppTheme.accentBlue.withValues(alpha: 0.5)),
+                  side: BorderSide(
+                      color: AppTheme.accentBlue.withValues(alpha: 0.5)),
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
               ),
@@ -6332,8 +6339,8 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
                 label: const Text('Upload'),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppTheme.accentPurple,
-                  side:
-                      BorderSide(color: AppTheme.accentPurple.withValues(alpha: 0.5)),
+                  side: BorderSide(
+                      color: AppTheme.accentPurple.withValues(alpha: 0.5)),
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
               ),
@@ -6346,8 +6353,8 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
                 label: const Text('Manual'),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppTheme.primaryGreen,
-                  side:
-                      BorderSide(color: AppTheme.primaryGreen.withValues(alpha: 0.5)),
+                  side: BorderSide(
+                      color: AppTheme.primaryGreen.withValues(alpha: 0.5)),
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
               ),
@@ -6404,8 +6411,8 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
                 label: const Text('Scan'),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppTheme.accentOrange,
-                  side:
-                      BorderSide(color: AppTheme.accentOrange.withValues(alpha: 0.5)),
+                  side: BorderSide(
+                      color: AppTheme.accentOrange.withValues(alpha: 0.5)),
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
               ),
@@ -6418,8 +6425,8 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
                 label: const Text('Upload'),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppTheme.accentPurple,
-                  side:
-                      BorderSide(color: AppTheme.accentPurple.withValues(alpha: 0.5)),
+                  side: BorderSide(
+                      color: AppTheme.accentPurple.withValues(alpha: 0.5)),
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
               ),
@@ -6432,8 +6439,8 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
                 label: const Text('Manual'),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppTheme.primaryGreen,
-                  side:
-                      BorderSide(color: AppTheme.primaryGreen.withValues(alpha: 0.5)),
+                  side: BorderSide(
+                      color: AppTheme.primaryGreen.withValues(alpha: 0.5)),
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
               ),
@@ -6909,8 +6916,8 @@ class _ManualInvoiceFormState extends State<_ManualInvoiceForm> {
                     onTap: () async {
                       final picked = await showDatePicker(
                         context: context,
-                        initialDate:
-                            _dueDate ?? DateTime.now().add(const Duration(days: 30)),
+                        initialDate: _dueDate ??
+                            DateTime.now().add(const Duration(days: 30)),
                         firstDate: DateTime(2020),
                         lastDate: DateTime(2030),
                       );
