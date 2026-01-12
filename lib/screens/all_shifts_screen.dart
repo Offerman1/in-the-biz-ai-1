@@ -512,7 +512,8 @@ class _AllShiftsScreenState extends State<AllShiftsScreen> {
         color: AppTheme.primaryGreen.withValues(alpha: 0.1),
         border: Border(
           top: BorderSide(color: AppTheme.primaryGreen.withValues(alpha: 0.3)),
-          bottom: BorderSide(color: AppTheme.primaryGreen.withValues(alpha: 0.3)),
+          bottom:
+              BorderSide(color: AppTheme.primaryGreen.withValues(alpha: 0.3)),
         ),
       ),
       child: Row(
@@ -859,12 +860,12 @@ class _AllShiftsScreenState extends State<AllShiftsScreen> {
                                   vertical: 2,
                                 ),
                                 decoration: BoxDecoration(
-                                  color:
-                                      AppTheme.accentPurple.withValues(alpha: 0.15),
+                                  color: AppTheme.accentPurple
+                                      .withValues(alpha: 0.15),
                                   borderRadius: BorderRadius.circular(4),
                                   border: Border.all(
-                                    color:
-                                        AppTheme.accentPurple.withValues(alpha: 0.3),
+                                    color: AppTheme.accentPurple
+                                        .withValues(alpha: 0.3),
                                     width: 0.5,
                                   ),
                                 ),
@@ -926,10 +927,12 @@ class _AllShiftsScreenState extends State<AllShiftsScreen> {
                                   vertical: 2,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: AppTheme.accentBlue.withValues(alpha: 0.15),
+                                  color: AppTheme.accentBlue
+                                      .withValues(alpha: 0.15),
                                   borderRadius: BorderRadius.circular(4),
                                   border: Border.all(
-                                    color: AppTheme.accentBlue.withValues(alpha: 0.3),
+                                    color: AppTheme.accentBlue
+                                        .withValues(alpha: 0.3),
                                     width: 0.5,
                                   ),
                                 ),
@@ -1139,31 +1142,34 @@ class _AllShiftsScreenState extends State<AllShiftsScreen> {
                       AppTheme.bodyMedium.copyWith(fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 8),
-                RadioListTile<String>(
-                  title:
-                      Text('Delete from app only', style: AppTheme.bodyMedium),
-                  subtitle: Text('Keep events in calendar',
-                      style: AppTheme.labelSmall
-                          .copyWith(color: AppTheme.textMuted)),
-                  value: 'app_only',
+                RadioGroup<String>(
                   groupValue: deleteOption,
                   onChanged: (value) =>
                       setDialogState(() => deleteOption = value),
-                  activeColor: AppTheme.primaryGreen,
-                  contentPadding: EdgeInsets.zero,
-                ),
-                RadioListTile<String>(
-                  title: Text('Delete from app & calendar',
-                      style: AppTheme.bodyMedium),
-                  subtitle: Text('Remove everywhere',
-                      style: AppTheme.labelSmall
-                          .copyWith(color: AppTheme.textMuted)),
-                  value: 'both',
-                  groupValue: deleteOption,
-                  onChanged: (value) =>
-                      setDialogState(() => deleteOption = value),
-                  activeColor: AppTheme.primaryGreen,
-                  contentPadding: EdgeInsets.zero,
+                  child: Column(
+                    children: [
+                      RadioListTile<String>(
+                        title: Text('Delete from app only',
+                            style: AppTheme.bodyMedium),
+                        subtitle: Text('Keep events in calendar',
+                            style: AppTheme.labelSmall
+                                .copyWith(color: AppTheme.textMuted)),
+                        value: 'app_only',
+                        activeColor: AppTheme.primaryGreen,
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                      RadioListTile<String>(
+                        title: Text('Delete from app & calendar',
+                            style: AppTheme.bodyMedium),
+                        subtitle: Text('Remove everywhere',
+                            style: AppTheme.labelSmall
+                                .copyWith(color: AppTheme.textMuted)),
+                        value: 'both',
+                        activeColor: AppTheme.primaryGreen,
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                    ],
+                  ),
                 ),
               ],
               const SizedBox(height: 8),
@@ -1453,19 +1459,22 @@ class _AllShiftsScreenState extends State<AllShiftsScreen> {
                 mainAxisAlignment: pw.MainAxisAlignment.spaceAround,
                 children: [
                   pw.Column(children: [
-                    pw.Text('Total Income', style: const pw.TextStyle(fontSize: 10)),
+                    pw.Text('Total Income',
+                        style: const pw.TextStyle(fontSize: 10)),
                     pw.Text('\$${totalIncome.toStringAsFixed(2)}',
                         style: pw.TextStyle(
                             fontSize: 16, fontWeight: pw.FontWeight.bold)),
                   ]),
                   pw.Column(children: [
-                    pw.Text('Total Hours', style: const pw.TextStyle(fontSize: 10)),
+                    pw.Text('Total Hours',
+                        style: const pw.TextStyle(fontSize: 10)),
                     pw.Text('${totalHours.toStringAsFixed(1)}h',
                         style: pw.TextStyle(
                             fontSize: 16, fontWeight: pw.FontWeight.bold)),
                   ]),
                   pw.Column(children: [
-                    pw.Text('Total Tips', style: const pw.TextStyle(fontSize: 10)),
+                    pw.Text('Total Tips',
+                        style: const pw.TextStyle(fontSize: 10)),
                     pw.Text(
                         '\$${(totalCashTips + totalCreditTips).toStringAsFixed(2)}',
                         style: pw.TextStyle(
@@ -1811,36 +1820,37 @@ class _AllShiftsScreenState extends State<AllShiftsScreen> {
                 style: AppTheme.bodyMedium,
               ),
               const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: RadioListTile<String>(
-                      title: Text('Add', style: AppTheme.bodySmall),
-                      value: 'add',
-                      groupValue: adjustType,
-                      onChanged: (v) => setDialogState(() => adjustType = v!),
-                      activeColor: AppTheme.primaryGreen,
-                      contentPadding: EdgeInsets.zero,
-                      dense: true,
+              RadioGroup<String>(
+                groupValue: adjustType,
+                onChanged: (v) => setDialogState(() => adjustType = v!),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: RadioListTile<String>(
+                        title: Text('Add', style: AppTheme.bodySmall),
+                        value: 'add',
+                        activeColor: AppTheme.primaryGreen,
+                        contentPadding: EdgeInsets.zero,
+                        dense: true,
+                      ),
                     ),
-                  ),
-                  Expanded(
-                    child: RadioListTile<String>(
-                      title: Text('Multiply', style: AppTheme.bodySmall),
-                      value: 'multiply',
-                      groupValue: adjustType,
-                      onChanged: (v) => setDialogState(() => adjustType = v!),
-                      activeColor: AppTheme.primaryGreen,
-                      contentPadding: EdgeInsets.zero,
-                      dense: true,
+                    Expanded(
+                      child: RadioListTile<String>(
+                        title: Text('Multiply', style: AppTheme.bodySmall),
+                        value: 'multiply',
+                        activeColor: AppTheme.primaryGreen,
+                        contentPadding: EdgeInsets.zero,
+                        dense: true,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               const SizedBox(height: 8),
               TextField(
                 controller: amountController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
                 decoration: InputDecoration(
                   labelText: adjustType == 'add'
                       ? 'Amount to add (\$)'

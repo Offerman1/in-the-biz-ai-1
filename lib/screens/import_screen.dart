@@ -544,52 +544,135 @@ class _ImportScreenState extends State<ImportScreen> {
           ),
           content: SizedBox(
             width: double.maxFinite,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Sample values
-                  Text(
-                    'Sample values:',
-                    style:
-                        AppTheme.labelSmall.copyWith(color: AppTheme.textMuted),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: AppTheme.darkBackground,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: samples.take(3).map((sample) {
-                        return Text(
-                          '• ${sample.toString()}',
-                          style: AppTheme.labelSmall
-                              .copyWith(fontFamily: 'monospace'),
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // AI Suggestions (if any)
-                  if (suggestions.isNotEmpty) ...[
+            child: RadioGroup<String>(
+              groupValue: selectedField,
+              onChanged: (value) => setState(() => selectedField = value),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Sample values
                     Text(
-                      'AI Suggestions:',
+                      'Sample values:',
+                      style: AppTheme.labelSmall
+                          .copyWith(color: AppTheme.textMuted),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppTheme.darkBackground,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: samples.take(3).map((sample) {
+                          return Text(
+                            '• ${sample.toString()}',
+                            style: AppTheme.labelSmall
+                                .copyWith(fontFamily: 'monospace'),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // AI Suggestions (if any)
+                    if (suggestions.isNotEmpty) ...[
+                      Text(
+                        'AI Suggestions:',
+                        style: AppTheme.bodyMedium.copyWith(
+                          color: AppTheme.primaryGreen,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      ...suggestions.map((suggestion) {
+                        final field = suggestion['field'] as String;
+                        final reason = suggestion['reason'] as String;
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: () {
+                                setState(() => selectedField = field);
+                              },
+                              borderRadius: BorderRadius.circular(8),
+                              child: Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: selectedField == field
+                                      ? AppTheme.primaryGreen
+                                          .withValues(alpha: 0.2)
+                                      : Colors.transparent,
+                                  border: Border.all(
+                                    color: selectedField == field
+                                        ? AppTheme.primaryGreen
+                                        : AppTheme.primaryGreen
+                                            .withValues(alpha: 0.3),
+                                    width: selectedField == field ? 2 : 1,
+                                  ),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Radio<String>(
+                                      value: field,
+                                      activeColor: AppTheme.primaryGreen,
+                                    ),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            allFields[field] ?? field,
+                                            style: AppTheme.bodyMedium.copyWith(
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          Text(
+                                            reason,
+                                            style: AppTheme.labelSmall.copyWith(
+                                              color: AppTheme.textMuted,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      }),
+                      const SizedBox(height: 16),
+                      Divider(color: AppTheme.textMuted.withValues(alpha: 0.3)),
+                      const SizedBox(height: 16),
+                    ],
+
+                    // All Available Fields
+                    Text(
+                      'All Available Fields:',
                       style: AppTheme.bodyMedium.copyWith(
-                        color: AppTheme.primaryGreen,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     const SizedBox(height: 8),
-                    ...suggestions.map((suggestion) {
-                      final field = suggestion['field'] as String;
-                      final reason = suggestion['reason'] as String;
+                    ...allFields.entries.map((entry) {
+                      final field = entry.key;
+                      final label = entry.value;
+
+                      // Skip if already shown in suggestions
+                      if (suggestions.any((s) => s['field'] == field)) {
+                        return const SizedBox.shrink();
+                      }
+
                       return Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
+                        padding: const EdgeInsets.only(bottom: 4),
                         child: Material(
                           color: Colors.transparent,
                           child: InkWell(
@@ -598,15 +681,20 @@ class _ImportScreenState extends State<ImportScreen> {
                             },
                             borderRadius: BorderRadius.circular(8),
                             child: Container(
-                              padding: const EdgeInsets.all(12),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
                               decoration: BoxDecoration(
                                 color: selectedField == field
-                                    ? AppTheme.primaryGreen.withValues(alpha: 0.2)
+                                    ? AppTheme.primaryGreen
+                                        .withValues(alpha: 0.2)
                                     : Colors.transparent,
                                 border: Border.all(
                                   color: selectedField == field
                                       ? AppTheme.primaryGreen
-                                      : AppTheme.primaryGreen.withValues(alpha: 0.3),
+                                      : AppTheme.textMuted
+                                          .withValues(alpha: 0.3),
                                   width: selectedField == field ? 2 : 1,
                                 ),
                                 borderRadius: BorderRadius.circular(8),
@@ -615,30 +703,12 @@ class _ImportScreenState extends State<ImportScreen> {
                                 children: [
                                   Radio<String>(
                                     value: field,
-                                    groupValue: selectedField,
-                                    onChanged: (value) {
-                                      setState(() => selectedField = value);
-                                    },
                                     activeColor: AppTheme.primaryGreen,
                                   ),
                                   Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          allFields[field] ?? field,
-                                          style: AppTheme.bodyMedium.copyWith(
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                        Text(
-                                          reason,
-                                          style: AppTheme.labelSmall.copyWith(
-                                            color: AppTheme.textMuted,
-                                          ),
-                                        ),
-                                      ],
+                                    child: Text(
+                                      label,
+                                      style: AppTheme.bodyMedium,
                                     ),
                                   ),
                                 ],
@@ -648,78 +718,8 @@ class _ImportScreenState extends State<ImportScreen> {
                         ),
                       );
                     }),
-                    const SizedBox(height: 16),
-                    Divider(color: AppTheme.textMuted.withValues(alpha: 0.3)),
-                    const SizedBox(height: 16),
                   ],
-
-                  // All Available Fields
-                  Text(
-                    'All Available Fields:',
-                    style: AppTheme.bodyMedium.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  ...allFields.entries.map((entry) {
-                    final field = entry.key;
-                    final label = entry.value;
-
-                    // Skip if already shown in suggestions
-                    if (suggestions.any((s) => s['field'] == field)) {
-                      return const SizedBox.shrink();
-                    }
-
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 4),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: () {
-                            setState(() => selectedField = field);
-                          },
-                          borderRadius: BorderRadius.circular(8),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: selectedField == field
-                                  ? AppTheme.primaryGreen.withValues(alpha: 0.2)
-                                  : Colors.transparent,
-                              border: Border.all(
-                                color: selectedField == field
-                                    ? AppTheme.primaryGreen
-                                    : AppTheme.textMuted.withValues(alpha: 0.3),
-                                width: selectedField == field ? 2 : 1,
-                              ),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Row(
-                              children: [
-                                Radio<String>(
-                                  value: field,
-                                  groupValue: selectedField,
-                                  onChanged: (value) {
-                                    setState(() => selectedField = value);
-                                  },
-                                  activeColor: AppTheme.primaryGreen,
-                                ),
-                                Expanded(
-                                  child: Text(
-                                    label,
-                                    style: AppTheme.bodyMedium,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  }),
-                ],
+                ),
               ),
             ),
           ),
@@ -1400,11 +1400,12 @@ class _ImportScreenState extends State<ImportScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: _getConfidenceColor(overallConfidence).withValues(alpha: 0.1),
+                color: _getConfidenceColor(overallConfidence)
+                    .withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color:
-                      _getConfidenceColor(overallConfidence).withValues(alpha: 0.3),
+                  color: _getConfidenceColor(overallConfidence)
+                      .withValues(alpha: 0.3),
                 ),
               ),
               child: Row(
@@ -1515,8 +1516,8 @@ class _ImportScreenState extends State<ImportScreen> {
                         color: AppTheme.cardBackground,
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color:
-                              _getConfidenceColor(confidence).withValues(alpha: 0.3),
+                          color: _getConfidenceColor(confidence)
+                              .withValues(alpha: 0.3),
                         ),
                       ),
                       child: Row(
