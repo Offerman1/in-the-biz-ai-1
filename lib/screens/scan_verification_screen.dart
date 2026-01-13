@@ -5,6 +5,7 @@ import '../models/vision_scan.dart';
 import '../models/beo_event.dart';
 import '../services/database_service.dart';
 import '../services/beo_event_service.dart';
+import '../services/scan_image_service.dart';
 import 'add_shift_screen.dart';
 import 'add_edit_contact_screen.dart';
 import 'dart:typed_data';
@@ -46,11 +47,39 @@ class _ScanVerificationScreenState extends State<ScanVerificationScreen> {
   bool _isSavingBeo = false;
   final DatabaseService _db = DatabaseService();
   final BeoEventService _beoService = BeoEventService();
+  final ScanImageService _scanImageService = ScanImageService();
 
   @override
   void initState() {
     super.initState();
     _editableData = Map<String, dynamic>.from(widget.extractedData);
+  }
+
+  /// Upload scan images and return the public URLs
+  /// Works with both file paths (mobile) and bytes (web)
+  Future<List<String>> _uploadScanImages(String scanType, {String? entityId}) async {
+    try {
+      if (widget.imageBytes != null && widget.imageBytes!.isNotEmpty) {
+        // Web: Upload from bytes
+        return await _scanImageService.uploadFromBytes(
+          imageBytes: widget.imageBytes!,
+          scanType: scanType,
+          entityId: entityId,
+          mimeTypes: widget.mimeTypes,
+        );
+      } else if (widget.imagePaths != null && widget.imagePaths!.isNotEmpty) {
+        // Mobile: Upload from file paths
+        return await _scanImageService.uploadFromPaths(
+          imagePaths: widget.imagePaths!,
+          scanType: scanType,
+          entityId: entityId,
+        );
+      }
+      return [];
+    } catch (e) {
+      print('Error uploading scan images: $e');
+      return [];
+    }
   }
 
   /// Get confidence level emoji for a field
@@ -445,6 +474,43 @@ class _ScanVerificationScreenState extends State<ScanVerificationScreen> {
     setState(() => _isSaving = true);
 
     try {
+      // Determine scan type folder for image storage
+      String scanTypeFolder;
+      switch (widget.scanType) {
+        case ScanType.paycheck:
+          scanTypeFolder = 'paycheck';
+          break;
+        case ScanType.invoice:
+          scanTypeFolder = 'invoice';
+          break;
+        case ScanType.receipt:
+          scanTypeFolder = 'receipt';
+          break;
+        case ScanType.businessCard:
+          scanTypeFolder = 'business_card';
+          break;
+        case ScanType.checkout:
+          scanTypeFolder = 'checkout';
+          break;
+        case ScanType.beo:
+          scanTypeFolder = 'beo';
+          break;
+      }
+
+      // Upload scan images
+      final imageUrls = await _uploadScanImages(scanTypeFolder);
+      
+      // Add image URLs to the data
+      if (imageUrls.isNotEmpty) {
+        // Use 'image_urls' for multiple images, 'image_url' for single
+        if (widget.scanType == ScanType.paycheck || widget.scanType == ScanType.businessCard) {
+          // These typically have single images
+          _editableData['image_url'] = imageUrls.first;
+        } else {
+          _editableData['image_urls'] = imageUrls;
+        }
+      }
+
       await widget.onConfirm(_editableData);
 
       if (mounted) {
@@ -471,7 +537,15 @@ class _ScanVerificationScreenState extends State<ScanVerificationScreen> {
     setState(() => _isCreatingShift = true);
 
     try {
-      // First save the checkout
+      // Upload scan images for checkout
+      final imageUrls = await _uploadScanImages('checkout');
+      
+      // Add image URLs to the data before saving
+      if (imageUrls.isNotEmpty) {
+        _editableData['image_urls'] = imageUrls;
+      }
+
+      // Save the checkout with images
       await widget.onConfirm(_editableData);
 
       if (!mounted) return;
@@ -994,16 +1068,23 @@ class _ScanVerificationScreenState extends State<ScanVerificationScreen> {
         throw Exception('User not logged in');
       }
 
+      // Generate BEO ID first so we can use it for image upload
+      final beoId = _editableData['id'] ?? const Uuid().v4();
+
+      // Upload scan images
+      final imageUrls = await _uploadScanImages('beo', entityId: beoId);
+
       // Ensure required fields are present
       final beoData = {
         ..._editableData,
-        'id': _editableData['id'] ?? const Uuid().v4(),
+        'id': beoId,
         'user_id': userId,
         'event_date': _editableData['event_date'] ??
             DateTime.now().toIso8601String().split('T')[0],
         'event_name': _editableData['event_name'] ?? 'Untitled Event',
         'is_standalone': true,
         'created_manually': false,
+        'image_urls': imageUrls.isNotEmpty ? imageUrls : null,
         'created_at': DateTime.now().toIso8601String(),
         'updated_at': DateTime.now().toIso8601String(),
       };
@@ -1017,14 +1098,16 @@ class _ScanVerificationScreenState extends State<ScanVerificationScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Row(
+            content: Row(
               children: [
-                Icon(Icons.check_circle, color: Colors.white),
-                SizedBox(width: 12),
+                const Icon(Icons.check_circle, color: Colors.white),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'BEO saved! It will appear on your calendar.',
-                    style: TextStyle(color: Colors.white),
+                    imageUrls.isNotEmpty 
+                        ? 'BEO saved with ${imageUrls.length} image(s)! It will appear on your calendar.'
+                        : 'BEO saved! It will appear on your calendar.',
+                    style: const TextStyle(color: Colors.white),
                   ),
                 ),
               ],
@@ -1061,16 +1144,23 @@ class _ScanVerificationScreenState extends State<ScanVerificationScreen> {
         throw Exception('User not logged in');
       }
 
+      // Generate BEO ID first so we can use it for image upload
+      final beoId = _editableData['id'] ?? const Uuid().v4();
+
+      // Upload scan images
+      final imageUrls = await _uploadScanImages('beo', entityId: beoId);
+
       // Ensure required fields are present
       final beoData = {
         ..._editableData,
-        'id': _editableData['id'] ?? const Uuid().v4(),
+        'id': beoId,
         'user_id': userId,
         'event_date': _editableData['event_date'] ??
             DateTime.now().toIso8601String().split('T')[0],
         'event_name': _editableData['event_name'] ?? 'Untitled Event',
         'is_standalone': false, // Will be linked to a shift
         'created_manually': false,
+        'image_urls': imageUrls.isNotEmpty ? imageUrls : null,
         'created_at': DateTime.now().toIso8601String(),
         'updated_at': DateTime.now().toIso8601String(),
       };
