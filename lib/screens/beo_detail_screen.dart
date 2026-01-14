@@ -187,11 +187,15 @@ class _BeoDetailScreenState extends State<BeoDetailScreen> {
       if (result != null && mounted) {
         final coverUrl = result['cover_image_url'] as String?;
         if (coverUrl != null && coverUrl.isNotEmpty) {
-          setState(() {
-            _coverImageUrl = _db.supabase.storage
-                .from('shift-attachments')
-                .getPublicUrl(coverUrl);
-          });
+          final signedUrl = await _db.supabase.storage
+              .from('shift-attachments')
+              .createSignedUrl(coverUrl, 3600); // 1 hour expiry
+
+          if (mounted) {
+            setState(() {
+              _coverImageUrl = signedUrl;
+            });
+          }
         }
       }
     } catch (e) {
@@ -922,14 +926,15 @@ class _BeoDetailScreenState extends State<BeoDetailScreen> {
         throw Exception('Database update failed - cover_image_url not saved');
       }
 
-      // Get the public URL
-      final publicUrl =
-          _db.supabase.storage.from('shift-attachments').getPublicUrl(fileName);
+      // Get the signed URL
+      final signedUrl = await _db.supabase.storage
+          .from('shift-attachments')
+          .createSignedUrl(fileName, 3600); // 1 hour expiry
 
-      print('📸 Public URL: $publicUrl');
+      print('📸 Signed URL: $signedUrl');
 
       setState(() {
-        _coverImageUrl = publicUrl;
+        _coverImageUrl = signedUrl;
         _isUploadingImage = false;
       });
 

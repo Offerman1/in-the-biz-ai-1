@@ -738,12 +738,32 @@ class _EventPortfolioScreenState extends State<EventPortfolioScreen> {
       itemCount: _events.length,
       itemBuilder: (context, index) {
         final event = _events[index];
-        return _buildEventCard(event);
+        return FutureBuilder<Widget>(
+          future: _buildEventCard(event),
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              return snapshot.data!;
+            } else {
+              return Container(
+                decoration: BoxDecoration(
+                  color: AppTheme.cardBackground,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                ),
+                child: Center(
+                  child: CircularProgressIndicator(
+                    color: AppTheme.primaryGreen,
+                    strokeWidth: 2,
+                  ),
+                ),
+              );
+            }
+          },
+        );
       },
     );
   }
 
-  Widget _buildEventCard(Map<String, dynamic> event) {
+  Future<Widget> _buildEventCard(Map<String, dynamic> event) async {
     final beoId = event['id'] as String?;
     final eventName = event['event_name'] as String? ?? 'Untitled Event';
     final eventType = event['event_type'] as String? ?? '';
@@ -767,10 +787,10 @@ class _EventPortfolioScreenState extends State<EventPortfolioScreen> {
     // Get cover image or first scanned image from Supabase storage
     String? displayImageUrl;
     if (coverImageUrl != null && coverImageUrl.isNotEmpty) {
-      // Cover image is stored as a path, need to get public URL
-      displayImageUrl = _db.supabase.storage
+      // Cover image is stored as a path, need to get signed URL
+      displayImageUrl = await _db.supabase.storage
           .from('shift-attachments')
-          .getPublicUrl(coverImageUrl);
+          .createSignedUrl(coverImageUrl, 3600); // 1 hour expiry
       print('🖼️ Using cover image URL: $displayImageUrl');
     } else if (imageUrls != null && imageUrls.isNotEmpty) {
       final imagePath = imageUrls.first.toString();
@@ -779,10 +799,10 @@ class _EventPortfolioScreenState extends State<EventPortfolioScreen> {
         // Already a full URL, use as-is
         displayImageUrl = imagePath;
       } else {
-        // It's a path, get public URL
-        displayImageUrl = _db.supabase.storage
+        // It's a path, get signed URL
+        displayImageUrl = await _db.supabase.storage
             .from('shift-attachments')
-            .getPublicUrl(imagePath);
+            .createSignedUrl(imagePath, 3600); // 1 hour expiry
       }
       print('🖼️ Using first scan image URL: $displayImageUrl');
     } else {
