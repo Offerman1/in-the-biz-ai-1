@@ -461,7 +461,7 @@ class DatabaseService {
   Future<String> getPhotoUrl(String storagePath) async {
     // Use signed URLs for both web and mobile (all buckets now private)
     final response = await _supabase.storage
-        .from('shift-photos')
+        .from('shift-attachments')
         .createSignedUrl(storagePath, 3600); // 1 hour expiry
     return response;
   }
@@ -479,7 +479,7 @@ class DatabaseService {
   /// Delete a photo
   Future<void> deletePhoto(String photoId, String storagePath) async {
     // Delete from storage
-    await _supabase.storage.from('shift-photos').remove([storagePath]);
+    await _supabase.storage.from('shift-attachments').remove([storagePath]);
 
     // Delete reference from database
     await _supabase.from('shift_photos').delete().eq('id', photoId);

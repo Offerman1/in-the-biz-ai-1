@@ -446,7 +446,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
       final storagePaths = _capturedPhotos.where((path) {
         final isUrl = path.startsWith('http://') || path.startsWith('https://');
         final isStoragePath = !isUrl &&
-            (path.contains('/beo/') || // BEO images now in shift-photos bucket
+            (path.contains('/beo/') || // BEO images use shift-attachments bucket
                 (path.contains('/') &&
                     path.split('/').length >= 2 &&
                     !path.startsWith('/') &&

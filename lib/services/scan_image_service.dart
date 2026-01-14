@@ -7,7 +7,7 @@ import 'package:uuid/uuid.dart';
 /// Unified service for uploading and managing scan images
 /// Supports all scan types: BEO, Paycheck, Invoice, Receipt, Business Card, Server Checkout
 ///
-/// Storage bucket: 'shift-photos' (UNIFIED - same as gallery photos)
+/// Storage bucket: 'shift-attachments' (existing bucket that works)
 /// Folder structure: {userId}/{scanType}/{uuid}.jpg (userId MUST be first for RLS)
 ///
 /// Image optimization:
