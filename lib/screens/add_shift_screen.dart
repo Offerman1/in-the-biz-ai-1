@@ -5926,15 +5926,20 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
     // Check if this is a URL (from Supabase storage) or a local file
     final isUrl =
         filePath.startsWith('http://') || filePath.startsWith('https://');
+    
+    // Check if this is a storage path (contains user ID / indicates Supabase storage)
+    final isStoragePath = !isUrl && 
+        (filePath.contains('/scans/') || // BEO scans: userId/scans/beo/file.jpg
+         filePath.contains('/') && filePath.split('/').length >= 2); // General storage paths
 
     print(
         '🖼️ Building thumbnail for: ${filePath.length > 60 ? '${filePath.substring(0, 60)}...' : filePath}');
-    print('🖼️ isUrl: $isUrl, extension: $extension');
+    print('🖼️ isUrl: $isUrl, isStoragePath: $isStoragePath, extension: $extension');
 
     // Determine if it's an image or video
     final isImage =
         ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].contains(extension) ||
-            (isUrl &&
+            ((isUrl || isStoragePath) &&
                 ![
                   'mp4',
                   'mov',
@@ -5975,10 +5980,10 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
       iconColor = AppTheme.textMuted;
     }
 
-    // Build the image widget based on whether it's a URL or local file
+    // Build the image widget based on whether it's a URL, storage path, or local file
     Widget imageWidget;
     if (isUrl) {
-      // Network image from Supabase storage
+      // Network image from Supabase storage (full URL)
       imageWidget = Image.network(
         filePath,
         fit: BoxFit.cover,
@@ -6009,6 +6014,56 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
               size: 40,
             ),
           );
+        },
+      );
+    } else if (isStoragePath) {
+      // Storage path - generate signed URL
+      imageWidget = FutureBuilder<String>(
+        future: _db.getPhotoUrlForBucket('shift-attachments', filePath),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            return Image.network(
+              snapshot.data!,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                print('🖼️ ERROR loading storage image: $error');
+                print('🖼️ Storage path was: $filePath');
+                return Container(
+                  color: AppTheme.cardBackgroundLight,
+                  child: Icon(
+                    Icons.broken_image,
+                    color: AppTheme.textMuted,
+                    size: 40,
+                  ),
+                );
+              },
+            );
+          } else if (snapshot.hasError) {
+            print('🖼️ ERROR generating signed URL: ${snapshot.error}');
+            return Container(
+              color: AppTheme.cardBackgroundLight,
+              child: Icon(
+                Icons.broken_image,
+                color: AppTheme.textMuted,
+                size: 40,
+              ),
+            );
+          } else {
+            // Loading signed URL
+            return Container(
+              color: AppTheme.cardBackgroundLight,
+              child: Center(
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppTheme.primaryGreen,
+                  ),
+                ),
+              ),
+            );
+          }
         },
       );
     } else {
