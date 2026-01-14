@@ -459,19 +459,11 @@ class DatabaseService {
 
   /// Get signed URL for a photo (valid for 1 hour)
   Future<String> getPhotoUrl(String storagePath) async {
-    // Use public URLs on web, signed URLs on mobile
-    // Web has issues with signed URLs from private buckets
-    if (kIsWeb) {
-      final response = _supabase.storage
-          .from('shift-photos')
-          .getPublicUrl(storagePath);
-      return response;
-    } else {
-      final response = await _supabase.storage
-          .from('shift-photos')
-          .createSignedUrl(storagePath, 3600);
-      return response;
-    }
+    // Use signed URLs for both web and mobile (all buckets now private)
+    final response = await _supabase.storage
+        .from('shift-photos')
+        .createSignedUrl(storagePath, 3600); // 1 hour expiry
+    return response;
   }
 
   /// Delete a photo

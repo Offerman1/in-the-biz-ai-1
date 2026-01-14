@@ -45,8 +45,10 @@ class VisionScannerService {
             ),
           );
 
-      // Get public URL
-      final url = _supabase.storage.from(bucketName).getPublicUrl(fileName);
+      // Get signed URL (private bucket)
+      final url = await _supabase.storage
+          .from(bucketName)
+          .createSignedUrl(fileName, 3600); // 1 hour expiry
       uploadedUrls.add(url);
     }
 

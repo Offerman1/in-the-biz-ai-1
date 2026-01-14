@@ -39,8 +39,35 @@
   <!-- Google AdSense -->
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1150666051629225"
      crossorigin="anonymous"></script>
+  
+  <!-- Cache busting meta tag -->
+  <meta name="cache-control" content="no-cache, no-store, must-revalidate">
+  <meta name="pragma" content="no-cache">
+  <meta name="expires" content="0">
 </head>
 <body>
+  <!-- Force service worker update on new deployments -->
+  <script>
+    // Unregister existing service workers and force reload on version mismatch
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        // Check if we have a version mismatch
+        const expectedVersion = '1.2.1+17';
+        const currentVersion = localStorage.getItem('app_version');
+        
+        if (currentVersion && currentVersion !== expectedVersion) {
+          // Version changed, clear cache and reload
+          registrations.forEach(function(registration) {
+            registration.unregister();
+          });
+          localStorage.setItem('app_version', expectedVersion);
+          window.location.reload(true);
+        } else if (!currentVersion) {
+          localStorage.setItem('app_version', expectedVersion);
+        }
+      });
+    }
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

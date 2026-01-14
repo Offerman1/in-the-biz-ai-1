@@ -123,6 +123,7 @@ cd "c:\Users\Brandon 2021\Desktop\In The Biz AI" ; Copy-Item -Path "build\web\ma
 - The built `main.dart.js` must be copied to the ROOT directory
 - Vercel watches the **main** branch and deploys in ~6 seconds
 - Version is hardcoded in `lib/main.dart` line 22 - you MUST update it there too!
+- **CACHE BUSTING:** `index.html` has automatic cache-busting that forces browser reload on version changes
 
 ### DO NOT:
 - ❌ Just edit `lib/main.dart` and stop
@@ -131,6 +132,8 @@ cd "c:\Users\Brandon 2021\Desktop\In The Biz AI" ; Copy-Item -Path "build\web\ma
 - ❌ Push to gh-pages (that's the OLD way)
 - ❌ Only update version in pubspec.yaml (also update lib/main.dart!)
 - ❌ Wait for the user to ask - DEPLOY IMMEDIATELY after code changes
+- ❌ Create bat files for deployment - use manual commands only
+- ❌ Start deploying without user permission
 
 ### ALWAYS:
 - ✅ Build AND deploy in the SAME action
@@ -138,11 +141,37 @@ cd "c:\Users\Brandon 2021\Desktop\In The Biz AI" ; Copy-Item -Path "build\web\ma
 - ✅ Push to **main** branch (Vercel deploys from main)
 - ✅ Verify deployment by checking console for correct version number
 - ✅ Deployment completes in ~6 seconds on Vercel
+- ✅ Use MANUAL commands, never bat files
+- ✅ ASK USER before deploying - never deploy automatically
+- ✅ Cache-busting is handled automatically by index.html script
 
 ### IMPORTANT: GitHub/Vercel Account Ownership
 - The GitHub repo MUST be owned by the same account that Vercel is authenticated as
 - Currently: Repo owned by **Offerman1**, Vercel authenticated as **Offerman1**
 - If deployments stop working, check that repo ownership and Vercel authentication match
+
+### 🚨 CACHE-BUSTING SOLUTION FOR WEB DEPLOYMENT 🚨
+
+**PROBLEM:** Users see old version after deployment until hard refresh (Ctrl+Shift+R)
+**CAUSE:** Service worker aggressively caches old `main.dart.js` files
+**SOLUTION:** Automatic cache-busting script in `index.html`
+
+**How it works:**
+- `index.html` contains JavaScript that checks app version in localStorage
+- If version mismatch detected, unregisters service worker and forces reload
+- Version automatically updates during deployment (matches pubspec.yaml)
+- Users get new version immediately without manual cache clearing
+
+**When deploying, the cache-busting handles:**
+- ✅ Forces browser to fetch new `main.dart.js`
+- ✅ Unregisters old service workers
+- ✅ Updates version tracking in localStorage
+- ✅ Works automatically - no user action required
+
+**DO NOT:**
+- ❌ Modify the cache-busting script in index.html
+- ❌ Remove the version checking code
+- ❌ Create separate cache-clearing mechanisms
 
 ---
 

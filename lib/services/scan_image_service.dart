@@ -65,10 +65,11 @@ class ScanImageService {
               ),
             );
 
-        // Get public URL
-        final publicUrl =
-            _supabase.storage.from(_bucketName).getPublicUrl(storagePath);
-        uploadedUrls.add(publicUrl);
+        // Get signed URL (private bucket)
+        final signedUrl = await _supabase.storage
+            .from(_bucketName)
+            .createSignedUrl(storagePath, 3600); // 1 hour expiry
+        uploadedUrls.add(signedUrl);
 
         print(
             'ScanImageService: Uploaded $storagePath (${optimizedBytes.length ~/ 1024}KB)');
@@ -116,10 +117,11 @@ class ScanImageService {
               ),
             );
 
-        // Get public URL
-        final publicUrl =
-            _supabase.storage.from(_bucketName).getPublicUrl(storagePath);
-        uploadedUrls.add(publicUrl);
+        // Get signed URL (private bucket)
+        final signedUrl = await _supabase.storage
+            .from(_bucketName)
+            .createSignedUrl(storagePath, 3600); // 1 hour expiry
+        uploadedUrls.add(signedUrl);
 
         print(
             'ScanImageService: Uploaded $storagePath (${optimizedBytes.length ~/ 1024}KB)');
