@@ -41,7 +41,9 @@ import '../services/quickbooks_service.dart';
 import 'paywall_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
-  const SettingsScreen({super.key});
+  final int initialTab;
+
+  const SettingsScreen({super.key, this.initialTab = 0});
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
@@ -434,6 +436,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       currentTabIndex: null,
       child: DefaultTabController(
         length: 4,
+        initialIndex: widget.initialTab,
         child: Scaffold(
           backgroundColor: AppTheme.darkBackground,
           appBar: AppBar(

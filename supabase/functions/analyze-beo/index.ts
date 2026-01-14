@@ -85,7 +85,12 @@ SECTION 1: GENERAL EVENT & CONTACT INFORMATION
 **Event Identity:**
 - event_name (string): The event's official name/title
 - event_date (YYYY-MM-DD): The date of the event
-- event_type (string): 'Wedding', 'Corporate', 'Birthday', 'Gala', 'Product Launch', 'Other'
+- event_type (string): MUST be one of these exact values:
+  Life Celebrations: 'Wedding', 'Rehearsal Dinner', 'Engagement Party', 'Bridal Shower', 'Bachelor/Bachelorette Party', 'Anniversary', 'Birthday', 'Sweet 16', 'Quinceañera', 'Bar Mitzvah', 'Bat Mitzvah', 'Baby Shower', 'Gender Reveal', 'Baptism/Christening', 'First Communion', 'Confirmation', 'Graduation', 'Retirement', 'Celebration of Life'
+  Holidays: 'Christmas Party', 'New Year\\'s Eve', 'Thanksgiving', 'Passover', '4th of July', 'Halloween Party'
+  Corporate: 'Corporate Event', 'Conference', 'Gala/Fundraiser', 'Award Ceremony', 'Team Building', 'Networking', 'Luncheon', 'Seminar/Workshop'
+  Social: 'Cocktail Party', 'Wine Tasting', 'Game Day', 'Brunch', 'Family Reunion', 'Class Reunion', 'Homecoming', 'Prom'
+  Other: 'Other'
 - post_as (string): How the event should appear on public signage/screens
 - venue_name (string): Name of the venue
 - venue_address (string): Full venue address

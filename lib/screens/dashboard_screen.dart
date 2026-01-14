@@ -438,7 +438,7 @@ class _HomeScreenState extends State<_HomeScreen> {
                                 });
                               },
                               child: Icon(Icons.add,
-                                  color: AppTheme.primaryGreen, size: 28),
+                                  color: AppTheme.navBarIconColor, size: 28),
                             ),
                             const SizedBox(width: 12),
                             GestureDetector(
@@ -453,8 +453,8 @@ class _HomeScreenState extends State<_HomeScreen> {
                                   _loadGoal();
                                 });
                               },
-                              child: Icon(Icons.flag,
-                                  color: AppTheme.primaryGreen, size: 28),
+                              child: Icon(Icons.flag_outlined,
+                                  color: AppTheme.navBarIconColor, size: 28),
                             ),
                           ],
                         ),
@@ -555,19 +555,117 @@ class _HomeScreenState extends State<_HomeScreen> {
                                       ),
                                     )
                                   : Icon(Icons.refresh,
-                                      color: AppTheme.primaryGreen, size: 28),
+                                      color: AppTheme.navBarIconColor,
+                                      size: 28),
                             ),
                             const SizedBox(width: 12),
                             GestureDetector(
                               onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (_) => const SettingsScreen()),
+                                final RenderBox button =
+                                    context.findRenderObject() as RenderBox;
+                                final RenderBox overlay = Navigator.of(context)
+                                    .overlay!
+                                    .context
+                                    .findRenderObject() as RenderBox;
+                                final RelativeRect position =
+                                    RelativeRect.fromRect(
+                                  Rect.fromPoints(
+                                    button.localToGlobal(
+                                        Offset(button.size.width - 48, 40),
+                                        ancestor: overlay),
+                                    button.localToGlobal(
+                                        button.size.bottomRight(Offset.zero),
+                                        ancestor: overlay),
+                                  ),
+                                  Offset.zero & overlay.size,
                                 );
+                                showMenu<int>(
+                                  context: context,
+                                  position: position,
+                                  color: AppTheme.cardBackground,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  items: [
+                                    PopupMenuItem<int>(
+                                      value: 0,
+                                      child: Row(
+                                        children: [
+                                          Icon(Icons.settings,
+                                              color: AppTheme.textSecondary,
+                                              size: 20),
+                                          const SizedBox(width: 12),
+                                          Text('Settings',
+                                              style: AppTheme.bodyMedium
+                                                  .copyWith(
+                                                      color: AppTheme
+                                                          .textPrimary)),
+                                        ],
+                                      ),
+                                    ),
+                                    PopupMenuItem<int>(
+                                      value: 1,
+                                      child: Row(
+                                        children: [
+                                          Icon(Icons.work,
+                                              color: AppTheme.textSecondary,
+                                              size: 20),
+                                          const SizedBox(width: 12),
+                                          Text('Jobs & Data',
+                                              style: AppTheme.bodyMedium
+                                                  .copyWith(
+                                                      color: AppTheme
+                                                          .textPrimary)),
+                                        ],
+                                      ),
+                                    ),
+                                    PopupMenuItem<int>(
+                                      value: 2,
+                                      child: Row(
+                                        children: [
+                                          Icon(Icons.folder_outlined,
+                                              color: AppTheme.textSecondary,
+                                              size: 20),
+                                          const SizedBox(width: 12),
+                                          Text('Docs & Contacts',
+                                              style: AppTheme.bodyMedium
+                                                  .copyWith(
+                                                      color: AppTheme
+                                                          .textPrimary)),
+                                        ],
+                                      ),
+                                    ),
+                                    PopupMenuItem<int>(
+                                      value: 3,
+                                      child: Row(
+                                        children: [
+                                          Icon(Icons.account_balance,
+                                              color: AppTheme.textSecondary,
+                                              size: 20),
+                                          const SizedBox(width: 12),
+                                          Text('Taxes',
+                                              style: AppTheme.bodyMedium
+                                                  .copyWith(
+                                                      color: AppTheme
+                                                          .textPrimary)),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ).then((value) {
+                                  if (value != null) {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) =>
+                                            SettingsScreen(initialTab: value),
+                                      ),
+                                    );
+                                  }
+                                });
                               },
-                              child: Icon(Icons.settings_outlined,
-                                  color: AppTheme.primaryGreen, size: 28),
+                              child: Icon(Icons.more_vert,
+                                  color: AppTheme.navBarIconColor, size: 28),
                             ),
                           ],
                         ),

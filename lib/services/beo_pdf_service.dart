@@ -13,6 +13,24 @@ class BeoPdfService {
   final _dateFormat = DateFormat('EEEE, MMMM d, yyyy');
   final _currencyFormat = NumberFormat.currency(symbol: '\$', decimalDigits: 2);
 
+  /// Convert 24-hour time to 12-hour AM/PM format
+  String _formatTime(String? time) {
+    if (time == null || time.isEmpty) return '';
+    try {
+      final parts = time.split(':');
+      if (parts.isEmpty) return time;
+      int hour = int.parse(parts[0]);
+      final minute = parts.length > 1 ? parts[1] : '00';
+      final period = hour >= 12 ? 'PM' : 'AM';
+      if (hour == 0)
+        hour = 12;
+      else if (hour > 12) hour -= 12;
+      return '$hour:$minute $period';
+    } catch (e) {
+      return time;
+    }
+  }
+
   /// Generate a PDF for a BEO event and share it
   Future<void> generateAndSharePdf(BeoEvent beo,
       {String? logoUrl, String? companyName}) async {
@@ -126,7 +144,7 @@ class BeoPdfService {
               ),
               if (beo.eventStartTime != null || beo.eventEndTime != null)
                 pw.Text(
-                  '${beo.eventStartTime ?? ''} - ${beo.eventEndTime ?? ''}',
+                  '${_formatTime(beo.eventStartTime)} - ${_formatTime(beo.eventEndTime)}',
                   style: const pw.TextStyle(fontSize: 11),
                 ),
               if (beo.eventType != null)

@@ -57,7 +57,8 @@ class _ScanVerificationScreenState extends State<ScanVerificationScreen> {
 
   /// Upload scan images and return the public URLs
   /// Works with both file paths (mobile) and bytes (web)
-  Future<List<String>> _uploadScanImages(String scanType, {String? entityId}) async {
+  Future<List<String>> _uploadScanImages(String scanType,
+      {String? entityId}) async {
     try {
       if (widget.imageBytes != null && widget.imageBytes!.isNotEmpty) {
         // Web: Upload from bytes
@@ -499,11 +500,12 @@ class _ScanVerificationScreenState extends State<ScanVerificationScreen> {
 
       // Upload scan images
       final imageUrls = await _uploadScanImages(scanTypeFolder);
-      
+
       // Add image URLs to the data
       if (imageUrls.isNotEmpty) {
         // Use 'image_urls' for multiple images, 'image_url' for single
-        if (widget.scanType == ScanType.paycheck || widget.scanType == ScanType.businessCard) {
+        if (widget.scanType == ScanType.paycheck ||
+            widget.scanType == ScanType.businessCard) {
           // These typically have single images
           _editableData['image_url'] = imageUrls.first;
         } else {
@@ -539,7 +541,7 @@ class _ScanVerificationScreenState extends State<ScanVerificationScreen> {
     try {
       // Upload scan images for checkout
       final imageUrls = await _uploadScanImages('checkout');
-      
+
       // Add image URLs to the data before saving
       if (imageUrls.isNotEmpty) {
         _editableData['image_urls'] = imageUrls;
@@ -1104,7 +1106,7 @@ class _ScanVerificationScreenState extends State<ScanVerificationScreen> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    imageUrls.isNotEmpty 
+                    imageUrls.isNotEmpty
                         ? 'BEO saved with ${imageUrls.length} image(s)! It will appear on your calendar.'
                         : 'BEO saved! It will appear on your calendar.',
                     style: const TextStyle(color: Colors.white),
@@ -1167,10 +1169,29 @@ class _ScanVerificationScreenState extends State<ScanVerificationScreen> {
 
       // First, save the BEO event
       final beoEvent = BeoEvent.fromJson(beoData);
+      print(
+          '🎯 BEO Event created: eventName=${beoEvent.eventName}, venueName=${beoEvent.venueName}, eventDate=${beoEvent.eventDate}');
 
       final savedBeo = await _beoService.createBeoEvent(beoEvent);
+      print('🎯 BEO saved with ID: ${savedBeo.id}');
 
       if (!mounted) return;
+
+      // Prepare the data to pass to AddShiftScreen
+      final prefilledData = {
+        'event_name': beoEvent.eventName,
+        'location': beoEvent.venueName ?? '',
+        'hostess': beoEvent.primaryContactName ?? '',
+        'guest_count': beoEvent.displayGuestCount?.toString() ?? '',
+        'event_cost': beoEvent.grandTotal?.toString() ?? '',
+        'commission': beoEvent.commissionAmount?.toString() ?? '',
+        'start_time': beoEvent.eventStartTime,
+        'end_time': beoEvent.eventEndTime,
+        'beo_event_id': savedBeo.id,
+        'image_urls': imageUrls, // Pass the uploaded image URLs
+      };
+      print(
+          '🎯 Navigating to AddShiftScreen with prefilledBeoData: $prefilledData');
 
       // Navigate to Add Shift screen with pre-filled data from BEO
       final result = await Navigator.push<bool>(
@@ -1178,17 +1199,7 @@ class _ScanVerificationScreenState extends State<ScanVerificationScreen> {
         MaterialPageRoute(
           builder: (context) => AddShiftScreen(
             preselectedDate: beoEvent.eventDate,
-            prefilledBeoData: {
-              'event_name': beoEvent.eventName,
-              'location': beoEvent.venueName ?? '',
-              'hostess': beoEvent.primaryContactName ?? '',
-              'guest_count': beoEvent.displayGuestCount?.toString() ?? '',
-              'event_cost': beoEvent.grandTotal?.toString() ?? '',
-              'commission': beoEvent.commissionAmount?.toString() ?? '',
-              'start_time': beoEvent.eventStartTime,
-              'end_time': beoEvent.eventEndTime,
-              'beo_event_id': savedBeo.id,
-            },
+            prefilledBeoData: prefilledData,
           ),
         ),
       );
@@ -1214,7 +1225,10 @@ class _ScanVerificationScreenState extends State<ScanVerificationScreen> {
             ),
           );
         }
-        Navigator.pop(context, result ?? false);
+        // Only pop if we can safely do so
+        if (Navigator.canPop(context)) {
+          Navigator.pop(context, result ?? false);
+        }
       }
     } catch (e) {
       if (mounted) {

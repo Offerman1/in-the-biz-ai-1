@@ -156,6 +156,14 @@ class DatabaseService {
             'table_section': shift.tableSection,
             'cash_sales': shift.cashSales,
             'card_sales': shift.cardSales,
+            // BEO Event linkage
+            'beo_event_id': shift.beoEventId,
+            // Section field
+            'section': shift.section,
+            // Checkout ID
+            'checkout_id': shift.checkoutId,
+            // Shift hidden sections
+            'shift_hidden_sections': shift.shiftHiddenSections,
           })
           .select()
           .single();
@@ -309,6 +317,14 @@ class DatabaseService {
       'table_section': shift.tableSection,
       'cash_sales': shift.cashSales,
       'card_sales': shift.cardSales,
+      // BEO Event linkage
+      'beo_event_id': shift.beoEventId,
+      // Section field
+      'section': shift.section,
+      // Checkout ID
+      'checkout_id': shift.checkoutId,
+      // Shift hidden sections
+      'shift_hidden_sections': shift.shiftHiddenSections,
       'updated_at': DateTime.now().toIso8601String(),
     }).eq('id', shift.id);
 
@@ -777,10 +793,10 @@ class DatabaseService {
 
     // Create if doesn't exist
     response ??= await _supabase
-          .from('user_settings')
-          .insert({'user_id': userId})
-          .select()
-          .single();
+        .from('user_settings')
+        .insert({'user_id': userId})
+        .select()
+        .single();
 
     return response;
   }

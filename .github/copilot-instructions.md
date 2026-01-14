@@ -10,6 +10,51 @@ applyTo: "*"
 
 ---
 
+## 🚨 CRITICAL: TIME FORMAT - NEVER USE MILITARY TIME 🚨
+
+**ALWAYS use 12-hour AM/PM format. NEVER use 24-hour military time.**
+
+### ❌ WRONG (Military/24-hour time):
+```
+17:00:00
+09:30:00
+21:00
+```
+
+### ✅ CORRECT (12-hour AM/PM):
+```
+5:00 PM
+9:30 AM
+9:00 PM
+```
+
+**This applies to:**
+- ALL screens in the application
+- ALL time displays (shift times, event times, etc.)
+- ALL time pickers and inputs
+- ALL formatted time strings
+
+**How to convert:**
+```dart
+String formatTime(String? time) {
+  if (time == null || time.isEmpty) return '';
+  try {
+    final parts = time.split(':');
+    if (parts.isEmpty) return time;
+    int hour = int.parse(parts[0]);
+    final minute = parts.length > 1 ? parts[1] : '00';
+    final period = hour >= 12 ? 'PM' : 'AM';
+    if (hour == 0) hour = 12;
+    else if (hour > 12) hour -= 12;
+    return '$hour:$minute $period';
+  } catch (e) {
+    return time;
+  }
+}
+```
+
+---
+
 ## 🚨 CRITICAL: HOW TO CHECK FOR ERRORS - READ THIS FIRST 🚨
 
 **NEVER check errors for a specific file. ALWAYS check the FULL WORKSPACE.**

@@ -16,6 +16,7 @@ import '../models/job.dart';
 import '../models/job_template.dart';
 import '../models/event_contact.dart';
 import '../models/shift_attachment.dart';
+import '../models/beo_event.dart';
 import '../providers/shift_provider.dart';
 import '../providers/field_order_provider.dart';
 import '../services/database_service.dart';
@@ -28,6 +29,7 @@ import '../widgets/hero_card.dart';
 import '../widgets/navigation_wrapper.dart';
 import '../widgets/add_field_picker.dart';
 import '../widgets/section_options_menu.dart';
+import 'beo_detail_screen.dart';
 import '../widgets/add_section_picker.dart';
 import '../models/field_definition.dart';
 import '../models/section_definition.dart';
@@ -43,6 +45,7 @@ import '../widgets/scan_type_menu.dart';
 import '../widgets/document_preview_widget.dart';
 import '../models/vision_scan.dart';
 import '../services/vision_scanner_service.dart';
+import '../services/beo_event_service.dart';
 
 class AddShiftScreen extends StatefulWidget {
   final Shift? existingShift;
@@ -249,6 +252,9 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
   // Linked BEO Event ID (from BEO scan)
   String? _beoEventId;
 
+  // Linked BEO Event (loaded from database)
+  BeoEvent? _linkedBeo;
+
   @override
   void initState() {
     super.initState();
@@ -267,6 +273,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
       _applyCheckoutData();
     }
     if (widget.prefilledBeoData != null) {
+      print('🎯 AddShiftScreen: prefilledBeoData = ${widget.prefilledBeoData}');
       _applyBeoData();
     }
     // Auto-open BEO scanner if flag is set
@@ -337,36 +344,85 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
         data['commission'].toString().isNotEmpty) {
       _commissionController.text = data['commission'].toString();
     }
-    // Parse start time
-    if (data['start_time'] != null &&
-        data['start_time'].toString().isNotEmpty) {
-      try {
-        final time = data['start_time'].toString();
-        final parts = time.split(':');
-        if (parts.length >= 2) {
-          _startTime = TimeOfDay(
-            hour: int.parse(parts[0]),
-            minute: int.parse(parts[1]),
-          );
-        }
-      } catch (_) {}
+
+    // Only set times if this is a NEW shift (no existing shift)
+    // For existing shifts, preserve their scheduled work times
+    // The BEO times are for the party, not the work schedule
+    final isNewShift = widget.existingShift == null;
+
+    if (isNewShift) {
+      // Parse start time
+      if (data['start_time'] != null &&
+          data['start_time'].toString().isNotEmpty) {
+        try {
+          final time = data['start_time'].toString();
+          final parts = time.split(':');
+          if (parts.length >= 2) {
+            _startTime = TimeOfDay(
+              hour: int.parse(parts[0]),
+              minute: int.parse(parts[1]),
+            );
+          }
+        } catch (_) {}
+      }
+      // Parse end time
+      if (data['end_time'] != null && data['end_time'].toString().isNotEmpty) {
+        try {
+          final time = data['end_time'].toString();
+          final parts = time.split(':');
+          if (parts.length >= 2) {
+            _endTime = TimeOfDay(
+              hour: int.parse(parts[0]),
+              minute: int.parse(parts[1]),
+            );
+          }
+        } catch (_) {}
+      }
     }
-    // Parse end time
-    if (data['end_time'] != null && data['end_time'].toString().isNotEmpty) {
-      try {
-        final time = data['end_time'].toString();
-        final parts = time.split(':');
-        if (parts.length >= 2) {
-          _endTime = TimeOfDay(
-            hour: int.parse(parts[0]),
-            minute: int.parse(parts[1]),
-          );
-        }
-      } catch (_) {}
-    }
+
     // Store BEO Event ID for linking
     if (data['beo_event_id'] != null) {
       _beoEventId = data['beo_event_id'].toString();
+      print('🎯 Set _beoEventId: $_beoEventId');
+    }
+    // Add scanned image URLs as attachments
+    if (data['image_urls'] != null && data['image_urls'] is List) {
+      final urls = data['image_urls'] as List;
+      for (final url in urls) {
+        if (url != null && url.toString().isNotEmpty) {
+          _capturedPhotos.add(url.toString());
+          print(
+              '🎯 Added image URL to _capturedPhotos: ${url.toString().substring(0, 50)}...');
+        }
+      }
+      print('🎯 Total _capturedPhotos count: ${_capturedPhotos.length}');
+    }
+
+    // IMPORTANT: Make the Event Details/BEO section visible when BEO data is present
+    // Remove from hidden sections if it was hidden
+    _shiftHiddenSections.remove('event_contract');
+    print('🎯 Made Event Details/BEO section visible');
+
+    // Load the linked BEO from database
+    if (_beoEventId != null) {
+      _loadLinkedBeo();
+    }
+  }
+
+  /// Load the linked BEO event from database
+  Future<void> _loadLinkedBeo() async {
+    if (_beoEventId == null) return;
+    try {
+      final beoService = BeoEventService();
+      final beo = await beoService.getBeoEventById(_beoEventId!);
+      if (mounted) {
+        setState(() {
+          _linkedBeo = beo;
+        });
+        print('🎯 Loaded linked BEO: ${beo?.eventName}');
+      }
+    } catch (e) {
+      print('Error loading linked BEO: $e');
     }
   }
 
@@ -612,8 +668,21 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
     // Load shift-level hidden sections
     _shiftHiddenSections = List.from(shift.shiftHiddenSections);
 
-    // Load linked BEO Event ID
+    // Load linked BEO Event ID and BEO data
     _beoEventId = shift.beoEventId;
+
+    // If shift has a linked BEO, load it and make section visible
+    if (_beoEventId != null) {
+      print('🎯 Editing shift with linked BEO ID: $_beoEventId');
+      _shiftHiddenSections.remove('event_contract'); // Make section visible
+      _loadLinkedBeo();
+    }
+
+    // Load images if they exist
+    if (shift.imageUrl != null && shift.imageUrl!.isNotEmpty) {
+      _capturedPhotos.addAll(shift.imageUrl!.split(','));
+      print('🎯 Loaded ${_capturedPhotos.length} images from shift');
+    }
   }
 
   @override
@@ -1040,6 +1109,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
       // Debug logging
       print('🔍 SAVING SHIFT:');
       print('  Event Name: ${shift.eventName}');
+      print('  BEO Event ID: ${shift.beoEventId}');
       print('  Hostess: ${shift.hostess}');
       print('  Guest Count: ${shift.guestCount}');
       print('  Location: ${shift.location}');
@@ -1576,36 +1646,45 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
                       data['commission_amount'].toString();
                 }
 
-                // Timing
-                if (data['event_date'] != null) {
+                // Timing - ONLY set if this is a NEW shift (not editing existing)
+                // For existing shifts, preserve the scheduled work times
+                // The BEO's event time is for the party, not the work schedule
+                final isNewShift = widget.existingShift == null;
+
+                if (data['event_date'] != null && isNewShift) {
                   try {
                     _selectedDate =
                         DateTime.parse(data['event_date'].toString());
                   } catch (_) {}
                 }
-                if (data['event_start_time'] != null) {
-                  try {
-                    final time = data['event_start_time'].toString();
-                    final parts = time.split(':');
-                    if (parts.length >= 2) {
-                      _startTime = TimeOfDay(
-                        hour: int.parse(parts[0]),
-                        minute: int.parse(parts[1]),
-                      );
-                    }
-                  } catch (_) {}
-                }
-                if (data['event_end_time'] != null) {
-                  try {
-                    final time = data['event_end_time'].toString();
-                    final parts = time.split(':');
-                    if (parts.length >= 2) {
-                      _endTime = TimeOfDay(
-                        hour: int.parse(parts[0]),
-                        minute: int.parse(parts[1]),
-                      );
-                    }
-                  } catch (_) {}
+
+                // Only override times for NEW shifts
+                // Existing shifts keep their scheduled work times
+                if (isNewShift) {
+                  if (data['event_start_time'] != null) {
+                    try {
+                      final time = data['event_start_time'].toString();
+                      final parts = time.split(':');
+                      if (parts.length >= 2) {
+                        _startTime = TimeOfDay(
+                          hour: int.parse(parts[0]),
+                          minute: int.parse(parts[1]),
+                        );
+                      }
+                    } catch (_) {}
+                  }
+                  if (data['event_end_time'] != null) {
+                    try {
+                      final time = data['event_end_time'].toString();
+                      final parts = time.split(':');
+                      if (parts.length >= 2) {
+                        _endTime = TimeOfDay(
+                          hour: int.parse(parts[0]),
+                          minute: int.parse(parts[1]),
+                        );
+                      }
+                    } catch (_) {}
+                  }
                 }
 
                 // Notes
@@ -4060,12 +4139,20 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
     if (!_isSectionVisible('event_contract')) return const SizedBox.shrink();
 
     final guestCount = int.tryParse(_guestCountController.text);
-    String summary = 'Event Details';
+    String summary = 'Event Details/BEO';
 
-    if (guestCount != null && guestCount > 0) {
-      summary = 'Event Details: $guestCount guests';
+    if (_linkedBeo != null) {
+      summary = 'Event Details/BEO: ${_linkedBeo!.eventName}';
+    } else if (guestCount != null && guestCount > 0) {
+      summary = 'Event Details/BEO: $guestCount guests';
     }
 
+    // If we have a linked BEO, show read-only full details with edit button
+    if (_linkedBeo != null) {
+      return _buildLinkedBeoSection(summary);
+    }
+
+    // Otherwise show the editable fields
     return CollapsibleSection(
       title: summary,
       icon: Icons.celebration,
@@ -4193,6 +4280,415 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
         ],
       ],
     );
+  }
+
+  /// Build read-only BEO section with all 40+ fields and edit button
+  Widget _buildLinkedBeoSection(String summary) {
+    final beo = _linkedBeo!;
+
+    return CollapsibleSection(
+      title: summary,
+      icon: Icons.description,
+      accentColor: AppTheme.accentPurple,
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Edit button
+          IconButton(
+            icon: Icon(Icons.edit, color: AppTheme.accentPurple, size: 20),
+            onPressed: () async {
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => BeoDetailScreen(
+                    beoEvent: beo,
+                    isEditing: true,
+                  ),
+                ),
+              );
+              // Reload BEO if it was edited
+              if (result == true) {
+                _loadLinkedBeo();
+              }
+            },
+            tooltip: 'Edit BEO',
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+          ),
+          const SizedBox(width: 8),
+          SectionOptionsMenu(
+            sectionKey: 'event_contract',
+            onOptionSelected: (option) =>
+                _handleRemoveSection('event_contract', option),
+          ),
+        ],
+      ),
+      children: [
+        const SizedBox(height: 8),
+        // Build read-only display of all BEO fields
+        ..._buildBeoDetailRows(beo),
+      ],
+    );
+  }
+
+  /// Format military time to AM/PM
+  String _formatTimeToAmPm(String? time) {
+    if (time == null || time.isEmpty) return '';
+    try {
+      // If already has AM/PM, return as-is
+      if (time.toUpperCase().contains('AM') ||
+          time.toUpperCase().contains('PM')) {
+        return time;
+      }
+      // Parse military time
+      final parts = time.split(':');
+      if (parts.isEmpty) return time;
+      var hour = int.parse(parts[0]);
+      final minute = parts.length > 1
+          ? parts[1]
+              .replaceAll(RegExp(r'[^0-9]'), '')
+              .padRight(2, '0')
+              .substring(0, 2)
+          : '00';
+      final period = hour >= 12 ? 'PM' : 'AM';
+      if (hour > 12) hour -= 12;
+      if (hour == 0) hour = 12;
+      return '$hour:$minute $period';
+    } catch (e) {
+      return time;
+    }
+  }
+
+  /// Check if text is a disclaimer/boilerplate
+  bool _isDisclaimer(String? text) {
+    if (text == null || text.isEmpty) return true;
+    final lowerText = text.toLowerCase();
+    final disclaimerPatterns = [
+      'we\'re happy to accommodate',
+      'prior to signing',
+      'please specify',
+      'certificate of liability',
+      'certificate of insurance',
+      'non-refundable deposit',
+      'deposit is deducted',
+      'final bill',
+      'must be received',
+      'cancellation policy',
+      'terms and conditions',
+      'subject to',
+      '% of the estimated',
+      'signed contract',
+    ];
+    for (final pattern in disclaimerPatterns) {
+      if (lowerText.contains(pattern)) return true;
+    }
+    return false;
+  }
+
+  /// Build rows for all non-empty BEO fields - clean layout without icons on sub-fields
+  List<Widget> _buildBeoDetailRows(BeoEvent beo) {
+    final rows = <Widget>[];
+
+    /// Add a section header with icon
+    void addSectionHeader(String title, IconData icon) {
+      rows.add(
+        Padding(
+          padding: const EdgeInsets.only(top: 16, bottom: 8),
+          child: Row(
+            children: [
+              Icon(icon, size: 18, color: AppTheme.accentPurple),
+              const SizedBox(width: 8),
+              Text(
+                title,
+                style: AppTheme.labelLarge.copyWith(
+                  color: AppTheme.textPrimary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    /// Add a regular field row - no icons, consistent alignment
+    void addRow(String label, String? value) {
+      if (value != null && value.isNotEmpty && !_isDisclaimer(value)) {
+        rows.add(
+          Padding(
+            padding: const EdgeInsets.only(bottom: 6, left: 26),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(
+                  width: 110,
+                  child: Text(
+                    label,
+                    style: AppTheme.labelSmall.copyWith(
+                      color: AppTheme.textMuted,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Text(
+                    value,
+                    style: AppTheme.bodyMedium.copyWith(
+                      color: AppTheme.textPrimary,
+                    ),
+                    textAlign: TextAlign.left,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+    }
+
+    // EVENT INFO
+    addSectionHeader('Event', Icons.celebration);
+    addRow('Name', beo.eventName);
+    addRow('Type', beo.eventType);
+    addRow('Date', DateFormat('EEE, MMM d, yyyy').format(beo.eventDate));
+    if (beo.eventStartTime != null || beo.eventEndTime != null) {
+      String time = '';
+      if (beo.eventStartTime != null)
+        time = _formatTimeToAmPm(beo.eventStartTime);
+      if (beo.eventEndTime != null)
+        time += ' - ${_formatTimeToAmPm(beo.eventEndTime)}';
+      addRow('Time', time);
+    }
+    addRow('Account', beo.accountName);
+
+    // VENUE
+    addSectionHeader('Venue', Icons.location_on);
+    addRow('Name', beo.venueName);
+    addRow('Function Space', beo.functionSpace);
+    addRow('Address', beo.venueAddress);
+
+    // GUEST COUNT
+    if ((beo.displayGuestCount ?? 0) > 0 ||
+        beo.guestCountExpected != null ||
+        beo.guestCountConfirmed != null) {
+      addSectionHeader('Guests', Icons.people);
+      if (beo.displayGuestCount != null && beo.displayGuestCount! > 0) {
+        addRow('Total', '${beo.displayGuestCount}');
+      }
+      addRow('Expected', beo.guestCountExpected?.toString());
+      addRow('Confirmed', beo.guestCountConfirmed?.toString());
+      addRow('Adults', beo.adultCount?.toString());
+      addRow('Children', beo.childCount?.toString());
+    }
+
+    // TIMELINE
+    if (beo.loadInTime != null ||
+        beo.setupTime != null ||
+        beo.guestArrivalTime != null) {
+      addSectionHeader('Timeline', Icons.schedule);
+      addRow('Load In', _formatTimeToAmPm(beo.loadInTime));
+      addRow('Setup', _formatTimeToAmPm(beo.setupTime));
+      addRow('Guest Arrival', _formatTimeToAmPm(beo.guestArrivalTime));
+      addRow('Breakdown', _formatTimeToAmPm(beo.breakdownTime));
+      addRow('Load Out', _formatTimeToAmPm(beo.loadOutTime));
+    }
+
+    // FINANCIALS
+    if (beo.grandTotal != null ||
+        beo.foodTotal != null ||
+        beo.depositAmount != null) {
+      addSectionHeader('Financials', Icons.attach_money);
+      if (beo.foodTotal != null)
+        addRow('Food', '\$${beo.foodTotal!.toStringAsFixed(2)}');
+      if (beo.beverageTotal != null)
+        addRow('Beverage', '\$${beo.beverageTotal!.toStringAsFixed(2)}');
+      if (beo.laborTotal != null)
+        addRow('Labor', '\$${beo.laborTotal!.toStringAsFixed(2)}');
+      if (beo.roomRental != null)
+        addRow('Room Rental', '\$${beo.roomRental!.toStringAsFixed(2)}');
+      if (beo.subtotal != null)
+        addRow('Subtotal', '\$${beo.subtotal!.toStringAsFixed(2)}');
+      if (beo.serviceChargePercent != null)
+        addRow('Service Charge',
+            '${beo.serviceChargePercent!.toStringAsFixed(1)}%');
+      if (beo.taxAmount != null)
+        addRow('Tax', '\$${beo.taxAmount!.toStringAsFixed(2)}');
+      if (beo.gratuityAmount != null)
+        addRow('Gratuity', '\$${beo.gratuityAmount!.toStringAsFixed(2)}');
+      if (beo.grandTotal != null)
+        addRow('Grand Total', '\$${beo.grandTotal!.toStringAsFixed(2)}');
+      if (beo.depositAmount != null)
+        addRow('Deposit', '\$${beo.depositAmount!.toStringAsFixed(2)}');
+      if (beo.balanceDue != null)
+        addRow('Balance Due', '\$${beo.balanceDue!.toStringAsFixed(2)}');
+    }
+
+    // CONTACTS
+    if (beo.primaryContactName != null || beo.salesManagerName != null) {
+      addSectionHeader('Contacts', Icons.person);
+      addRow('Primary', beo.primaryContactName);
+      addRow('Phone', beo.primaryContactPhone);
+      addRow('Email', beo.primaryContactEmail);
+      addRow('Sales Manager', beo.salesManagerName);
+      addRow('Catering Manager', beo.cateringManagerName);
+    }
+
+    // MENU
+    if (beo.menuStyle != null ||
+        beo.menuItems != null ||
+        beo.menuDetails != null) {
+      addSectionHeader('Menu', Icons.restaurant_menu);
+      addRow('Style', beo.menuStyle);
+
+      // Display detailed menu breakdown if available
+      if (beo.menuDetails != null && beo.menuDetails!.isNotEmpty) {
+        final md = beo.menuDetails!;
+
+        // Appetizers
+        if (md['appetizers'] != null && (md['appetizers'] as List).isNotEmpty) {
+          final items = (md['appetizers'] as List)
+              .map((a) => a['name']?.toString() ?? '')
+              .where((s) => s.isNotEmpty)
+              .join(', ');
+          if (items.isNotEmpty) addRow('Appetizers', items);
+        }
+
+        // Salads
+        if (md['salads'] != null && (md['salads'] as List).isNotEmpty) {
+          final items = (md['salads'] as List)
+              .map((a) => a['name']?.toString() ?? '')
+              .where((s) => s.isNotEmpty)
+              .join(', ');
+          if (items.isNotEmpty) addRow('Salads', items);
+        }
+
+        // Entrees
+        if (md['entrees'] != null && (md['entrees'] as List).isNotEmpty) {
+          final items = (md['entrees'] as List)
+              .map((a) => a['name']?.toString() ?? '')
+              .where((s) => s.isNotEmpty)
+              .join(', ');
+          if (items.isNotEmpty) addRow('Entrees', items);
+        }
+
+        // Sides
+        if (md['sides'] != null && (md['sides'] as List).isNotEmpty) {
+          final items = (md['sides'] as List)
+              .map((a) => a['name']?.toString() ?? '')
+              .where((s) => s.isNotEmpty)
+              .join(', ');
+          if (items.isNotEmpty) addRow('Sides', items);
+        }
+
+        // Desserts
+        if (md['desserts'] != null && (md['desserts'] as List).isNotEmpty) {
+          final items = (md['desserts'] as List)
+              .map((a) => a['name']?.toString() ?? '')
+              .where((s) => s.isNotEmpty)
+              .join(', ');
+          if (items.isNotEmpty) addRow('Desserts', items);
+        }
+
+        // Passed Items
+        if (md['passed_items'] != null &&
+            (md['passed_items'] as List).isNotEmpty) {
+          final items = (md['passed_items'] as List)
+              .map((a) => a['name']?.toString() ?? '')
+              .where((s) => s.isNotEmpty)
+              .join(', ');
+          if (items.isNotEmpty) addRow('Passed Items', items);
+        }
+      } else if (beo.menuItems != null) {
+        // Fall back to legacy menu items string
+        addRow('Items', beo.menuItems);
+      }
+
+      addRow('Dietary', beo.dietaryRestrictions);
+    }
+
+    // BEVERAGES
+    if (beo.beverageDetails != null && beo.beverageDetails!.isNotEmpty) {
+      addSectionHeader('Beverages', Icons.local_bar);
+      final bd = beo.beverageDetails!;
+      addRow('Package', bd['package']?.toString());
+      addRow('Bar Type', bd['bar_type']?.toString());
+      if (bd['price_per_person'] != null) {
+        addRow('Per Person', '\$${bd['price_per_person']}');
+      }
+      addRow('Brands', bd['brands']?.toString());
+    }
+
+    // SETUP & DECOR
+    if (beo.decorNotes != null ||
+        beo.floorPlanNotes != null ||
+        beo.setupDetails != null) {
+      addSectionHeader('Setup & Decor', Icons.design_services);
+
+      // Display detailed setup if available
+      if (beo.setupDetails != null && beo.setupDetails!.isNotEmpty) {
+        final sd = beo.setupDetails!;
+
+        // Tables
+        if (sd['tables'] != null && (sd['tables'] as List).isNotEmpty) {
+          final tables = (sd['tables'] as List)
+              .map((t) =>
+                  '${t['qty']} ${t['type']}${t['linen_color'] != null ? ' (${t['linen_color']})' : ''}')
+              .join(', ');
+          if (tables.isNotEmpty) addRow('Tables', tables);
+        }
+
+        // Linens
+        if (sd['linens'] != null && sd['linens'] is Map) {
+          final linens = sd['linens'] as Map;
+          final linenList = <String>[];
+          if (linens['tablecloths'] != null)
+            linenList.add('Tablecloths: ${linens['tablecloths']}');
+          if (linens['napkins'] != null)
+            linenList.add('Napkins: ${linens['napkins']}');
+          if (linenList.isNotEmpty) addRow('Linens', linenList.join(', '));
+        }
+
+        // Chairs
+        if (sd['chairs'] != null && sd['chairs'] is Map) {
+          final chairs = sd['chairs'] as Map;
+          addRow('Chairs', '${chairs['qty']} ${chairs['type']}');
+        }
+
+        // Decor
+        if (sd['decor'] != null && (sd['decor'] as List).isNotEmpty) {
+          addRow('Decor Items', (sd['decor'] as List).join(', '));
+        }
+
+        // AV Equipment
+        if (sd['av_equipment'] != null &&
+            (sd['av_equipment'] as List).isNotEmpty) {
+          addRow('AV Equipment', (sd['av_equipment'] as List).join(', '));
+        }
+
+        // Special Items
+        if (sd['special_items'] != null &&
+            (sd['special_items'] as List).isNotEmpty) {
+          addRow('Special Items', (sd['special_items'] as List).join(', '));
+        }
+      }
+
+      addRow('Decor Notes', beo.decorNotes);
+      addRow('Floor Plan', beo.floorPlanNotes);
+    }
+
+    // NOTES
+    if (beo.specialRequests != null || beo.formattedNotes != null) {
+      addSectionHeader('Notes', Icons.note);
+      addRow('Special Requests', beo.specialRequests);
+      addRow('Notes', beo.formattedNotes);
+    }
+
+    // BILLING
+    if (beo.paymentMethod != null) {
+      addSectionHeader('Billing', Icons.payment);
+      addRow('Payment Method', beo.paymentMethod);
+    }
+
+    return rows;
   }
 
   Widget _buildWorkDetailsSection() {
@@ -5427,11 +5923,33 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
     final extension =
         fileName.contains('.') ? fileName.split('.').last.toLowerCase() : '';
 
+    // Check if this is a URL (from Supabase storage) or a local file
+    final isUrl =
+        filePath.startsWith('http://') || filePath.startsWith('https://');
+
+    print(
+        '🖼️ Building thumbnail for: ${filePath.length > 60 ? '${filePath.substring(0, 60)}...' : filePath}');
+    print('🖼️ isUrl: $isUrl, extension: $extension');
+
     // Determine if it's an image or video
     final isImage =
-        ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].contains(extension);
+        ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].contains(extension) ||
+            (isUrl &&
+                ![
+                  'mp4',
+                  'mov',
+                  'avi',
+                  'mkv',
+                  'flv',
+                  'wmv',
+                  'pdf',
+                  'doc',
+                  'docx'
+                ].any((ext) => filePath.toLowerCase().contains('.$ext')));
     final isVideo =
         ['mp4', 'mov', 'avi', 'mkv', 'flv', 'wmv'].contains(extension);
+
+    print('🖼️ isImage: $isImage, isVideo: $isVideo');
 
     // Determine icon and color for non-image/video files
     IconData fileIcon;
@@ -5455,6 +5973,61 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
     } else {
       fileIcon = Icons.insert_drive_file;
       iconColor = AppTheme.textMuted;
+    }
+
+    // Build the image widget based on whether it's a URL or local file
+    Widget imageWidget;
+    if (isUrl) {
+      // Network image from Supabase storage
+      imageWidget = Image.network(
+        filePath,
+        fit: BoxFit.cover,
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Container(
+            color: AppTheme.cardBackgroundLight,
+            child: Center(
+              child: CircularProgressIndicator(
+                value: loadingProgress.expectedTotalBytes != null
+                    ? loadingProgress.cumulativeBytesLoaded /
+                        loadingProgress.expectedTotalBytes!
+                    : null,
+                strokeWidth: 2,
+                color: AppTheme.primaryGreen,
+              ),
+            ),
+          );
+        },
+        errorBuilder: (context, error, stackTrace) {
+          print('🖼️ ERROR loading network image: $error');
+          print('🖼️ URL was: $filePath');
+          return Container(
+            color: AppTheme.cardBackgroundLight,
+            child: Icon(
+              Icons.broken_image,
+              color: AppTheme.textMuted,
+              size: 40,
+            ),
+          );
+        },
+      );
+    } else {
+      // Local file
+      imageWidget = Image.file(
+        File(filePath),
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          print('🖼️ ERROR loading local file: $error');
+          return Container(
+            color: AppTheme.cardBackgroundLight,
+            child: Icon(
+              isVideo ? Icons.videocam : Icons.broken_image,
+              color: AppTheme.textMuted,
+              size: 40,
+            ),
+          );
+        },
+      );
     }
 
     return GestureDetector(
@@ -5481,20 +6054,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
                   ? Stack(
                       fit: StackFit.expand,
                       children: [
-                        Image.file(
-                          File(filePath),
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              color: AppTheme.cardBackgroundLight,
-                              child: Icon(
-                                isVideo ? Icons.videocam : Icons.broken_image,
-                                color: AppTheme.textMuted,
-                                size: 40,
-                              ),
-                            );
-                          },
-                        ),
+                        imageWidget,
                         if (isVideo)
                           Center(
                             child: Container(

@@ -7,8 +7,8 @@ import 'package:uuid/uuid.dart';
 /// Unified service for uploading and managing scan images
 /// Supports all scan types: BEO, Paycheck, Invoice, Receipt, Business Card, Server Checkout
 ///
-/// Storage bucket: 'documents' (shared with other document uploads)
-/// Folder structure: scans/{userId}/{scanType}/{uuid}.jpg
+/// Storage bucket: 'shift-attachments' (existing bucket for shift-related files)
+/// Folder structure: {userId}/scans/{scanType}/{uuid}.jpg (userId MUST be first for RLS)
 ///
 /// Image optimization:
 /// - Max dimension: 1500px (preserves detail for text/documents)
@@ -16,7 +16,7 @@ import 'package:uuid/uuid.dart';
 /// - Average file size: 100-300KB per image
 class ScanImageService {
   final SupabaseClient _supabase = Supabase.instance.client;
-  static const String _bucketName = 'documents'; // Use existing bucket
+  static const String _bucketName = 'shift-attachments'; // Use existing bucket
 
   // Max image dimension (width or height) - 1500px is good for document readability
   static const int _maxDimension = 1500;
@@ -101,10 +101,10 @@ class ScanImageService {
         // Optimize the image
         final optimizedBytes = await _optimizeImage(bytes);
 
-        // Generate storage path with scans/ prefix
+        // Generate storage path - userId MUST be first for RLS policy
         final fileId = entityId ?? const Uuid().v4();
         final storagePath =
-            'scans/$userId/$scanType/${fileId}_page${i + 1}.jpg';
+            '$userId/scans/$scanType/${fileId}_page${i + 1}.jpg';
 
         // Upload to Supabase Storage
         await _supabase.storage.from(_bucketName).uploadBinary(

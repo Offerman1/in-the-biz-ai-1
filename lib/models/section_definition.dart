@@ -30,7 +30,7 @@ class SectionRegistry {
     ),
     SectionDefinition(
       key: 'event_contract',
-      label: 'Event Contract',
+      label: 'Event Details/BEO',
       description: 'BEO details: event name, guest count, hostess, venue, etc.',
       icon: Icons.assignment,
     ),

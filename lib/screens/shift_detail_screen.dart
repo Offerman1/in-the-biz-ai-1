@@ -627,9 +627,9 @@ class _ShiftDetailScreenState extends State<ShiftDetailScreen>
 
                     const SizedBox(height: 16),
 
-                    // Event Details - Always show for editing
+                    // Event Details/BEO - Always show for editing
                     _buildSectionCard(
-                      title: 'Event Details',
+                      title: 'Event Details/BEO',
                       child: Column(
                         children: [
                           _buildDetailRow(

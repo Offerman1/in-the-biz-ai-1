@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show FileOptions;
+import 'dart:typed_data';
 import '../models/beo_event.dart';
+import '../models/shift.dart';
 import '../services/beo_event_service.dart';
 import '../services/beo_pdf_service.dart';
 import '../theme/app_theme.dart';
+import '../constants/event_types.dart';
 import 'package:uuid/uuid.dart';
 import '../services/database_service.dart';
+import 'single_shift_detail_screen.dart';
 
 /// Screen for viewing/editing BEO (Banquet Event Order) details
 /// Shows ALL 40+ fields from scanned BEOs
@@ -29,9 +35,34 @@ class BeoDetailScreen extends StatefulWidget {
 class _BeoDetailScreenState extends State<BeoDetailScreen> {
   late bool _isEditing;
   bool _isSaving = false;
+  bool _isUploadingImage = false;
+  String? _linkedShiftId;
+  String? _coverImageUrl;
+  Uint8List? _newCoverImageBytes;
   final BeoEventService _beoService = BeoEventService();
   final DatabaseService _db = DatabaseService();
+  final ImagePicker _imagePicker = ImagePicker();
   final _dateFormat = DateFormat('EEEE, MMMM d, yyyy');
+
+  /// Convert 24-hour time to 12-hour AM/PM format
+  String _formatTimeToAmPm(String? time) {
+    if (time == null || time.isEmpty) return '';
+    try {
+      final parts = time.split(':');
+      if (parts.isEmpty) return time;
+      int hour = int.parse(parts[0]);
+      final minute = parts.length > 1 ? parts[1].substring(0, 2) : '00';
+      final period = hour >= 12 ? 'PM' : 'AM';
+      if (hour == 0) {
+        hour = 12;
+      } else if (hour > 12) {
+        hour -= 12;
+      }
+      return '$hour:$minute $period';
+    } catch (e) {
+      return time;
+    }
+  }
 
   // ═══════════════════════════════════════════════════════════════════════════
   // SECTION 1: EVENT IDENTITY & CONTACTS
@@ -138,6 +169,55 @@ class _BeoDetailScreenState extends State<BeoDetailScreen> {
     super.initState();
     _isEditing = widget.isEditing || widget.isCreating;
     _loadExistingData();
+    _loadLinkedShift();
+    _loadCoverImage();
+  }
+
+  /// Load cover image URL from database
+  Future<void> _loadCoverImage() async {
+    if (widget.beoEvent == null) return;
+
+    try {
+      final result = await _db.supabase
+          .from('beo_events')
+          .select('cover_image_url')
+          .eq('id', widget.beoEvent!.id)
+          .maybeSingle();
+
+      if (result != null && mounted) {
+        final coverUrl = result['cover_image_url'] as String?;
+        if (coverUrl != null && coverUrl.isNotEmpty) {
+          setState(() {
+            _coverImageUrl = _db.supabase.storage
+                .from('shift-attachments')
+                .getPublicUrl(coverUrl);
+          });
+        }
+      }
+    } catch (e) {
+      print('Error loading cover image: $e');
+    }
+  }
+
+  /// Load linked shift information
+  Future<void> _loadLinkedShift() async {
+    if (widget.beoEvent == null) return;
+
+    try {
+      final result = await _db.supabase
+          .from('shifts')
+          .select('id')
+          .eq('beo_event_id', widget.beoEvent!.id)
+          .maybeSingle();
+
+      if (result != null && mounted) {
+        setState(() {
+          _linkedShiftId = result['id'] as String?;
+        });
+      }
+    } catch (e) {
+      print('Error loading linked shift: $e');
+    }
   }
 
   void _loadExistingData() {
@@ -169,13 +249,13 @@ class _BeoDetailScreenState extends State<BeoDetailScreen> {
       // Section 2: Timeline
       _setupDate = e.setupDate;
       _teardownDate = e.teardownDate;
-      _loadInTimeController.text = e.loadInTime ?? '';
-      _setupTimeController.text = e.setupTime ?? '';
-      _guestArrivalTimeController.text = e.guestArrivalTime ?? '';
-      _eventStartTimeController.text = e.eventStartTime ?? '';
-      _eventEndTimeController.text = e.eventEndTime ?? '';
-      _breakdownTimeController.text = e.breakdownTime ?? '';
-      _loadOutTimeController.text = e.loadOutTime ?? '';
+      _loadInTimeController.text = _formatTimeToAmPm(e.loadInTime);
+      _setupTimeController.text = _formatTimeToAmPm(e.setupTime);
+      _guestArrivalTimeController.text = _formatTimeToAmPm(e.guestArrivalTime);
+      _eventStartTimeController.text = _formatTimeToAmPm(e.eventStartTime);
+      _eventEndTimeController.text = _formatTimeToAmPm(e.eventEndTime);
+      _breakdownTimeController.text = _formatTimeToAmPm(e.breakdownTime);
+      _loadOutTimeController.text = _formatTimeToAmPm(e.loadOutTime);
 
       // Section 3: Guest Counts
       _guestCountExpectedController.text =
@@ -579,6 +659,508 @@ class _BeoDetailScreenState extends State<BeoDetailScreen> {
     }
   }
 
+  /// Delete this BEO with confirmation
+  Future<void> _deleteBeo() async {
+    if (widget.beoEvent == null) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.cardBackground,
+        title: Text(
+          'Delete BEO?',
+          style: AppTheme.titleMedium.copyWith(color: AppTheme.textPrimary),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Are you sure you want to delete "${widget.beoEvent!.eventName}"?',
+              style:
+                  AppTheme.bodyMedium.copyWith(color: AppTheme.textSecondary),
+            ),
+            if (_linkedShiftId != null) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppTheme.warningColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                      color: AppTheme.warningColor.withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.link, color: AppTheme.warningColor, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'This BEO is linked to a shift. The shift will remain but the BEO reference will be removed.',
+                        style: AppTheme.bodySmall
+                            .copyWith(color: AppTheme.warningColor),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child:
+                Text('Cancel', style: TextStyle(color: AppTheme.textSecondary)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child:
+                Text('Delete', style: TextStyle(color: AppTheme.dangerColor)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      // If linked to a shift, unlink first
+      if (_linkedShiftId != null) {
+        await _beoService.unlinkBeoFromShift(_linkedShiftId!);
+      }
+
+      // Delete the BEO
+      await _beoService.deleteBeoEvent(widget.beoEvent!.id);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('BEO deleted successfully'),
+            backgroundColor: AppTheme.primaryGreen,
+          ),
+        );
+        Navigator.pop(context, true); // Return true to indicate deletion
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to delete BEO: $e'),
+            backgroundColor: AppTheme.dangerColor,
+          ),
+        );
+      }
+    }
+  }
+
+  /// Open the linked shift
+  Future<void> _openLinkedShift() async {
+    if (_linkedShiftId == null) return;
+
+    try {
+      final response = await _db.supabase
+          .from('shifts')
+          .select()
+          .eq('id', _linkedShiftId!)
+          .maybeSingle();
+
+      if (response != null && mounted) {
+        // Import is already present via single_shift_detail_screen.dart import through other files
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) {
+              // Need to import Shift model
+              final shift = Shift.fromSupabase(response);
+              return SingleShiftDetailScreen(shift: shift);
+            },
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to load shift: $e'),
+            backgroundColor: AppTheme.dangerColor,
+          ),
+        );
+      }
+    }
+  }
+
+  /// Build linked shift banner
+  Widget _buildLinkedShiftBanner() {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.primaryGreen.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.primaryGreen.withValues(alpha: 0.3)),
+      ),
+      child: InkWell(
+        onTap: _openLinkedShift,
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryGreen.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(Icons.link, color: AppTheme.primaryGreen),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Linked to Shift',
+                    style: AppTheme.bodyMedium.copyWith(
+                      color: AppTheme.primaryGreen,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    'Tap to view the connected shift',
+                    style:
+                        AppTheme.bodySmall.copyWith(color: AppTheme.textMuted),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, color: AppTheme.primaryGreen),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Pick and upload a cover image
+  Future<void> _pickCoverImage() async {
+    try {
+      final XFile? pickedFile = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 800,
+        maxHeight: 800,
+        imageQuality: 85,
+      );
+
+      if (pickedFile == null) return;
+
+      final bytes = await pickedFile.readAsBytes();
+
+      setState(() {
+        _newCoverImageBytes = bytes;
+      });
+
+      // If we already have a BEO (not creating), upload immediately
+      if (widget.beoEvent != null && !widget.isCreating) {
+        await _uploadCoverImage(bytes);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to pick image: $e'),
+            backgroundColor: AppTheme.dangerColor,
+          ),
+        );
+      }
+    }
+  }
+
+  /// Upload cover image to storage
+  Future<void> _uploadCoverImage(Uint8List bytes) async {
+    if (widget.beoEvent == null) return;
+
+    setState(() => _isUploadingImage = true);
+
+    try {
+      final userId = _db.supabase.auth.currentUser!.id;
+      // Use shift-attachments bucket which already exists and has proper RLS policies
+      final fileName =
+          '$userId/beo-covers/cover_${widget.beoEvent!.id}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+      print('📸 Uploading cover image: $fileName');
+      print('📸 Bytes size: ${bytes.length}');
+
+      // Upload to shift-attachments bucket (existing bucket with proper policies)
+      final uploadResult =
+          await _db.supabase.storage.from('shift-attachments').uploadBinary(
+                fileName,
+                bytes,
+                fileOptions:
+                    const FileOptions(contentType: 'image/jpeg', upsert: true),
+              );
+
+      print('📸 Upload result: $uploadResult');
+      print('📸 BEO ID for update: ${widget.beoEvent!.id}');
+
+      // Update the database with the new cover image path
+      final updateResult = await _db.supabase
+          .from('beo_events')
+          .update({'cover_image_url': fileName})
+          .eq('id', widget.beoEvent!.id)
+          .select();
+
+      print('📸 Database update result: $updateResult');
+
+      // Verify the update worked
+      final verifyResult = await _db.supabase
+          .from('beo_events')
+          .select('id, cover_image_url')
+          .eq('id', widget.beoEvent!.id)
+          .single();
+
+      print('📸 Verification query result: $verifyResult');
+
+      if (verifyResult['cover_image_url'] != fileName) {
+        throw Exception('Database update failed - cover_image_url not saved');
+      }
+
+      // Get the public URL
+      final publicUrl =
+          _db.supabase.storage.from('shift-attachments').getPublicUrl(fileName);
+
+      print('📸 Public URL: $publicUrl');
+
+      setState(() {
+        _coverImageUrl = publicUrl;
+        _isUploadingImage = false;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Cover image updated!'),
+            backgroundColor: AppTheme.successColor,
+          ),
+        );
+      }
+    } catch (e, stackTrace) {
+      print('❌ Cover image upload error: $e');
+      print('❌ Stack trace: $stackTrace');
+      setState(() => _isUploadingImage = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to upload image: $e'),
+            backgroundColor: AppTheme.dangerColor,
+          ),
+        );
+      }
+    }
+  }
+
+  /// Remove cover image
+  Future<void> _removeCoverImage() async {
+    if (widget.beoEvent == null) return;
+
+    try {
+      await _db.supabase
+          .from('beo_events')
+          .update({'cover_image_url': null}).eq('id', widget.beoEvent!.id);
+
+      setState(() {
+        _coverImageUrl = null;
+        _newCoverImageBytes = null;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Cover image removed'),
+            backgroundColor: AppTheme.primaryGreen,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to remove image: $e'),
+            backgroundColor: AppTheme.dangerColor,
+          ),
+        );
+      }
+    }
+  }
+
+  /// Build cover image section
+  Widget _buildCoverImageSection() {
+    final hasImage = _coverImageUrl != null || _newCoverImageBytes != null;
+    final eventType = _eventType ?? 'Other';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.image, color: AppTheme.primaryGreen, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                'Cover Image',
+                style: AppTheme.bodyLarge.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'This image appears on the Event Portfolio card',
+            style: AppTheme.bodySmall.copyWith(color: AppTheme.textMuted),
+          ),
+          const SizedBox(height: 12),
+
+          // Image preview/placeholder
+          GestureDetector(
+            onTap: _pickCoverImage,
+            child: Container(
+              height: 150,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: AppTheme.cardBackgroundLight,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: AppTheme.primaryGreen.withValues(alpha: 0.3),
+                  width: 2,
+                  style: hasImage ? BorderStyle.solid : BorderStyle.none,
+                ),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: _isUploadingImage
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            CircularProgressIndicator(
+                                color: AppTheme.primaryGreen),
+                            const SizedBox(height: 8),
+                            Text('Uploading...',
+                                style: AppTheme.bodySmall
+                                    .copyWith(color: AppTheme.textMuted)),
+                          ],
+                        ),
+                      )
+                    : _newCoverImageBytes != null
+                        ? Image.memory(
+                            _newCoverImageBytes!,
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            height: 150,
+                          )
+                        : _coverImageUrl != null
+                            ? Image.network(
+                                _coverImageUrl!,
+                                fit: BoxFit.cover,
+                                width: double.infinity,
+                                height: 150,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return _buildImagePlaceholder(eventType);
+                                },
+                              )
+                            : _buildImagePlaceholder(eventType),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 8),
+
+          // Action buttons
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _pickCoverImage,
+                  icon: Icon(
+                      hasImage
+                          ? Icons.change_circle
+                          : Icons.add_photo_alternate,
+                      size: 18),
+                  label: Text(hasImage ? 'Change Image' : 'Add Image'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppTheme.primaryGreen,
+                    side: BorderSide(color: AppTheme.primaryGreen),
+                  ),
+                ),
+              ),
+              if (hasImage) ...[
+                const SizedBox(width: 8),
+                OutlinedButton.icon(
+                  onPressed: _removeCoverImage,
+                  icon: const Icon(Icons.delete_outline, size: 18),
+                  label: const Text('Remove'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppTheme.dangerColor,
+                    side: BorderSide(color: AppTheme.dangerColor),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildImagePlaceholder(String eventType) {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(
+          color: AppTheme.textMuted.withValues(alpha: 0.3),
+          style: BorderStyle.solid,
+        ),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              _getEventEmoji(eventType),
+              style: const TextStyle(fontSize: 40),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Tap to add cover image',
+              style: AppTheme.bodySmall.copyWith(color: AppTheme.textMuted),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _getEventEmoji(String eventType) {
+    switch (eventType.toLowerCase()) {
+      case 'wedding':
+        return '💒';
+      case 'corporate':
+        return '🏢';
+      case 'birthday':
+        return '🎂';
+      case 'gala':
+        return '🎭';
+      case 'anniversary':
+        return '💕';
+      case 'holiday party':
+        return '🎄';
+      case 'conference':
+        return '📊';
+      default:
+        return '🎉';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final title = widget.isCreating
@@ -613,6 +1195,45 @@ class _BeoDetailScreenState extends State<BeoDetailScreen> {
               icon: Icon(Icons.edit, color: AppTheme.primaryGreen),
               onPressed: () => setState(() => _isEditing = true),
             ),
+          if (!_isEditing && widget.beoEvent != null)
+            PopupMenuButton<String>(
+              icon: Icon(Icons.more_vert, color: AppTheme.textSecondary),
+              color: AppTheme.cardBackground,
+              onSelected: (value) {
+                if (value == 'delete') {
+                  _deleteBeo();
+                } else if (value == 'view_shift' && _linkedShiftId != null) {
+                  _openLinkedShift();
+                }
+              },
+              itemBuilder: (context) => [
+                if (_linkedShiftId != null)
+                  PopupMenuItem(
+                    value: 'view_shift',
+                    child: Row(
+                      children: [
+                        Icon(Icons.work_outline,
+                            color: AppTheme.accentBlue, size: 20),
+                        const SizedBox(width: 12),
+                        Text('View Linked Shift',
+                            style: TextStyle(color: AppTheme.textPrimary)),
+                      ],
+                    ),
+                  ),
+                PopupMenuItem(
+                  value: 'delete',
+                  child: Row(
+                    children: [
+                      Icon(Icons.delete_outline,
+                          color: AppTheme.dangerColor, size: 20),
+                      const SizedBox(width: 12),
+                      Text('Delete BEO',
+                          style: TextStyle(color: AppTheme.dangerColor)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           if (_isEditing)
             TextButton(
               onPressed: _isSaving ? null : _save,
@@ -640,6 +1261,13 @@ class _BeoDetailScreenState extends State<BeoDetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Linked Shift Indicator
+            if (_linkedShiftId != null && !_isEditing)
+              _buildLinkedShiftBanner(),
+
+            // Cover Image Section (always show for existing BEOs)
+            if (widget.beoEvent != null) _buildCoverImageSection(),
+
             // ═══════════════════════════════════════════════════════════════
             // SECTION 1: EVENT IDENTITY
             // ═══════════════════════════════════════════════════════════════
@@ -648,22 +1276,7 @@ class _BeoDetailScreenState extends State<BeoDetailScreen> {
                   isRequired: true),
               _buildDateField(
                   'Event Date', _eventDate, () => _selectDate('event')),
-              _buildDropdown(
-                  'Event Type',
-                  _eventType,
-                  [
-                    'Wedding',
-                    'Corporate',
-                    'Birthday',
-                    'Gala',
-                    'Anniversary',
-                    'Product Launch',
-                    'Holiday Party',
-                    'Fundraiser',
-                    'Conference',
-                    'Other'
-                  ],
-                  (val) => setState(() => _eventType = val)),
+              _buildEventTypeSelector(),
               _buildTextField('Post As', _postAsController),
               _buildTextField('Venue Name', _venueNameController),
               _buildTextField('Venue Address', _venueAddressController),
@@ -1066,44 +1679,154 @@ class _BeoDetailScreenState extends State<BeoDetailScreen> {
     );
   }
 
-  Widget _buildDropdown(String label, String? value, List<String> options,
-      Function(String?) onChanged) {
+  /// Build event type selector with grouped categories
+  Widget _buildEventTypeSelector() {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label,
+          Text('Event Type',
               style:
                   AppTheme.labelMedium.copyWith(color: AppTheme.textSecondary)),
           const SizedBox(height: 6),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            decoration: BoxDecoration(
-              color: _isEditing
-                  ? AppTheme.cardBackgroundLight
-                  : AppTheme.cardBackground,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                value: value,
-                isExpanded: true,
-                dropdownColor: AppTheme.cardBackground,
-                style:
-                    AppTheme.bodyMedium.copyWith(color: AppTheme.textPrimary),
-                hint: Text('Select $label',
-                    style: TextStyle(color: AppTheme.textMuted)),
-                items: options
-                    .map(
-                        (opt) => DropdownMenuItem(value: opt, child: Text(opt)))
-                    .toList(),
-                onChanged: _isEditing ? onChanged : null,
+          GestureDetector(
+            onTap: _isEditing ? _showEventTypeSelector : null,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+              decoration: BoxDecoration(
+                color: _isEditing
+                    ? AppTheme.cardBackgroundLight
+                    : AppTheme.cardBackground,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  if (_eventType != null) ...[
+                    Text(
+                      EventTypes.getTypeEmoji(_eventType!),
+                      style: const TextStyle(fontSize: 18),
+                    ),
+                    const SizedBox(width: 8),
+                  ],
+                  Expanded(
+                    child: Text(
+                      _eventType ?? 'Select Event Type',
+                      style: AppTheme.bodyMedium.copyWith(
+                        color: _eventType != null
+                            ? AppTheme.textPrimary
+                            : AppTheme.textMuted,
+                      ),
+                    ),
+                  ),
+                  if (_isEditing)
+                    Icon(Icons.keyboard_arrow_down, color: AppTheme.textMuted),
+                ],
               ),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  void _showEventTypeSelector() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppTheme.cardBackground,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.7,
+        minChildSize: 0.5,
+        maxChildSize: 0.9,
+        expand: false,
+        builder: (context, scrollController) => Column(
+          children: [
+            // Handle bar
+            Container(
+              margin: const EdgeInsets.only(top: 12, bottom: 8),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppTheme.textMuted,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            // Title
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                'Select Event Type',
+                style: AppTheme.titleMedium.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            const Divider(height: 1),
+            // Options
+            Expanded(
+              child: ListView(
+                controller: scrollController,
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                children: [
+                  // All categories
+                  ...EventTypes.categories.expand((category) => [
+                        _buildEventTypeCategoryHeader(category.name,
+                            EventTypes.getCategoryEmoji(category.name)),
+                        ...category.types
+                            .map((type) => _buildEventTypeOption(type)),
+                      ]),
+                  // Other option
+                  _buildEventTypeCategoryHeader('Other', '📋'),
+                  _buildEventTypeOption('Other'),
+                  const SizedBox(height: 48),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEventTypeCategoryHeader(String name, String emoji) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      child: Text(
+        '$emoji $name',
+        style: AppTheme.labelMedium.copyWith(
+          color: AppTheme.textMuted,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEventTypeOption(String type) {
+    final isSelected = _eventType == type;
+    return ListTile(
+      dense: true,
+      contentPadding: const EdgeInsets.only(left: 32, right: 16),
+      leading: Text(EventTypes.getTypeEmoji(type),
+          style: const TextStyle(fontSize: 20)),
+      title: Text(
+        type,
+        style: AppTheme.bodyMedium.copyWith(
+          color: isSelected ? AppTheme.primaryGreen : AppTheme.textPrimary,
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+        ),
+      ),
+      trailing: isSelected
+          ? Icon(Icons.check_circle, color: AppTheme.primaryGreen, size: 20)
+          : null,
+      onTap: () {
+        setState(() => _eventType = type);
+        Navigator.pop(context);
+      },
     );
   }
 }

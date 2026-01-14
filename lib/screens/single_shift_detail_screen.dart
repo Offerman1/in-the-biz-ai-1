@@ -1885,7 +1885,7 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  'Event Contract',
+                  'Event Details/BEO',
                   style: AppTheme.titleLarge.copyWith(
                     fontWeight: FontWeight.bold,
                     letterSpacing: 0.5,
@@ -1939,75 +1939,122 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
           ),
           const SizedBox(height: 20),
 
-          // Two-column layout for basic BEO details
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Left Column
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildEditableBEORow(
-                      label: 'GUEST COUNT',
-                      fieldKey: 'guestCount',
-                      value: shift.guestCount?.toString() ?? '',
-                      suffix: ' guests',
-                      isNumeric: true,
-                    ),
-                    const SizedBox(height: 16),
-                    _buildEditableMultilineRow(
-                      label: 'HOSTESS',
-                      fieldKey: 'hostess',
-                      value: shift.hostess ?? '',
-                    ),
-                    const SizedBox(height: 16),
-                    _buildEditableMultilineRow(
-                      label: 'LOCATION',
-                      fieldKey: 'location',
-                      value: shift.location ?? '',
-                    ),
-                    const SizedBox(height: 16),
-                    _buildEditableBEORow(
-                      label: 'TOTAL SALES',
-                      fieldKey: 'eventCost',
-                      value: (shift.eventCost ?? 0).toStringAsFixed(2),
-                      prefix: '\$',
-                      isNumeric: true,
-                    ),
-                  ],
+          // When BEO is linked, show simplified view. Otherwise show full editable fields.
+          if (_linkedBeoEvent != null) ...[
+            // Simplified view for linked BEO - just show key info
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildBEODetailRow(
+                        'FUNCTION SPACE',
+                        _linkedBeoEvent!.functionSpace ??
+                            shift.location ??
+                            'N/A',
+                      ),
+                      const SizedBox(height: 12),
+                      _buildBEODetailRow(
+                        'GUESTS',
+                        '${_linkedBeoEvent!.displayGuestCount ?? shift.guestCount ?? 0}',
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(width: 24),
-              // Right Column
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildEditableMultilineRow(
-                      label: 'CLIENT',
-                      fieldKey: 'clientName',
-                      value: shift.clientName ?? '',
-                    ),
-                    const SizedBox(height: 16),
-                    _buildEditableMultilineRow(
-                      label: 'PROJECT',
-                      fieldKey: 'projectName',
-                      value: shift.projectName ?? '',
-                    ),
-                    const SizedBox(height: 16),
-                    _buildEditableBEORow(
-                      label: 'COMMISSION',
-                      fieldKey: 'commission',
-                      value: (shift.commission ?? 0).toStringAsFixed(2),
-                      prefix: '\$',
-                      isNumeric: true,
-                    ),
-                  ],
+                const SizedBox(width: 24),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildBEODetailRow(
+                        'TOTAL',
+                        '\$${(_linkedBeoEvent!.grandTotal ?? shift.eventCost ?? 0).toStringAsFixed(2)}',
+                      ),
+                      const SizedBox(height: 12),
+                      _buildBEODetailRow(
+                        'CONTACT',
+                        _linkedBeoEvent!.primaryContactName ??
+                            shift.hostess ??
+                            'N/A',
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
+          ] else ...[
+            // Full editable fields when no BEO is linked
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Left Column
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildEditableBEORow(
+                        label: 'GUEST COUNT',
+                        fieldKey: 'guestCount',
+                        value: shift.guestCount?.toString() ?? '',
+                        suffix: ' guests',
+                        isNumeric: true,
+                      ),
+                      const SizedBox(height: 16),
+                      _buildEditableMultilineRow(
+                        label: 'HOSTESS',
+                        fieldKey: 'hostess',
+                        value: shift.hostess ?? '',
+                      ),
+                      const SizedBox(height: 16),
+                      _buildEditableMultilineRow(
+                        label: 'LOCATION',
+                        fieldKey: 'location',
+                        value: shift.location ?? '',
+                      ),
+                      const SizedBox(height: 16),
+                      _buildEditableBEORow(
+                        label: 'TOTAL SALES',
+                        fieldKey: 'eventCost',
+                        value: (shift.eventCost ?? 0).toStringAsFixed(2),
+                        prefix: '\$',
+                        isNumeric: true,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 24),
+                // Right Column
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildEditableMultilineRow(
+                        label: 'CLIENT',
+                        fieldKey: 'clientName',
+                        value: shift.clientName ?? '',
+                      ),
+                      const SizedBox(height: 16),
+                      _buildEditableMultilineRow(
+                        label: 'PROJECT',
+                        fieldKey: 'projectName',
+                        value: shift.projectName ?? '',
+                      ),
+                      const SizedBox(height: 16),
+                      _buildEditableBEORow(
+                        label: 'COMMISSION',
+                        fieldKey: 'commission',
+                        value: (shift.commission ?? 0).toStringAsFixed(2),
+                        prefix: '\$',
+                        isNumeric: true,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
 
           // Show linked BEO details if available
           if (_linkedBeoEvent != null || _isLoadingBeo) ...[
@@ -2087,7 +2134,7 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
           const SizedBox(height: 16),
 
           // SECTION 1: Event Identity & Contacts
-          _buildBeoSectionHeader('EVENT DETAILS', Icons.event),
+          _buildBeoSectionHeader('EVENT DETAILS/BEO', Icons.event),
           _buildBeoFieldGrid([
             ('Event Type', beo.eventType),
             ('Post As', beo.postAs),
@@ -2131,13 +2178,13 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
                   ? DateFormat('MMM d, yyyy').format(beo.teardownDate!)
                   : null
             ),
-            ('Load-In Time', beo.loadInTime),
-            ('Setup Time', beo.setupTime),
-            ('Guest Arrival', beo.guestArrivalTime),
-            ('Event Start', beo.eventStartTime),
-            ('Event End', beo.eventEndTime),
-            ('Breakdown Time', beo.breakdownTime),
-            ('Load-Out Time', beo.loadOutTime),
+            ('Load-In Time', _formatTimeToAmPm(beo.loadInTime)),
+            ('Setup Time', _formatTimeToAmPm(beo.setupTime)),
+            ('Guest Arrival', _formatTimeToAmPm(beo.guestArrivalTime)),
+            ('Event Start', _formatTimeToAmPm(beo.eventStartTime)),
+            ('Event End', _formatTimeToAmPm(beo.eventEndTime)),
+            ('Breakdown Time', _formatTimeToAmPm(beo.breakdownTime)),
+            ('Load-Out Time', _formatTimeToAmPm(beo.loadOutTime)),
           ]),
 
           // SECTION 3: Guest Counts
@@ -2264,14 +2311,34 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
           _buildBeoSectionHeader('FOOD & BEVERAGE', Icons.restaurant),
           _buildBeoFieldGrid([
             ('Menu Style', beo.menuStyle),
-            ('Menu Items', beo.menuItems),
+          ]),
+
+          // Display detailed menu breakdown if available
+          if (beo.menuDetails != null && beo.menuDetails!.isNotEmpty) ...[
+            _buildMenuDetailsWidget(beo.menuDetails!),
+          ] else if (beo.menuItems != null) ...[
+            _buildBeoFieldGrid([('Menu Items', beo.menuItems)]),
+          ],
+
+          _buildBeoFieldGrid([
             ('Dietary Restrictions', beo.dietaryRestrictions),
           ]),
 
+          // Beverages
+          if (beo.beverageDetails != null &&
+              beo.beverageDetails!.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            _buildBeverageDetailsWidget(beo.beverageDetails!),
+          ],
+
           // SECTION 6: Setup & Decor
-          if (beo.decorNotes != null || beo.floorPlanNotes != null) ...[
+          if (beo.decorNotes != null ||
+              beo.floorPlanNotes != null ||
+              beo.setupDetails != null) ...[
             const SizedBox(height: 20),
             _buildBeoSectionHeader('SETUP & DECOR', Icons.design_services),
+            if (beo.setupDetails != null && beo.setupDetails!.isNotEmpty)
+              _buildSetupDetailsWidget(beo.setupDetails!),
             _buildBeoFieldGrid([
               ('Decor Notes', beo.decorNotes),
               ('Floor Plan', beo.floorPlanNotes),
@@ -2344,10 +2411,64 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
     );
   }
 
+  /// Format military time to AM/PM
+  String _formatTimeToAmPm(String? time) {
+    if (time == null || time.isEmpty) return '';
+    final timeStr = time; // Capture non-null for use in catch
+    try {
+      if (timeStr.toUpperCase().contains('AM') ||
+          timeStr.toUpperCase().contains('PM')) {
+        return timeStr;
+      }
+      final parts = timeStr.split(':');
+      if (parts.isEmpty) return timeStr;
+      var hour = int.parse(parts[0]);
+      final minute = parts.length > 1
+          ? parts[1]
+              .replaceAll(RegExp(r'[^0-9]'), '')
+              .padRight(2, '0')
+              .substring(0, 2)
+          : '00';
+      final period = hour >= 12 ? 'PM' : 'AM';
+      if (hour > 12) hour -= 12;
+      if (hour == 0) hour = 12;
+      return '$hour:$minute $period';
+    } catch (e) {
+      return timeStr;
+    }
+  }
+
+  /// Check if text is a disclaimer/boilerplate
+  bool _isDisclaimer(String? text) {
+    if (text == null || text.isEmpty) return false;
+    final lowerText = text.toLowerCase();
+    final disclaimerPatterns = [
+      'we\'re happy to accommodate',
+      'prior to signing',
+      'please specify',
+      'certificate of liability',
+      'certificate of insurance',
+      'non-refundable deposit',
+      'deposit is deducted',
+      'final bill',
+      'must be received',
+      'cancellation policy',
+      'terms and conditions',
+      'subject to',
+      '% of the estimated',
+      'signed contract',
+    ];
+    for (final pattern in disclaimerPatterns) {
+      if (lowerText.contains(pattern)) return true;
+    }
+    return false;
+  }
+
   Widget _buildBeoFieldGrid(List<(String, String?)> fields) {
-    // Filter out null or empty values
-    final nonEmptyFields =
-        fields.where((f) => f.$2 != null && f.$2!.isNotEmpty).toList();
+    // Filter out null, empty values, and disclaimers
+    final nonEmptyFields = fields
+        .where((f) => f.$2 != null && f.$2!.isNotEmpty && !_isDisclaimer(f.$2))
+        .toList();
 
     if (nonEmptyFields.isEmpty) {
       return Padding(
@@ -2396,6 +2517,9 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
   }
 
   Widget _buildBeoNoteField(String label, String value) {
+    // Skip disclaimers
+    if (_isDisclaimer(value)) return const SizedBox.shrink();
+
     return Padding(
       padding: const EdgeInsets.only(left: 26),
       child: Column(
@@ -2424,6 +2548,129 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
         ],
       ),
     );
+  }
+
+  /// Build menu details widget from JSON
+  Widget _buildMenuDetailsWidget(Map<String, dynamic> menuDetails) {
+    final widgets = <Widget>[];
+
+    void addMenuSection(String label, String key) {
+      if (menuDetails[key] != null && (menuDetails[key] as List).isNotEmpty) {
+        final items = (menuDetails[key] as List)
+            .map((a) => a['name']?.toString() ?? '')
+            .where((s) => s.isNotEmpty)
+            .toList();
+        if (items.isNotEmpty) {
+          widgets.add(
+            Padding(
+              padding: const EdgeInsets.only(left: 26, bottom: 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label.toUpperCase(),
+                    style: AppTheme.labelSmall.copyWith(
+                      color: AppTheme.textMuted,
+                      fontSize: 10,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  ...items.map((item) => Padding(
+                        padding: const EdgeInsets.only(left: 8),
+                        child: Text(
+                          '• $item',
+                          style: AppTheme.bodyMedium,
+                        ),
+                      )),
+                ],
+              ),
+            ),
+          );
+        }
+      }
+    }
+
+    addMenuSection('Appetizers', 'appetizers');
+    addMenuSection('Salads', 'salads');
+    addMenuSection('Entrees', 'entrees');
+    addMenuSection('Sides', 'sides');
+    addMenuSection('Desserts', 'desserts');
+    addMenuSection('Passed Items', 'passed_items');
+
+    return Column(children: widgets);
+  }
+
+  /// Build beverage details widget from JSON
+  Widget _buildBeverageDetailsWidget(Map<String, dynamic> beverageDetails) {
+    final fields = <(String, String?)>[
+      ('Package', beverageDetails['package']?.toString()),
+      ('Bar Type', beverageDetails['bar_type']?.toString()),
+      (
+        'Per Person',
+        beverageDetails['price_per_person'] != null
+            ? '\$${beverageDetails['price_per_person']}'
+            : null
+      ),
+      ('Brands', beverageDetails['brands']?.toString()),
+    ];
+
+    return _buildBeoFieldGrid(fields);
+  }
+
+  /// Build setup details widget from JSON
+  Widget _buildSetupDetailsWidget(Map<String, dynamic> setupDetails) {
+    final fields = <(String, String?)>[];
+
+    // Tables
+    if (setupDetails['tables'] != null &&
+        (setupDetails['tables'] as List).isNotEmpty) {
+      final tables = (setupDetails['tables'] as List)
+          .map((t) =>
+              '${t['qty']} ${t['type']}${t['linen_color'] != null ? ' (${t['linen_color']})' : ''}')
+          .join(', ');
+      if (tables.isNotEmpty) fields.add(('Tables', tables));
+    }
+
+    // Linens
+    if (setupDetails['linens'] != null && setupDetails['linens'] is Map) {
+      final linens = setupDetails['linens'] as Map;
+      final linenList = <String>[];
+      if (linens['tablecloths'] != null)
+        linenList.add('Tablecloths: ${linens['tablecloths']}');
+      if (linens['napkins'] != null)
+        linenList.add('Napkins: ${linens['napkins']}');
+      if (linenList.isNotEmpty) fields.add(('Linens', linenList.join(', ')));
+    }
+
+    // Chairs
+    if (setupDetails['chairs'] != null && setupDetails['chairs'] is Map) {
+      final chairs = setupDetails['chairs'] as Map;
+      fields.add(('Chairs', '${chairs['qty']} ${chairs['type']}'));
+    }
+
+    // Decor
+    if (setupDetails['decor'] != null &&
+        (setupDetails['decor'] as List).isNotEmpty) {
+      fields.add(('Decor Items', (setupDetails['decor'] as List).join(', ')));
+    }
+
+    // AV Equipment
+    if (setupDetails['av_equipment'] != null &&
+        (setupDetails['av_equipment'] as List).isNotEmpty) {
+      fields.add(
+          ('AV Equipment', (setupDetails['av_equipment'] as List).join(', ')));
+    }
+
+    // Special Items
+    if (setupDetails['special_items'] != null &&
+        (setupDetails['special_items'] as List).isNotEmpty) {
+      fields.add((
+        'Special Items',
+        (setupDetails['special_items'] as List).join(', ')
+      ));
+    }
+
+    return _buildBeoFieldGrid(fields);
   }
 
   Widget _buildBEODetailRow(String label, String value) {
@@ -2951,20 +3198,7 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
             spacing: 8,
             runSpacing: 8,
             children: photoPaths
-                .map((path) => GestureDetector(
-                      onTap: () => _viewFullImage(context, path),
-                      child: Container(
-                        width: 100,
-                        height: 100,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(8),
-                          image: DecorationImage(
-                            image: FileImage(File(path)),
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                      ),
-                    ))
+                .map((path) => _buildPhotoThumbnail(context, path.trim()))
                 .toList(),
           ),
         ],
@@ -2972,14 +3206,99 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
     );
   }
 
+  Widget _buildPhotoThumbnail(BuildContext context, String path) {
+    final isUrl = path.startsWith('http://') || path.startsWith('https://');
+
+    return GestureDetector(
+      onTap: () => _viewFullImage(context, path),
+      child: Container(
+        width: 100,
+        height: 100,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          color: AppTheme.cardBackgroundLight,
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: isUrl
+            ? Image.network(
+                path,
+                fit: BoxFit.cover,
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Center(
+                    child: CircularProgressIndicator(
+                      value: loadingProgress.expectedTotalBytes != null
+                          ? loadingProgress.cumulativeBytesLoaded /
+                              loadingProgress.expectedTotalBytes!
+                          : null,
+                      strokeWidth: 2,
+                      color: AppTheme.primaryGreen,
+                    ),
+                  );
+                },
+                errorBuilder: (context, error, stackTrace) {
+                  print('Error loading photo: $error');
+                  return Center(
+                    child: Icon(
+                      Icons.broken_image,
+                      color: AppTheme.textMuted,
+                      size: 40,
+                    ),
+                  );
+                },
+              )
+            : Image.file(
+                File(path),
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Center(
+                    child: Icon(
+                      Icons.broken_image,
+                      color: AppTheme.textMuted,
+                      size: 40,
+                    ),
+                  );
+                },
+              ),
+      ),
+    );
+  }
+
   void _viewFullImage(BuildContext context, String path) {
+    final isUrl = path.startsWith('http://') || path.startsWith('https://');
+
     showDialog(
       context: context,
       builder: (context) => Dialog(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Image.file(File(path)),
+            isUrl
+                ? Image.network(
+                    path,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return const Padding(
+                        padding: EdgeInsets.all(40),
+                        child: CircularProgressIndicator(),
+                      );
+                    },
+                    errorBuilder: (context, error, stackTrace) {
+                      return Padding(
+                        padding: const EdgeInsets.all(40),
+                        child: Column(
+                          children: [
+                            Icon(Icons.error,
+                                color: AppTheme.accentRed, size: 48),
+                            const SizedBox(height: 8),
+                            Text('Failed to load image',
+                                style: AppTheme.bodyMedium),
+                          ],
+                        ),
+                      );
+                    },
+                  )
+                : Image.file(File(path)),
             TextButton(
               onPressed: () => Navigator.pop(context),
               child: const Text('Close'),

@@ -271,7 +271,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                   _isMonthListView
                       ? Icons.calendar_view_month
                       : Icons.view_list,
-                  color: AppTheme.headerIconColor,
+                  color: AppTheme.navBarIconColor,
                 ),
                 iconSize: 24,
                 padding: EdgeInsets.zero,
@@ -293,7 +293,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
             child: IconButton(
               icon: Icon(
                 Icons.work_outline,
-                color: AppTheme.headerIconColor,
+                color: AppTheme.navBarIconColor,
               ),
               iconSize: 24,
               padding: EdgeInsets.zero,
@@ -344,7 +344,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                     });
                   },
                   child: Icon(Icons.chevron_left,
-                      color: AppTheme.headerIconColor, size: 28),
+                      color: AppTheme.primaryGreen, size: 28),
                 ),
                 // Title - on mobile: refresh calendar, on tablet: navigate back
                 GestureDetector(
@@ -439,7 +439,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                     });
                   },
                   child: Icon(Icons.chevron_right,
-                      color: AppTheme.headerIconColor, size: 28),
+                      color: AppTheme.primaryGreen, size: 28),
                 ),
               ],
             ),
@@ -454,7 +454,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
             child: IconButton(
               icon: Icon(
                 Icons.attach_money,
-                color: AppTheme.headerIconColor,
+                color: AppTheme.navBarIconColor,
               ),
               iconSize: 24,
               padding: EdgeInsets.zero,
@@ -495,7 +495,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                               AppTheme.primaryGreen),
                         ),
                       )
-                    : Icon(Icons.sync, color: AppTheme.headerIconColor),
+                    : Icon(Icons.sync, color: AppTheme.navBarIconColor),
                 iconSize: 24,
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
@@ -562,7 +562,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
             top: 0,
             bottom: 0,
             child: IconButton(
-              icon: Icon(Icons.today, color: AppTheme.headerIconColor),
+              icon: Icon(Icons.today, color: AppTheme.navBarIconColor),
               iconSize: 24,
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(),
@@ -1301,6 +1301,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
         shiftDate.isAfter(today) || shiftDate.isAtSameMomentAs(today);
     final isIncomplete =
         isPast && shift.status != 'completed' && shift.totalIncome == 0;
+    final hasBeo = shift.beoEventId != null;
 
     // Determine badge color based on FUTURE vs PAST, not completion status
     Color badgeColor;
@@ -1328,6 +1329,51 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
 
     // Stacked layout for 1-2 shifts: time on two lines for better readability
     if (useStackedTime && showTime) {
+      // Use gradient container if shift has BEO
+      if (hasBeo) {
+        return Container(
+          margin: const EdgeInsets.only(bottom: 2),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [AppTheme.primaryGreen, AppTheme.accentPurple],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(3),
+          ),
+          child: Container(
+            margin: const EdgeInsets.all(1.5),
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+            decoration: BoxDecoration(
+              color: AppTheme.cardBackground,
+              borderRadius: BorderRadius.circular(2),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '${_formatTimeShort(shift.startTime!)} -',
+                  style: TextStyle(
+                    color: AppTheme.primaryGreen,
+                    fontSize: badgeFontSize,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Text(
+                  _formatTimeShort(shift.endTime!),
+                  style: TextStyle(
+                    color: AppTheme.primaryGreen,
+                    fontSize: badgeFontSize,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+
       return Container(
         margin: const EdgeInsets.only(bottom: 2),
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
@@ -1366,6 +1412,49 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
     }
 
     // Compact single-line layout for 3+ shifts or money display
+    // Use gradient container if shift has BEO
+    if (hasBeo) {
+      return Container(
+        height: badgeHeight + 3,
+        margin: const EdgeInsets.only(bottom: 2),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [AppTheme.primaryGreen, AppTheme.accentPurple],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(3),
+        ),
+        child: Container(
+          margin: const EdgeInsets.all(1.5),
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+          decoration: BoxDecoration(
+            color: AppTheme.cardBackground,
+            borderRadius: BorderRadius.circular(2),
+          ),
+          child: Row(
+            children: [
+              if (showTime)
+                Expanded(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      '${_formatTimeShort(shift.startTime!)}-${_formatTimeShort(shift.endTime!)}',
+                      style: TextStyle(
+                        color: AppTheme.primaryGreen,
+                        fontSize: badgeFontSize,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Container(
       height: badgeHeight,
       margin: const EdgeInsets.only(bottom: 2),
@@ -1706,111 +1795,202 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
 
   /// Builds a BEO event card for the drawer
   Widget _buildDrawerBeoCard(BeoEvent beo) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => BeoDetailScreen(beoEvent: beo),
-          ),
-        );
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: AppTheme.cardBackgroundLight,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: AppTheme.accentPurple.withValues(alpha: 0.5),
-            width: 1,
-          ),
+    // BEO card styled same as shift card but with purple outline
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        border: Border.all(
+          color: AppTheme.accentPurple,
+          width: 2,
         ),
-        child: Row(
-          children: [
-            // Purple BEO icon
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: AppTheme.accentPurple.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                Icons.description_outlined,
-                color: AppTheme.accentPurple,
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: 12),
-            // Event info
-            Expanded(
-              child: Column(
+        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppTheme.cardBackground,
+          borderRadius: BorderRadius.circular(AppTheme.radiusMedium - 2),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(AppTheme.radiusMedium - 2),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => BeoDetailScreen(beoEvent: beo),
+                ),
+              );
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    beo.eventName,
-                    style: AppTheme.bodyMedium.copyWith(
-                      color: AppTheme.textPrimary,
-                      fontWeight: FontWeight.w600,
+                  // Date Badge (same as shift card)
+                  Container(
+                    width: 56,
+                    height: 70,
+                    decoration: BoxDecoration(
+                      color: AppTheme.accentPurple.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+                      border: Border.all(
+                        color: AppTheme.accentPurple.withValues(alpha: 0.3),
+                        width: 1,
+                      ),
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 2),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.location_on_outlined,
-                        size: 12,
-                        color: AppTheme.textMuted,
-                      ),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          beo.venueName ?? 'No venue',
-                          style: TextStyle(
-                            color: AppTheme.textMuted,
-                            fontSize: 12,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          DateFormat('E').format(beo.eventDate),
+                          style: AppTheme.labelSmall.copyWith(
+                            color: AppTheme.accentPurple,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-                    ],
+                        Text(
+                          DateFormat('d').format(beo.eventDate),
+                          style: AppTheme.titleLarge.copyWith(
+                            color: AppTheme.accentPurple,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 20,
+                          ),
+                        ),
+                        Text(
+                          beo.eventDate.year == DateTime.now().year
+                              ? DateFormat('MMM').format(beo.eventDate)
+                              : DateFormat("MMM ''yy").format(beo.eventDate),
+                          style: AppTheme.labelSmall.copyWith(
+                            color: AppTheme.accentPurple,
+                            fontSize: 9,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+
+                  // BEO Info
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Row 1: Event Name + BEO badge
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                beo.eventName,
+                                style: AppTheme.bodyLarge.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppTheme.accentPurple
+                                    .withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                'BEO',
+                                style: AppTheme.labelMedium.copyWith(
+                                  color: AppTheme.accentPurple,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        // Row 2: Venue
+                        if (beo.venueName != null) ...[
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.location_on_outlined,
+                                size: 14,
+                                color: AppTheme.textMuted,
+                              ),
+                              const SizedBox(width: 4),
+                              Expanded(
+                                child: Text(
+                                  beo.venueName!,
+                                  style: AppTheme.bodyMedium.copyWith(
+                                    color: AppTheme.textSecondary,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                        ],
+                        // Row 3: Time + Guest count
+                        Row(
+                          children: [
+                            if (beo.eventStartTime != null) ...[
+                              Icon(
+                                Icons.access_time,
+                                size: 12,
+                                color: AppTheme.textMuted,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                beo.eventEndTime != null
+                                    ? '${_formatTime(beo.eventStartTime!)} - ${_formatTime(beo.eventEndTime!)}'
+                                    : _formatTime(beo.eventStartTime!),
+                                style: AppTheme.labelSmall.copyWith(
+                                  color: AppTheme.textMuted,
+                                ),
+                              ),
+                            ],
+                            if (beo.displayGuestCount != null &&
+                                beo.displayGuestCount! > 0) ...[
+                              if (beo.eventStartTime != null)
+                                const SizedBox(width: 12),
+                              Icon(
+                                Icons.people_outline,
+                                size: 12,
+                                color: AppTheme.accentPurple,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${beo.displayGuestCount} guests',
+                                style: AppTheme.labelSmall.copyWith(
+                                  color: AppTheme.accentPurple,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
             ),
-            // Guest count if available
-            if (beo.displayGuestCount != null && beo.displayGuestCount! > 0)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppTheme.accentPurple.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.people_outline,
-                      size: 12,
-                      color: AppTheme.accentPurple,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${beo.displayGuestCount}',
-                      style: TextStyle(
-                        color: AppTheme.accentPurple,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-          ],
+          ),
         ),
       ),
     );
@@ -1819,6 +1999,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
   /// Builds a shift card for the drawer - matches dashboard Recent Shifts style
   Widget _buildDrawerShiftCard(Shift shift) {
     final isScheduled = shift.status == 'scheduled';
+    final hasBeo = shift.beoEventId != null;
     final accentColor =
         isScheduled ? AppTheme.accentBlue : AppTheme.primaryGreen;
 
@@ -1839,32 +2020,38 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
       }
     }
 
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => SingleShiftDetailScreen(shift: shift),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        // Gradient border for shifts with BEO
+        gradient: hasBeo
+            ? LinearGradient(
+                colors: [AppTheme.primaryGreen, AppTheme.accentPurple],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              )
+            : null,
+        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
-        );
-      },
+        ],
+      ),
       child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
+        margin: hasBeo ? const EdgeInsets.all(2) : null,
         decoration: BoxDecoration(
           color: AppTheme.cardBackground,
-          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.2),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
+          borderRadius: BorderRadius.circular(
+              hasBeo ? AppTheme.radiusMedium - 2 : AppTheme.radiusMedium),
         ),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+            borderRadius: BorderRadius.circular(
+                hasBeo ? AppTheme.radiusMedium - 2 : AppTheme.radiusMedium),
             onTap: () {
               Navigator.push(
                 context,
