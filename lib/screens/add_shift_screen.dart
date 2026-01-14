@@ -355,20 +355,6 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
       print('🎯 Set _beoEventId: $_beoEventId');
     }
 
-    // Add scanned image URLs from BEO to captured photos
-    if (data['image_urls'] != null && data['image_urls'] is List) {
-      final urls = data['image_urls'] as List;
-      for (final url in urls) {
-        if (url != null && url.toString().isNotEmpty) {
-          _capturedPhotos.add(url.toString());
-          print(
-              '🎯 Added BEO image URL to _capturedPhotos: ${url.toString().substring(0, 50)}...');
-        }
-      }
-      print(
-          '🎯 Total _capturedPhotos count after BEO: ${_capturedPhotos.length}');
-    }
-
     // IMPORTANT: Make the Event Details/BEO section visible when BEO data is present
     // Remove from hidden sections if it was hidden
     _shiftHiddenSections.remove('event_contract');
