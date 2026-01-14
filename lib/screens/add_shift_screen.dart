@@ -427,7 +427,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
       final storagePaths = _capturedPhotos.where((path) {
         final isUrl = path.startsWith('http://') || path.startsWith('https://');
         final isStoragePath = !isUrl &&
-            (path.contains('/scans/') ||
+            (path.contains('/beo/') || // BEO images now in shift-photos bucket
                 (path.contains('/') &&
                     path.split('/').length >= 2 &&
                     !path.startsWith('/') &&
@@ -443,8 +443,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
 
       // Generate all signed URLs in parallel
       final signedUrlFutures = storagePaths.map((path) async {
-        final bucketName =
-            path.contains('/scans/') ? 'shift-attachments' : 'shift-photos';
+        final bucketName = 'shift-photos'; // All images now use unified bucket
 
         try {
           final signedUrl = await _db.getPhotoUrlForBucket(bucketName, path);
@@ -1041,7 +1040,8 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
         notes: _notesController.text.trim().isNotEmpty
             ? _notesController.text.trim()
             : null,
-        imageUrl: _capturedPhotos.isNotEmpty ? _capturedPhotos.join(',') : null,
+        imageUrl:
+            null, // BEO images now go to shift_photos table, not imageUrl field
         jobId: _selectedJob!.id,
         // =====================================================
         // RIDESHARE & DELIVERY FIELDS
@@ -1186,12 +1186,16 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
 
       if (widget.existingShift != null) {
         await _db.updateShift(shift);
+        // Upload any new photos for existing shift
+        await _uploadCapturedPhotosToShiftPhotosTable(shift.id);
       } else {
         // Handle recurring shifts
         if (_isRecurring && _selectedWeekdays.isNotEmpty) {
           await _createRecurringShifts(shift);
         } else {
-          await _db.saveShift(shift);
+          final savedShift = await _db.saveShift(shift);
+          // Upload all captured photos to shift_photos table for unified system
+          await _uploadCapturedPhotosToShiftPhotosTable(savedShift.id);
         }
       }
 
@@ -1209,6 +1213,68 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
       }
     } finally {
       setState(() => _isSaving = false);
+    }
+  }
+
+  /// Upload all captured photos to shift_photos table (unified system)
+  Future<void> _uploadCapturedPhotosToShiftPhotosTable(String shiftId) async {
+    if (_capturedPhotos.isEmpty) return;
+
+    print(
+        '🎯 Uploading ${_capturedPhotos.length} photos to shift_photos table...');
+
+    for (final photoPath in _capturedPhotos) {
+      try {
+        // Skip URLs - they're already uploaded
+        if (photoPath.startsWith('http://') ||
+            photoPath.startsWith('https://')) {
+          continue;
+        }
+
+        // Check if it's a storage path (already uploaded) vs local file
+        final isStoragePath = photoPath.contains('/beo/') ||
+            (photoPath.contains('/') &&
+                photoPath.split('/').length >= 2 &&
+                !photoPath.startsWith('/') &&
+                !photoPath.contains('\\') &&
+                !photoPath.contains('cache') &&
+                !photoPath.contains('tmp'));
+
+        if (isStoragePath) {
+          // Storage path - just add reference to shift_photos table
+          final userId = _db.supabase.auth.currentUser?.id;
+          if (userId == null) continue;
+
+          await _db.supabase.from('shift_photos').insert({
+            'shift_id': shiftId,
+            'user_id': userId,
+            'storage_path': photoPath,
+            'photo_type': photoPath.contains('/beo/') ? 'beo_scan' : 'gallery',
+          });
+
+          print('🎯 Added storage path to shift_photos: $photoPath');
+        } else {
+          // Local file - upload it
+          final file = File(photoPath);
+          if (await file.exists()) {
+            final bytes = await file.readAsBytes();
+            final fileName =
+                'photo_${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+            await _db.uploadPhoto(
+              shiftId: shiftId,
+              imageBytes: bytes,
+              fileName: fileName,
+              photoType: 'gallery',
+            );
+
+            print('🎯 Uploaded local file to shift_photos: $photoPath');
+          }
+        }
+      } catch (e) {
+        print('🎯 Error uploading photo $photoPath: $e');
+        // Continue with other photos
+      }
     }
   }
 
