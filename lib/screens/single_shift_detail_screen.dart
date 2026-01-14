@@ -3176,6 +3176,7 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
     final photoPaths =
         shift.imageUrl!.split(',').where((p) => p.trim().isNotEmpty).toList();
 
+    // Use FutureBuilder to batch-load all signed URLs like gallery images
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -3194,33 +3195,79 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
             ],
           ),
           const SizedBox(height: 16),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: photoPaths
-                .map((path) => _buildPhotoThumbnail(context, path.trim()))
-                .toList(),
+
+          // Batch-load all signed URLs at once
+          FutureBuilder<List<Map<String, String>>>(
+            future: _batchLoadSignedUrls(photoPaths),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child:
+                        CircularProgressIndicator(color: AppTheme.primaryGreen),
+                  ),
+                );
+              }
+
+              if (snapshot.hasError) {
+                return Center(
+                  child: Text('Error loading photos: ${snapshot.error}'),
+                );
+              }
+
+              final photoUrls = snapshot.data ?? [];
+
+              return Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: photoUrls
+                    .map((photoData) =>
+                        _buildInstantPhotoThumbnail(context, photoData))
+                    .toList(),
+              );
+            },
           ),
         ],
       ),
     );
   }
 
-  Widget _buildPhotoThumbnail(BuildContext context, String path) {
-    final isUrl = path.startsWith('http://') || path.startsWith('https://');
+  /// Batch-load signed URLs for all photos at once (like gallery images)
+  Future<List<Map<String, String>>> _batchLoadSignedUrls(
+      List<String> photoPaths) async {
+    return await Future.wait(photoPaths.map((path) async {
+      try {
+        // Determine correct bucket for storage path
+        final bucketName = path.contains('/scans/')
+            ? 'shift-attachments' // BEO/scan images
+            : 'shift-photos'; // Gallery/manual photos
 
-    // Check if this is a storage path (Supabase storage paths - NOT local file paths)
-    final isStoragePath = !isUrl &&
-        (path.contains('/scans/') || // BEO scans: userId/scans/beo/file.jpg
-            (path.contains('/') &&
-                path.split('/').length >= 2 &&
-                !path.startsWith('/') && // NOT local file path like /data/...
-                !path.contains('\\') && // NOT Windows path like C:\...
-                !path.contains('cache') && // NOT cache path
-                !path.contains('tmp'))); // NOT temp path
+        final db = DatabaseService();
+        final signedUrl = await db.getPhotoUrlForBucket(bucketName, path);
+
+        return {
+          'originalPath': path,
+          'signedUrl': signedUrl,
+        };
+      } catch (e) {
+        print('Error loading signed URL for $path: $e');
+        return {
+          'originalPath': path,
+          'signedUrl': '', // Empty indicates error
+        };
+      }
+    }));
+  }
+
+  /// Build thumbnail using pre-loaded signed URL (instant display)
+  Widget _buildInstantPhotoThumbnail(
+      BuildContext context, Map<String, String> photoData) {
+    final originalPath = photoData['originalPath']!;
+    final signedUrl = photoData['signedUrl']!;
 
     return GestureDetector(
-      onTap: () => _viewFullImage(context, path),
+      onTap: () => _viewFullImage(context, originalPath),
       child: Container(
         width: 100,
         height: 100,
@@ -3229,25 +3276,11 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
           color: AppTheme.cardBackgroundLight,
         ),
         clipBehavior: Clip.antiAlias,
-        child: isUrl
+        child: signedUrl.isNotEmpty
             ? Image.network(
-                path,
+                signedUrl,
                 fit: BoxFit.cover,
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) return child;
-                  return Center(
-                    child: CircularProgressIndicator(
-                      value: loadingProgress.expectedTotalBytes != null
-                          ? loadingProgress.cumulativeBytesLoaded /
-                              loadingProgress.expectedTotalBytes!
-                          : null,
-                      strokeWidth: 2,
-                      color: AppTheme.primaryGreen,
-                    ),
-                  );
-                },
                 errorBuilder: (context, error, stackTrace) {
-                  print('Error loading photo: $error');
                   return Center(
                     child: Icon(
                       Icons.broken_image,
@@ -3257,66 +3290,13 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
                   );
                 },
               )
-            : isStoragePath
-                ? FutureBuilder<String>(
-                    future: () async {
-                      // Determine correct bucket for storage path
-                      final bucketName = path.contains('/scans/')
-                          ? 'shift-attachments' // BEO/scan images
-                          : 'shift-photos'; // Gallery/manual photos
-
-                      final db = DatabaseService();
-                      return await db.getPhotoUrlForBucket(bucketName, path);
-                    }(),
-                    builder: (context, snapshot) {
-                      if (snapshot.hasData) {
-                        return Image.network(
-                          snapshot.data!,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            print('Error loading storage image: $error');
-                            return Center(
-                              child: Icon(
-                                Icons.broken_image,
-                                color: AppTheme.textMuted,
-                                size: 40,
-                              ),
-                            );
-                          },
-                        );
-                      } else if (snapshot.hasError) {
-                        print('Error generating signed URL: ${snapshot.error}');
-                        return Center(
-                          child: Icon(
-                            Icons.broken_image,
-                            color: AppTheme.textMuted,
-                            size: 40,
-                          ),
-                        );
-                      } else {
-                        // Loading signed URL
-                        return Center(
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: AppTheme.primaryGreen,
-                          ),
-                        );
-                      }
-                    },
-                  )
-                : Image.file(
-                    File(path),
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Center(
-                        child: Icon(
-                          Icons.broken_image,
-                          color: AppTheme.textMuted,
-                          size: 40,
-                        ),
-                      );
-                    },
-                  ),
+            : Center(
+                child: Icon(
+                  Icons.broken_image,
+                  color: AppTheme.textMuted,
+                  size: 40,
+                ),
+              ),
       ),
     );
   }
