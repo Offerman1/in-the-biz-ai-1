@@ -711,7 +711,7 @@ NEVER execute bulk edits without user confirmation first.`,
         },
         shiftId: {
           type: "string",
-          description: "Optional: Link to a specific shift/event UUID",
+          description: "Optional: Link to a specific shift UUID. If user mentions adding contact to a BEO shift, first find the shift linked to the BEO (shifts.beo_event_id) and use that shiftId",
         },
         instagram: { type: "string", description: "Instagram handle (without @)" },
         tiktok: { type: "string", description: "TikTok handle (without @)" },
@@ -804,6 +804,54 @@ NEVER execute bulk edits without user confirmation first.`,
         isFavorite: { type: "boolean" },
       },
       required: ["isFavorite"],
+    },
+  },
+
+  {
+    name: "link_contact_to_shift",
+    description: "Link an existing contact to a shift. Use this when user says 'add [contact name] to the shift' or 'link [contact] to [shift]'",
+    parameters: {
+      type: "object",
+      properties: {
+        contactId: {
+          type: "string",
+          description: "Contact UUID (if known)"
+        },
+        contactName: {
+          type: "string",
+          description: "Contact name to search for (if contactId not known)"
+        },
+        shiftId: {
+          type: "string",
+          description: "Shift UUID to link the contact to"
+        },
+      },
+      required: ["shiftId"],
+    },
+  },
+
+  {
+    name: "link_contacts_to_beo_shift",
+    description: "Link multiple contacts to the shift that's connected to a BEO event. Use when user says 'add [contacts] to the BEO shift' or 'link staff to the wedding BEO'",
+    parameters: {
+      type: "object",
+      properties: {
+        beoEventId: {
+          type: "string",
+          description: "BEO event UUID"
+        },
+        contactIds: {
+          type: "array",
+          items: { type: "string" },
+          description: "Array of contact UUIDs to link"
+        },
+        contactNames: {
+          type: "array",
+          items: { type: "string" },
+          description: "Array of contact names to search and link"
+        },
+      },
+      required: ["beoEventId"],
     },
   },
 
@@ -1486,6 +1534,724 @@ NEVER execute bulk edits without user confirmation first.`,
     parameters: {
       type: "object",
       properties: {},
+    },
+  },
+
+  // ============================================
+  // BEO EVENTS MANAGEMENT (14 functions)
+  // ============================================
+  {
+    name: "get_beo_events",
+    description: "List all BEO (Banquet Event Order) events with optional filters.",
+    parameters: {
+      type: "object",
+      properties: {
+        upcoming: { type: "boolean", description: "Show only upcoming events" },
+        past: { type: "boolean", description: "Show only past events" },
+        startDate: { type: "string", description: "Filter from date (YYYY-MM-DD)" },
+        endDate: { type: "string", description: "Filter to date (YYYY-MM-DD)" },
+        venue: { type: "string", description: "Filter by venue name" },
+        clientName: { type: "string", description: "Filter by client/contact name" },
+      },
+    },
+  },
+
+  {
+    name: "search_beo_events",
+    description: "Search BEO events by name, venue, or client.",
+    parameters: {
+      type: "object",
+      properties: {
+        searchTerm: { type: "string", description: "Search query" },
+      },
+      required: ["searchTerm"],
+    },
+  },
+
+  {
+    name: "get_beo_details",
+    description: "Get complete details of a specific BEO event.",
+    parameters: {
+      type: "object",
+      properties: {
+        eventId: { type: "string", description: "BEO event UUID" },
+      },
+      required: ["eventId"],
+    },
+  },
+
+  {
+    name: "get_upcoming_beos",
+    description: "Get BEO events happening in the next N days.",
+    parameters: {
+      type: "object",
+      properties: {
+        daysAhead: { type: "number", description: "Number of days (default 30)" },
+      },
+    },
+  },
+
+  {
+    name: "link_beo_to_shift",
+    description: "Associate a BEO event with a shift.",
+    parameters: {
+      type: "object",
+      properties: {
+        eventId: { type: "string", description: "BEO event UUID" },
+        shiftId: { type: "string", description: "Shift UUID" },
+      },
+      required: ["eventId", "shiftId"],
+    },
+  },
+
+  {
+    name: "unlink_beo_from_shift",
+    description: "Remove BEO event association from a shift.",
+    parameters: {
+      type: "object",
+      properties: {
+        shiftId: { type: "string", description: "Shift UUID" },
+      },
+      required: ["shiftId"],
+    },
+  },
+
+  {
+    name: "edit_beo_event",
+    description: "Modify BEO event details.",
+    parameters: {
+      type: "object",
+      properties: {
+        eventId: { type: "string", description: "BEO event UUID" },
+        updates: { type: "object", description: "Fields to update" },
+      },
+      required: ["eventId", "updates"],
+    },
+  },
+
+  {
+    name: "delete_beo_event",
+    description: "Delete a BEO event (requires confirmation).",
+    parameters: {
+      type: "object",
+      properties: {
+        eventId: { type: "string", description: "BEO event UUID" },
+        confirmed: { type: "boolean", description: "Must be true after confirmation" },
+      },
+      required: ["eventId"],
+    },
+  },
+
+  {
+    name: "get_beo_contacts",
+    description: "Get all contacts for a BEO event.",
+    parameters: {
+      type: "object",
+      properties: {
+        eventId: { type: "string", description: "BEO event UUID" },
+      },
+      required: ["eventId"],
+    },
+  },
+
+  {
+    name: "get_beos_by_venue",
+    description: "Find all BEO events at a specific venue.",
+    parameters: {
+      type: "object",
+      properties: {
+        venueName: { type: "string", description: "Venue name" },
+      },
+      required: ["venueName"],
+    },
+  },
+
+  {
+    name: "get_beos_by_client",
+    description: "Find all BEO events for a specific client.",
+    parameters: {
+      type: "object",
+      properties: {
+        clientName: { type: "string", description: "Client name" },
+      },
+      required: ["clientName"],
+    },
+  },
+
+  {
+    name: "get_beo_earnings",
+    description: "Calculate expected earnings from a BEO event.",
+    parameters: {
+      type: "object",
+      properties: {
+        eventId: { type: "string", description: "BEO event UUID" },
+      },
+      required: ["eventId"],
+    },
+  },
+
+  {
+    name: "get_beo_timeline",
+    description: "Get the event timeline/schedule from a BEO.",
+    parameters: {
+      type: "object",
+      properties: {
+        eventId: { type: "string", description: "BEO event UUID" },
+      },
+      required: ["eventId"],
+    },
+  },
+
+  // ============================================
+  // SERVER CHECKOUTS MANAGEMENT (12 functions)
+  // ============================================
+  {
+    name: "get_checkouts",
+    description: "List server checkouts with optional filters.",
+    parameters: {
+      type: "object",
+      properties: {
+        startDate: { type: "string", description: "From date (YYYY-MM-DD)" },
+        endDate: { type: "string", description: "To date (YYYY-MM-DD)" },
+        jobId: { type: "string", description: "Filter by job UUID" },
+        minTips: { type: "number", description: "Minimum tips amount" },
+        maxTips: { type: "number", description: "Maximum tips amount" },
+      },
+    },
+  },
+
+  {
+    name: "search_checkouts",
+    description: "Search checkouts by section or notes.",
+    parameters: {
+      type: "object",
+      properties: {
+        searchTerm: { type: "string", description: "Search query" },
+      },
+      required: ["searchTerm"],
+    },
+  },
+
+  {
+    name: "get_checkout_details",
+    description: "Get complete details of a server checkout.",
+    parameters: {
+      type: "object",
+      properties: {
+        checkoutId: { type: "string", description: "Checkout UUID" },
+      },
+      required: ["checkoutId"],
+    },
+  },
+
+  {
+    name: "link_checkout_to_shift",
+    description: "Associate a checkout with a shift.",
+    parameters: {
+      type: "object",
+      properties: {
+        checkoutId: { type: "string", description: "Checkout UUID" },
+        shiftId: { type: "string", description: "Shift UUID" },
+      },
+      required: ["checkoutId", "shiftId"],
+    },
+  },
+
+  {
+    name: "unlink_checkout_from_shift",
+    description: "Remove checkout association from a shift.",
+    parameters: {
+      type: "object",
+      properties: {
+        shiftId: { type: "string", description: "Shift UUID" },
+      },
+      required: ["shiftId"],
+    },
+  },
+
+  {
+    name: "edit_checkout",
+    description: "Modify checkout details.",
+    parameters: {
+      type: "object",
+      properties: {
+        checkoutId: { type: "string", description: "Checkout UUID" },
+        updates: { type: "object", description: "Fields to update" },
+      },
+      required: ["checkoutId", "updates"],
+    },
+  },
+
+  {
+    name: "delete_checkout",
+    description: "Delete a checkout (requires confirmation).",
+    parameters: {
+      type: "object",
+      properties: {
+        checkoutId: { type: "string", description: "Checkout UUID" },
+        confirmed: { type: "boolean", description: "Must be true after confirmation" },
+      },
+      required: ["checkoutId"],
+    },
+  },
+
+  {
+    name: "get_checkout_stats",
+    description: "Get statistics for checkouts in a period.",
+    parameters: {
+      type: "object",
+      properties: {
+        startDate: { type: "string", description: "From date (YYYY-MM-DD)" },
+        endDate: { type: "string", description: "To date (YYYY-MM-DD)" },
+        jobId: { type: "string", description: "Filter by job UUID" },
+      },
+    },
+  },
+
+  {
+    name: "compare_checkouts",
+    description: "Compare two checkouts side by side.",
+    parameters: {
+      type: "object",
+      properties: {
+        checkout1Id: { type: "string", description: "First checkout UUID" },
+        checkout2Id: { type: "string", description: "Second checkout UUID" },
+      },
+      required: ["checkout1Id", "checkout2Id"],
+    },
+  },
+
+  {
+    name: "get_tipshare_breakdown",
+    description: "Get detailed tipshare breakdown for a checkout.",
+    parameters: {
+      type: "object",
+      properties: {
+        checkoutId: { type: "string", description: "Checkout UUID" },
+      },
+      required: ["checkoutId"],
+    },
+  },
+
+  {
+    name: "get_section_stats",
+    description: "Get statistics for a specific section.",
+    parameters: {
+      type: "object",
+      properties: {
+        section: { type: "string", description: "Section name" },
+        startDate: { type: "string", description: "From date (YYYY-MM-DD)" },
+        endDate: { type: "string", description: "To date (YYYY-MM-DD)" },
+      },
+      required: ["section"],
+    },
+  },
+
+  // ============================================
+  // PAYCHECKS MANAGEMENT (15 functions)
+  // ============================================
+  {
+    name: "get_paychecks",
+    description: "List all paychecks with optional filters.",
+    parameters: {
+      type: "object",
+      properties: {
+        startDate: { type: "string", description: "From date (YYYY-MM-DD)" },
+        endDate: { type: "string", description: "To date (YYYY-MM-DD)" },
+        year: { type: "number", description: "Filter by year" },
+        employerName: { type: "string", description: "Filter by employer" },
+      },
+    },
+  },
+
+  {
+    name: "search_paychecks",
+    description: "Search paychecks by employer or payroll provider.",
+    parameters: {
+      type: "object",
+      properties: {
+        searchTerm: { type: "string", description: "Search query" },
+      },
+      required: ["searchTerm"],
+    },
+  },
+
+  {
+    name: "get_paycheck_details",
+    description: "Get complete details of a paycheck.",
+    parameters: {
+      type: "object",
+      properties: {
+        paycheckId: { type: "string", description: "Paycheck UUID" },
+      },
+      required: ["paycheckId"],
+    },
+  },
+
+  {
+    name: "get_upcoming_paycheck",
+    description: "Predict the date of the next paycheck.",
+    parameters: {
+      type: "object",
+      properties: {},
+    },
+  },
+
+  {
+    name: "get_ytd_earnings",
+    description: "Get year-to-date earnings totals.",
+    parameters: {
+      type: "object",
+      properties: {
+        year: { type: "number", description: "Year (default current year)" },
+      },
+    },
+  },
+
+  {
+    name: "edit_paycheck",
+    description: "Modify paycheck details.",
+    parameters: {
+      type: "object",
+      properties: {
+        paycheckId: { type: "string", description: "Paycheck UUID" },
+        updates: { type: "object", description: "Fields to update" },
+      },
+      required: ["paycheckId", "updates"],
+    },
+  },
+
+  {
+    name: "delete_paycheck",
+    description: "Delete a paycheck (requires confirmation).",
+    parameters: {
+      type: "object",
+      properties: {
+        paycheckId: { type: "string", description: "Paycheck UUID" },
+        confirmed: { type: "boolean", description: "Must be true after confirmation" },
+      },
+      required: ["paycheckId"],
+    },
+  },
+
+  {
+    name: "get_deduction_summary",
+    description: "Get summary of all deductions for a year.",
+    parameters: {
+      type: "object",
+      properties: {
+        year: { type: "number", description: "Year (default current year)" },
+      },
+    },
+  },
+
+  {
+    name: "get_tax_withholding_summary",
+    description: "Get summary of tax withholdings for a year.",
+    parameters: {
+      type: "object",
+      properties: {
+        year: { type: "number", description: "Year (default current year)" },
+      },
+    },
+  },
+
+  {
+    name: "compare_paychecks",
+    description: "Compare two paychecks side by side.",
+    parameters: {
+      type: "object",
+      properties: {
+        paycheck1Id: { type: "string", description: "First paycheck UUID" },
+        paycheck2Id: { type: "string", description: "Second paycheck UUID" },
+      },
+      required: ["paycheck1Id", "paycheck2Id"],
+    },
+  },
+
+  {
+    name: "get_pay_frequency",
+    description: "Determine pay frequency (weekly, bi-weekly, etc).",
+    parameters: {
+      type: "object",
+      properties: {},
+    },
+  },
+
+  {
+    name: "project_annual_salary",
+    description: "Project annual salary based on recent paychecks.",
+    parameters: {
+      type: "object",
+      properties: {},
+    },
+  },
+
+  // ============================================
+  // RECEIPTS/EXPENSES MANAGEMENT (12 functions)
+  // ============================================
+  {
+    name: "get_receipts",
+    description: "List receipts/expenses with optional filters.",
+    parameters: {
+      type: "object",
+      properties: {
+        startDate: { type: "string", description: "From date (YYYY-MM-DD)" },
+        endDate: { type: "string", description: "To date (YYYY-MM-DD)" },
+        vendor: { type: "string", description: "Filter by vendor name" },
+        category: { type: "string", description: "Filter by expense category" },
+        minAmount: { type: "number", description: "Minimum amount" },
+        maxAmount: { type: "number", description: "Maximum amount" },
+        deductibleOnly: { type: "boolean", description: "Only tax deductible" },
+      },
+    },
+  },
+
+  {
+    name: "search_receipts",
+    description: "Search receipts by vendor, category, or receipt number.",
+    parameters: {
+      type: "object",
+      properties: {
+        searchTerm: { type: "string", description: "Search query" },
+      },
+      required: ["searchTerm"],
+    },
+  },
+
+  {
+    name: "get_receipt_details",
+    description: "Get complete details of a receipt.",
+    parameters: {
+      type: "object",
+      properties: {
+        receiptId: { type: "string", description: "Receipt UUID" },
+      },
+      required: ["receiptId"],
+    },
+  },
+
+  {
+    name: "get_expense_summary",
+    description: "Get summary of expenses by category.",
+    parameters: {
+      type: "object",
+      properties: {
+        startDate: { type: "string", description: "From date (YYYY-MM-DD)" },
+        endDate: { type: "string", description: "To date (YYYY-MM-DD)" },
+        category: { type: "string", description: "Filter by category" },
+      },
+    },
+  },
+
+  {
+    name: "get_deductible_expenses",
+    description: "Get all tax-deductible expenses for a year.",
+    parameters: {
+      type: "object",
+      properties: {
+        year: { type: "number", description: "Year (default current year)" },
+      },
+    },
+  },
+
+  {
+    name: "categorize_receipt",
+    description: "Update the expense category of a receipt.",
+    parameters: {
+      type: "object",
+      properties: {
+        receiptId: { type: "string", description: "Receipt UUID" },
+        category: { type: "string", description: "New expense category" },
+      },
+      required: ["receiptId", "category"],
+    },
+  },
+
+  {
+    name: "mark_receipt_deductible",
+    description: "Mark a receipt as tax deductible or not.",
+    parameters: {
+      type: "object",
+      properties: {
+        receiptId: { type: "string", description: "Receipt UUID" },
+        isDeductible: { type: "boolean", description: "True if tax deductible" },
+      },
+      required: ["receiptId", "isDeductible"],
+    },
+  },
+
+  {
+    name: "link_receipt_to_shift",
+    description: "Associate a receipt with a shift.",
+    parameters: {
+      type: "object",
+      properties: {
+        receiptId: { type: "string", description: "Receipt UUID" },
+        shiftId: { type: "string", description: "Shift UUID" },
+      },
+      required: ["receiptId", "shiftId"],
+    },
+  },
+
+  {
+    name: "edit_receipt",
+    description: "Modify receipt details.",
+    parameters: {
+      type: "object",
+      properties: {
+        receiptId: { type: "string", description: "Receipt UUID" },
+        updates: { type: "object", description: "Fields to update" },
+      },
+      required: ["receiptId", "updates"],
+    },
+  },
+
+  {
+    name: "delete_receipt",
+    description: "Delete a receipt (requires confirmation).",
+    parameters: {
+      type: "object",
+      properties: {
+        receiptId: { type: "string", description: "Receipt UUID" },
+        confirmed: { type: "boolean", description: "Must be true after confirmation" },
+      },
+      required: ["receiptId"],
+    },
+  },
+
+  // ============================================
+  // INVOICES MANAGEMENT (14 functions)
+  // ============================================
+  {
+    name: "get_invoices",
+    description: "List invoices with optional filters.",
+    parameters: {
+      type: "object",
+      properties: {
+        startDate: { type: "string", description: "From date (YYYY-MM-DD)" },
+        endDate: { type: "string", description: "To date (YYYY-MM-DD)" },
+        client: { type: "string", description: "Filter by client name" },
+        status: { type: "string", description: "Filter by status (paid, unpaid, overdue)" },
+        minAmount: { type: "number", description: "Minimum amount" },
+        maxAmount: { type: "number", description: "Maximum amount" },
+      },
+    },
+  },
+
+  {
+    name: "search_invoices",
+    description: "Search invoices by client or invoice number.",
+    parameters: {
+      type: "object",
+      properties: {
+        searchTerm: { type: "string", description: "Search query" },
+      },
+      required: ["searchTerm"],
+    },
+  },
+
+  {
+    name: "get_invoice_details",
+    description: "Get complete details of an invoice.",
+    parameters: {
+      type: "object",
+      properties: {
+        invoiceId: { type: "string", description: "Invoice UUID" },
+      },
+      required: ["invoiceId"],
+    },
+  },
+
+  {
+    name: "get_unpaid_invoices",
+    description: "List all unpaid invoices.",
+    parameters: {
+      type: "object",
+      properties: {},
+    },
+  },
+
+  {
+    name: "get_overdue_invoices",
+    description: "List all overdue invoices.",
+    parameters: {
+      type: "object",
+      properties: {},
+    },
+  },
+
+  {
+    name: "get_total_receivables",
+    description: "Get total amount owed from unpaid invoices.",
+    parameters: {
+      type: "object",
+      properties: {},
+    },
+  },
+
+  {
+    name: "mark_invoice_paid",
+    description: "Record a payment on an invoice.",
+    parameters: {
+      type: "object",
+      properties: {
+        invoiceId: { type: "string", description: "Invoice UUID" },
+        amountPaid: { type: "number", description: "Payment amount" },
+        paidDate: { type: "string", description: "Payment date (YYYY-MM-DD)" },
+      },
+      required: ["invoiceId", "amountPaid"],
+    },
+  },
+
+  {
+    name: "mark_invoice_overdue",
+    description: "Mark an invoice as overdue.",
+    parameters: {
+      type: "object",
+      properties: {
+        invoiceId: { type: "string", description: "Invoice UUID" },
+      },
+      required: ["invoiceId"],
+    },
+  },
+
+  {
+    name: "link_invoice_to_shift",
+    description: "Associate an invoice with a shift.",
+    parameters: {
+      type: "object",
+      properties: {
+        invoiceId: { type: "string", description: "Invoice UUID" },
+        shiftId: { type: "string", description: "Shift UUID" },
+      },
+      required: ["invoiceId", "shiftId"],
+    },
+  },
+
+  {
+    name: "edit_invoice",
+    description: "Modify invoice details.",
+    parameters: {
+      type: "object",
+      properties: {
+        invoiceId: { type: "string", description: "Invoice UUID" },
+        updates: { type: "object", description: "Fields to update" },
+      },
+      required: ["invoiceId", "updates"],
+    },
+  },
+
+  {
+    name: "delete_invoice",
+    description: "Delete an invoice (requires confirmation).",
+    parameters: {
+      type: "object",
+      properties: {
+        invoiceId: { type: "string", description: "Invoice UUID" },
+        confirmed: { type: "boolean", description: "Must be true after confirmation" },
+      },
+      required: ["invoiceId"],
     },
   },
 ];

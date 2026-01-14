@@ -15,6 +15,11 @@ import { SettingsExecutor } from "./executors/settings-executor.ts";
 import { AnalyticsExecutor } from "./executors/analytics-executor.ts";
 import { ContactExecutor } from "./executors/contact-executor.ts";
 import { UtilityExecutor } from "./executors/utility-executor.ts";
+import { BEOExecutor } from "./executors/beo-executor.ts";
+import { CheckoutExecutor } from "./executors/checkout-executor.ts";
+import { PaycheckExecutor } from "./executors/paycheck-executor.ts";
+import { ReceiptExecutor } from "./executors/receipt-executor.ts";
+import { InvoiceExecutor } from "./executors/invoice-executor.ts";
 
 // Import utilities
 import { ContextBuilder } from "./utils/context-builder.ts";
@@ -106,6 +111,11 @@ serve(async (req) => {
     const settingsExecutor = new SettingsExecutor(supabase, userId);
     const analyticsExecutor = new AnalyticsExecutor(supabase, userId);
     const contactExecutor = new ContactExecutor(supabase, userId);
+    const beoExecutor = new BEOExecutor(supabase, userId);
+    const checkoutExecutor = new CheckoutExecutor(supabase, userId);
+    const paycheckExecutor = new PaycheckExecutor(supabase, userId);
+    const receiptExecutor = new ReceiptExecutor(supabase, userId);
+    const invoiceExecutor = new InvoiceExecutor(supabase, userId);
 
     // Initialize utilities
     const contextBuilder = new ContextBuilder(supabase, userId);
@@ -309,7 +319,7 @@ Extract ALL details mentioned: names, roles, companies, phone, email, website, s
       contents: conversationHistory,
       tools: [{ functionDeclarations }],
       generationConfig: {
-        maxOutputTokens: 2000,
+        maxOutputTokens: 8192,
         temperature: 1.0,
       },
       systemInstruction: systemPrompt,
@@ -339,10 +349,46 @@ Extract ALL details mentioned: names, roles, companies, phone, email, website, s
             call.args.targetDate = DateParser.parse(call.args.targetDate);
           }
 
+          // Helper: Convert snake_case to camelCase (e.g., get_beo_events -> getBEOEvents)
+          const snakeToCamel = (str: string): string => {
+            // Handle special cases first
+            str = str.replace(/_beo_/g, "_BEO_").replace(/_beo$/g, "_BEO");
+            str = str.replace(/_ytd_/g, "_YTD_").replace(/_ytd$/g, "_YTD");
+            
+            // Convert to camelCase
+            return str.replace(/_([a-z])/gi, (_, letter) => letter.toUpperCase());
+          };
+
           // Route to appropriate executor
           let functionResult;
 
-          if (call.name.includes("shift")) {
+          // BEO Events
+          if (call.name.includes("beo")) {
+            const methodName = snakeToCamel(call.name);
+            functionResult = await (beoExecutor as any)[methodName](call.args);
+          }
+          // Server Checkouts
+          else if (call.name.includes("checkout") || call.name.includes("tipshare") || call.name.includes("section_stats")) {
+            const methodName = snakeToCamel(call.name);
+            functionResult = await (checkoutExecutor as any)[methodName](call.args);
+          }
+          // Paychecks
+          else if (call.name.includes("paycheck") || call.name.includes("ytd") || call.name.includes("deduction") || call.name.includes("withholding") || call.name.includes("pay_frequency") || call.name.includes("annual_salary") || call.name.includes("upcoming_paycheck")) {
+            const methodName = snakeToCamel(call.name);
+            functionResult = await (paycheckExecutor as any)[methodName](call.args);
+          }
+          // Receipts
+          else if (call.name.includes("receipt") || (call.name.includes("expense") && !call.name.includes("quickbooks")) || (call.name.includes("deductible") && !call.name.includes("paycheck"))) {
+            const methodName = snakeToCamel(call.name);
+            functionResult = await (receiptExecutor as any)[methodName](call.args);
+          }
+          // Invoices
+          else if (call.name.includes("invoice") || call.name.includes("unpaid") || call.name.includes("overdue") || call.name.includes("receivables")) {
+            const methodName = snakeToCamel(call.name);
+            functionResult = await (invoiceExecutor as any)[methodName](call.args);
+          }
+          // Original executors
+          else if (call.name.includes("shift")) {
             functionResult = await shiftExecutor.execute(call.name, call.args);
           } else if (call.name.includes("job")) {
             functionResult = await jobExecutor.execute(call.name, call.args);
@@ -414,7 +460,7 @@ Extract ALL details mentioned: names, roles, companies, phone, email, website, s
         contents: conversationHistory,
         // Don't include tools here - we just want text, not more function calls
         generationConfig: {
-          maxOutputTokens: 1000,
+          maxOutputTokens: 8192,
           temperature: 0.7,
         },
         systemInstruction: systemPrompt + `
@@ -447,20 +493,72 @@ Extract ALL details mentioned: names, roles, companies, phone, email, website, s
         /^[!?.✅❌⚠️✨\s]+$/.test(replyText.trim());
       
       if (isResponseBroken) {
-        console.log("AI response looks broken, using function result message instead");
-        // Build fallback from function results
-        const results = functionResponses.map(r => {
-          if (r.response.needsConfirmation) {
-            return r.response.message;
-          } else if (r.response.success) {
-            return r.response.message || `✅ ${r.name.replace(/_/g, " ")} completed`;
-          } else if (r.response.error) {
-            return `❌ ${r.name.replace(/_/g, " ")}: ${r.response.error}`;
-          } else {
-            return `Completed ${r.name.replace(/_/g, " ")}`;
-          }
+        console.log("AI response looks broken, retrying with stronger prompt");
+        
+        // Try ONE MORE TIME with an extremely explicit prompt
+        const retryResult = await model.generateContent({
+          contents: conversationHistory,
+          generationConfig: {
+            maxOutputTokens: 8192,
+            temperature: 0.9,
+          },
+          systemInstruction: `You are ITB, the user's friendly AI assistant in a finance tracking app.
+
+CRITICAL: You MUST respond in complete, natural sentences. NEVER return just function names or raw data.
+
+The user just asked you to do something. Here's what happened:
+${functionResponses.map(r => {
+  if (r.response.success) {
+    return `✅ ${r.name}: ${r.response.message || 'Completed successfully'}`;
+  } else if (r.response.error) {
+    return `❌ ${r.name}: ${r.response.error}`;
+  }
+  return `${r.name}: ${JSON.stringify(r.response)}`;
+}).join('\n')}
+
+NOW YOU MUST:
+1. Write a conversational response explaining what you did (or what went wrong)
+2. Use complete sentences - NEVER just list function names
+3. Be friendly and apologetic if something failed
+4. Ask if they need help with anything else
+
+Example GOOD responses:
+- "I searched for your shifts and found 2 contacts! Would you like me to show you their details?"
+- "I tried searching for those shifts but ran into an issue. Could you give me more details about what you're looking for?"
+- "Got it! I found 2 contacts associated with your shifts. What would you like to do with them?"
+
+Example BAD responses (NEVER DO THIS):
+- "search shifts completed, found 2 contacts"
+- "✨ ✅"
+- "search_shifts: success"
+
+YOUR RESPONSE:`
         });
-        replyText = results.filter(Boolean).join(" ") || "Action completed. Anything else?";
+
+        try {
+          replyText = retryResult.response.text();
+          console.log("Retry response:", replyText);
+        } catch (e) {
+          console.log("Retry also failed, using smart fallback");
+          
+          // Last resort: Build a smart conversational fallback
+          const successCount = functionResponses.filter(r => r.response.success).length;
+          const errorCount = functionResponses.filter(r => r.response.error).length;
+          
+          if (errorCount > 0) {
+            const errorMsg = functionResponses.find(r => r.response.error)?.response.error;
+            replyText = `I ran into an issue: ${errorMsg}. Could you try rephrasing your request or give me more details?`;
+          } else if (successCount > 0) {
+            const lastMsg = functionResponses[functionResponses.length - 1]?.response.message;
+            if (lastMsg && lastMsg.length > 20) {
+              replyText = lastMsg;
+            } else {
+              replyText = `✅ Done! I completed your request successfully. Anything else I can help with?`;
+            }
+          } else {
+            replyText = "I processed your request, but I'm not sure if it worked as expected. Could you check and let me know if you need anything else?";
+          }
+        }
       }
 
       // Final safety check - ensure we never return empty

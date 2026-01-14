@@ -41,6 +41,11 @@ class _AssistantScreenState extends State<AssistantScreen> {
     super.initState();
     _loadUserContext();
     _loadChatHistory().then((_) {
+      // Scroll to bottom after chat history loads AND widget is built
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollToBottom();
+      });
+
       // If there's an initial message, send it after chat loads
       if (widget.initialMessage != null && widget.initialMessage!.isNotEmpty) {
         Future.delayed(const Duration(milliseconds: 500), () {
@@ -87,10 +92,11 @@ class _AssistantScreenState extends State<AssistantScreen> {
           _messages.addAll(messages.map((msg) => ChatMessage(
                 text: msg['message'] as String,
                 isUser: msg['is_user'] as bool,
-                timestamp: DateTime.parse(msg['created_at'] as String),
+                timestamp:
+                    DateTime.parse(msg['created_at'] as String).toLocal(),
               )));
         });
-        _scrollToBottom();
+        // Note: Scroll happens in initState's addPostFrameCallback
       }
     } catch (e) {
       debugPrint('Error loading chat history: $e');
@@ -244,8 +250,9 @@ class _AssistantScreenState extends State<AssistantScreen> {
   }
 
   void _scrollToBottom() {
-    Future.delayed(const Duration(milliseconds: 100), () {
-      if (_scrollController.hasClients) {
+    // Longer delay to ensure ListView is fully rendered
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (_scrollController.hasClients && mounted) {
         _scrollController.animateTo(
           _scrollController.position.maxScrollExtent,
           duration: const Duration(milliseconds: 300),

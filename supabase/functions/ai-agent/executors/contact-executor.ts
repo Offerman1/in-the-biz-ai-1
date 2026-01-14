@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Contact Executor - Manages event contacts (vendors, staff, etc.)
 import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
@@ -18,6 +19,10 @@ export class ContactExecutor {
         return await this.getContactsForShift(args);
       case "set_contact_favorite":
         return await this.setContactFavorite(args);
+      case "link_contact_to_shift":
+        return await this.linkContactToShift(args);
+      case "link_contacts_to_beo_shift":
+        return await this.linkContactsToBEOShift(args);
       default:
         throw new Error(`Unknown contact function: ${functionName}`);
     }
@@ -309,6 +314,139 @@ export class ContactExecutor {
       message: isFavorite
         ? `✅ Added ${contact.name} to favorites`
         : `Removed ${contact.name} from favorites`,
+    };
+  }
+
+  private async linkContactToShift(args: any) {
+    const { contactId, contactName, shiftId } = args;
+
+    // Find contact
+    let contact;
+    if (contactId) {
+      const { data } = await this.supabase
+        .from("event_contacts")
+        .select("*")
+        .eq("id", contactId)
+        .eq("user_id", this.userId)
+        .single();
+      contact = data;
+    } else if (contactName) {
+      const { data } = await this.supabase
+        .from("event_contacts")
+        .select("*")
+        .eq("user_id", this.userId)
+        .ilike("name", `%${contactName}%`)
+        .single();
+      contact = data;
+    }
+
+    if (!contact) {
+      throw new Error(`Contact not found: ${contactName || contactId}`);
+    }
+
+    // Verify shift exists
+    const { data: shift } = await this.supabase
+      .from("shifts")
+      .select("id")
+      .eq("id", shiftId)
+      .eq("user_id", this.userId)
+      .single();
+
+    if (!shift) {
+      throw new Error("Shift not found");
+    }
+
+    // Link contact to shift
+    const { data, error } = await this.supabase
+      .from("event_contacts")
+      .update({ shift_id: shiftId })
+      .eq("id", contact.id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return {
+      success: true,
+      message: `✅ Linked ${contact.name} to shift`,
+      contact: data,
+    };
+  }
+
+  private async linkContactsToBEOShift(args: any) {
+    const { beoEventId, contactIds, contactNames } = args;
+
+    // First, find the shift that's linked to this BEO
+    const { data: shift } = await this.supabase
+      .from("shifts")
+      .select("id")
+      .eq("beo_event_id", beoEventId)
+      .eq("user_id", this.userId)
+      .single();
+
+    if (!shift) {
+      throw new Error("No shift found linked to this BEO event. Link the BEO to a shift first.");
+    }
+
+    const linkedContacts = [];
+    const errors = [];
+
+    // Process contact IDs
+    if (contactIds && Array.isArray(contactIds)) {
+      for (const contactId of contactIds) {
+        try {
+          const { data, error } = await this.supabase
+            .from("event_contacts")
+            .update({ shift_id: shift.id })
+            .eq("id", contactId)
+            .eq("user_id", this.userId)
+            .select()
+            .single();
+
+          if (error) throw error;
+          linkedContacts.push(data.name);
+        } catch (e: any) {
+          errors.push(`Failed to link contact ID ${contactId}: ${e.message}`);
+        }
+      }
+    }
+
+    // Process contact names
+    if (contactNames && Array.isArray(contactNames)) {
+      for (const name of contactNames) {
+        try {
+          const { data: contact } = await this.supabase
+            .from("event_contacts")
+            .select("*")
+            .eq("user_id", this.userId)
+            .ilike("name", `%${name}%`)
+            .single();
+
+          if (!contact) {
+            errors.push(`Contact not found: ${name}`);
+            continue;
+          }
+
+          const { data, error } = await this.supabase
+            .from("event_contacts")
+            .update({ shift_id: shift.id })
+            .eq("id", contact.id)
+            .select()
+            .single();
+
+          if (error) throw error;
+          linkedContacts.push(data.name);
+        } catch (e: any) {
+          errors.push(`Failed to link ${name}: ${e.message}`);
+        }
+      }
+    }
+
+    return {
+      success: true,
+      message: `✅ Linked ${linkedContacts.length} contact(s) to BEO shift`,
+      linkedContacts,
+      errors: errors.length > 0 ? errors : undefined,
     };
   }
 }
