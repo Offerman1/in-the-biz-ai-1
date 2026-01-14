@@ -432,7 +432,7 @@ class DatabaseService {
     // Upload to storage: userId/shiftId/filename
     final storagePath = '$userId/$shiftId/$fileName';
 
-    await _supabase.storage.from('shift-photos').uploadBinary(
+    await _supabase.storage.from('shift-attachments').uploadBinary(
           storagePath,
           imageBytes,
           fileOptions: const FileOptions(contentType: 'image/jpeg'),
