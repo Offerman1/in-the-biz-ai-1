@@ -187,15 +187,10 @@ class _BeoDetailScreenState extends State<BeoDetailScreen> {
       if (result != null && mounted) {
         final coverUrl = result['cover_image_url'] as String?;
         if (coverUrl != null && coverUrl.isNotEmpty) {
-          final signedUrl = await _db.supabase.storage
-              .from('shift-attachments')
-              .createSignedUrl(coverUrl, 3600); // 1 hour expiry
-
-          if (mounted) {
-            setState(() {
-              _coverImageUrl = signedUrl;
-            });
-          }
+          // Store the storage path (like gallery photos)
+          setState(() {
+            _coverImageUrl = coverUrl; // Store path, not signed URL
+          });
         }
       }
     } catch (e) {

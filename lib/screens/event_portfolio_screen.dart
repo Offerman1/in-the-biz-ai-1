@@ -738,32 +738,12 @@ class _EventPortfolioScreenState extends State<EventPortfolioScreen> {
       itemCount: _events.length,
       itemBuilder: (context, index) {
         final event = _events[index];
-        return FutureBuilder<Widget>(
-          future: _buildEventCard(event),
-          builder: (context, snapshot) {
-            if (snapshot.hasData) {
-              return snapshot.data!;
-            } else {
-              return Container(
-                decoration: BoxDecoration(
-                  color: AppTheme.cardBackground,
-                  borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-                ),
-                child: Center(
-                  child: CircularProgressIndicator(
-                    color: AppTheme.primaryGreen,
-                    strokeWidth: 2,
-                  ),
-                ),
-              );
-            }
-          },
-        );
+        return _buildEventCard(event);
       },
     );
   }
 
-  Future<Widget> _buildEventCard(Map<String, dynamic> event) async {
+  Widget _buildEventCard(Map<String, dynamic> event) {
     final beoId = event['id'] as String?;
     final eventName = event['event_name'] as String? ?? 'Untitled Event';
     final eventType = event['event_type'] as String? ?? '';
@@ -787,11 +767,15 @@ class _EventPortfolioScreenState extends State<EventPortfolioScreen> {
     // Get cover image or first scanned image from Supabase storage
     String? displayImageUrl;
     if (coverImageUrl != null && coverImageUrl.isNotEmpty) {
-      // Cover image is stored as a path, need to get signed URL
-      displayImageUrl = await _db.supabase.storage
-          .from('shift-attachments')
-          .createSignedUrl(coverImageUrl, 3600); // 1 hour expiry
-      print('🖼️ Using cover image URL: $displayImageUrl');
+      // Check if it's already a full URL or just a path
+      if (coverImageUrl.startsWith('http')) {
+        displayImageUrl = coverImageUrl;
+      } else {
+        // It's a storage path - use as image key for FutureBuilder
+        displayImageUrl =
+            coverImageUrl; // Will be converted to signed URL in Image.network
+      }
+      print('🖼️ Using cover image path: $coverImageUrl');
     } else if (imageUrls != null && imageUrls.isNotEmpty) {
       final imagePath = imageUrls.first.toString();
       // Check if it's already a full URL or just a path
@@ -799,12 +783,10 @@ class _EventPortfolioScreenState extends State<EventPortfolioScreen> {
         // Already a full URL, use as-is
         displayImageUrl = imagePath;
       } else {
-        // It's a path, get signed URL
-        displayImageUrl = await _db.supabase.storage
-            .from('shift-attachments')
-            .createSignedUrl(imagePath, 3600); // 1 hour expiry
+        // It's a storage path
+        displayImageUrl = imagePath;
       }
-      print('🖼️ Using first scan image URL: $displayImageUrl');
+      print('🖼️ Using first scan image path: $imagePath');
     } else {
       print('🖼️ No image available for this event');
     }
@@ -873,36 +855,12 @@ class _EventPortfolioScreenState extends State<EventPortfolioScreen> {
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(8),
                           child: displayImageUrl != null
-                              ? Image.network(
-                                  displayImageUrl,
-                                  key: ValueKey(displayImageUrl),
-                                  fit: BoxFit.cover,
+                              ? _BeoImage(
+                                  imagePath: displayImageUrl,
                                   width: 56,
                                   height: 56,
-                                  errorBuilder: (context, error, stackTrace) {
-                                    print(
-                                        '❌ Image load error for $eventName: $error');
-                                    return Center(
-                                      child: Text(
-                                        _getEventEmoji(eventType),
-                                        style: const TextStyle(fontSize: 24),
-                                      ),
-                                    );
-                                  },
-                                  loadingBuilder:
-                                      (context, child, loadingProgress) {
-                                    if (loadingProgress == null) return child;
-                                    return Center(
-                                      child: SizedBox(
-                                        width: 20,
-                                        height: 20,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          color: AppTheme.primaryGreen,
-                                        ),
-                                      ),
-                                    );
-                                  },
+                                  eventName: eventName,
+                                  eventType: eventType,
                                 )
                               : Center(
                                   child: Text(
@@ -1227,6 +1185,107 @@ class _EventPortfolioScreenState extends State<EventPortfolioScreen> {
     } catch (e) {
       print('Error loading linked shift: $e');
     }
+  }
+
+  String _getEventEmoji(String eventType) {
+    switch (eventType.toLowerCase()) {
+      case 'wedding':
+        return '💒';
+      case 'corporate':
+        return '🏢';
+      case 'birthday':
+        return '🎂';
+      default:
+        return '🎉';
+    }
+  }
+}
+
+/// Custom BEO image widget that handles signed URL generation
+/// Works like gallery photos - no async in main widget
+class _BeoImage extends StatefulWidget {
+  final String imagePath;
+  final double width;
+  final double height;
+  final String eventName;
+  final String eventType;
+
+  const _BeoImage({
+    required this.imagePath,
+    required this.width,
+    required this.height,
+    required this.eventName,
+    required this.eventType,
+  });
+
+  @override
+  State<_BeoImage> createState() => _BeoImageState();
+}
+
+class _BeoImageState extends State<_BeoImage> {
+  final DatabaseService _db = DatabaseService();
+  String? _signedUrl;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSignedUrl();
+  }
+
+  Future<void> _loadSignedUrl() async {
+    try {
+      if (widget.imagePath.startsWith('http')) {
+        // Already a URL
+        _signedUrl = widget.imagePath;
+      } else {
+        // Storage path - generate signed URL
+        _signedUrl = await _db.getPhotoUrlForBucket(
+            'shift-attachments', widget.imagePath);
+      }
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      print('❌ Error loading BEO image: $e');
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading || _signedUrl == null) {
+      return Container(
+        width: widget.width,
+        height: widget.height,
+        color: AppTheme.cardBackgroundLight,
+        child: Center(
+          child: Text(
+            _getEventEmoji(widget.eventType),
+            style: const TextStyle(fontSize: 24),
+          ),
+        ),
+      );
+    }
+
+    return Image.network(
+      _signedUrl!,
+      key: ValueKey(_signedUrl),
+      fit: BoxFit.cover,
+      width: widget.width,
+      height: widget.height,
+      errorBuilder: (context, error, stackTrace) {
+        print('❌ Image load error for ${widget.eventName}: $error');
+        return Center(
+          child: Text(
+            _getEventEmoji(widget.eventType),
+            style: const TextStyle(fontSize: 24),
+          ),
+        );
+      },
+    );
   }
 
   String _getEventEmoji(String eventType) {

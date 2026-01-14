@@ -466,6 +466,16 @@ class DatabaseService {
     return response;
   }
 
+  /// Get signed URL for a photo from any bucket (for BEO images)
+  Future<String> getPhotoUrlForBucket(
+      String bucketName, String storagePath) async {
+    // Use signed URLs for both web and mobile (all buckets now private)
+    final response = await _supabase.storage
+        .from(bucketName)
+        .createSignedUrl(storagePath, 3600); // 1 hour expiry
+    return response;
+  }
+
   /// Delete a photo
   Future<void> deletePhoto(String photoId, String storagePath) async {
     // Delete from storage
