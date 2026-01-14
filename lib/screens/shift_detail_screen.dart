@@ -308,7 +308,7 @@ class _ShiftDetailScreenState extends State<ShiftDetailScreen>
 
       // Get signed URLs for each photo - use existing bucket
       final photosWithUrls = await Future.wait(photos.map((photo) async {
-        final storagePath = photo['storage_path'] as String;
+        final storagePath = photo['file_path'] as String;
 
         // Use existing bucket that actually exists
         final bucketName = 'shift-attachments';
@@ -917,7 +917,7 @@ class _ShiftDetailScreenState extends State<ShiftDetailScreen>
                                               try {
                                                 await _dbService.deletePhoto(
                                                   photo['id'],
-                                                  photo['storage_path'],
+                                                  photo['file_path'],
                                                 );
                                                 _loadPhotos();
                                                 if (mounted) {

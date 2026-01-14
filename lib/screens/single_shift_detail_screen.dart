@@ -6,6 +6,8 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 import '../models/shift.dart';
 import '../models/event_contact.dart';
 import '../models/shift_attachment.dart';
@@ -46,6 +48,11 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
   List<ShiftAttachment> _attachments = [];
   bool _isLoadingAttachments = false;
   bool _isUploadingAttachment = false;
+  bool _attachmentViewIsGrid = false; // false = list, true = grid
+  Map<String, String> _attachmentUrlCache =
+      {}; // Cache signed URLs to prevent reloading
+  bool _isSelectingAttachments = false;
+  Set<String> _selectedAttachmentIds = {};
 
   // Linked BEO Event
   BeoEvent? _linkedBeoEvent;
@@ -163,6 +170,165 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
     _loadEventContacts();
     _loadAttachments();
     _loadLinkedBeoEvent();
+    _loadAttachmentViewPreference();
+  }
+
+  Future<void> _loadAttachmentViewPreference() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (mounted) {
+      setState(() {
+        _attachmentViewIsGrid =
+            prefs.getBool('attachment_view_is_grid') ?? false;
+      });
+    }
+  }
+
+  Future<void> _toggleAttachmentView() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _attachmentViewIsGrid = !_attachmentViewIsGrid;
+    });
+    await prefs.setBool('attachment_view_is_grid', _attachmentViewIsGrid);
+  }
+
+  void _toggleAttachmentSelection(String attachmentId) {
+    setState(() {
+      if (_selectedAttachmentIds.contains(attachmentId)) {
+        _selectedAttachmentIds.remove(attachmentId);
+        if (_selectedAttachmentIds.isEmpty) {
+          _isSelectingAttachments = false;
+        }
+      } else {
+        _selectedAttachmentIds.add(attachmentId);
+      }
+    });
+  }
+
+  void _startAttachmentSelection(String attachmentId) {
+    setState(() {
+      _isSelectingAttachments = true;
+      _selectedAttachmentIds.add(attachmentId);
+    });
+  }
+
+  void _cancelAttachmentSelection() {
+    setState(() {
+      _isSelectingAttachments = false;
+      _selectedAttachmentIds.clear();
+    });
+  }
+
+  Future<void> _shareSelectedAttachments() async {
+    final selectedAttachments = _attachments
+        .where((a) => _selectedAttachmentIds.contains(a.id))
+        .toList();
+
+    // Show loading dialog immediately
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => Center(
+        child: Card(
+          color: AppTheme.cardBackground,
+          child: Padding(
+            padding: EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation(AppTheme.primaryGreen)),
+                SizedBox(height: 16),
+                Text('Preparing files...', style: AppTheme.bodyMedium),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    try {
+      final tempDir = await getTemporaryDirectory();
+
+      // Download all files IN PARALLEL
+      final downloadFutures = selectedAttachments.map((attachment) async {
+        // Use cached URL if available, otherwise fetch it
+        final url = _attachmentUrlCache[attachment.id] ??
+            await _db.getAttachmentUrl(attachment.storagePath);
+        final response = await http.get(Uri.parse(url));
+        final file = File('${tempDir.path}/${attachment.fileName}');
+        await file.writeAsBytes(response.bodyBytes);
+        return XFile(file.path);
+      }).toList();
+
+      final files = await Future.wait(downloadFutures);
+
+      // Close loading dialog
+      if (mounted) Navigator.pop(context);
+
+      // Show share sheet
+      await Share.shareXFiles(files, text: 'Attachments');
+      _cancelAttachmentSelection();
+    } catch (e) {
+      // Close loading dialog
+      if (mounted) Navigator.pop(context);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to share: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _deleteSelectedAttachments() async {
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.cardBackground,
+        title: Text('Delete ${_selectedAttachmentIds.length} attachments?',
+            style: AppTheme.titleMedium),
+        content: Text('These attachments will be permanently deleted.',
+            style: AppTheme.bodyMedium),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: AppTheme.accentRed),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldDelete == true) {
+      try {
+        final selectedAttachments = _attachments
+            .where((a) => _selectedAttachmentIds.contains(a.id))
+            .toList();
+        for (final attachment in selectedAttachments) {
+          await _db.deleteAttachment(attachment);
+        }
+        await _loadAttachments();
+        _cancelAttachmentSelection();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content:
+                    Text('${selectedAttachments.length} attachments deleted')),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to delete: $e')),
+          );
+        }
+      }
+    }
   }
 
   /// Load linked BEO event if shift has beoEventId
@@ -519,6 +685,20 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
     setState(() => _isLoadingAttachments = true);
     try {
       final attachments = await _db.getShiftAttachments(shift.id);
+
+      // Pre-load URLs for all image attachments to cache them
+      for (final attachment in attachments) {
+        if (attachment.isImage &&
+            !_attachmentUrlCache.containsKey(attachment.id)) {
+          try {
+            final url = await _db.getAttachmentUrl(attachment.storagePath);
+            _attachmentUrlCache[attachment.id] = url;
+          } catch (e) {
+            // Skip failed loads
+          }
+        }
+      }
+
       setState(() {
         _attachments = attachments;
         _isLoadingAttachments = false;
@@ -3621,20 +3801,67 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
                   ],
                 ],
               ),
-              IconButton(
-                icon: _isUploadingAttachment
-                    ? SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor:
-                              AlwaysStoppedAnimation(AppTheme.primaryGreen),
-                        ),
-                      )
-                    : Icon(Icons.add, color: AppTheme.primaryGreen),
-                onPressed: _isUploadingAttachment ? null : _pickAndUploadFile,
-                tooltip: 'Add Attachment',
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (_isSelectingAttachments) ...[
+                    IconButton(
+                      icon: Icon(Icons.share,
+                          color: AppTheme.primaryGreen, size: 18),
+                      onPressed: _selectedAttachmentIds.isEmpty
+                          ? null
+                          : _shareSelectedAttachments,
+                      padding: EdgeInsets.zero,
+                      constraints: BoxConstraints(minWidth: 28, minHeight: 28),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.delete,
+                          color: AppTheme.dangerColor, size: 18),
+                      onPressed: _selectedAttachmentIds.isEmpty
+                          ? null
+                          : _deleteSelectedAttachments,
+                      padding: EdgeInsets.zero,
+                      constraints: BoxConstraints(minWidth: 28, minHeight: 28),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.close,
+                          color: AppTheme.textSecondary, size: 18),
+                      onPressed: _cancelAttachmentSelection,
+                      padding: EdgeInsets.zero,
+                      constraints: BoxConstraints(minWidth: 28, minHeight: 28),
+                    ),
+                  ] else ...[
+                    if (_attachments.isNotEmpty)
+                      IconButton(
+                        icon: Icon(
+                            _attachmentViewIsGrid
+                                ? Icons.view_list
+                                : Icons.grid_view,
+                            color: AppTheme.textSecondary,
+                            size: 18),
+                        onPressed: _toggleAttachmentView,
+                        padding: EdgeInsets.zero,
+                        constraints:
+                            BoxConstraints(minWidth: 28, minHeight: 28),
+                      ),
+                    IconButton(
+                      icon: _isUploadingAttachment
+                          ? SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation(
+                                      AppTheme.primaryGreen)))
+                          : Icon(Icons.add,
+                              color: AppTheme.primaryGreen, size: 18),
+                      onPressed:
+                          _isUploadingAttachment ? null : _pickAndUploadFile,
+                      padding: EdgeInsets.zero,
+                      constraints: BoxConstraints(minWidth: 28, minHeight: 28),
+                    ),
+                  ],
+                ],
               ),
             ],
           ),
@@ -3674,107 +3901,206 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
               ),
             )
           else
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: _attachments.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 8),
-              itemBuilder: (context, index) {
-                final attachment = _attachments[index];
-                return Row(
-                  children: [
-                    SizedBox(
-                      width: 100,
-                      height: 80,
-                      child: DocumentPreviewWidget(
-                        attachment: attachment,
-                        showFileName: false,
-                        showFileSize: false,
-                      ),
+            _attachmentViewIsGrid
+                ? GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 3,
+                      crossAxisSpacing: 8,
+                      mainAxisSpacing: 8,
+                      childAspectRatio: 0.75,
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            attachment.fileName,
-                            style: AppTheme.bodyMedium.copyWith(
-                              fontWeight: FontWeight.w500,
+                    itemCount: _attachments.length,
+                    itemBuilder: (context, index) {
+                      final attachment = _attachments[index];
+                      final isSelected =
+                          _selectedAttachmentIds.contains(attachment.id);
+                      return GestureDetector(
+                        onTap: _isSelectingAttachments
+                            ? () => _toggleAttachmentSelection(attachment.id)
+                            : null,
+                        onLongPress: () {
+                          if (!_isSelectingAttachments) {
+                            _startAttachmentSelection(attachment.id);
+                          }
+                        },
+                        child: Stack(
+                          children: [
+                            AbsorbPointer(
+                              absorbing: _isSelectingAttachments,
+                              child: Opacity(
+                                opacity: isSelected ? 0.6 : 1.0,
+                                child: DocumentPreviewWidget(
+                                  attachment: attachment,
+                                  showFileName: true,
+                                  showFileSize: true,
+                                  height: 150,
+                                  cachedUrl: _attachmentUrlCache[attachment.id],
+                                ),
+                              ),
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '${attachment.extension.toUpperCase()} • ${attachment.formattedSize}',
-                            style: AppTheme.labelSmall.copyWith(
-                              color: AppTheme.textMuted,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    // Attachment actions menu
-                    PopupMenuButton<String>(
-                      icon: Icon(Icons.more_vert,
-                          color: AppTheme.textSecondary, size: 20),
-                      color: AppTheme.cardBackground,
-                      onSelected: (value) {
-                        switch (value) {
-                          case 'open':
-                            _openAttachment(attachment);
-                            break;
-                          case 'share':
-                            _shareAttachment(attachment);
-                            break;
-                          case 'delete':
-                            _deleteAttachment(attachment);
-                            break;
-                        }
-                      },
-                      itemBuilder: (context) => [
-                        PopupMenuItem(
-                          value: 'open',
+                            if (isSelected)
+                              Positioned(
+                                top: 8,
+                                right: 8,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.primaryGreen,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(Icons.check,
+                                      color: Colors.white, size: 24),
+                                ),
+                              ),
+                          ],
+                        ),
+                      );
+                    },
+                  )
+                : ListView.separated(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: _attachments.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 8),
+                    itemBuilder: (context, index) {
+                      final attachment = _attachments[index];
+                      final isSelected =
+                          _selectedAttachmentIds.contains(attachment.id);
+                      return GestureDetector(
+                        onTap: () {
+                          if (_isSelectingAttachments) {
+                            _toggleAttachmentSelection(attachment.id);
+                          }
+                        },
+                        onLongPress: () {
+                          if (!_isSelectingAttachments) {
+                            _startAttachmentSelection(attachment.id);
+                          }
+                        },
+                        child: Container(
+                          color: isSelected
+                              ? AppTheme.primaryGreen.withValues(alpha: 0.2)
+                              : null,
                           child: Row(
                             children: [
-                              Icon(Icons.open_in_new,
-                                  color: AppTheme.textPrimary, size: 18),
+                              if (_isSelectingAttachments)
+                                Padding(
+                                  padding:
+                                      const EdgeInsets.only(left: 8, right: 8),
+                                  child: Icon(
+                                    isSelected
+                                        ? Icons.check_circle
+                                        : Icons.radio_button_unchecked,
+                                    color: isSelected
+                                        ? AppTheme.primaryGreen
+                                        : AppTheme.textMuted,
+                                  ),
+                                ),
+                              SizedBox(
+                                width: 100,
+                                height: 80,
+                                child: DocumentPreviewWidget(
+                                  attachment: attachment,
+                                  showFileName: false,
+                                  showFileSize: false,
+                                  cachedUrl: _attachmentUrlCache[attachment.id],
+                                ),
+                              ),
                               const SizedBox(width: 12),
-                              Text('Open in App', style: AppTheme.bodyMedium),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      attachment.fileName,
+                                      style: AppTheme.bodyMedium.copyWith(
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      '${attachment.extension.toUpperCase()} • ${attachment.formattedSize}',
+                                      style: AppTheme.labelSmall.copyWith(
+                                        color: AppTheme.textMuted,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              // Attachment actions menu - hide in selection mode
+                              if (!_isSelectingAttachments)
+                                PopupMenuButton<String>(
+                                  icon: Icon(Icons.more_vert,
+                                      color: AppTheme.textSecondary, size: 20),
+                                  color: AppTheme.cardBackground,
+                                  onSelected: (value) {
+                                    switch (value) {
+                                      case 'open':
+                                        _openAttachment(attachment);
+                                        break;
+                                      case 'share':
+                                        _shareAttachment(attachment);
+                                        break;
+                                      case 'delete':
+                                        _deleteAttachment(attachment);
+                                        break;
+                                    }
+                                  },
+                                  itemBuilder: (context) => [
+                                    PopupMenuItem(
+                                      value: 'open',
+                                      child: Row(
+                                        children: [
+                                          Icon(Icons.open_in_new,
+                                              color: AppTheme.textPrimary,
+                                              size: 18),
+                                          const SizedBox(width: 12),
+                                          Text('Open in App',
+                                              style: AppTheme.bodyMedium),
+                                        ],
+                                      ),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'share',
+                                      child: Row(
+                                        children: [
+                                          Icon(Icons.share,
+                                              color: AppTheme.textPrimary,
+                                              size: 18),
+                                          const SizedBox(width: 12),
+                                          Text('Share',
+                                              style: AppTheme.bodyMedium),
+                                        ],
+                                      ),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'delete',
+                                      child: Row(
+                                        children: [
+                                          Icon(Icons.delete,
+                                              color: AppTheme.dangerColor,
+                                              size: 18),
+                                          const SizedBox(width: 12),
+                                          Text('Delete',
+                                              style: AppTheme.bodyMedium
+                                                  .copyWith(
+                                                      color: AppTheme
+                                                          .dangerColor)),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
                             ],
                           ),
                         ),
-                        PopupMenuItem(
-                          value: 'share',
-                          child: Row(
-                            children: [
-                              Icon(Icons.share,
-                                  color: AppTheme.textPrimary, size: 18),
-                              const SizedBox(width: 12),
-                              Text('Share', style: AppTheme.bodyMedium),
-                            ],
-                          ),
-                        ),
-                        PopupMenuItem(
-                          value: 'delete',
-                          child: Row(
-                            children: [
-                              Icon(Icons.delete,
-                                  color: AppTheme.dangerColor, size: 18),
-                              const SizedBox(width: 12),
-                              Text('Delete',
-                                  style: AppTheme.bodyMedium
-                                      .copyWith(color: AppTheme.dangerColor)),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                );
-              },
-            ),
+                      );
+                    },
+                  ),
         ],
       ),
     );

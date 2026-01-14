@@ -48,8 +48,19 @@ CREATE TABLE IF NOT EXISTS public.shift_photos (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Create shift_attachments table for AI agent compatibility 
+CREATE TABLE IF NOT EXISTS public.shift_attachments (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    shift_id UUID NOT NULL REFERENCES public.shifts(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    storage_path TEXT NOT NULL,
+    photo_type TEXT DEFAULT 'gallery',
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- Enable Row Level Security
 ALTER TABLE public.shift_photos ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.shift_attachments ENABLE ROW LEVEL SECURITY;
 
 -- Policies for shift_photos
 CREATE POLICY "Users can view own photos" ON public.shift_photos
@@ -59,6 +70,16 @@ CREATE POLICY "Users can insert own photos" ON public.shift_photos
     FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 CREATE POLICY "Users can delete own photos" ON public.shift_photos
+    FOR DELETE USING (auth.uid() = user_id);
+
+-- Policies for shift_attachments  
+CREATE POLICY "Users can view own attachments" ON public.shift_attachments
+    FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own attachments" ON public.shift_attachments
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own attachments" ON public.shift_attachments
     FOR DELETE USING (auth.uid() = user_id);
 
 -- Create user profiles table
@@ -106,28 +127,28 @@ CREATE TRIGGER on_auth_user_created
 
 -- Create storage bucket for shift photos
 INSERT INTO storage.buckets (id, name, public)
-VALUES ('shift-photos', 'shift-photos', false)
+VALUES ('shift-attachments', 'shift-attachments', false)
 ON CONFLICT (id) DO NOTHING;
 
 -- Storage policies
 CREATE POLICY "Users can upload own photos"
 ON storage.objects FOR INSERT
 WITH CHECK (
-    bucket_id = 'shift-photos' 
+    bucket_id = 'shift-attachments' 
     AND auth.uid()::text = (storage.foldername(name))[1]
 );
 
 CREATE POLICY "Users can view own photos"
 ON storage.objects FOR SELECT
 USING (
-    bucket_id = 'shift-photos' 
+    bucket_id = 'shift-attachments' 
     AND auth.uid()::text = (storage.foldername(name))[1]
 );
 
 CREATE POLICY "Users can delete own photos"
 ON storage.objects FOR DELETE
 USING (
-    bucket_id = 'shift-photos' 
+    bucket_id = 'shift-attachments' 
     AND auth.uid()::text = (storage.foldername(name))[1]
 );
 

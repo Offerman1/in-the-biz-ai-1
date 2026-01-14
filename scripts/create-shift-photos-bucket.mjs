@@ -16,7 +16,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey, {
 });
 
 async function main() {
-  console.log('🔧 Creating shift-photos bucket...');
+  console.log('🔧 Creating shift-attachments bucket...');
   
   // Check if bucket exists
   const { data: buckets, error: listError } = await supabase.storage.listBuckets();
@@ -26,13 +26,13 @@ async function main() {
     process.exit(1);
   }
   
-  const existingBucket = buckets?.find(b => b.name === 'shift-photos');
+  const existingBucket = buckets?.find(b => b.name === 'shift-attachments');
   
   if (existingBucket) {
-    console.log('✅ Bucket "shift-photos" already exists!');
+    console.log('✅ Bucket "shift-attachments" already exists!');
   } else {
     // Create the bucket
-    const { data, error } = await supabase.storage.createBucket('shift-photos', {
+    const { data, error } = await supabase.storage.createBucket('shift-attachments', {
       public: true, // Make it public from the start
       fileSizeLimit: 5242880, // 5MB max per image
       allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/heic']
@@ -43,7 +43,7 @@ async function main() {
       process.exit(1);
     }
     
-    console.log('✅ Bucket "shift-photos" created successfully and set to PUBLIC!');
+    console.log('✅ Bucket "shift-attachments" created successfully and set to PUBLIC!');
   }
 
   // List all buckets to verify

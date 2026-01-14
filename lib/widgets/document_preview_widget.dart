@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:url_launcher/url_launcher.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:http/http.dart' as http;
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
 import '../models/shift_attachment.dart';
 import '../services/database_service.dart';
 import '../theme/app_theme.dart';
+import '../screens/photo_viewer_screen.dart';
 
 /// Universal document preview widget
 /// - Images: Shows thumbnail preview
@@ -14,6 +19,7 @@ class DocumentPreviewWidget extends StatefulWidget {
   final double width;
   final bool showFileName;
   final bool showFileSize;
+  final String? cachedUrl; // Pre-loaded URL to avoid refetching
 
   const DocumentPreviewWidget({
     super.key,
@@ -22,6 +28,7 @@ class DocumentPreviewWidget extends StatefulWidget {
     this.width = double.infinity,
     this.showFileName = true,
     this.showFileSize = true,
+    this.cachedUrl,
   });
 
   @override
@@ -36,7 +43,11 @@ class _DocumentPreviewWidgetState extends State<DocumentPreviewWidget> {
   @override
   void initState() {
     super.initState();
-    if (widget.attachment.isImage || widget.attachment.isPdf) {
+    // Use cached URL if available
+    if (widget.cachedUrl != null) {
+      _imageUrl = widget.cachedUrl;
+      _isLoadingUrl = false;
+    } else if (widget.attachment.isImage || widget.attachment.isPdf) {
       _loadImageUrl();
     } else {
       _isLoadingUrl = false;
@@ -215,7 +226,77 @@ class _DocumentPreviewWidgetState extends State<DocumentPreviewWidget> {
   }
 
   Future<void> _handleTap(BuildContext context) async {
-    // All files open in native app (saves bandwidth, uses phone's cache)
+    // Images - open in PhotoViewerScreen for in-app viewing
+    if (widget.attachment.isImage) {
+      try {
+        // Get signed URL for the image
+        final url = await _db.getAttachmentUrl(widget.attachment.storagePath);
+
+        // Navigate to PhotoViewerScreen
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => PhotoViewerScreen(
+              photos: [
+                {
+                  'id': widget.attachment.id,
+                  'file_path': widget.attachment.filePath,
+                  'url': url,
+                }
+              ],
+              initialIndex: 0,
+              onDelete: (photoId, storagePath) async {
+                try {
+                  await _db.deleteAttachment(widget.attachment);
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Attachment deleted')),
+                    );
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Failed to delete: $e')),
+                    );
+                  }
+                }
+              },
+              onShare: (photoId, storagePath) async {
+                try {
+                  final url = await _db.getAttachmentUrl(storagePath);
+                  final response = await http.get(Uri.parse(url));
+                  final tempDir = await getTemporaryDirectory();
+                  final file =
+                      File('${tempDir.path}/${widget.attachment.fileName}');
+                  await file.writeAsBytes(response.bodyBytes);
+                  await Share.shareXFiles([XFile(file.path)],
+                      text: 'Attachment');
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Failed to share: $e')),
+                    );
+                  }
+                }
+              },
+            ),
+          ),
+        );
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Could not open image: $e'),
+              backgroundColor: AppTheme.dangerColor,
+            ),
+          );
+        }
+      }
+      return;
+    }
+
+    // All other files open in native app (saves bandwidth, uses phone's cache)
     if (!kIsWeb) {
       try {
         // Get signed URL from Supabase

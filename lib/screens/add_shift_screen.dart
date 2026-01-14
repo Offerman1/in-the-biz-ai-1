@@ -446,7 +446,8 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
       final storagePaths = _capturedPhotos.where((path) {
         final isUrl = path.startsWith('http://') || path.startsWith('https://');
         final isStoragePath = !isUrl &&
-            (path.contains('/beo/') || // BEO images use shift-attachments bucket
+            (path.contains(
+                    '/beo/') || // BEO images use shift-attachments bucket
                 (path.contains('/') &&
                     path.split('/').length >= 2 &&
                     !path.startsWith('/') &&
@@ -765,10 +766,41 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
       _loadLinkedBeo();
     }
 
-    // Load images if they exist
-    if (shift.imageUrl != null && shift.imageUrl!.isNotEmpty) {
-      _capturedPhotos.addAll(shift.imageUrl!.split(','));
-      print('🎯 Loaded ${_capturedPhotos.length} images from shift');
+    // Load existing photos from shift_attachments table
+    if (widget.existingShift != null) {
+      _loadExistingPhotos();
+    }
+  }
+
+  /// Load existing photos from shift_attachments table for editing
+  Future<void> _loadExistingPhotos() async {
+    if (widget.existingShift == null) return;
+
+    try {
+      print('🔍 Loading photos for shift ID: ${widget.existingShift!.id}');
+
+      // Check both tables for debugging
+      final attachmentsPhotos =
+          await _db.getShiftPhotos(widget.existingShift!.id);
+      print(
+          '🔍 Found ${attachmentsPhotos.length} photos in shift_attachments table');
+
+      // Also check old shift_photos table
+      final oldPhotos = await _db.supabase
+          .from('shift_photos')
+          .select()
+          .eq('shift_id', widget.existingShift!.id);
+      print('🔍 Found ${oldPhotos.length} photos in OLD shift_photos table');
+
+      // Use attachments photos (new system)
+      for (final photo in attachmentsPhotos) {
+        final storagePath = photo['storage_path'] as String;
+        _capturedPhotos.add(storagePath);
+        print('🔍 Added photo: $storagePath');
+        setState(() {}); // Refresh UI to show loaded photos
+      }
+    } catch (e) {
+      print('❌ Error loading existing photos: $e');
     }
   }
 
@@ -1060,7 +1092,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
             ? _notesController.text.trim()
             : null,
         imageUrl:
-            null, // BEO images now go to shift_photos table, not imageUrl field
+            null, // BEO images now go to shift_attachments table, not imageUrl field
         jobId: _selectedJob!.id,
         // =====================================================
         // RIDESHARE & DELIVERY FIELDS
@@ -1213,7 +1245,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
           await _createRecurringShifts(shift);
         } else {
           final savedShift = await _db.saveShift(shift);
-          // Upload all captured photos to shift_photos table for unified system
+          // Upload all captured photos to shift_attachments table for unified system
           await _uploadCapturedPhotosToShiftPhotosTable(savedShift.id);
         }
       }
@@ -1235,12 +1267,12 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
     }
   }
 
-  /// Upload all captured photos to shift_photos table (unified system)
+  /// Upload all captured photos to shift_attachments table (unified system)
   Future<void> _uploadCapturedPhotosToShiftPhotosTable(String shiftId) async {
     if (_capturedPhotos.isEmpty) return;
 
     print(
-        '🎯 Uploading ${_capturedPhotos.length} photos to shift_photos table...');
+        '🎯 Uploading ${_capturedPhotos.length} photos to shift_attachments table...');
 
     for (final photoPath in _capturedPhotos) {
       try {
@@ -1260,18 +1292,21 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
                 !photoPath.contains('tmp'));
 
         if (isStoragePath) {
-          // Storage path - just add reference to shift_photos table
+          // Storage path - just add reference to shift_attachments table
           final userId = _db.supabase.auth.currentUser?.id;
           if (userId == null) continue;
 
-          await _db.supabase.from('shift_photos').insert({
+          await _db.supabase.from('shift_attachments').insert({
             'shift_id': shiftId,
             'user_id': userId,
-            'storage_path': photoPath,
-            'photo_type': photoPath.contains('/beo/') ? 'beo_scan' : 'gallery',
+            'file_name': photoPath.split('/').last,
+            'file_path': photoPath,
+            'file_type': 'image',
+            'file_size': 0,
+            'file_extension': '.jpg',
           });
 
-          print('🎯 Added storage path to shift_photos: $photoPath');
+          print('🎯 Added storage path to shift_attachments: $photoPath');
         } else {
           // Local file - upload it
           final file = File(photoPath);
@@ -1287,7 +1322,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
               photoType: 'gallery',
             );
 
-            print('🎯 Uploaded local file to shift_photos: $photoPath');
+            print('🎯 Uploaded local file to shift_attachments: $photoPath');
           }
         }
       } catch (e) {

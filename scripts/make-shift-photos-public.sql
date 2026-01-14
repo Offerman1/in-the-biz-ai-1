@@ -1,8 +1,8 @@
--- Make shift-photos bucket public for web compatibility
+-- Make shift-attachments bucket public for web compatibility
 -- Web has issues with signed URLs from private buckets
 UPDATE storage.buckets 
 SET public = true 
-WHERE name = 'shift-photos';
+WHERE name = 'shift-attachments';
 
 -- Verify the update
-SELECT name, public FROM storage.buckets WHERE name = 'shift-photos';
+SELECT name, public FROM storage.buckets WHERE name = 'shift-attachments';

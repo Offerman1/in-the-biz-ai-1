@@ -10,11 +10,11 @@ const client = new pg.Client({
 async function main() {
   await client.connect();
   
-  // Make shift-photos bucket public
+  // Make shift-attachments bucket public
   const result = await client.query(
-    "UPDATE storage.buckets SET public = true WHERE name = 'shift-photos'"
+    "UPDATE storage.buckets SET public = true WHERE name = 'shift-attachments'"
   );
-  console.log('Updated shift-photos bucket to PUBLIC. Rows affected:', result.rowCount);
+  console.log('Updated shift-attachments bucket to PUBLIC. Rows affected:', result.rowCount);
   
   // Verify all buckets
   const buckets = await client.query('SELECT name, public FROM storage.buckets ORDER BY name');

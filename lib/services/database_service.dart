@@ -438,12 +438,15 @@ class DatabaseService {
           fileOptions: const FileOptions(contentType: 'image/jpeg'),
         );
 
-    // Save reference in shift_photos table
-    await _supabase.from('shift_photos').insert({
+    // Save reference in shift_attachments table
+    await _supabase.from('shift_attachments').insert({
       'shift_id': shiftId,
       'user_id': userId,
-      'storage_path': storagePath,
-      'photo_type': photoType,
+      'file_name': fileName,
+      'file_path': storagePath,
+      'file_type': 'image',
+      'file_size': imageBytes.length,
+      'file_extension': '.jpg',
     });
 
     return storagePath;
@@ -451,8 +454,11 @@ class DatabaseService {
 
   /// Get photos for a shift
   Future<List<Map<String, dynamic>>> getShiftPhotos(String shiftId) async {
-    final response =
-        await _supabase.from('shift_photos').select().eq('shift_id', shiftId);
+    final response = await _supabase
+        .from('shift_attachments')
+        .select()
+        .eq('shift_id', shiftId)
+        .order('created_at', ascending: false);
 
     return List<Map<String, dynamic>>.from(response);
   }
@@ -482,7 +488,7 @@ class DatabaseService {
     await _supabase.storage.from('shift-attachments').remove([storagePath]);
 
     // Delete reference from database
-    await _supabase.from('shift_photos').delete().eq('id', photoId);
+    await _supabase.from('shift_attachments').delete().eq('id', photoId);
   }
 
   // ============================================

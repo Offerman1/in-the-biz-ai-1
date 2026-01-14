@@ -8,12 +8,14 @@ class PhotoViewerScreen extends StatefulWidget {
   final List<Map<String, dynamic>> photos;
   final int initialIndex;
   final Function(String photoId, String storagePath)? onDelete;
+  final Function(String photoId, String storagePath)? onShare;
 
   const PhotoViewerScreen({
     super.key,
     required this.photos,
     this.initialIndex = 0,
     this.onDelete,
+    this.onShare,
   });
 
   @override
@@ -68,10 +70,10 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen> {
 
       try {
         final photo = widget.photos[_currentIndex];
-        await _dbService.deletePhoto(photo['id'], photo['storage_path']);
+        await _dbService.deletePhoto(photo['id'], photo['file_path']);
 
         if (mounted) {
-          widget.onDelete?.call(photo['id'], photo['storage_path']);
+          widget.onDelete?.call(photo['id'], photo['file_path']);
 
           if (widget.photos.length == 1) {
             Navigator.pop(context, true); // Last photo deleted
@@ -111,6 +113,14 @@ class _PhotoViewerScreenState extends State<PhotoViewerScreen> {
         ),
         centerTitle: true,
         actions: [
+          if (widget.onShare != null)
+            IconButton(
+              icon: const Icon(Icons.share, color: Colors.white),
+              onPressed: () {
+                final photo = widget.photos[_currentIndex];
+                widget.onShare?.call(photo['id'], photo['file_path']);
+              },
+            ),
           if (widget.onDelete != null)
             IconButton(
               icon: _isDeleting
