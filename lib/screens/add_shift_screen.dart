@@ -5933,11 +5933,15 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
     final isUrl =
         filePath.startsWith('http://') || filePath.startsWith('https://');
 
-    // Check if this is a storage path (contains user ID / indicates Supabase storage)
+    // Check if this is a storage path (Supabase storage paths - NOT local file paths)
     final isStoragePath = !isUrl &&
         (filePath.contains('/scans/') || // BEO scans: userId/scans/beo/file.jpg
-            filePath.contains('/') &&
-                filePath.split('/').length >= 2); // General storage paths
+            (filePath.contains('/') &&
+                filePath.split('/').length >= 2 &&
+                !filePath.startsWith('/') &&        // NOT local file path like /data/...
+                !filePath.contains('\\') &&        // NOT Windows path like C:\...
+                !filePath.contains('cache') &&     // NOT cache path
+                !filePath.contains('tmp')));       // NOT temp path
 
     print(
         '🖼️ Building thumbnail for: ${filePath.length > 60 ? '${filePath.substring(0, 60)}...' : filePath}');
@@ -6026,10 +6030,10 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
       );
     } else if (isStoragePath) {
       // Storage path - determine correct bucket and generate signed URL
-      final bucketName = filePath.contains('/scans/') 
-          ? 'shift-attachments'  // BEO/scan images
-          : 'shift-photos';      // Gallery/manual photos
-      
+      final bucketName = filePath.contains('/scans/')
+          ? 'shift-attachments' // BEO/scan images
+          : 'shift-photos'; // Gallery/manual photos
+
       imageWidget = FutureBuilder<String>(
         future: _db.getPhotoUrlForBucket(bucketName, filePath),
         builder: (context, snapshot) {
