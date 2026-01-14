@@ -3214,10 +3214,10 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
         (path.contains('/scans/') || // BEO scans: userId/scans/beo/file.jpg
             (path.contains('/') &&
                 path.split('/').length >= 2 &&
-                !path.startsWith('/') &&        // NOT local file path like /data/...
-                !path.contains('\\') &&        // NOT Windows path like C:\...
-                !path.contains('cache') &&     // NOT cache path
-                !path.contains('tmp')));       // NOT temp path
+                !path.startsWith('/') && // NOT local file path like /data/...
+                !path.contains('\\') && // NOT Windows path like C:\...
+                !path.contains('cache') && // NOT cache path
+                !path.contains('tmp'))); // NOT temp path
 
     return GestureDetector(
       onTap: () => _viewFullImage(context, path),
@@ -3261,10 +3261,10 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
                 ? FutureBuilder<String>(
                     future: () async {
                       // Determine correct bucket for storage path
-                      final bucketName = path.contains('/scans/') 
-                          ? 'shift-attachments'  // BEO/scan images
-                          : 'shift-photos';      // Gallery/manual photos
-                      
+                      final bucketName = path.contains('/scans/')
+                          ? 'shift-attachments' // BEO/scan images
+                          : 'shift-photos'; // Gallery/manual photos
+
                       final db = DatabaseService();
                       return await db.getPhotoUrlForBucket(bucketName, path);
                     }(),
@@ -3305,18 +3305,18 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
                     },
                   )
                 : Image.file(
-                File(path),
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Center(
-                    child: Icon(
-                      Icons.broken_image,
-                      color: AppTheme.textMuted,
-                      size: 40,
-                    ),
-                  );
-                },
-              ),
+                    File(path),
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Center(
+                        child: Icon(
+                          Icons.broken_image,
+                          color: AppTheme.textMuted,
+                          size: 40,
+                        ),
+                      );
+                    },
+                  ),
       ),
     );
   }

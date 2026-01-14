@@ -5938,10 +5938,11 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
         (filePath.contains('/scans/') || // BEO scans: userId/scans/beo/file.jpg
             (filePath.contains('/') &&
                 filePath.split('/').length >= 2 &&
-                !filePath.startsWith('/') &&        // NOT local file path like /data/...
-                !filePath.contains('\\') &&        // NOT Windows path like C:\...
-                !filePath.contains('cache') &&     // NOT cache path
-                !filePath.contains('tmp')));       // NOT temp path
+                !filePath
+                    .startsWith('/') && // NOT local file path like /data/...
+                !filePath.contains('\\') && // NOT Windows path like C:\...
+                !filePath.contains('cache') && // NOT cache path
+                !filePath.contains('tmp'))); // NOT temp path
 
     print(
         '🖼️ Building thumbnail for: ${filePath.length > 60 ? '${filePath.substring(0, 60)}...' : filePath}');
