@@ -6025,9 +6025,13 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
         },
       );
     } else if (isStoragePath) {
-      // Storage path - generate signed URL
+      // Storage path - determine correct bucket and generate signed URL
+      final bucketName = filePath.contains('/scans/') 
+          ? 'shift-attachments'  // BEO/scan images
+          : 'shift-photos';      // Gallery/manual photos
+      
       imageWidget = FutureBuilder<String>(
-        future: _db.getPhotoUrlForBucket('shift-attachments', filePath),
+        future: _db.getPhotoUrlForBucket(bucketName, filePath),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             return Image.network(

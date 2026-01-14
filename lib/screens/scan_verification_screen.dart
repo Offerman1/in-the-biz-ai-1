@@ -1149,7 +1149,7 @@ class _ScanVerificationScreenState extends State<ScanVerificationScreen> {
       // Use existing BEO ID from AI analysis or generate new one
       final beoId = _editableData['id'] as String? ?? const Uuid().v4();
       final isExistingBeo = _editableData['id'] != null;
-      
+
       print('🎯 BEO ID for Shift+BEO: $beoId, isExisting: $isExistingBeo');
 
       // Upload scan images
@@ -1178,8 +1178,9 @@ class _ScanVerificationScreenState extends State<ScanVerificationScreen> {
       final savedBeo = isExistingBeo
           ? await _beoService.updateBeoEvent(beoEvent) // Update existing BEO
           : await _beoService.createBeoEvent(beoEvent); // Create new BEO
-      
-      print('🎯 BEO ${isExistingBeo ? 'updated' : 'created'} with ID: ${savedBeo.id}');
+
+      print(
+          '🎯 BEO ${isExistingBeo ? 'updated' : 'created'} with ID: ${savedBeo.id}');
 
       if (!mounted) return;
 
