@@ -255,6 +255,10 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
   // Linked BEO Event (loaded from database)
   BeoEvent? _linkedBeo;
 
+  // Signed URL cache for fast image loading (storage_path -> signed_url)
+  final Map<String, String> _signedUrlCache = {};
+  bool _isLoadingSignedUrls = false;
+
   @override
   void initState() {
     super.initState();
@@ -406,6 +410,71 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
     // Load the linked BEO from database
     if (_beoEventId != null) {
       _loadLinkedBeo();
+    }
+
+    // Preload signed URLs for all storage paths to fix performance
+    _preloadSignedUrls();
+  }
+
+  /// Preload signed URLs for all storage paths to avoid individual API calls
+  Future<void> _preloadSignedUrls() async {
+    if (_isLoadingSignedUrls) return; // Prevent multiple calls
+
+    setState(() => _isLoadingSignedUrls = true);
+
+    try {
+      // Get all storage paths that need signed URLs
+      final storagePaths = _capturedPhotos.where((path) {
+        final isUrl = path.startsWith('http://') || path.startsWith('https://');
+        final isStoragePath = !isUrl &&
+            (path.contains('/scans/') ||
+                (path.contains('/') &&
+                    path.split('/').length >= 2 &&
+                    !path.startsWith('/') &&
+                    !path.contains('\\') &&
+                    !path.contains('cache') &&
+                    !path.contains('tmp')));
+        return isStoragePath;
+      }).toList();
+
+      if (storagePaths.isEmpty) return;
+
+      print('🎯 Preloading ${storagePaths.length} signed URLs...');
+
+      // Generate all signed URLs in parallel
+      final signedUrlFutures = storagePaths.map((path) async {
+        final bucketName =
+            path.contains('/scans/') ? 'shift-attachments' : 'shift-photos';
+
+        try {
+          final signedUrl = await _db.getPhotoUrlForBucket(bucketName, path);
+          return MapEntry(path, signedUrl);
+        } catch (e) {
+          print('🖼️ ERROR generating signed URL for $path: $e');
+          return MapEntry(path, ''); // Empty string indicates error
+        }
+      }).toList();
+
+      final signedUrls = await Future.wait(signedUrlFutures);
+
+      // Cache all signed URLs
+      for (final entry in signedUrls) {
+        if (entry.value.isNotEmpty) {
+          _signedUrlCache[entry.key] = entry.value;
+        }
+      }
+
+      print('🎯 Cached ${_signedUrlCache.length} signed URLs');
+
+      if (mounted) {
+        setState(() {}); // Trigger rebuild to use cached URLs
+      }
+    } catch (e) {
+      print('🖼️ ERROR preloading signed URLs: $e');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoadingSignedUrls = false);
+      }
     }
   }
 
@@ -6030,33 +6099,17 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
         },
       );
     } else if (isStoragePath) {
-      // Storage path - determine correct bucket and generate signed URL
-      final bucketName = filePath.contains('/scans/')
-          ? 'shift-attachments' // BEO/scan images
-          : 'shift-photos'; // Gallery/manual photos
+      // Use cached signed URL if available, otherwise show loading
+      final cachedUrl = _signedUrlCache[filePath];
 
-      imageWidget = FutureBuilder<String>(
-        future: _db.getPhotoUrlForBucket(bucketName, filePath),
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            return Image.network(
-              snapshot.data!,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                print('🖼️ ERROR loading storage image: $error');
-                print('🖼️ Storage path was: $filePath');
-                return Container(
-                  color: AppTheme.cardBackgroundLight,
-                  child: Icon(
-                    Icons.broken_image,
-                    color: AppTheme.textMuted,
-                    size: 40,
-                  ),
-                );
-              },
-            );
-          } else if (snapshot.hasError) {
-            print('🖼️ ERROR generating signed URL: ${snapshot.error}');
+      if (cachedUrl != null) {
+        // Use cached signed URL - INSTANT loading!
+        imageWidget = Image.network(
+          cachedUrl,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            print('🖼️ ERROR loading cached image: $error');
+            print('🖼️ Cached URL was: $cachedUrl');
             return Container(
               color: AppTheme.cardBackgroundLight,
               child: Icon(
@@ -6065,24 +6118,34 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
                 size: 40,
               ),
             );
-          } else {
-            // Loading signed URL
-            return Container(
-              color: AppTheme.cardBackgroundLight,
-              child: Center(
-                child: SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: AppTheme.primaryGreen,
-                  ),
-                ),
+          },
+        );
+      } else if (_isLoadingSignedUrls) {
+        // Currently loading signed URLs - show spinner
+        imageWidget = Container(
+          color: AppTheme.cardBackgroundLight,
+          child: Center(
+            child: SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: AppTheme.primaryGreen,
               ),
-            );
-          }
-        },
-      );
+            ),
+          ),
+        );
+      } else {
+        // No cached URL and not loading - show error
+        imageWidget = Container(
+          color: AppTheme.cardBackgroundLight,
+          child: Icon(
+            Icons.broken_image,
+            color: AppTheme.textMuted,
+            size: 40,
+          ),
+        );
+      }
     } else {
       // Local file
       imageWidget = Image.file(

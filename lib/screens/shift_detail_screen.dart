@@ -309,13 +309,14 @@ class _ShiftDetailScreenState extends State<ShiftDetailScreen>
       // Get signed URLs for each photo with bucket detection
       final photosWithUrls = await Future.wait(photos.map((photo) async {
         final storagePath = photo['storage_path'] as String;
-        
+
         // Determine correct bucket for storage path
-        final bucketName = storagePath.contains('/scans/') 
-            ? 'shift-attachments'  // BEO/scan images
-            : 'shift-photos';      // Gallery/manual photos
-            
-        final url = await _dbService.getPhotoUrlForBucket(bucketName, storagePath);
+        final bucketName = storagePath.contains('/scans/')
+            ? 'shift-attachments' // BEO/scan images
+            : 'shift-photos'; // Gallery/manual photos
+
+        final url =
+            await _dbService.getPhotoUrlForBucket(bucketName, storagePath);
         return {...photo, 'url': url};
       }));
 
