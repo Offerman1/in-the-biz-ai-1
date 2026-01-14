@@ -3238,8 +3238,8 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
       List<String> photoPaths) async {
     return await Future.wait(photoPaths.map((path) async {
       try {
-        // All photos now use unified shift-photos bucket
-        const bucketName = 'shift-photos';
+        // Use existing bucket that actually exists
+        const bucketName = 'shift-attachments';
 
         final db = DatabaseService();
         final signedUrl = await db.getPhotoUrlForBucket(bucketName, path);

@@ -348,23 +348,25 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
         data['commission'].toString().isNotEmpty) {
       _commissionController.text = data['commission'].toString();
     }
-    
+
     // Store BEO Event ID for linking
     if (data['beo_event_id'] != null) {
       _beoEventId = data['beo_event_id'].toString();
       print('🎯 Set _beoEventId: $_beoEventId');
     }
-    
+
     // Add scanned image URLs from BEO to captured photos
     if (data['image_urls'] != null && data['image_urls'] is List) {
       final urls = data['image_urls'] as List;
       for (final url in urls) {
         if (url != null && url.toString().isNotEmpty) {
           _capturedPhotos.add(url.toString());
-          print('🎯 Added BEO image URL to _capturedPhotos: ${url.toString().substring(0, 50)}...');
+          print(
+              '🎯 Added BEO image URL to _capturedPhotos: ${url.toString().substring(0, 50)}...');
         }
       }
-      print('🎯 Total _capturedPhotos count after BEO: ${_capturedPhotos.length}');
+      print(
+          '🎯 Total _capturedPhotos count after BEO: ${_capturedPhotos.length}');
     }
 
     // IMPORTANT: Make the Event Details/BEO section visible when BEO data is present
@@ -474,7 +476,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
 
       // Generate all signed URLs in parallel
       final signedUrlFutures = storagePaths.map((path) async {
-        final bucketName = 'shift-photos'; // All images now use unified bucket
+        final bucketName = 'shift-attachments'; // Use existing bucket
 
         try {
           final signedUrl = await _db.getPhotoUrlForBucket(bucketName, path);

@@ -16,7 +16,7 @@ import 'package:uuid/uuid.dart';
 /// - Average file size: 100-300KB per image
 class ScanImageService {
   final SupabaseClient _supabase = Supabase.instance.client;
-  static const String _bucketName = 'shift-photos'; // UNIFIED BUCKET
+  static const String _bucketName = 'shift-attachments'; // Use existing bucket
 
   // Max image dimension (width or height) - 1500px is good for document readability
   static const int _maxDimension = 1500;
