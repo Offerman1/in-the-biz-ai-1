@@ -188,6 +188,119 @@ class ScanImageService {
     }
   }
 
+  /// Upload scan images to BOTH shift-attachments AND dedicated scan bucket
+  /// Also creates shift_attachments table entries if shiftId provided
+  /// Returns storage paths from shift-attachments bucket
+  Future<List<String>> uploadScanToShiftAttachments({
+    required List<String>? imagePaths,
+    required List<Uint8List>? imageBytes,
+    required String scanType,
+    required String entityId, // Receipt ID, Invoice ID, Checkout ID, etc.
+    String? shiftId, // If provided, creates shift_attachments entries
+    List<String>? mimeTypes,
+  }) async {
+    final userId = _supabase.auth.currentUser?.id;
+    if (userId == null) throw Exception('User not logged in');
+
+    final shiftAttachmentPaths = <String>[];
+
+    // Determine number of images
+    final imageCount = imagePaths?.length ?? imageBytes?.length ?? 0;
+    if (imageCount == 0) return shiftAttachmentPaths;
+
+    for (int i = 0; i < imageCount; i++) {
+      try {
+        Uint8List optimizedBytes;
+
+        // Get image bytes
+        if (imageBytes != null && i < imageBytes.length) {
+          optimizedBytes = await _optimizeImage(imageBytes[i]);
+        } else if (imagePaths != null && i < imagePaths.length) {
+          final file = File(imagePaths[i]);
+          if (!await file.exists()) continue;
+          final bytes = await file.readAsBytes();
+          optimizedBytes = await _optimizeImage(bytes);
+        } else {
+          continue;
+        }
+
+        // Storage path for shift-attachments bucket
+        final storagePath = '$userId/$scanType/${entityId}_page${i + 1}.jpg';
+
+        // 1. Upload to shift-attachments bucket (for in-app preview)
+        await _supabase.storage.from(_bucketName).uploadBinary(
+              storagePath,
+              optimizedBytes,
+              fileOptions: const FileOptions(
+                contentType: 'image/jpeg',
+                upsert: true,
+              ),
+            );
+
+        shiftAttachmentPaths.add(storagePath);
+        print('✅ Uploaded to shift-attachments: $storagePath');
+
+        // 2. Also upload to dedicated scan bucket (for financial records)
+        final dedicatedBucket = _getDedicatedBucket(scanType);
+        if (dedicatedBucket != null) {
+          try {
+            await _supabase.storage.from(dedicatedBucket).uploadBinary(
+                  storagePath,
+                  optimizedBytes,
+                  fileOptions: const FileOptions(
+                    contentType: 'image/jpeg',
+                    upsert: true,
+                  ),
+                );
+            print('✅ Also uploaded to $dedicatedBucket: $storagePath');
+          } catch (e) {
+            print('⚠️  Failed to upload to $dedicatedBucket: $e');
+            // Continue - shift-attachments upload succeeded
+          }
+        }
+
+        // 3. Create shift_attachments table entry if linked to shift
+        if (shiftId != null) {
+          await _supabase.from('shift_attachments').insert({
+            'shift_id': shiftId,
+            'user_id': userId,
+            'file_name': '${entityId}_page${i + 1}.jpg',
+            'file_path': storagePath,
+            'file_type': 'image',
+            'file_size': optimizedBytes.length,
+            'file_extension': '.jpg',
+          });
+          print('✅ Created shift_attachments entry for shift $shiftId');
+        }
+      } catch (e) {
+        print('❌ Error uploading image $i: $e');
+        // Continue with other images
+      }
+    }
+
+    return shiftAttachmentPaths;
+  }
+
+  /// Get dedicated bucket name for scan type
+  String? _getDedicatedBucket(String scanType) {
+    switch (scanType.toLowerCase()) {
+      case 'checkout':
+        return 'checkout-scans';
+      case 'invoice':
+        return 'invoice-scans';
+      case 'receipt':
+        return 'receipt-scans';
+      case 'business_card':
+        return 'business-card-scans';
+      // BEO and paycheck don't need dual upload
+      case 'beo':
+      case 'paycheck':
+        return null;
+      default:
+        return null;
+    }
+  }
+
   /// Get scan type folder name for storage organization
   static String getScanTypeFolder(String scanType) {
     switch (scanType.toLowerCase()) {

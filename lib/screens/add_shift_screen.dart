@@ -45,6 +45,7 @@ import '../widgets/scan_type_menu.dart';
 import '../widgets/document_preview_widget.dart';
 import '../models/vision_scan.dart';
 import '../services/vision_scanner_service.dart';
+import '../services/scan_image_service.dart';
 import '../services/beo_event_service.dart';
 
 class AddShiftScreen extends StatefulWidget {
@@ -75,6 +76,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
   final _formKey = GlobalKey<FormState>();
   final DatabaseService _db = DatabaseService();
   final VisionScannerService _visionScanner = VisionScannerService();
+  final ScanImageService _scanImageService = ScanImageService();
 
   // Controllers for all possible fields
   final _cashTipsController = TextEditingController();
@@ -1947,6 +1949,9 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
 
       ScaffoldMessenger.of(context).clearSnackBars();
 
+      // Get checkout ID from result
+      final checkoutId = result['data']['id'] as String?;
+
       // Show verification screen
       final confirmed = await Navigator.push<bool>(
         context,
@@ -1956,7 +1961,21 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
             extractedData: result['data'] as Map<String, dynamic>,
             confidenceScores:
                 result['data']['ai_confidence_scores'] as Map<String, dynamic>?,
+            imagePaths: session.imagePaths,
+            imageBytes: session.imageBytes,
+            mimeTypes: session.mimeTypes,
             onConfirm: (data) async {
+              // Upload images to both buckets and create shift_attachments entries
+              if (checkoutId != null && widget.existingShift != null) {
+                await _scanImageService.uploadScanToShiftAttachments(
+                  imagePaths: session.imagePaths,
+                  imageBytes: session.imageBytes,
+                  scanType: 'checkout',
+                  entityId: checkoutId,
+                  shiftId: widget.existingShift!.id,
+                  mimeTypes: session.mimeTypes,
+                );
+              }
               // Pre-fill shift form with checkout data
               setState(() {
                 if (data['total_sales'] != null) {
@@ -2256,6 +2275,9 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
 
       ScaffoldMessenger.of(context).clearSnackBars();
 
+      // Get contact ID from result
+      final contactId = result['data']['id'] as String?;
+
       // Show verification screen
       final confirmed = await Navigator.push<bool>(
         context,
@@ -2265,9 +2287,22 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
             extractedData: result['data'] as Map<String, dynamic>,
             confidenceScores:
                 result['data']['ai_confidence_scores'] as Map<String, dynamic>?,
+            imagePaths: session.imagePaths,
+            imageBytes: session.imageBytes,
+            mimeTypes: session.mimeTypes,
             onConfirm: (data) async {
-              // Contact already saved by Edge Function
-              // Just refresh the contacts list
+              // Upload images to both buckets and create shift_attachments entries
+              if (contactId != null && widget.existingShift != null) {
+                await _scanImageService.uploadScanToShiftAttachments(
+                  imagePaths: session.imagePaths,
+                  imageBytes: session.imageBytes,
+                  scanType: 'business_card',
+                  entityId: contactId,
+                  shiftId: widget.existingShift!.id,
+                  mimeTypes: session.mimeTypes,
+                );
+              }
+              // Refresh the contacts list
               await _loadEventContacts();
             },
           ),
@@ -2394,6 +2429,9 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
 
       ScaffoldMessenger.of(context).clearSnackBars();
 
+      // Get invoice ID from result
+      final invoiceId = result['data']['id'] as String?;
+
       // Show verification screen
       final confirmed = await Navigator.push<bool>(
         context,
@@ -2403,8 +2441,21 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
             extractedData: result['data'] as Map<String, dynamic>,
             confidenceScores:
                 result['data']['ai_confidence_scores'] as Map<String, dynamic>?,
+            imagePaths: session.imagePaths,
+            imageBytes: session.imageBytes,
+            mimeTypes: session.mimeTypes,
             onConfirm: (data) async {
-              // Invoice already saved by Edge Function
+              // Upload images to both buckets and create shift_attachments entries
+              if (invoiceId != null && widget.existingShift != null) {
+                await _scanImageService.uploadScanToShiftAttachments(
+                  imagePaths: session.imagePaths,
+                  imageBytes: session.imageBytes,
+                  scanType: 'invoice',
+                  entityId: invoiceId,
+                  shiftId: widget.existingShift!.id,
+                  mimeTypes: session.mimeTypes,
+                );
+              }
             },
           ),
         ),
@@ -2465,6 +2516,9 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
 
       ScaffoldMessenger.of(context).clearSnackBars();
 
+      // Get receipt ID from result
+      final receiptId = result['data']['id'] as String?;
+
       // Show verification screen
       final confirmed = await Navigator.push<bool>(
         context,
@@ -2474,8 +2528,21 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
             extractedData: result['data'] as Map<String, dynamic>,
             confidenceScores:
                 result['data']['ai_confidence_scores'] as Map<String, dynamic>?,
+            imagePaths: session.imagePaths,
+            imageBytes: session.imageBytes,
+            mimeTypes: session.mimeTypes,
             onConfirm: (data) async {
-              // Receipt already saved by Edge Function
+              // Upload images to both buckets and create shift_attachments entries
+              if (receiptId != null && widget.existingShift != null) {
+                await _scanImageService.uploadScanToShiftAttachments(
+                  imagePaths: session.imagePaths,
+                  imageBytes: session.imageBytes,
+                  scanType: 'receipt',
+                  entityId: receiptId,
+                  shiftId: widget.existingShift!.id,
+                  mimeTypes: session.mimeTypes,
+                );
+              }
             },
           ),
         ),

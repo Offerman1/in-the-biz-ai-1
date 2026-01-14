@@ -52,7 +52,7 @@
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(function(registrations) {
         // Check if we have a version mismatch
-        const expectedVersion = '1.2.1+18';
+        const expectedVersion = '1.2.1+19';
         const currentVersion = localStorage.getItem('app_version');
         
         if (currentVersion && currentVersion !== expectedVersion) {

@@ -265,13 +265,20 @@ class _DocumentPreviewWidgetState extends State<DocumentPreviewWidget> {
               onShare: (photoId, storagePath) async {
                 try {
                   final url = await _db.getAttachmentUrl(storagePath);
-                  final response = await http.get(Uri.parse(url));
-                  final tempDir = await getTemporaryDirectory();
-                  final file =
-                      File('${tempDir.path}/${widget.attachment.fileName}');
-                  await file.writeAsBytes(response.bodyBytes);
-                  await Share.shareXFiles([XFile(file.path)],
-                      text: 'Attachment');
+
+                  if (kIsWeb) {
+                    // On web, share the URL or copy to clipboard
+                    await Share.share(url, subject: widget.attachment.fileName);
+                  } else {
+                    // On mobile, download and share the file
+                    final response = await http.get(Uri.parse(url));
+                    final tempDir = await getTemporaryDirectory();
+                    final file =
+                        File('${tempDir.path}/${widget.attachment.fileName}');
+                    await file.writeAsBytes(response.bodyBytes);
+                    await Share.shareXFiles([XFile(file.path)],
+                        text: 'Attachment');
+                  }
                 } catch (e) {
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(

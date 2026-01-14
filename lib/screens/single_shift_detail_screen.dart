@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:file_picker/file_picker.dart';
@@ -857,17 +858,24 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
 
   Future<void> _shareAttachment(ShiftAttachment attachment) async {
     try {
-      // Download file to temp directory
-      final bytes = await _db.downloadAttachment(attachment.filePath);
-      final tempDir = await getTemporaryDirectory();
-      final tempFile = File('${tempDir.path}/${attachment.fileName}');
-      await tempFile.writeAsBytes(bytes);
+      if (kIsWeb) {
+        // On web, share the file URL directly
+        final url = await _db.getAttachmentUrl(attachment.filePath);
+        await Share.share(url,
+            subject: 'Shift Attachment - ${attachment.fileName}');
+      } else {
+        // On mobile, download and share the file
+        final bytes = await _db.downloadAttachment(attachment.filePath);
+        final tempDir = await getTemporaryDirectory();
+        final tempFile = File('${tempDir.path}/${attachment.fileName}');
+        await tempFile.writeAsBytes(bytes);
 
-      // Share using share_plus
-      await Share.shareXFiles(
-        [XFile(tempFile.path)],
-        subject: 'Shift Attachment - ${attachment.fileName}',
-      );
+        // Share using share_plus
+        await Share.shareXFiles(
+          [XFile(tempFile.path)],
+          subject: 'Shift Attachment - ${attachment.fileName}',
+        );
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

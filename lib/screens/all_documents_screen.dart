@@ -345,6 +345,78 @@ class _AllDocumentsScreenState extends State<AllDocumentsScreen> {
           ),
         ],
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _showAddDocumentOptions,
+        backgroundColor: AppTheme.primaryGreen,
+        icon: const Icon(Icons.add, color: Colors.white),
+        label: const Text(
+          'Add Document',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+      ),
+    );
+  }
+
+  void _showAddDocumentOptions() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppTheme.cardBackground,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppTheme.textMuted,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'Add Document',
+                style: AppTheme.titleMedium.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 24),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppTheme.accentPurple.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(Icons.upload_file, color: AppTheme.accentPurple),
+                ),
+                title: Text('Upload File',
+                    style: AppTheme.bodyLarge
+                        .copyWith(fontWeight: FontWeight.w600)),
+                subtitle: Text('Choose PDF, image, or spreadsheet',
+                    style:
+                        AppTheme.bodySmall.copyWith(color: AppTheme.textMuted)),
+                trailing: Icon(Icons.chevron_right, color: AppTheme.textMuted),
+                onTap: () {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content:
+                          Text('Document upload from settings coming soon!'),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
     );
   }
 

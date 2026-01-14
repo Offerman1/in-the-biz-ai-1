@@ -36,6 +36,8 @@ import 'admin_panel_screen.dart';
 import 'all_documents_screen.dart';
 import 'all_shifts_screen.dart';
 import 'assistant_screen.dart';
+import 'server_checkouts_screen.dart';
+import 'paychecks_screen.dart';
 import '../services/subscription_service.dart';
 import '../services/quickbooks_service.dart';
 import 'paywall_screen.dart';
@@ -925,13 +927,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
         const SizedBox(height: 24),
 
-        // Invoices & Receipts Section
-        _buildSectionHeader('INVOICES & RECEIPTS'),
-        const SizedBox(height: 12),
-        _buildInvoicesReceiptsTile(),
-
-        const SizedBox(height: 24),
-
         // Event Portfolio Section
         _buildSectionHeader('EVENT PORTFOLIO'),
         const SizedBox(height: 12),
@@ -939,10 +934,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
         const SizedBox(height: 24),
 
+        // Server Checkouts Section
+        _buildSectionHeader('SERVER CHECKOUTS'),
+        const SizedBox(height: 12),
+        _buildServerCheckoutsTile(),
+
+        const SizedBox(height: 24),
+
+        // Invoices & Receipts Section
+        _buildSectionHeader('INVOICES & RECEIPTS'),
+        const SizedBox(height: 12),
+        _buildInvoicesReceiptsTile(),
+
+        const SizedBox(height: 24),
+
         // Event Contacts Section
         _buildSectionHeader('EVENT CONTACTS'),
         const SizedBox(height: 12),
         _buildContactsDirectoryTile(),
+
+        const SizedBox(height: 24),
+
+        // Paychecks Section
+        _buildSectionHeader('PAYCHECKS'),
+        const SizedBox(height: 12),
+        _buildPaychecksTile(),
 
         const SizedBox(height: 40),
       ],
@@ -1862,6 +1878,70 @@ class _SettingsScreenState extends State<SettingsScreen> {
             context,
             MaterialPageRoute(
               builder: (_) => const AllDocumentsScreen(),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildServerCheckoutsTile() {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackground,
+        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+      ),
+      child: ListTile(
+        leading: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: AppTheme.accentBlue.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(Icons.point_of_sale, color: AppTheme.accentBlue),
+        ),
+        title: Text('Server Checkouts', style: AppTheme.bodyMedium),
+        subtitle: Text('View checkout history', style: AppTheme.bodyMedium),
+        trailing: Icon(Icons.chevron_right, color: AppTheme.textMuted),
+        onTap: () {
+          // Navigate to dedicated server checkouts screen
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const ServerCheckoutsScreen(),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildPaychecksTile() {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackground,
+        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+      ),
+      child: ListTile(
+        leading: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: AppTheme.successColor.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(Icons.attach_money, color: AppTheme.successColor),
+        ),
+        title: Text('Paychecks', style: AppTheme.bodyMedium),
+        subtitle: Text('W-2 income tracking', style: AppTheme.bodyMedium),
+        trailing: Icon(Icons.chevron_right, color: AppTheme.textMuted),
+        onTap: () {
+          // Navigate to dedicated paychecks screen
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const PaychecksScreen(),
             ),
           );
         },

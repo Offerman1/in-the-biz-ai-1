@@ -87,11 +87,15 @@ get_errors with NO filePaths parameter (omit it entirely)
 
 ### Step-by-Step Deployment Process:
 
-**Step 1: Update version in BOTH places (if changing version):**
-- `pubspec.yaml` line 4: `version: X.X.X+X`
+**Step 0: BUMP VERSION (REQUIRED FOR EVERY DEPLOYMENT):**
+- `pubspec.yaml` line 4: Increment build number → `version: 1.2.1+18` becomes `version: 1.2.1+19`
+- `index.html` line 56: Update cache-busting version → `const expectedVersion = '1.2.1+19';`
+- **WHY:** Cache-busting ONLY works if version changes. Without this, users see old cached version!
+
+**Step 1: Update version in lib/main.dart (optional - only if showing version in app):**
 - `lib/main.dart` line 22: `const String appVersion = 'X.X.X+X';`
 
-**Step 2: Clean build (recommended for version changes):**
+**Step 2: Build:**
 ```cmd
 cd "c:\Users\Brandon 2021\Desktop\In The Biz AI"
 flutter clean
@@ -111,9 +115,9 @@ git commit -m "Deploy: [your message]"
 git push origin main
 ```
 
-**OR use this single command (after building):**
+**OR use this single command (AFTER bumping version in pubspec.yaml and index.html):**
 ```cmd
-cd "c:\Users\Brandon 2021\Desktop\In The Biz AI" ; Copy-Item -Path "build\web\main.dart.js" -Destination "main.dart.js" -Force ; git add . ; git commit -m "Deploy: [your message]" ; git push origin main
+cd "c:\Users\Brandon 2021\Desktop\In The Biz AI" ; flutter build web --release ; Copy-Item -Path "build\web\main.dart.js" -Destination "main.dart.js" -Force ; git add . ; git commit -m "Deploy: [your message]" ; git push origin main
 ```
 
 ### WHY THIS IS CRITICAL:

@@ -4,6 +4,8 @@ import '../theme/app_theme.dart';
 import '../services/database_service.dart';
 import '../models/invoice.dart';
 import '../models/receipt.dart';
+import '../models/shift.dart';
+import '../screens/single_shift_detail_screen.dart';
 
 /// Invoices & Receipts management screen
 /// Shows all invoices and receipts with filters
@@ -171,6 +173,78 @@ class _InvoicesReceiptsScreenState extends State<InvoicesReceiptsScreen>
                 ),
               ],
             ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _showAddDocumentOptions,
+        backgroundColor: AppTheme.primaryGreen,
+        icon: const Icon(Icons.add, color: Colors.white),
+        label: const Text(
+          'Add Document',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+      ),
+    );
+  }
+
+  void _showAddDocumentOptions() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppTheme.cardBackground,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppTheme.textMuted,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'Add Invoice or Receipt',
+                style: AppTheme.titleMedium.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 24),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppTheme.accentPurple.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(Icons.auto_awesome, color: AppTheme.accentPurple),
+                ),
+                title: Text('Scan Document',
+                    style: AppTheme.bodyLarge
+                        .copyWith(fontWeight: FontWeight.w600)),
+                subtitle: Text('Use AI to extract invoice/receipt data',
+                    style:
+                        AppTheme.bodySmall.copyWith(color: AppTheme.textMuted)),
+                trailing: Icon(Icons.chevron_right, color: AppTheme.textMuted),
+                onTap: () {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content:
+                          Text('Document scanning from settings coming soon!'),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -205,7 +279,8 @@ class _InvoicesReceiptsScreenState extends State<InvoicesReceiptsScreen>
               decoration: BoxDecoration(
                 color: AppTheme.darkBackground,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: AppTheme.textMuted.withValues(alpha: 0.3)),
+                border: Border.all(
+                    color: AppTheme.textMuted.withValues(alpha: 0.3)),
               ),
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<String>(
@@ -239,7 +314,8 @@ class _InvoicesReceiptsScreenState extends State<InvoicesReceiptsScreen>
               decoration: BoxDecoration(
                 color: AppTheme.darkBackground,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: AppTheme.textMuted.withValues(alpha: 0.3)),
+                border: Border.all(
+                    color: AppTheme.textMuted.withValues(alpha: 0.3)),
               ),
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<String>(
@@ -395,6 +471,7 @@ class _InvoicesReceiptsScreenState extends State<InvoicesReceiptsScreen>
           amount: invoice.totalAmount,
           currency: invoice.currency,
           status: invoice.status.value,
+          shiftId: invoice.shiftId,
         ));
       },
     );
@@ -419,6 +496,7 @@ class _InvoicesReceiptsScreenState extends State<InvoicesReceiptsScreen>
           amount: receipt.totalAmount,
           currency: receipt.currency,
           isDeductible: receipt.isTaxDeductible,
+          shiftId: receipt.shiftId,
         ));
       },
     );
@@ -499,14 +577,48 @@ class _InvoicesReceiptsScreenState extends State<InvoicesReceiptsScreen>
                   padding:
                       const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
-                    color: AppTheme.accentBlue.withValues(alpha: 0.2),
+                    color: AppTheme.accentPurple.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
-                    'Deductible',
+                    'DEDUCTIBLE',
                     style: AppTheme.labelSmall.copyWith(
-                      color: AppTheme.accentBlue,
+                      color: AppTheme.accentPurple,
                       fontSize: 10,
+                    ),
+                  ),
+                ),
+              ],
+              if (item.shiftId != null) ...[
+                const SizedBox(height: 4),
+                GestureDetector(
+                  onTap: () => _viewLinkedShift(item.shiftId!),
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryGreen.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(
+                        color: AppTheme.primaryGreen.withValues(alpha: 0.5),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.link,
+                            color: AppTheme.primaryGreen, size: 12),
+                        const SizedBox(width: 4),
+                        Text(
+                          'VIEW SHIFT',
+                          style: AppTheme.labelSmall.copyWith(
+                            color: AppTheme.primaryGreen,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -516,6 +628,33 @@ class _InvoicesReceiptsScreenState extends State<InvoicesReceiptsScreen>
         ],
       ),
     );
+  }
+
+  Future<void> _viewLinkedShift(String shiftId) async {
+    try {
+      final response =
+          await _db.supabase.from('shifts').select().eq('id', shiftId).single();
+
+      final shift = Shift.fromMap(response);
+
+      if (mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => SingleShiftDetailScreen(shift: shift),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Could not load shift: $e'),
+            backgroundColor: AppTheme.dangerColor,
+          ),
+        );
+      }
+    }
   }
 
   Widget _buildStatusBadge(String status) {
@@ -587,6 +726,7 @@ class _DocumentItem {
   final String currency;
   final String? status;
   final bool? isDeductible;
+  final String? shiftId; // Link to shift
 
   _DocumentItem({
     required this.type,
@@ -597,5 +737,6 @@ class _DocumentItem {
     required this.currency,
     this.status,
     this.isDeductible,
+    this.shiftId,
   });
 }
