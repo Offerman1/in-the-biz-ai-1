@@ -1146,8 +1146,11 @@ class _ScanVerificationScreenState extends State<ScanVerificationScreen> {
         throw Exception('User not logged in');
       }
 
-      // Generate BEO ID first so we can use it for image upload
-      final beoId = _editableData['id'] ?? const Uuid().v4();
+      // Use existing BEO ID from AI analysis or generate new one
+      final beoId = _editableData['id'] as String? ?? const Uuid().v4();
+      final isExistingBeo = _editableData['id'] != null;
+      
+      print('🎯 BEO ID for Shift+BEO: $beoId, isExisting: $isExistingBeo');
 
       // Upload scan images
       final imageUrls = await _uploadScanImages('beo', entityId: beoId);
@@ -1167,13 +1170,16 @@ class _ScanVerificationScreenState extends State<ScanVerificationScreen> {
         'updated_at': DateTime.now().toIso8601String(),
       };
 
-      // First, save the BEO event
+      // Create or update the BEO event
       final beoEvent = BeoEvent.fromJson(beoData);
       print(
-          '🎯 BEO Event created: eventName=${beoEvent.eventName}, venueName=${beoEvent.venueName}, eventDate=${beoEvent.eventDate}');
+          '🎯 BEO Event for Shift+BEO: eventName=${beoEvent.eventName}, venueName=${beoEvent.venueName}, eventDate=${beoEvent.eventDate}');
 
-      final savedBeo = await _beoService.createBeoEvent(beoEvent);
-      print('🎯 BEO saved with ID: ${savedBeo.id}');
+      final savedBeo = isExistingBeo
+          ? await _beoService.updateBeoEvent(beoEvent) // Update existing BEO
+          : await _beoService.createBeoEvent(beoEvent); // Create new BEO
+      
+      print('🎯 BEO ${isExistingBeo ? 'updated' : 'created'} with ID: ${savedBeo.id}');
 
       if (!mounted) return;
 

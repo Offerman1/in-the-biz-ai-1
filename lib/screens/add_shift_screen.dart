@@ -1594,6 +1594,12 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
 
       // Capture the BEO Event ID from the response
       final beoEventId = result['beoEventId'] as String?;
+      print('🎯 Set _beoEventId: $beoEventId');
+
+      // Add the BEO ID to extracted data so verification screen uses existing BEO
+      if (beoEventId != null) {
+        (result['data'] as Map<String, dynamic>)['id'] = beoEventId;
+      }
 
       // Hide loading snackbar
       ScaffoldMessenger.of(context).clearSnackBars();
@@ -5926,15 +5932,17 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
     // Check if this is a URL (from Supabase storage) or a local file
     final isUrl =
         filePath.startsWith('http://') || filePath.startsWith('https://');
-    
+
     // Check if this is a storage path (contains user ID / indicates Supabase storage)
-    final isStoragePath = !isUrl && 
+    final isStoragePath = !isUrl &&
         (filePath.contains('/scans/') || // BEO scans: userId/scans/beo/file.jpg
-         filePath.contains('/') && filePath.split('/').length >= 2); // General storage paths
+            filePath.contains('/') &&
+                filePath.split('/').length >= 2); // General storage paths
 
     print(
         '🖼️ Building thumbnail for: ${filePath.length > 60 ? '${filePath.substring(0, 60)}...' : filePath}');
-    print('🖼️ isUrl: $isUrl, isStoragePath: $isStoragePath, extension: $extension');
+    print(
+        '🖼️ isUrl: $isUrl, isStoragePath: $isStoragePath, extension: $extension');
 
     // Determine if it's an image or video
     final isImage =
