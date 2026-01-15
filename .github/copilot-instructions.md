@@ -83,19 +83,24 @@ get_errors with NO filePaths parameter (omit it entirely)
 
 **DEPLOYMENT TARGET: Vercel (main branch) - NOT GitHub Pages**
 
-**WHENEVER YOU MAKE CHANGES TO ANY DART FILE (lib/main.dart, lib/screens/*, lib/widgets/*, etc.):**
+**⚠️ BEFORE DEPLOYING - MANDATORY CHECKLIST:**
+1. ✅ Update `pubspec.yaml` line 4 (version: X.X.X+N)
+2. ✅ Update `index.html` line 56 (expectedVersion)
+3. ✅ Update `lib/main.dart` line 22 (appVersion) - **NEVER SKIP THIS!**
+4. ✅ Use `&` NOT `&amp;` in terminal commands
+5. ✅ Run `get_errors` with NO filePaths to check full workspace
+
+**IF YOU SKIP lib/main.dart, THE CACHE-BUSTING WILL NOT WORK!**
 
 ### Step-by-Step Deployment Process:
 
 **Step 0: BUMP VERSION (REQUIRED FOR EVERY DEPLOYMENT):**
 - `pubspec.yaml` line 4: Increment build number → `version: 1.2.1+18` becomes `version: 1.2.1+19`
 - `index.html` line 56: Update cache-busting version → `const expectedVersion = '1.2.1+19';`
-- **WHY:** Cache-busting ONLY works if version changes. Without this, users see old cached version!
+- `lib/main.dart` line 22: `const String appVersion = '1.2.1+19';` **← MANDATORY! NEVER FORGET!**
+- **WHY:** Cache-busting ONLY works if ALL THREE are updated. Users will see old version if you skip any!
 
-**Step 1: Update version in lib/main.dart (optional - only if showing version in app):**
-- `lib/main.dart` line 22: `const String appVersion = 'X.X.X+X';`
-
-**Step 2: Build:**
+**Step 1: Build:**
 ```cmd
 cd "c:\Users\Brandon 2021\Desktop\In The Biz AI"
 flutter clean
@@ -115,10 +120,12 @@ git commit -m "Deploy: [your message]"
 git push origin main
 ```
 
-**OR use this single command (AFTER bumping version in pubspec.yaml and index.html):**
+**OR use this single command (AFTER bumping all 3 versions - pubspec.yaml, index.html, AND lib/main.dart):**
 ```cmd
-cd "c:\Users\Brandon 2021\Desktop\In The Biz AI" ; flutter build web --release ; Copy-Item -Path "build\web\main.dart.js" -Destination "main.dart.js" -Force ; git add . ; git commit -m "Deploy: [your message]" ; git push origin main
+cd "c:\Users\Brandon 2021\Desktop\In The Biz AI" & flutter build web --release & Copy-Item -Path "build\web\main.dart.js" -Destination "main.dart.js" -Force & git add . & git commit -m "Deploy: [your message]" & git push origin main
 ```
+
+**⚠️ CRITICAL: Use `&` NOT `&amp;` - The ampersand HTML entity breaks terminal commands!**
 
 ### WHY THIS IS CRITICAL:
 - Editing `lib/main.dart` does NOT update the website
@@ -130,18 +137,20 @@ cd "c:\Users\Brandon 2021\Desktop\In The Biz AI" ; flutter build web --release ;
 - **CACHE BUSTING:** `index.html` has automatic cache-busting that forces browser reload on version changes
 
 ### DO NOT:
+- ❌ Use `&amp;` in terminal commands (use `&` instead)
 - ❌ Just edit `lib/main.dart` and stop
 - ❌ Say "the code is updated" without deploying
 - ❌ Forget to copy `main.dart.js` to root
 - ❌ Push to gh-pages (that's the OLD way)
-- ❌ Only update version in pubspec.yaml (also update lib/main.dart!)
+- ❌ Skip updating lib/main.dart version (MANDATORY for cache-busting!)
 - ❌ Wait for the user to ask - DEPLOY IMMEDIATELY after code changes
 - ❌ Create bat files for deployment - use manual commands only
 - ❌ Start deploying without user permission
 
 ### ALWAYS:
 - ✅ Build AND deploy in the SAME action
-- ✅ Update version in BOTH pubspec.yaml AND lib/main.dart
+- ✅ Update version in ALL THREE FILES: pubspec.yaml, index.html, AND lib/main.dart
+- ✅ Use `&` for command chaining (NOT `&amp;`)
 - ✅ Push to **main** branch (Vercel deploys from main)
 - ✅ Verify deployment by checking console for correct version number
 - ✅ Deployment completes in ~6 seconds on Vercel
