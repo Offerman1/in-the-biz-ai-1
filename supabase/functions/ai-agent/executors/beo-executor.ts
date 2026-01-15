@@ -384,6 +384,53 @@ export class BEOExecutor {
     }
   }
 
+  async bulkDeleteBEOEvents(confirmed: boolean): Promise<any> {
+    try {
+      if (!confirmed) {
+        return {
+          success: false,
+          needsConfirmation: true,
+          message: "Are you sure you want to delete ALL BEO events? This cannot be undone.",
+        };
+      }
+
+      // Get all BEO events for preview
+      const { data: events, error: fetchError } = await this.supabase
+        .from("beo_events")
+        .select("*")
+        .eq("user_id", this.userId);
+
+      if (fetchError) throw fetchError;
+
+      if (!events || events.length === 0) {
+        return {
+          success: true,
+          count: 0,
+          message: "No BEO events to delete",
+        };
+      }
+
+      // Delete all BEO events
+      const { error: deleteError } = await this.supabase
+        .from("beo_events")
+        .delete()
+        .eq("user_id", this.userId);
+
+      if (deleteError) throw deleteError;
+
+      return {
+        success: true,
+        count: events.length,
+        message: `✅ Deleted ${events.length} BEO event(s)`,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+  }
+
   async getBEOContacts(eventId: string): Promise<any> {
     try {
       const { data: event, error } = await this.supabase

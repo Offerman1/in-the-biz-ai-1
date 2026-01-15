@@ -1378,12 +1378,12 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
         margin: const EdgeInsets.only(bottom: 2),
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
         decoration: BoxDecoration(
-          color: badgeColor.withValues(alpha: 0.2),
+          color: AppTheme.cardBackground,
           borderRadius: BorderRadius.circular(2),
           // Red border for incomplete shifts, normal color otherwise
           border: Border.all(
             color: isIncomplete ? AppTheme.accentRed : badgeColor,
-            width: isIncomplete ? 1.5 : 0.5,
+            width: 1.5,
           ),
         ),
         child: Column(
@@ -1460,12 +1460,12 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
       margin: const EdgeInsets.only(bottom: 2),
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
       decoration: BoxDecoration(
-        color: badgeColor.withValues(alpha: 0.2),
+        color: AppTheme.cardBackground,
         borderRadius: BorderRadius.circular(2),
         // Red border for incomplete shifts, normal color otherwise
         border: Border.all(
           color: isIncomplete ? AppTheme.accentRed : badgeColor,
-          width: isIncomplete ? 1.5 : 0.5,
+          width: 1.5,
         ),
       ),
       child: Row(
@@ -2023,12 +2023,19 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        // Gradient border for shifts with BEO
+        // Gradient border for shifts with BEO, solid color border for others
         gradient: hasBeo
             ? LinearGradient(
                 colors: [AppTheme.primaryGreen, AppTheme.accentPurple],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
+              )
+            : null,
+        // Solid color border for non-BEO shifts
+        border: !hasBeo
+            ? Border.all(
+                color: accentColor,
+                width: 2,
               )
             : null,
         borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
@@ -2070,11 +2077,11 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                     width: 56,
                     height: 70,
                     decoration: BoxDecoration(
-                      color: accentColor.withValues(alpha: 0.15),
+                      color: Colors.transparent,
                       borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
                       border: Border.all(
-                        color: accentColor.withValues(alpha: 0.3),
-                        width: 1,
+                        color: accentColor,
+                        width: 0.5,
                       ),
                     ),
                     child: Column(
@@ -2083,7 +2090,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                         Text(
                           DateFormat('E').format(shift.date),
                           style: AppTheme.labelSmall.copyWith(
-                            color: accentColor,
+                            color: AppTheme.textSecondary,
                             fontSize: 10,
                             fontWeight: FontWeight.w600,
                           ),
@@ -2091,7 +2098,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                         Text(
                           DateFormat('d').format(shift.date),
                           style: AppTheme.titleLarge.copyWith(
-                            color: accentColor,
+                            color: AppTheme.textSecondary,
                             fontWeight: FontWeight.w700,
                             fontSize: 20,
                           ),
@@ -2101,7 +2108,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                               ? DateFormat('MMM').format(shift.date)
                               : DateFormat("MMM ''yy").format(shift.date),
                           style: AppTheme.labelSmall.copyWith(
-                            color: accentColor,
+                            color: AppTheme.textSecondary,
                             fontSize: 9,
                             fontWeight: FontWeight.w600,
                           ),
@@ -2212,6 +2219,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
     if (eventName != null) {
       leftItems.add(
         Container(
+          constraints: const BoxConstraints(maxWidth: 180),
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
           decoration: BoxDecoration(
             color: AppTheme.accentPurple.withValues(alpha: 0.15),
@@ -2453,362 +2461,193 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
 
         // Day list
         Expanded(
-          child: ListView.builder(
-            controller: _monthListScrollController,
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 80),
-            itemCount: daysInMonth,
-            itemBuilder: (context, index) {
-              final day =
-                  DateTime(_focusedDay.year, _focusedDay.month, index + 1);
-              final normalizedDay = DateTime(day.year, day.month, day.day);
-              final dayShifts = shiftsByDate[normalizedDay] ?? [];
-              final dayIncome = dayShifts.fold<double>(
-                  0, (sum, shift) => sum + shift.totalIncome);
-              final dayHours = dayShifts.fold<double>(
-                  0, (sum, shift) => sum + shift.hoursWorked);
+          child: GestureDetector(
+            onHorizontalDragEnd: (details) {
+              // Swipe left = next month
+              if (details.velocity.pixelsPerSecond.dx < -100) {
+                setState(() {
+                  _focusedDay = DateTime(
+                    _focusedDay.year,
+                    _focusedDay.month + 1,
+                    1,
+                  );
+                });
+              }
+              // Swipe right = previous month
+              else if (details.velocity.pixelsPerSecond.dx > 100) {
+                setState(() {
+                  _focusedDay = DateTime(
+                    _focusedDay.year,
+                    _focusedDay.month - 1,
+                    1,
+                  );
+                });
+              }
+            },
+            child: ListView.builder(
+              controller: _monthListScrollController,
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 80),
+              itemCount: daysInMonth,
+              itemBuilder: (context, index) {
+                final day =
+                    DateTime(_focusedDay.year, _focusedDay.month, index + 1);
+                final normalizedDay = DateTime(day.year, day.month, day.day);
+                final dayShifts = shiftsByDate[normalizedDay] ?? [];
+                final dayIncome = dayShifts.fold<double>(
+                    0, (sum, shift) => sum + shift.totalIncome);
+                final dayHours = dayShifts.fold<double>(
+                    0, (sum, shift) => sum + shift.hoursWorked);
 
-              final isToday = isSameDay(day, DateTime.now());
+                final isToday = isSameDay(day, DateTime.now());
 
-              return GestureDetector(
-                onTap: () {
-                  _resetZoom(); // Reset zoom when tapping a day
-                  if (dayShifts.isEmpty) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => AddShiftScreen(
-                          preselectedDate: day,
+                return GestureDetector(
+                  onTap: () {
+                    _resetZoom(); // Reset zoom when tapping a day
+                    if (dayShifts.isEmpty) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => AddShiftScreen(
+                            preselectedDate: day,
+                          ),
                         ),
-                      ),
-                    );
-                  } else {
-                    // Open drawer modal for days with shifts
-                    setState(() {
-                      _selectedDay = day;
-                      _focusedDay = day;
-                      _isDrawerExpanded = true;
-                    });
-                  }
-                },
-                child: Container(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: isToday
-                        ? AppTheme.primaryGreen.withValues(alpha: 0.1)
-                        : AppTheme.cardBackground,
-                    borderRadius: BorderRadius.circular(12),
-                    border: isToday
-                        ? Border.all(color: AppTheme.primaryGreen, width: 2)
-                        : null,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Header row: Date + Day total
-                      Row(
-                        children: [
-                          // Date
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                DateFormat('EEE').format(day).toUpperCase(),
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: isToday
-                                      ? AppTheme.primaryGreen
-                                      : AppTheme.textSecondary,
-                                ),
-                              ),
-                              Text(
-                                DateFormat('d').format(day),
-                                style: TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                  color: isToday
-                                      ? AppTheme.primaryGreen
-                                      : AppTheme.textPrimary,
-                                  height: 1.0,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const Spacer(),
-                          // Day total
-                          if (dayShifts.isNotEmpty)
+                      );
+                    } else {
+                      // Open drawer modal for days with shifts
+                      setState(() {
+                        _selectedDay = day;
+                        _focusedDay = day;
+                        _isDrawerExpanded = true;
+                      });
+                    }
+                  },
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: isToday
+                          ? AppTheme.primaryGreen.withValues(alpha: 0.1)
+                          : AppTheme.cardBackground,
+                      borderRadius: BorderRadius.circular(12),
+                      border: isToday
+                          ? Border.all(color: AppTheme.primaryGreen, width: 2)
+                          : null,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Header row: Date + Day total
+                        Row(
+                          children: [
+                            // Date
                             Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Row(
-                                  children: [
-                                    Text(
-                                      currencyFormat.format(dayIncome),
-                                      style: TextStyle(
-                                        color: AppTheme.primaryGreen,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 6),
-                                    Text('•',
-                                        style: TextStyle(
-                                            color: AppTheme.textSecondary)),
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      '${dayHours.toStringAsFixed(1)}h',
-                                      style: AppTheme.bodyMedium.copyWith(
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                Text(
-                                  '${dayShifts.length} shift${dayShifts.length > 1 ? 's' : ''}',
-                                  style: AppTheme.labelMedium.copyWith(
-                                    color: AppTheme.textMuted,
-                                    fontSize: 11,
-                                  ),
-                                ),
-                              ],
-                            ),
-                        ],
-                      ),
-
-                      if (dayShifts.isEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 12),
-                          child: Center(
-                            child: Text(
-                              '+ Add shift',
-                              style: AppTheme.bodyMedium
-                                  .copyWith(color: AppTheme.textMuted),
-                            ),
-                          ),
-                        )
-                      else if (dayShifts.length == 1) ...[
-                        // SINGLE SHIFT - Show detailed view (no redundant summary)
-                        const SizedBox(height: 16),
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => SingleShiftDetailScreen(
-                                    shift: dayShifts.first),
-                              ),
-                            );
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: dayShifts.first.status == 'scheduled'
-                                  ? AppTheme.accentBlue.withValues(alpha: 0.08)
-                                  : AppTheme.primaryGreen
-                                      .withValues(alpha: 0.08),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: dayShifts.first.status == 'scheduled'
-                                    ? AppTheme.accentBlue.withValues(alpha: 0.3)
-                                    : AppTheme.primaryGreen
-                                        .withValues(alpha: 0.3),
-                                width: 1,
-                              ),
-                            ),
-                            child: Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                // Left: Job name and time
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      // Job name with dot
-                                      Row(
-                                        children: [
-                                          Container(
-                                            width: 8,
-                                            height: 8,
-                                            decoration: BoxDecoration(
-                                              shape: BoxShape.circle,
-                                              color: dayShifts.first.status ==
-                                                      'scheduled'
-                                                  ? AppTheme.accentBlue
-                                                  : AppTheme.primaryGreen,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Expanded(
-                                            child: Text(
-                                              _jobs[dayShifts.first.jobId]
-                                                      ?.name ??
-                                                  'Shift',
-                                              style:
-                                                  AppTheme.bodyMedium.copyWith(
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      if (dayShifts.first.startTime != null &&
-                                          dayShifts.first.endTime != null) ...[
-                                        const SizedBox(height: 6),
-                                        Padding(
-                                          padding:
-                                              const EdgeInsets.only(left: 16),
-                                          child: Text(
-                                            '${_formatTime(dayShifts.first.startTime!)} - ${_formatTime(dayShifts.first.endTime!)}',
-                                            style: AppTheme.bodyMedium.copyWith(
-                                              color: AppTheme.textSecondary,
-                                              fontSize: 12,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ],
+                                Text(
+                                  DateFormat('EEE').format(day).toUpperCase(),
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: isToday
+                                        ? AppTheme.primaryGreen
+                                        : AppTheme.textSecondary,
                                   ),
                                 ),
-                                const SizedBox(width: 16),
-                                // Right: Event, guests, notes
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.end,
-                                    children: [
-                                      // Event name
-                                      if (dayShifts.first.eventName != null &&
-                                          dayShifts
-                                              .first.eventName!.isNotEmpty) ...[
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.end,
-                                          children: [
-                                            Icon(Icons.event,
-                                                size: 14,
-                                                color: AppTheme.textMuted),
-                                            const SizedBox(width: 4),
-                                            Flexible(
-                                              child: Text(
-                                                dayShifts.first.eventName!,
-                                                style: AppTheme.labelMedium
-                                                    .copyWith(
-                                                  color: AppTheme.textMuted,
-                                                ),
-                                                overflow: TextOverflow.ellipsis,
-                                                textAlign: TextAlign.right,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 4),
-                                      ],
-                                      // Guest count
-                                      if (dayShifts.first.guestCount != null &&
-                                          dayShifts.first.guestCount! > 0) ...[
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.end,
-                                          children: [
-                                            Icon(Icons.people,
-                                                size: 14,
-                                                color: AppTheme.textMuted),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              '${dayShifts.first.guestCount} guests',
-                                              style:
-                                                  AppTheme.labelMedium.copyWith(
-                                                color: AppTheme.textMuted,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 4),
-                                      ],
-                                      // Notes preview
-                                      if (dayShifts.first.notes != null &&
-                                          dayShifts.first.notes!.isNotEmpty)
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.end,
-                                          children: [
-                                            Icon(Icons.note,
-                                                size: 14,
-                                                color: AppTheme.textMuted),
-                                            const SizedBox(width: 4),
-                                            Flexible(
-                                              child: Text(
-                                                dayShifts.first.notes!,
-                                                style: AppTheme.labelMedium
-                                                    .copyWith(
-                                                  color: AppTheme.textMuted,
-                                                ),
-                                                overflow: TextOverflow.ellipsis,
-                                                maxLines: 1,
-                                                textAlign: TextAlign.right,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                    ],
+                                Text(
+                                  DateFormat('d').format(day),
+                                  style: TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                    color: isToday
+                                        ? AppTheme.primaryGreen
+                                        : AppTheme.textPrimary,
+                                    height: 1.0,
                                   ),
                                 ),
                               ],
                             ),
-                          ),
+                            const Spacer(),
+                            // Day total
+                            if (dayShifts.isNotEmpty)
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Text(
+                                        currencyFormat.format(dayIncome),
+                                        style: TextStyle(
+                                          color: AppTheme.primaryGreen,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text('•',
+                                          style: TextStyle(
+                                              color: AppTheme.textSecondary)),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        '${dayHours.toStringAsFixed(1)}h',
+                                        style: AppTheme.bodyMedium.copyWith(
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  Text(
+                                    '${dayShifts.length} shift${dayShifts.length > 1 ? 's' : ''}',
+                                    style: AppTheme.labelMedium.copyWith(
+                                      color: AppTheme.textMuted,
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                          ],
                         ),
-                      ] else ...[
-                        // MULTIPLE SHIFTS (2+) - Show compressed cards
-                        const SizedBox(height: 16),
-                        ...dayShifts.take(2).map((shift) {
-                          final isScheduled = shift.status == 'scheduled';
-                          final hasTime =
-                              shift.startTime != null && shift.endTime != null;
 
-                          final job = _jobs[shift.jobId];
-                          final jobName = job?.name ?? 'Shift';
-
-                          Color dotColor = isScheduled
-                              ? AppTheme.accentBlue
-                              : AppTheme.primaryGreen;
-
-                          return GestureDetector(
+                        if (dayShifts.isEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 12),
+                            child: Center(
+                              child: Text(
+                                '+ Add shift',
+                                style: AppTheme.bodyMedium
+                                    .copyWith(color: AppTheme.textMuted),
+                              ),
+                            ),
+                          )
+                        else if (dayShifts.length == 1) ...[
+                          // SINGLE SHIFT - Show detailed view (no redundant summary)
+                          const SizedBox(height: 16),
+                          GestureDetector(
                             onTap: () {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) =>
-                                      SingleShiftDetailScreen(shift: shift),
+                                  builder: (context) => SingleShiftDetailScreen(
+                                      shift: dayShifts.first),
                                 ),
                               );
                             },
                             child: Container(
-                              margin: const EdgeInsets.only(bottom: 8),
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: isScheduled
-                                    ? AppTheme.accentBlue
-                                        .withValues(alpha: 0.08)
-                                    : AppTheme.primaryGreen
-                                        .withValues(alpha: 0.08),
+                                color: AppTheme.cardBackgroundLight,
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                  color: isScheduled
+                                  color: dayShifts.first.status == 'scheduled'
                                       ? AppTheme.accentBlue
-                                          .withValues(alpha: 0.3)
-                                      : AppTheme.primaryGreen
-                                          .withValues(alpha: 0.3),
-                                  width: 1,
+                                      : AppTheme.primaryGreen,
+                                  width: 2,
                                 ),
                               ),
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  // Left: Job name + Time
+                                  // Left: Job name and time
                                   Expanded(
-                                    flex: 3,
                                     child: Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
@@ -2821,13 +2660,18 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                                               height: 8,
                                               decoration: BoxDecoration(
                                                 shape: BoxShape.circle,
-                                                color: dotColor,
+                                                color: dayShifts.first.status ==
+                                                        'scheduled'
+                                                    ? AppTheme.accentBlue
+                                                    : AppTheme.primaryGreen,
                                               ),
                                             ),
                                             const SizedBox(width: 8),
                                             Expanded(
                                               child: Text(
-                                                jobName,
+                                                _jobs[dayShifts.first.jobId]
+                                                        ?.name ??
+                                                    'Shift',
                                                 style: AppTheme.bodyMedium
                                                     .copyWith(
                                                   fontWeight: FontWeight.w600,
@@ -2837,17 +2681,19 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                                             ),
                                           ],
                                         ),
-                                        if (hasTime) ...[
-                                          const SizedBox(height: 4),
+                                        if (dayShifts.first.startTime != null &&
+                                            dayShifts.first.endTime !=
+                                                null) ...[
+                                          const SizedBox(height: 6),
                                           Padding(
                                             padding:
                                                 const EdgeInsets.only(left: 16),
                                             child: Text(
-                                              '${_formatTime(shift.startTime!)} - ${_formatTime(shift.endTime!)}',
+                                              '${_formatTime(dayShifts.first.startTime!)} - ${_formatTime(dayShifts.first.endTime!)}',
                                               style:
                                                   AppTheme.bodyMedium.copyWith(
                                                 color: AppTheme.textSecondary,
-                                                fontSize: 11,
+                                                fontSize: 12,
                                               ),
                                             ),
                                           ),
@@ -2855,91 +2701,282 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                                       ],
                                     ),
                                   ),
-                                  const SizedBox(width: 12),
-                                  // Center: Event name + Guest count
+                                  const SizedBox(width: 16),
+                                  // Right: Event, guests, notes
                                   Expanded(
-                                    flex: 2,
                                     child: Column(
                                       crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                                          CrossAxisAlignment.end,
                                       children: [
-                                        if (shift.eventName != null &&
-                                            shift.eventName!.isNotEmpty)
-                                          Text(
-                                            shift.eventName!,
-                                            style:
-                                                AppTheme.labelMedium.copyWith(
-                                              color: AppTheme.textMuted,
-                                              fontSize: 11,
-                                            ),
-                                            overflow: TextOverflow.ellipsis,
-                                            maxLines: 1,
-                                          )
-                                        else
-                                          const SizedBox(height: 14),
-                                        if (shift.guestCount != null &&
-                                            shift.guestCount! > 0) ...[
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            '${shift.guestCount} guests',
-                                            style:
-                                                AppTheme.labelMedium.copyWith(
-                                              color: AppTheme.textMuted,
-                                              fontSize: 11,
-                                            ),
+                                        // Event name
+                                        if (dayShifts.first.eventName != null &&
+                                            dayShifts.first.eventName!
+                                                .isNotEmpty) ...[
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.end,
+                                            children: [
+                                              Icon(Icons.event,
+                                                  size: 14,
+                                                  color: AppTheme.textMuted),
+                                              const SizedBox(width: 4),
+                                              Flexible(
+                                                child: Text(
+                                                  dayShifts.first.eventName!,
+                                                  style: AppTheme.labelMedium
+                                                      .copyWith(
+                                                    color: AppTheme.textMuted,
+                                                  ),
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  textAlign: TextAlign.right,
+                                                ),
+                                              ),
+                                            ],
                                           ),
+                                          const SizedBox(height: 4),
                                         ],
+                                        // Guest count
+                                        if (dayShifts.first.guestCount !=
+                                                null &&
+                                            dayShifts.first.guestCount! >
+                                                0) ...[
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.end,
+                                            children: [
+                                              Icon(Icons.people,
+                                                  size: 14,
+                                                  color: AppTheme.textMuted),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                '${dayShifts.first.guestCount} guests',
+                                                style: AppTheme.labelMedium
+                                                    .copyWith(
+                                                  color: AppTheme.textMuted,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 4),
+                                        ],
+                                        // Notes preview
+                                        if (dayShifts.first.notes != null &&
+                                            dayShifts.first.notes!.isNotEmpty)
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.end,
+                                            children: [
+                                              Icon(Icons.note,
+                                                  size: 14,
+                                                  color: AppTheme.textMuted),
+                                              const SizedBox(width: 4),
+                                              Flexible(
+                                                child: Text(
+                                                  dayShifts.first.notes!,
+                                                  style: AppTheme.labelMedium
+                                                      .copyWith(
+                                                    color: AppTheme.textMuted,
+                                                  ),
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  maxLines: 1,
+                                                  textAlign: TextAlign.right,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
                                       ],
                                     ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  // Right: Amount + Hours
-                                  Column(
-                                    crossAxisAlignment: CrossAxisAlignment.end,
-                                    children: [
-                                      Text(
-                                        currencyFormat
-                                            .format(shift.totalIncome),
-                                        style: TextStyle(
-                                          color: AppTheme.primaryGreen,
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        '${shift.hoursWorked.toStringAsFixed(1)}h',
-                                        style: AppTheme.bodyMedium.copyWith(
-                                          color: AppTheme.textSecondary,
-                                          fontSize: 11,
-                                        ),
-                                      ),
-                                    ],
                                   ),
                                 ],
                               ),
                             ),
-                          );
-                        }),
-                        // "+X more" indicator
-                        if (dayShifts.length > 2)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 4),
-                            child: Text(
-                              '+ ${dayShifts.length - 2} more shift${dayShifts.length - 2 > 1 ? 's' : ''} · Tap to see all',
-                              style: AppTheme.bodyMedium.copyWith(
-                                color: AppTheme.textMuted,
-                                fontSize: 12,
-                                fontStyle: FontStyle.italic,
+                          ),
+                        ] else ...[
+                          // MULTIPLE SHIFTS (2+) - Show compressed cards
+                          const SizedBox(height: 16),
+                          ...dayShifts.take(2).map((shift) {
+                            final isScheduled = shift.status == 'scheduled';
+                            final hasTime = shift.startTime != null &&
+                                shift.endTime != null;
+
+                            final job = _jobs[shift.jobId];
+                            final jobName = job?.name ?? 'Shift';
+
+                            Color dotColor = isScheduled
+                                ? AppTheme.accentBlue
+                                : AppTheme.primaryGreen;
+
+                            return GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        SingleShiftDetailScreen(shift: shift),
+                                  ),
+                                );
+                              },
+                              child: Container(
+                                margin: const EdgeInsets.only(bottom: 8),
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: isScheduled
+                                      ? AppTheme.accentBlue
+                                          .withValues(alpha: 0.08)
+                                      : AppTheme.primaryGreen
+                                          .withValues(alpha: 0.08),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: isScheduled
+                                        ? AppTheme.accentBlue
+                                            .withValues(alpha: 0.3)
+                                        : AppTheme.primaryGreen
+                                            .withValues(alpha: 0.3),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // Left: Job name + Time
+                                    Expanded(
+                                      flex: 3,
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          // Job name with dot
+                                          Row(
+                                            children: [
+                                              Container(
+                                                width: 8,
+                                                height: 8,
+                                                decoration: BoxDecoration(
+                                                  shape: BoxShape.circle,
+                                                  color: dotColor,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Expanded(
+                                                child: Text(
+                                                  jobName,
+                                                  style: AppTheme.bodyMedium
+                                                      .copyWith(
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          if (hasTime) ...[
+                                            const SizedBox(height: 4),
+                                            Padding(
+                                              padding: const EdgeInsets.only(
+                                                  left: 16),
+                                              child: Text(
+                                                '${_formatTime(shift.startTime!)} - ${_formatTime(shift.endTime!)}',
+                                                style: AppTheme.bodyMedium
+                                                    .copyWith(
+                                                  color: AppTheme.textSecondary,
+                                                  fontSize: 11,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    // Center: Event name + Guest count
+                                    Expanded(
+                                      flex: 2,
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          if (shift.eventName != null &&
+                                              shift.eventName!.isNotEmpty)
+                                            Text(
+                                              shift.eventName!,
+                                              style:
+                                                  AppTheme.labelMedium.copyWith(
+                                                color: AppTheme.textMuted,
+                                                fontSize: 11,
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
+                                              maxLines: 1,
+                                            )
+                                          else
+                                            const SizedBox(height: 14),
+                                          if (shift.guestCount != null &&
+                                              shift.guestCount! > 0) ...[
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              '${shift.guestCount} guests',
+                                              style:
+                                                  AppTheme.labelMedium.copyWith(
+                                                color: AppTheme.textMuted,
+                                                fontSize: 11,
+                                              ),
+                                            ),
+                                          ],
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    // Right: Amount + Hours
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.end,
+                                      children: [
+                                        Text(
+                                          currencyFormat
+                                              .format(shift.totalIncome),
+                                          style: TextStyle(
+                                            color: AppTheme.primaryGreen,
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          '${shift.hoursWorked.toStringAsFixed(1)}h',
+                                          style: AppTheme.bodyMedium.copyWith(
+                                            color: AppTheme.textSecondary,
+                                            fontSize: 11,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          }),
+                          // "+X more" indicator
+                          if (dayShifts.length > 2)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Text(
+                                '+ ${dayShifts.length - 2} more shift${dayShifts.length - 2 > 1 ? 's' : ''} · Tap to see all',
+                                style: AppTheme.bodyMedium.copyWith(
+                                  color: AppTheme.textMuted,
+                                  fontSize: 12,
+                                  fontStyle: FontStyle.italic,
+                                ),
                               ),
                             ),
-                          ),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           ),
         ),
       ],
@@ -2996,67 +3033,85 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
 
         // Week days (all 7 visible) - scrollable
         Expanded(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final screenWidth = MediaQuery.of(context).size.width;
-              final isTablet = screenWidth > 600;
-
-              // On tablets, use Column with Expanded to fill the screen
-              if (isTablet) {
-                return SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-                  child: Column(
-                    children: List.generate(7, (index) {
-                      final day = weekStart.add(Duration(days: index));
-                      final normalizedDay =
-                          DateTime(day.year, day.month, day.day);
-                      final dayShifts = shiftsByDate[normalizedDay] ?? [];
-                      final dayIncome = dayShifts.fold<double>(
-                          0, (sum, shift) => sum + shift.totalIncome);
-                      final dayHours = dayShifts.fold<double>(
-                          0, (sum, shift) => sum + shift.hoursWorked);
-                      final isToday = isSameDay(day, DateTime.now());
-
-                      return _buildWeekDayCard(
-                        day,
-                        normalizedDay,
-                        dayShifts,
-                        dayIncome,
-                        dayHours,
-                        isToday,
-                        constraints.maxHeight / 7.5, // Distribute height evenly
-                      );
-                    }),
-                  ),
-                );
+          child: GestureDetector(
+            onHorizontalDragEnd: (details) {
+              // Swipe left = next week
+              if (details.velocity.pixelsPerSecond.dx < -100) {
+                setState(() {
+                  _focusedDay = _focusedDay.add(const Duration(days: 7));
+                });
               }
-
-              // On phones, use regular ListView
-              return ListView.builder(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-                itemCount: 7,
-                itemBuilder: (context, index) {
-                  final day = weekStart.add(Duration(days: index));
-                  final normalizedDay = DateTime(day.year, day.month, day.day);
-                  final dayShifts = shiftsByDate[normalizedDay] ?? [];
-                  final dayIncome = dayShifts.fold<double>(
-                      0, (sum, shift) => sum + shift.totalIncome);
-                  final dayHours = dayShifts.fold<double>(
-                      0, (sum, shift) => sum + shift.hoursWorked);
-                  final isToday = isSameDay(day, DateTime.now());
-
-                  return _buildWeekDayCard(
-                    day,
-                    normalizedDay,
-                    dayShifts,
-                    dayIncome,
-                    dayHours,
-                    isToday,
-                    null, // No fixed height for phones
-                  );
-                },
-              );
+              // Swipe right = previous week
+              else if (details.velocity.pixelsPerSecond.dx > 100) {
+                setState(() {
+                  _focusedDay = _focusedDay.subtract(const Duration(days: 7));
+                });
+              }
             },
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final screenWidth = MediaQuery.of(context).size.width;
+                final isTablet = screenWidth > 600;
+
+                // On tablets, use Column with Expanded to fill the screen
+                if (isTablet) {
+                  return SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                    child: Column(
+                      children: List.generate(7, (index) {
+                        final day = weekStart.add(Duration(days: index));
+                        final normalizedDay =
+                            DateTime(day.year, day.month, day.day);
+                        final dayShifts = shiftsByDate[normalizedDay] ?? [];
+                        final dayIncome = dayShifts.fold<double>(
+                            0, (sum, shift) => sum + shift.totalIncome);
+                        final dayHours = dayShifts.fold<double>(
+                            0, (sum, shift) => sum + shift.hoursWorked);
+                        final isToday = isSameDay(day, DateTime.now());
+
+                        return _buildWeekDayCard(
+                          day,
+                          normalizedDay,
+                          dayShifts,
+                          dayIncome,
+                          dayHours,
+                          isToday,
+                          constraints.maxHeight /
+                              7.5, // Distribute height evenly
+                        );
+                      }),
+                    ),
+                  );
+                }
+
+                // On phones, use regular ListView
+                return ListView.builder(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                  itemCount: 7,
+                  itemBuilder: (context, index) {
+                    final day = weekStart.add(Duration(days: index));
+                    final normalizedDay =
+                        DateTime(day.year, day.month, day.day);
+                    final dayShifts = shiftsByDate[normalizedDay] ?? [];
+                    final dayIncome = dayShifts.fold<double>(
+                        0, (sum, shift) => sum + shift.totalIncome);
+                    final dayHours = dayShifts.fold<double>(
+                        0, (sum, shift) => sum + shift.hoursWorked);
+                    final isToday = isSameDay(day, DateTime.now());
+
+                    return _buildWeekDayCard(
+                      day,
+                      normalizedDay,
+                      dayShifts,
+                      dayIncome,
+                      dayHours,
+                      isToday,
+                      null, // No fixed height for phones
+                    );
+                  },
+                );
+              },
+            ),
           ),
         ),
       ],
@@ -3593,128 +3648,147 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
         ),
 
         Expanded(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final screenWidth = MediaQuery.of(context).size.width;
-              final isTablet = screenWidth > 600;
+          child: GestureDetector(
+            onHorizontalDragEnd: (details) {
+              // Swipe left = next year
+              if (details.velocity.pixelsPerSecond.dx < -100) {
+                setState(() {
+                  _focusedDay =
+                      DateTime(_focusedDay.year + 1, _focusedDay.month);
+                });
+              }
+              // Swipe right = previous year
+              else if (details.velocity.pixelsPerSecond.dx > 100) {
+                setState(() {
+                  _focusedDay =
+                      DateTime(_focusedDay.year - 1, _focusedDay.month);
+                });
+              }
+            },
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final screenWidth = MediaQuery.of(context).size.width;
+                final isTablet = screenWidth > 600;
 
-              // Calculate card dimensions that fill the space
-              // 4 rows of cards (12 months / 3 columns = 4 rows)
-              const spacing = 12.0;
-              const padding = 16.0;
-              const totalVerticalSpacing = spacing * 3; // 3 gaps between 4 rows
-              final cardHeight = (constraints.maxHeight -
-                      totalVerticalSpacing -
-                      (padding * 2)) /
-                  4;
+                // Calculate card dimensions that fill the space
+                // 4 rows of cards (12 months / 3 columns = 4 rows)
+                const spacing = 12.0;
+                const padding = 16.0;
+                const totalVerticalSpacing =
+                    spacing * 3; // 3 gaps between 4 rows
+                final cardHeight = (constraints.maxHeight -
+                        totalVerticalSpacing -
+                        (padding * 2)) /
+                    4;
 
-              return GridView.builder(
-                padding: const EdgeInsets.all(16),
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                  mainAxisExtent: cardHeight,
-                ),
-                itemCount: 12,
-                itemBuilder: (context, index) {
-                  final month = index + 1;
-                  final monthShifts = shiftsByMonth[month] ?? [];
-                  final totalIncome = monthShifts.fold<double>(
-                      0, (sum, shift) => sum + shift.totalIncome);
-                  final totalHours = monthShifts.fold<double>(
-                      0, (sum, shift) => sum + shift.hoursWorked);
+                return GridView.builder(
+                  padding: const EdgeInsets.all(16),
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    mainAxisExtent: cardHeight,
+                  ),
+                  itemCount: 12,
+                  itemBuilder: (context, index) {
+                    final month = index + 1;
+                    final monthShifts = shiftsByMonth[month] ?? [];
+                    final totalIncome = monthShifts.fold<double>(
+                        0, (sum, shift) => sum + shift.totalIncome);
+                    final totalHours = monthShifts.fold<double>(
+                        0, (sum, shift) => sum + shift.hoursWorked);
 
-                  // Check if this is the current month
-                  final now = DateTime.now();
-                  final isCurrentMonth =
-                      month == now.month && _focusedDay.year == now.year;
+                    // Check if this is the current month
+                    final now = DateTime.now();
+                    final isCurrentMonth =
+                        month == now.month && _focusedDay.year == now.year;
 
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _viewMode = CalendarViewMode.month;
-                        _focusedDay = DateTime(_focusedDay.year, month);
-                      });
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: AppTheme.cardBackground,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: isCurrentMonth
-                              ? AppTheme.primaryGreen
-                              : (monthShifts.isEmpty
-                                  ? AppTheme.cardBackgroundLight
-                                  : AppTheme.primaryGreen
-                                      .withValues(alpha: 0.3)),
-                          width: isCurrentMonth
-                              ? 2
-                              : (monthShifts.isEmpty ? 1 : 1.5),
+                    return GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _viewMode = CalendarViewMode.month;
+                          _focusedDay = DateTime(_focusedDay.year, month);
+                        });
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: AppTheme.cardBackground,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: isCurrentMonth
+                                ? AppTheme.primaryGreen
+                                : (monthShifts.isEmpty
+                                    ? AppTheme.cardBackgroundLight
+                                    : AppTheme.primaryGreen
+                                        .withValues(alpha: 0.3)),
+                            width: isCurrentMonth
+                                ? 2
+                                : (monthShifts.isEmpty ? 1 : 1.5),
+                          ),
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            // Month name
+                            Text(
+                              DateFormat('MMM')
+                                  .format(DateTime(_focusedDay.year, month))
+                                  .toUpperCase(),
+                              style: AppTheme.titleMedium.copyWith(
+                                fontSize: isTablet ? 20 : 13,
+                                fontWeight: FontWeight.w600,
+                                color: monthShifts.isEmpty
+                                    ? AppTheme.textMuted
+                                    : AppTheme.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            // Stats or empty state
+                            if (monthShifts.isEmpty)
+                              Text(
+                                '—',
+                                style: AppTheme.bodyMedium.copyWith(
+                                  color: AppTheme.textMuted,
+                                  fontSize: isTablet ? 36 : 24,
+                                ),
+                              )
+                            else
+                              Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  // Money amount (largest)
+                                  Text(
+                                    currencyFormat.format(totalIncome),
+                                    style: TextStyle(
+                                      color: AppTheme.primaryGreen,
+                                      fontSize: isTablet ? 28 : 18,
+                                      fontWeight: FontWeight.bold,
+                                      height: 1.0,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  // Hours + Shifts count combined
+                                  Text(
+                                    '${totalHours.toStringAsFixed(0)}h · ${monthShifts.length} shift${monthShifts.length > 1 ? 's' : ''}',
+                                    style: AppTheme.labelMedium.copyWith(
+                                      fontSize: isTablet ? 16 : 10,
+                                      color: AppTheme.textMuted,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],
+                              ),
+                          ],
                         ),
                       ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          // Month name
-                          Text(
-                            DateFormat('MMM')
-                                .format(DateTime(_focusedDay.year, month))
-                                .toUpperCase(),
-                            style: AppTheme.titleMedium.copyWith(
-                              fontSize: isTablet ? 20 : 13,
-                              fontWeight: FontWeight.w600,
-                              color: monthShifts.isEmpty
-                                  ? AppTheme.textMuted
-                                  : AppTheme.textPrimary,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          // Stats or empty state
-                          if (monthShifts.isEmpty)
-                            Text(
-                              '—',
-                              style: AppTheme.bodyMedium.copyWith(
-                                color: AppTheme.textMuted,
-                                fontSize: isTablet ? 36 : 24,
-                              ),
-                            )
-                          else
-                            Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                // Money amount (largest)
-                                Text(
-                                  currencyFormat.format(totalIncome),
-                                  style: TextStyle(
-                                    color: AppTheme.primaryGreen,
-                                    fontSize: isTablet ? 28 : 18,
-                                    fontWeight: FontWeight.bold,
-                                    height: 1.0,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                // Hours + Shifts count combined
-                                Text(
-                                  '${totalHours.toStringAsFixed(0)}h · ${monthShifts.length} shift${monthShifts.length > 1 ? 's' : ''}',
-                                  style: AppTheme.labelMedium.copyWith(
-                                    fontSize: isTablet ? 16 : 10,
-                                    color: AppTheme.textMuted,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ],
-                            ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              );
-            },
+                    );
+                  },
+                );
+              },
+            ),
           ),
         ),
       ],

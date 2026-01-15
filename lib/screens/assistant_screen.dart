@@ -41,10 +41,7 @@ class _AssistantScreenState extends State<AssistantScreen> {
     super.initState();
     _loadUserContext();
     _loadChatHistory().then((_) {
-      // Scroll to bottom after chat history loads AND widget is built
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _scrollToBottom();
-      });
+      // No scrolling needed - reversed ListView starts at bottom naturally
 
       // If there's an initial message, send it after chat loads
       if (widget.initialMessage != null && widget.initialMessage!.isNotEmpty) {
@@ -175,7 +172,6 @@ class _AssistantScreenState extends State<AssistantScreen> {
       _loadingMessage = 'Thinking...';
     });
     _messageController.clear();
-    _scrollToBottom();
 
     // Save user message to database
     await _saveChatMessage(message, true);
@@ -246,20 +242,7 @@ class _AssistantScreenState extends State<AssistantScreen> {
         _loadingMessage = '';
       });
     }
-    _scrollToBottom();
-  }
-
-  void _scrollToBottom() {
-    // Longer delay to ensure ListView is fully rendered
-    Future.delayed(const Duration(milliseconds: 300), () {
-      if (_scrollController.hasClients && mounted) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
-      }
-    });
+    // No scrolling needed - reversed ListView stays at bottom
   }
 
   // ============================================================================
@@ -299,7 +282,6 @@ class _AssistantScreenState extends State<AssistantScreen> {
       _loadingMessage =
           'Processing ${session.pageCount} page${session.pageCount == 1 ? '' : 's'} with AI...';
     });
-    _scrollToBottom();
 
     try {
       final userId = _db.supabase.auth.currentUser!.id;
@@ -435,7 +417,6 @@ class _AssistantScreenState extends State<AssistantScreen> {
         });
       }
     }
-    _scrollToBottom();
   }
 
   @override
@@ -541,11 +522,14 @@ class _AssistantScreenState extends State<AssistantScreen> {
             Expanded(
               child: ListView.builder(
                 controller: _scrollController,
+                reverse: true,
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                 itemCount: _messages.length,
                 itemBuilder: (context, index) {
-                  return _buildMessageBubble(_messages[index]);
+                  // Reverse the index since list is reversed
+                  final reversedIndex = _messages.length - 1 - index;
+                  return _buildMessageBubble(_messages[reversedIndex]);
                 },
               ),
             ),

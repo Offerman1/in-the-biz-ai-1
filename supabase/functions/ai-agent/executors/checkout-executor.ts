@@ -307,6 +307,58 @@ export class CheckoutExecutor {
     }
   }
 
+  async bulkDeleteCheckouts(confirmed: boolean): Promise<any> {
+    try {
+      if (!confirmed) {
+        return {
+          success: false,
+          needsConfirmation: true,
+          message: "Are you sure you want to delete ALL checkouts? This cannot be undone.",
+        };
+      }
+
+      const { data: checkouts, error: fetchError } = await this.supabase
+        .from("server_checkouts")
+        .select("*")
+        .eq("user_id", this.userId);
+
+      if (fetchError) throw fetchError;
+
+      if (!checkouts || checkouts.length === 0) {
+        return {
+          success: true,
+          count: 0,
+          message: "No checkouts to delete",
+        };
+      }
+
+      // Unlink all shifts
+      await this.supabase
+        .from("shifts")
+        .update({ checkout_id: null })
+        .eq("user_id", this.userId);
+
+      // Delete all checkouts
+      const { error: deleteError } = await this.supabase
+        .from("server_checkouts")
+        .delete()
+        .eq("user_id", this.userId);
+
+      if (deleteError) throw deleteError;
+
+      return {
+        success: true,
+        count: checkouts.length,
+        message: `✅ Deleted ${checkouts.length} checkout(s)`,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+  }
+
   async getCheckoutStats(filters?: {
     startDate?: string;
     endDate?: string;

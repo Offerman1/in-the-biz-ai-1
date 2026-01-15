@@ -397,4 +397,49 @@ export class ReceiptExecutor {
       };
     }
   }
+
+  async bulkDeleteReceipts(confirmed: boolean): Promise<any> {
+    try {
+      if (!confirmed) {
+        return {
+          success: false,
+          needsConfirmation: true,
+          message: "Are you sure you want to delete ALL receipts? This cannot be undone.",
+        };
+      }
+
+      const { data: receipts, error: fetchError } = await this.supabase
+        .from("receipts")
+        .select("*")
+        .eq("user_id", this.userId);
+
+      if (fetchError) throw fetchError;
+
+      if (!receipts || receipts.length === 0) {
+        return {
+          success: true,
+          count: 0,
+          message: "No receipts to delete",
+        };
+      }
+
+      const { error: deleteError } = await this.supabase
+        .from("receipts")
+        .delete()
+        .eq("user_id", this.userId);
+
+      if (deleteError) throw deleteError;
+
+      return {
+        success: true,
+        count: receipts.length,
+        message: `✅ Deleted ${receipts.length} receipt(s)`,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+  }
 }

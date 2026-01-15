@@ -527,17 +527,30 @@ NEVER execute bulk edits without user confirmation first.`,
 
   {
     name: "bulk_delete_shifts",
-    description: "Delete multiple shifts. ALWAYS requires explicit confirmation.",
+    description: "Delete multiple shifts at once (MUCH faster than deleting one-by-one). Use when user says 'delete all shifts', 'delete all my data', 'clear my calendar', etc. ALWAYS requires explicit confirmation. To delete ALL shifts, pass empty query: {}",
     parameters: {
       type: "object",
       properties: {
         query: {
           type: "object",
-          description: "Query to select shifts to delete",
+          description: "Query to select shifts to delete. To delete ALL shifts: pass empty object {}. To filter: {dateRange: {start: 'YYYY-MM-DD', end: 'YYYY-MM-DD'}, jobId: 'uuid'}",
+          properties: {
+            dateRange: {
+              type: "object",
+              properties: {
+                start: { type: "string", description: "Start date YYYY-MM-DD" },
+                end: { type: "string", description: "End date YYYY-MM-DD" }
+              }
+            },
+            jobId: {
+              type: "string",
+              description: "Filter by job UUID"
+            }
+          }
         },
         confirmed: {
           type: "boolean",
-          description: "MUST be true - always confirm bulk deletes",
+          description: "MUST be true - always ask user to confirm bulk deletes before setting this to true",
         },
       },
       required: ["query", "confirmed"],
@@ -1631,7 +1644,7 @@ NEVER execute bulk edits without user confirmation first.`,
 
   {
     name: "delete_beo_event",
-    description: "Delete a BEO event (requires confirmation).",
+    description: "Delete a single BEO event (requires confirmation).",
     parameters: {
       type: "object",
       properties: {
@@ -1639,6 +1652,21 @@ NEVER execute bulk edits without user confirmation first.`,
         confirmed: { type: "boolean", description: "Must be true after confirmation" },
       },
       required: ["eventId"],
+    },
+  },
+
+  {
+    name: "bulk_delete_beo_events",
+    description: "Delete ALL BEO events at once (MUCH faster than one-by-one). Use when user says 'delete all BEOs', 'clear my BEO portfolio', etc. ALWAYS requires explicit confirmation.",
+    parameters: {
+      type: "object",
+      properties: {
+        confirmed: {
+          type: "boolean",
+          description: "MUST be true - always ask user to confirm bulk deletes before setting this to true",
+        },
+      },
+      required: ["confirmed"],
     },
   },
 
@@ -1784,7 +1812,7 @@ NEVER execute bulk edits without user confirmation first.`,
 
   {
     name: "delete_checkout",
-    description: "Delete a checkout (requires confirmation).",
+    description: "Delete a single checkout (requires confirmation).",
     parameters: {
       type: "object",
       properties: {
@@ -1792,6 +1820,21 @@ NEVER execute bulk edits without user confirmation first.`,
         confirmed: { type: "boolean", description: "Must be true after confirmation" },
       },
       required: ["checkoutId"],
+    },
+  },
+
+  {
+    name: "bulk_delete_checkouts",
+    description: "Delete ALL server checkouts at once. Use when user says 'delete all checkouts', 'clear all my checkout data', etc. ALWAYS requires explicit confirmation.",
+    parameters: {
+      type: "object",
+      properties: {
+        confirmed: {
+          type: "boolean",
+          description: "MUST be true - always ask user to confirm bulk deletes",
+        },
+      },
+      required: ["confirmed"],
     },
   },
 
@@ -1923,7 +1966,7 @@ NEVER execute bulk edits without user confirmation first.`,
 
   {
     name: "delete_paycheck",
-    description: "Delete a paycheck (requires confirmation).",
+    description: "Delete a single paycheck (requires confirmation).",
     parameters: {
       type: "object",
       properties: {
@@ -1931,6 +1974,21 @@ NEVER execute bulk edits without user confirmation first.`,
         confirmed: { type: "boolean", description: "Must be true after confirmation" },
       },
       required: ["paycheckId"],
+    },
+  },
+
+  {
+    name: "bulk_delete_paychecks",
+    description: "Delete ALL paychecks at once. Use when user says 'delete all paychecks', 'clear my paycheck history', etc. ALWAYS requires explicit confirmation.",
+    parameters: {
+      type: "object",
+      properties: {
+        confirmed: {
+          type: "boolean",
+          description: "MUST be true - always ask user to confirm bulk deletes",
+        },
+      },
+      required: ["confirmed"],
     },
   },
 
@@ -2109,7 +2167,7 @@ NEVER execute bulk edits without user confirmation first.`,
 
   {
     name: "delete_receipt",
-    description: "Delete a receipt (requires confirmation).",
+    description: "Delete a single receipt (requires confirmation).",
     parameters: {
       type: "object",
       properties: {
@@ -2117,6 +2175,21 @@ NEVER execute bulk edits without user confirmation first.`,
         confirmed: { type: "boolean", description: "Must be true after confirmation" },
       },
       required: ["receiptId"],
+    },
+  },
+
+  {
+    name: "bulk_delete_receipts",
+    description: "Delete ALL receipts at once. Use when user says 'delete all receipts', 'clear all my expenses', etc. ALWAYS requires explicit confirmation.",
+    parameters: {
+      type: "object",
+      properties: {
+        confirmed: {
+          type: "boolean",
+          description: "MUST be true - always ask user to confirm bulk deletes",
+        },
+      },
+      required: ["confirmed"],
     },
   },
 
@@ -2244,7 +2317,7 @@ NEVER execute bulk edits without user confirmation first.`,
 
   {
     name: "delete_invoice",
-    description: "Delete an invoice (requires confirmation).",
+    description: "Delete a single invoice (requires confirmation).",
     parameters: {
       type: "object",
       properties: {
@@ -2252,6 +2325,21 @@ NEVER execute bulk edits without user confirmation first.`,
         confirmed: { type: "boolean", description: "Must be true after confirmation" },
       },
       required: ["invoiceId"],
+    },
+  },
+
+  {
+    name: "bulk_delete_invoices",
+    description: "Delete ALL invoices at once. Use when user says 'delete all invoices', 'clear all my invoice data', etc. ALWAYS requires explicit confirmation.",
+    parameters: {
+      type: "object",
+      properties: {
+        confirmed: {
+          type: "boolean",
+          description: "MUST be true - always ask user to confirm bulk deletes",
+        },
+      },
+      required: ["confirmed"],
     },
   },
 ];

@@ -93,6 +93,15 @@ class BeoEventService {
         .select()
         .single();
 
+    // Sync ALL relevant BEO fields to linked shifts
+    await _supabase.from('shifts').update({
+      'event_name': event.eventName,
+      'guest_count': event.guestCountConfirmed ?? event.displayGuestCount ?? 0,
+      'location': event.functionSpace ?? '',
+      'hostess': event.primaryContactName ?? '',
+      'event_cost': event.grandTotal ?? 0.0,
+    }).eq('beo_event_id', event.id);
+
     return BeoEvent.fromJson(response);
   }
 

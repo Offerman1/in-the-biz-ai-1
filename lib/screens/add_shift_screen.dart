@@ -29,8 +29,10 @@ import '../widgets/hero_card.dart';
 import '../widgets/navigation_wrapper.dart';
 import '../widgets/add_field_picker.dart';
 import '../widgets/section_options_menu.dart';
+import '../widgets/custom_time_picker.dart';
 import 'beo_detail_screen.dart';
 import '../widgets/add_section_picker.dart';
+import 'dashboard_screen.dart';
 import '../models/field_definition.dart';
 import '../models/section_definition.dart';
 import 'onboarding_screen.dart';
@@ -505,11 +507,27 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
     try {
       final beoService = BeoEventService();
       final beo = await beoService.getBeoEventById(_beoEventId!);
-      if (mounted) {
+      if (mounted && beo != null) {
         setState(() {
           _linkedBeo = beo;
+          // Sync form fields with BEO data when BEO is updated
+          _eventNameController.text = beo.eventName;
+          if (beo.guestCountConfirmed != null) {
+            _guestCountController.text = beo.guestCountConfirmed.toString();
+          } else if (beo.displayGuestCount != null) {
+            _guestCountController.text = beo.displayGuestCount.toString();
+          }
+          if (beo.functionSpace != null) {
+            _locationController.text = beo.functionSpace!;
+          }
+          if (beo.primaryContactName != null) {
+            _hostessController.text = beo.primaryContactName!;
+          }
+          if (beo.grandTotal != null) {
+            _eventCostController.text = beo.grandTotal.toString();
+          }
         });
-        print('🎯 Loaded linked BEO: ${beo?.eventName}');
+        print('🎯 Loaded and synced linked BEO: ${beo.eventName}');
       }
     } catch (e) {
       print('Error loading linked BEO: $e');
@@ -1256,7 +1274,14 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
         final shiftProvider =
             Provider.of<ShiftProvider>(context, listen: false);
         await shiftProvider.loadShifts();
-        Navigator.pop(context, true); // Return true to indicate success
+
+        // Navigate to Calendar page (index 1) after saving shift
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (_) => DashboardScreen(initialIndex: 1),
+          ),
+          (route) => false,
+        );
       }
     } catch (e) {
       if (mounted) {
@@ -3871,7 +3896,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
       String label, TimeOfDay? time, Function(TimeOfDay) onSelected) {
     return GestureDetector(
       onTap: () async {
-        final picked = await showTimePicker(
+        final picked = await CustomTimePicker.show(
           context: context,
           initialTime: time ?? TimeOfDay.now(),
         );

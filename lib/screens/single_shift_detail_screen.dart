@@ -1744,7 +1744,7 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
               borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
               border: Border.all(
                 color: AppTheme.textMuted.withValues(alpha: 0.3),
-                width: 1,
+                width: 0.5,
               ),
             ),
             child: Column(
@@ -1753,7 +1753,7 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
                 Text(
                   DateFormat('E').format(shift.date),
                   style: AppTheme.labelSmall.copyWith(
-                    color: AppTheme.textSecondary,
+                    color: AppTheme.textPrimary,
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
                   ),
@@ -1771,7 +1771,7 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
                       ? DateFormat('MMM').format(shift.date)
                       : DateFormat("MMM ''yy").format(shift.date),
                   style: AppTheme.labelSmall.copyWith(
-                    color: AppTheme.textSecondary,
+                    color: AppTheme.textPrimary,
                     fontSize: 9,
                     fontWeight: FontWeight.w600,
                   ),
@@ -1821,6 +1821,9 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
                       Align(
                         alignment: Alignment.centerLeft,
                         child: Container(
+                          constraints: const BoxConstraints(
+                            maxWidth: 180,
+                          ),
                           margin: const EdgeInsets.only(right: 6),
                           padding: const EdgeInsets.symmetric(
                             horizontal: 6,
@@ -1845,24 +1848,32 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
                                 color: AppTheme.accentPurple,
                               ),
                               const SizedBox(width: 4),
-                              Text(
-                                shift.eventName!,
-                                style: AppTheme.labelSmall.copyWith(
-                                  color: AppTheme.accentPurple,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              if (shift.guestCount != null) ...[
-                                const SizedBox(width: 4),
-                                Text(
-                                  '(${shift.guestCount})',
+                              Flexible(
+                                child: Text(
+                                  shift.eventName!,
                                   style: AppTheme.labelSmall.copyWith(
                                     color: AppTheme.accentPurple,
                                     fontSize: 10,
-                                    fontWeight: FontWeight.w500,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              if (shift.guestCount != null) ...[
+                                const SizedBox(width: 4),
+                                Icon(
+                                  Icons.people,
+                                  size: 10,
+                                  color: AppTheme.accentPurple,
+                                ),
+                                const SizedBox(width: 2),
+                                Text(
+                                  '${shift.guestCount}',
+                                  style: AppTheme.labelSmall.copyWith(
+                                    color: AppTheme.accentPurple,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
                               ],
@@ -1982,7 +1993,7 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
                     child: Text(
                       '${shift.hoursWorked.toStringAsFixed(1)}h',
                       style: AppTheme.labelSmall.copyWith(
-                        color: AppTheme.primaryGreen,
+                        color: AppTheme.textPrimary,
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                       ),
@@ -2129,46 +2140,87 @@ class _SingleShiftDetailScreenState extends State<SingleShiftDetailScreen>
 
           // When BEO is linked, show simplified view. Otherwise show full editable fields.
           if (_linkedBeoEvent != null) ...[
-            // Simplified view for linked BEO - just show key info
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            // Simplified view for linked BEO - show key event info in 3x2 grid
+            Table(
+              columnWidths: const {
+                0: FlexColumnWidth(1),
+                1: FlexColumnWidth(1),
+              },
               children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildBEODetailRow(
+                // Row 1: EVENT TIME | TOTAL COST
+                TableRow(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(right: 12, bottom: 16),
+                      child: _buildBEODetailRow(
+                        'EVENT TIME',
+                        () {
+                          final startTime = _linkedBeoEvent!.eventStartTime;
+                          final endTime = _linkedBeoEvent!.eventEndTime;
+                          if (startTime != null && endTime != null) {
+                            return '${_formatTimeToAmPm(startTime)} -\n${_formatTimeToAmPm(endTime)}';
+                          } else if (startTime != null) {
+                            return _formatTimeToAmPm(startTime);
+                          } else if (shift.startTime != null &&
+                              shift.endTime != null) {
+                            return '${_formatTimeToAmPm(shift.startTime!)} -\n${_formatTimeToAmPm(shift.endTime!)}';
+                          } else if (shift.startTime != null) {
+                            return _formatTimeToAmPm(shift.startTime!);
+                          }
+                          return 'N/A';
+                        }(),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 12, bottom: 16),
+                      child: _buildBEODetailRow(
+                        'TOTAL COST',
+                        '\$${(_linkedBeoEvent!.grandTotal ?? shift.eventCost ?? 0).toStringAsFixed(2)}',
+                      ),
+                    ),
+                  ],
+                ),
+                // Row 2: FUNCTION SPACE | CONTACT
+                TableRow(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(right: 12, bottom: 16),
+                      child: _buildBEODetailRow(
                         'FUNCTION SPACE',
                         _linkedBeoEvent!.functionSpace ??
                             shift.location ??
                             'N/A',
                       ),
-                      const SizedBox(height: 12),
-                      _buildBEODetailRow(
-                        'GUESTS',
-                        '${_linkedBeoEvent!.displayGuestCount ?? shift.guestCount ?? 0}',
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 24),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildBEODetailRow(
-                        'TOTAL',
-                        '\$${(_linkedBeoEvent!.grandTotal ?? shift.eventCost ?? 0).toStringAsFixed(2)}',
-                      ),
-                      const SizedBox(height: 12),
-                      _buildBEODetailRow(
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 12, bottom: 16),
+                      child: _buildBEODetailRow(
                         'CONTACT',
-                        _linkedBeoEvent!.primaryContactName ??
-                            shift.hostess ??
-                            'N/A',
+                        _linkedBeoEvent!.primaryContactName != null
+                            ? '${_linkedBeoEvent!.primaryContactName}${_linkedBeoEvent!.primaryContactPhone != null ? '\n${_linkedBeoEvent!.primaryContactPhone}' : ''}'
+                            : shift.hostess ?? 'N/A',
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
+                ),
+                // Row 3: GUARANTEED GUESTS | BOOKED BY
+                TableRow(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(right: 12),
+                      child: _buildBEODetailRow(
+                        'GUARANTEED GUESTS',
+                        '${_linkedBeoEvent!.guestCountConfirmed ?? _linkedBeoEvent!.displayGuestCount ?? shift.guestCount ?? 0}',
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 12),
+                      child: _buildBEODetailRow(
+                        'BOOKED BY',
+                        _linkedBeoEvent!.salesManagerName ?? 'N/A',
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

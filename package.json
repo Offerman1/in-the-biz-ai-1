@@ -12,6 +12,7 @@
     "@supabase/supabase-js": "^2.90.1",
     "dotenv": "^16.6.1",
     "googleapis": "^139.0.0",
+    "jsonwebtoken": "^9.0.3",
     "nodemailer": "^7.0.12",
     "pg": "^8.16.3",
     "puppeteer": "^22.0.0",

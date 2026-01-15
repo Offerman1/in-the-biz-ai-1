@@ -415,4 +415,49 @@ export class InvoiceExecutor {
       };
     }
   }
+
+  async bulkDeleteInvoices(confirmed: boolean): Promise<any> {
+    try {
+      if (!confirmed) {
+        return {
+          success: false,
+          needsConfirmation: true,
+          message: "Are you sure you want to delete ALL invoices? This cannot be undone.",
+        };
+      }
+
+      const { data: invoices, error: fetchError } = await this.supabase
+        .from("invoices")
+        .select("*")
+        .eq("user_id", this.userId);
+
+      if (fetchError) throw fetchError;
+
+      if (!invoices || invoices.length === 0) {
+        return {
+          success: true,
+          count: 0,
+          message: "No invoices to delete",
+        };
+      }
+
+      const { error: deleteError } = await this.supabase
+        .from("invoices")
+        .delete()
+        .eq("user_id", this.userId);
+
+      if (deleteError) throw deleteError;
+
+      return {
+        success: true,
+        count: invoices.length,
+        message: `✅ Deleted ${invoices.length} invoice(s)`,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+  }
 }

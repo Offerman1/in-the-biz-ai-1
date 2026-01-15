@@ -70,8 +70,7 @@ class AuthService {
       final GoogleSignInAccount googleUser =
           await GoogleSignIn.instance.authenticate();
 
-      final GoogleSignInAuthentication googleAuth =
-          googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth = googleUser.authentication;
 
       if (googleAuth.idToken == null) {
         throw Exception('Failed to get Google ID token');
@@ -114,6 +113,33 @@ class AuthService {
       idToken: idToken,
       nonce: nonce,
     );
+  }
+
+  /// Sign in with Apple
+  /// Works on Android, iOS, and Web
+  static Future<AuthResponse?> signInWithApple() async {
+    try {
+      // Use Supabase's built-in OAuth flow instead of sign_in_with_apple package
+      // This handles redirects properly on all platforms
+      final result = await _supabase.auth.signInWithOAuth(
+        OAuthProvider.apple,
+        redirectTo: kIsWeb
+            ? 'https://inthebiz.app'
+            : 'io.supabase.inthebizai://login-callback',
+      );
+
+      if (!result) {
+        throw Exception('Apple sign-in was cancelled or failed');
+      }
+
+      return _supabase.auth.currentSession as AuthResponse?;
+    } catch (e) {
+      // Check if user is actually logged in despite the error
+      if (_supabase.auth.currentUser != null) {
+        return _supabase.auth.currentSession as AuthResponse?;
+      }
+      throw Exception('Apple sign-in failed: $e');
+    }
   }
 
   /// Sign in with email and password

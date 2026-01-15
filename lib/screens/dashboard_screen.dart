@@ -1269,6 +1269,10 @@ class _HomeScreenState extends State<_HomeScreen> {
                     : AppTheme.cardBackgroundLight)
                 : AppTheme.cardBackground,
             borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: AppTheme.textMuted.withValues(alpha: 0.3),
+              width: 0.5,
+            ),
           ),
           child: Text(
             label,
@@ -1378,11 +1382,11 @@ class _HomeScreenState extends State<_HomeScreen> {
                   width: 56,
                   height: 70,
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryGreen.withValues(alpha: 0.15),
+                    color: Colors.transparent,
                     borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
                     border: Border.all(
-                      color: AppTheme.primaryGreen.withValues(alpha: 0.3),
-                      width: 1,
+                      color: AppTheme.primaryGreen,
+                      width: 0.5,
                     ),
                   ),
                   child: Column(
@@ -1399,7 +1403,7 @@ class _HomeScreenState extends State<_HomeScreen> {
                       Text(
                         DateFormat('d').format(shift.date),
                         style: AppTheme.titleLarge.copyWith(
-                          color: AppTheme.textPrimary,
+                          color: AppTheme.textSecondary,
                           fontWeight: FontWeight.w700,
                           fontSize: 20,
                         ),
@@ -1459,6 +1463,9 @@ class _HomeScreenState extends State<_HomeScreen> {
                             Align(
                               alignment: Alignment.centerLeft,
                               child: Container(
+                                constraints: const BoxConstraints(
+                                  maxWidth: 180,
+                                ),
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 6,
                                   vertical: 2,
@@ -1482,15 +1489,17 @@ class _HomeScreenState extends State<_HomeScreen> {
                                       color: AppTheme.accentPurple,
                                     ),
                                     const SizedBox(width: 4),
-                                    Text(
-                                      shift.eventName!,
-                                      style: AppTheme.labelSmall.copyWith(
-                                        color: AppTheme.accentPurple,
-                                        fontSize: 9,
-                                        fontWeight: FontWeight.w600,
+                                    Flexible(
+                                      child: Text(
+                                        shift.eventName!,
+                                        style: AppTheme.labelSmall.copyWith(
+                                          color: AppTheme.accentPurple,
+                                          fontSize: 9,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
                                       ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
                                     ),
                                     // Add guest count if available
                                     if (shift.guestCount != null &&

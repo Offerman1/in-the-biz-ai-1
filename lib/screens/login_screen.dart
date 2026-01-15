@@ -235,7 +235,8 @@ class _LoginScreenState extends State<LoginScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Could not send email. Please try again later.'),
+            content:
+                const Text('Could not send email. Please try again later.'),
             backgroundColor: AppTheme.accentRed,
           ),
         );
@@ -264,7 +265,7 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: 60),
+              const SizedBox(height: 3),
 
               // Logo / App Name
               Center(
@@ -277,7 +278,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       height: isTablet ? 240 : 120,
                       fit: BoxFit.contain,
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 0),
                     ShaderMask(
                       shaderCallback: (bounds) => LinearGradient(
                         colors: [
@@ -301,7 +302,8 @@ class _LoginScreenState extends State<LoginScreen> {
                               height: 1.2,
                               shadows: [
                                 Shadow(
-                                  color: AppTheme.primaryGreen.withValues(alpha: 0.5),
+                                  color: AppTheme.primaryGreen
+                                      .withValues(alpha: 0.5),
                                   blurRadius: 8,
                                   offset: const Offset(0, 2),
                                 ),
@@ -355,7 +357,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
 
-              const SizedBox(height: 48),
+              const SizedBox(height: 30),
 
               // Subtitle
               Text(
@@ -442,8 +444,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   decoration: BoxDecoration(
                     color: AppTheme.accentRed.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-                    border:
-                        Border.all(color: AppTheme.accentRed.withValues(alpha: 0.3)),
+                    border: Border.all(
+                        color: AppTheme.accentRed.withValues(alpha: 0.3)),
                   ),
                   child: Row(
                     children: [
@@ -632,31 +634,11 @@ class _LoginScreenState extends State<LoginScreen> {
               mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Official Google "G" logo colors
+                // Official Google "G" logo - PNG version
                 Image.network(
-                  'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg',
-                  width: 24,
-                  height: 24,
-                  errorBuilder: (context, error, stackTrace) {
-                    // Fallback if image doesn't load
-                    return Container(
-                      width: 24,
-                      height: 24,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                      child: Stack(
-                        children: [
-                          // Multi-color G logo approximation
-                          Positioned.fill(
-                            child: CustomPaint(
-                              painter: GoogleLogoPainter(),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
+                  'https://developers.google.com/identity/images/g-logo.png',
+                  width: 20,
+                  height: 20,
                 ),
                 const SizedBox(width: 16),
                 const Text(

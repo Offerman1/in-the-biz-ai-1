@@ -531,4 +531,49 @@ export class PaycheckExecutor {
       };
     }
   }
+
+  async bulkDeletePaychecks(confirmed: boolean): Promise<any> {
+    try {
+      if (!confirmed) {
+        return {
+          success: false,
+          needsConfirmation: true,
+          message: "Are you sure you want to delete ALL paychecks? This cannot be undone.",
+        };
+      }
+
+      const { data: paychecks, error: fetchError } = await this.supabase
+        .from("paychecks")
+        .select("*")
+        .eq("user_id", this.userId);
+
+      if (fetchError) throw fetchError;
+
+      if (!paychecks || paychecks.length === 0) {
+        return {
+          success: true,
+          count: 0,
+          message: "No paychecks to delete",
+        };
+      }
+
+      const { error: deleteError } = await this.supabase
+        .from("paychecks")
+        .delete()
+        .eq("user_id", this.userId);
+
+      if (deleteError) throw deleteError;
+
+      return {
+        success: true,
+        count: paychecks.length,
+        message: `✅ Deleted ${paychecks.length} paycheck(s)`,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+  }
 }
