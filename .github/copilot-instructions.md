@@ -85,73 +85,79 @@ get_errors with NO filePaths parameter (omit it entirely)
 
 **⚠️ BEFORE DEPLOYING - MANDATORY CHECKLIST:**
 1. ✅ Update `pubspec.yaml` line 4 (version: X.X.X+N)
-2. ✅ Update `index.html` line 56 (expectedVersion)
-3. ✅ Update `lib/main.dart` line 22 (appVersion) - **NEVER SKIP THIS!**
-4. ✅ Use `&` NOT `&amp;` in terminal commands
-5. ✅ Run `get_errors` with NO filePaths to check full workspace
+2. ✅ Update `lib/main.dart` line 22 (appVersion) - **NEVER SKIP THIS!**
+3. ✅ Use `&` NOT `&amp;` in terminal commands
+4. ✅ Run `get_errors` with NO filePaths to check full workspace
 
-**IF YOU SKIP lib/main.dart, THE CACHE-BUSTING WILL NOT WORK!**
+**NO MORE CACHE-BUSTING NEEDED:**
+- Service workers have been completely removed (`--pwa-strategy=none`)
+- Vercel serves all files with `Cache-Control: no-cache` headers
+- Users will ALWAYS get the latest version on refresh (no hard refresh needed)
 
 ### Step-by-Step Deployment Process:
 
 **Step 0: BUMP VERSION (REQUIRED FOR EVERY DEPLOYMENT):**
-- `pubspec.yaml` line 4: Increment build number → `version: 1.2.1+18` becomes `version: 1.2.1+19`
-- `index.html` line 56: Update cache-busting version → `const expectedVersion = '1.2.1+19';`
-- `lib/main.dart` line 22: `const String appVersion = '1.2.1+19';` **← MANDATORY! NEVER FORGET!**
-- **WHY:** Cache-busting ONLY works if ALL THREE are updated. Users will see old version if you skip any!
+- `pubspec.yaml` line 4: Increment build number → `version: 1.2.1+19` becomes `version: 1.2.1+20`
+- `lib/main.dart` line 22: `const String appVersion = '1.2.1+20';` **← MANDATORY!**
+- **WHY:** Version tracking for debugging and user support
 
-**Step 1: Build:**
+**Step 1: Build with NO service worker:**
 ```cmd
 cd "c:\Users\Brandon 2021\Desktop\In The Biz AI"
-flutter clean
-flutter pub get
-flutter build web --release
+flutter build web --release --pwa-strategy=none
 ```
 
-**Step 3: Copy built files to root:**
+**Step 2: Copy built files to root (for legacy compatibility):**
 ```cmd
 Copy-Item -Path "build\web\main.dart.js" -Destination "main.dart.js" -Force
 ```
 
-**Step 4: Commit and push to MAIN (not gh-pages):**
+**Step 3: Commit and push to MAIN (not gh-pages):**
 ```cmd
 git add .
 git commit -m "Deploy: [your message]"
 git push origin main
 ```
 
-**OR use this single command (AFTER bumping all 3 versions - pubspec.yaml, index.html, AND lib/main.dart):**
+**OR use this single command (AFTER bumping both versions - pubspec.yaml AND lib/main.dart):**
 ```cmd
-cd "c:\Users\Brandon 2021\Desktop\In The Biz AI" & flutter build web --release & Copy-Item -Path "build\web\main.dart.js" -Destination "main.dart.js" -Force & git add . & git commit -m "Deploy: [your message]" & git push origin main
+cd "c:\Users\Brandon 2021\Desktop\In The Biz AI" ; flutter build web --release --pwa-strategy=none ; Copy-Item -Path "build\web\main.dart.js" -Destination "main.dart.js" -Force ; git add . ; git commit -m "Deploy: [your message]" ; git push origin main
 ```
 
-**⚠️ CRITICAL: Use `&` NOT `&amp;` - The ampersand HTML entity breaks terminal commands!**
-
+**⚠️ CRITICAL: Use `;` for command chaining in PowerShell, NOT `&` or `&amp;`**
 ### WHY THIS IS CRITICAL:
 - Editing `lib/main.dart` does NOT update the website
 - The website serves `main.dart.js` from the ROOT, not from `lib/`
-- `flutter build web` compiles Dart → JavaScript in `build/web/`
+- `flutter build web --release --pwa-strategy=none` compiles Dart → JavaScript (NO service worker)
 - The built `main.dart.js` must be copied to the ROOT directory
 - Vercel watches the **main** branch and deploys in ~6 seconds
-- Version is hardcoded in `lib/main.dart` line 22 - you MUST update it there too!
-- **CACHE BUSTING:** `index.html` has automatic cache-busting that forces browser reload on version changes
+- **NO SERVICE WORKERS:** We use `--pwa-strategy=none` to prevent aggressive caching
+- **NO CACHE:** Vercel serves all files with `Cache-Control: no-cache` headers
 
 ### DO NOT:
-- ❌ Use `&amp;` in terminal commands (use `&` instead)
+- ❌ Use `&amp;` in terminal commands (HTML entity breaks commands)
+- ❌ Use `&` for command chaining in PowerShell (causes errors)
+- ✅ **USE `;` (semicolon) for command chaining in PowerShell**
 - ❌ Just edit `lib/main.dart` and stop
 - ❌ Say "the code is updated" without deploying
 - ❌ Forget to copy `main.dart.js` to root
 - ❌ Push to gh-pages (that's the OLD way)
-- ❌ Skip updating lib/main.dart version (MANDATORY for cache-busting!)
+- ❌ Skip updating lib/main.dart version (MANDATORY for version tracking!)
 - ❌ Wait for the user to ask - DEPLOY IMMEDIATELY after code changes
 - ❌ Create bat files for deployment - use manual commands only
 - ❌ Start deploying without user permission
+- ❌ Update index.html version (no longer needed - service workers removed)
 
 ### ALWAYS:
 - ✅ Build AND deploy in the SAME action
-- ✅ Update version in ALL THREE FILES: pubspec.yaml, index.html, AND lib/main.dart
-- ✅ Use `&` for command chaining (NOT `&amp;`)
+- ✅ Update version in BOTH FILES: pubspec.yaml AND lib/main.dart (NOT index.html)
+- ✅ Use `;` for command chaining in PowerShell (NOT `&` or `&amp;`)
+- ✅ Use `--pwa-strategy=none` flag when building (NO service workers)
 - ✅ Push to **main** branch (Vercel deploys from main)
+- ✅ Verify deployment by checking console for correct version number
+- ✅ Deployment completes in ~6 seconds on Vercel
+- ✅ Users get latest version on regular refresh (no hard refresh needed)
+- ✅ ASK USER before deploying - never deploy automatically
 - ✅ Verify deployment by checking console for correct version number
 - ✅ Deployment completes in ~6 seconds on Vercel
 - ✅ Use MANUAL commands, never bat files
