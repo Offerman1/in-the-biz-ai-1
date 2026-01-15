@@ -48,24 +48,42 @@
 <body>
   <!-- Force service worker update on new deployments -->
   <script>
-    // Unregister existing service workers and force reload on version mismatch
+    // Aggressive cache-busting: Force reload on version mismatch
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations().then(function(registrations) {
-        // Check if we have a version mismatch
-        const expectedVersion = '1.2.1+19';
-        const currentVersion = localStorage.getItem('app_version');
+      const expectedVersion = '1.2.1+19';
+      const currentVersion = localStorage.getItem('app_version');
+      
+      // If version mismatch detected, clear everything and reload
+      if (currentVersion && currentVersion !== expectedVersion) {
+        console.log('🔄 Version mismatch detected:', currentVersion, '→', expectedVersion);
         
-        if (currentVersion && currentVersion !== expectedVersion) {
-          // Version changed, clear cache and reload
+        // Clear all caches
+        if ('caches' in window) {
+          caches.keys().then(function(cacheNames) {
+            return Promise.all(
+              cacheNames.map(function(cacheName) {
+                return caches.delete(cacheName);
+              })
+            );
+          });
+        }
+        
+        // Unregister all service workers
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
           registrations.forEach(function(registration) {
             registration.unregister();
           });
+          
+          // Update version and force reload
           localStorage.setItem('app_version', expectedVersion);
           window.location.reload(true);
-        } else if (!currentVersion) {
-          localStorage.setItem('app_version', expectedVersion);
-        }
-      });
+        });
+      } else if (!currentVersion) {
+        // First time loading, set version
+        localStorage.setItem('app_version', expectedVersion);
+      } else {
+        console.log('✅ App version:', expectedVersion);
+      }
     }
   </script>
   <script src="flutter_bootstrap.js" async></script>
