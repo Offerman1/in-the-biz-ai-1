@@ -46,45 +46,34 @@
   <meta name="expires" content="0">
 </head>
 <body>
-  <!-- Force service worker update on new deployments -->
+  <!-- Disable service worker for better cache control -->
   <script>
-    // Aggressive cache-busting: Force reload on version mismatch
+    // Unregister any existing service workers (cleanup from old versions)
     if ('serviceWorker' in navigator) {
-      const expectedVersion = '1.2.1+19';
-      const currentVersion = localStorage.getItem('app_version');
-      
-      // If version mismatch detected, clear everything and reload
-      if (currentVersion && currentVersion !== expectedVersion) {
-        console.log('🔄 Version mismatch detected:', currentVersion, '→', expectedVersion);
-        
-        // Clear all caches
-        if ('caches' in window) {
-          caches.keys().then(function(cacheNames) {
-            return Promise.all(
-              cacheNames.map(function(cacheName) {
-                return caches.delete(cacheName);
-              })
-            );
-          });
-        }
-        
-        // Unregister all service workers
-        navigator.serviceWorker.getRegistrations().then(function(registrations) {
-          registrations.forEach(function(registration) {
-            registration.unregister();
-          });
-          
-          // Update version and force reload
-          localStorage.setItem('app_version', expectedVersion);
-          window.location.reload(true);
+      navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        registrations.forEach(function(registration) {
+          registration.unregister();
+          console.log('🗑️ Unregistered service worker');
         });
-      } else if (!currentVersion) {
-        // First time loading, set version
-        localStorage.setItem('app_version', expectedVersion);
-      } else {
-        console.log('✅ App version:', expectedVersion);
+      });
+      
+      // Clear all caches
+      if ('caches' in window) {
+        caches.keys().then(function(cacheNames) {
+          return Promise.all(
+            cacheNames.map(function(cacheName) {
+              caches.delete(cacheName);
+              console.log('🗑️ Cleared cache:', cacheName);
+            })
+          );
+        });
       }
     }
+    
+    // Simple version tracking (for debugging)
+    const appVersion = '1.2.1+20';
+    console.log('✅ App version:', appVersion);
+    localStorage.setItem('app_version', appVersion);
   </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
