@@ -9,6 +9,7 @@ import '../providers/shift_provider.dart';
 import '../services/database_service.dart';
 import '../services/tax_service.dart';
 import '../services/auth_service.dart';
+import '../services/tour_service.dart';
 import '../services/calendar_title_service.dart';
 import '../services/calendar_sync_service.dart';
 import '../services/google_calendar_service.dart';
@@ -2256,6 +2257,38 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
       child: Column(
         children: [
+          // Restart Tour
+          ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryGreen.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(Icons.help_outline,
+                  color: AppTheme.primaryGreen, size: 20),
+            ),
+            title: Text('Restart Tour', style: AppTheme.bodyMedium),
+            subtitle: Text('Show the app tour and help button again',
+                style: AppTheme.labelSmall.copyWith(color: AppTheme.textMuted)),
+            trailing: Icon(Icons.arrow_forward_ios,
+                size: 16, color: AppTheme.textMuted),
+            onTap: () {
+              final tourService =
+                  Provider.of<TourService>(context, listen: false);
+              tourService.showTourButton();
+              tourService.startTour();
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: const Text(
+                      'Tour restarted! Tap the help button on any screen to start.'),
+                  backgroundColor: AppTheme.primaryGreen,
+                  duration: const Duration(seconds: 3),
+                ),
+              );
+            },
+          ),
+          Divider(height: 1, color: AppTheme.cardBackgroundLight),
           // Contact Support
           ListTile(
             leading: Container(

@@ -159,11 +159,20 @@ class AuthService {
     required String password,
     String? fullName,
   }) async {
-    return _supabase.auth.signUp(
+    final response = await _supabase.auth.signUp(
       email: email,
       password: password,
       data: fullName != null ? {'full_name': fullName} : null,
     );
+
+    // Update profile with email after signup
+    if (response.user != null) {
+      await _supabase
+          .from('profiles')
+          .update({'email': email}).eq('id', response.user!.id);
+    }
+
+    return response;
   }
 
   /// Sign out

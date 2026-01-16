@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import '../models/shift.dart';
 import '../models/goal.dart';
 import '../providers/shift_provider.dart';
@@ -16,11 +17,14 @@ import '../screens/single_shift_detail_screen.dart';
 import '../screens/settings_screen.dart';
 import '../screens/goals_screen.dart';
 import '../services/database_service.dart';
+import '../services/tour_service.dart';
 import '../theme/app_theme.dart';
+import '../utils/tour_targets.dart';
 import '../widgets/animated_gradient_background.dart';
 import '../widgets/particle_background.dart';
 import '../widgets/shimmer_card.dart';
 import '../widgets/animated_logo.dart';
+import '../widgets/floating_tour_button.dart';
 
 class DashboardScreen extends StatefulWidget {
   final int initialIndex;
@@ -34,6 +38,12 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   late int _selectedIndex;
 
+  // Nav bar GlobalKeys for tour
+  final GlobalKey _homeNavKey = GlobalKey();
+  final GlobalKey _calendarNavKey = GlobalKey();
+  final GlobalKey _chatNavKey = GlobalKey();
+  final GlobalKey _statsNavKey = GlobalKey();
+
   @override
   void initState() {
     super.initState();
@@ -44,12 +54,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
   }
 
-  final List<Widget> _screens = [
-    const _HomeScreen(),
-    const BetterCalendarScreen(),
-    const AssistantScreen(),
-    const StatsWithCheckoutTab(),
-  ];
+  List<Widget> get _screens => [
+        _HomeScreen(
+          homeNavKey: _homeNavKey,
+          calendarNavKey: _calendarNavKey,
+          chatNavKey: _chatNavKey,
+          statsNavKey: _statsNavKey,
+        ),
+        const BetterCalendarScreen(),
+        const AssistantScreen(),
+        const StatsWithCheckoutTab(),
+      ];
 
   @override
   Widget build(BuildContext context) {
@@ -97,6 +112,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ),
             ),
+            // Floating tour button (context-aware based on current screen)
+            FloatingTourButton(
+              onTap: () {
+                // Start tour for current screen
+                switch (_selectedIndex) {
+                  case 0: // Home/Dashboard
+                    // Tour already starts automatically, just restart it
+                    final tourService =
+                        Provider.of<TourService>(context, listen: false);
+                    tourService.startTour();
+                    break;
+                  case 1: // Calendar
+                    // TODO: Implement calendar tour
+                    break;
+                  case 2: // Chat
+                    // TODO: Implement chat tour
+                    break;
+                  case 3: // Stats
+                    // TODO: Implement stats tour
+                    break;
+                }
+              },
+            ),
           ],
         ),
         bottomNavigationBar: Container(
@@ -116,13 +154,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  _buildNavItem(0, Icons.home_outlined, Icons.home, 'Home'),
-                  _buildNavItem(1, Icons.calendar_today_outlined,
-                      Icons.calendar_today, 'Calendar'),
-                  _buildNavItem(2, Icons.auto_awesome_outlined,
-                      Icons.auto_awesome, 'Chat'),
                   _buildNavItem(
-                      3, Icons.bar_chart_outlined, Icons.bar_chart, 'Stats'),
+                      0, Icons.home_outlined, Icons.home, 'Home', _homeNavKey),
+                  _buildNavItem(1, Icons.calendar_today_outlined,
+                      Icons.calendar_today, 'Calendar', _calendarNavKey),
+                  _buildNavItem(2, Icons.auto_awesome_outlined,
+                      Icons.auto_awesome, 'Chat', _chatNavKey),
+                  _buildNavItem(3, Icons.bar_chart_outlined, Icons.bar_chart,
+                      'Stats', _statsNavKey),
                 ],
               ),
             ),
@@ -132,10 +171,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildNavItem(
-      int index, IconData icon, IconData activeIcon, String label) {
+  Widget _buildNavItem(int index, IconData icon, IconData activeIcon,
+      String label, GlobalKey key) {
     final isSelected = _selectedIndex == index;
     return GestureDetector(
+      key: key,
       onTap: () => setState(() => _selectedIndex = index),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
@@ -178,7 +218,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
 // ============================================================
 
 class _HomeScreen extends StatefulWidget {
-  const _HomeScreen();
+  final GlobalKey homeNavKey;
+  final GlobalKey calendarNavKey;
+  final GlobalKey chatNavKey;
+  final GlobalKey statsNavKey;
+
+  const _HomeScreen({
+    required this.homeNavKey,
+    required this.calendarNavKey,
+    required this.chatNavKey,
+    required this.statsNavKey,
+  });
 
   @override
   State<_HomeScreen> createState() => _HomeScreenState();
@@ -191,12 +241,351 @@ class _HomeScreenState extends State<_HomeScreen> {
   String? _selectedJobId; // null means "All Jobs"
   List<Map<String, dynamic>> _jobs = [];
   bool _isRefreshing = false;
+  TourService? _tourService;
+
+  // Tour GlobalKeys
+  final GlobalKey _addShiftButtonKey = GlobalKey();
+  final GlobalKey _recentShiftsKey = GlobalKey();
+  final GlobalKey _seeAllButtonKey = GlobalKey();
+  final GlobalKey _goalsButtonKey = GlobalKey();
+  final GlobalKey _refreshButtonKey = GlobalKey();
+  final GlobalKey _settingsButtonKey = GlobalKey();
+
+  TutorialCoachMark? _tutorialCoachMark;
 
   @override
   void initState() {
     super.initState();
     _loadJobs();
     _loadGoal();
+
+    // Check if tour should start after build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkAndStartTour();
+
+      // Listen to tour service changes
+      _tourService = Provider.of<TourService>(context, listen: false);
+      _tourService?.addListener(_onTourServiceChanged);
+    });
+  }
+
+  @override
+  void dispose() {
+    _tourService?.removeListener(_onTourServiceChanged);
+    _tutorialCoachMark = null;
+    super.dispose();
+  }
+
+  void _onTourServiceChanged() {
+    if (!mounted) return;
+
+    final tourService = Provider.of<TourService>(context, listen: false);
+
+    debugPrint(
+        '🎯 Tour service changed: isActive=${tourService.isActive}, expectedScreen=${tourService.expectedScreen}, currentStep=${tourService.currentStep}');
+
+    // Show tour for dashboard steps (0-9)
+    if (tourService.isActive && tourService.currentStep <= 9) {
+      debugPrint('🎯 Tour service changed - showing dashboard tour');
+      // Small delay to ensure widgets are ready
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (mounted) {
+          _showDashboardTour();
+        }
+      });
+    }
+  }
+
+  Future<void> _checkAndStartTour() async {
+    if (!mounted) return;
+
+    try {
+      final tourService = Provider.of<TourService>(context, listen: false);
+
+      debugPrint(
+          '🎯 Tour Check: isActive=${tourService.isActive}, currentStep=${tourService.currentStep}, expectedScreen=${tourService.expectedScreen}');
+
+      // Check if we're on the job prerequisite step (-1)
+      if (tourService.isActive && tourService.isJobPrerequisiteStep) {
+        await Future.delayed(const Duration(milliseconds: 500));
+        if (mounted) {
+          debugPrint('🎯 Checking job prerequisite...');
+          await _checkJobPrerequisite();
+        }
+        return;
+      }
+
+      // Check if tour is active and we're on the expected screen
+      if (tourService.isActive && tourService.expectedScreen == 'dashboard') {
+        // Wait a bit longer to ensure all widgets are fully laid out
+        await Future.delayed(const Duration(milliseconds: 500));
+        if (mounted) {
+          debugPrint('🎯 Starting dashboard tour...');
+          _showDashboardTour();
+        }
+      } else {
+        debugPrint('🎯 Tour not active or wrong screen');
+      }
+    } catch (e) {
+      debugPrint('❌ Error checking tour: $e');
+    }
+  }
+
+  /// Check if user has jobs created (Step -1)
+  Future<void> _checkJobPrerequisite() async {
+    final tourService = Provider.of<TourService>(context, listen: false);
+
+    debugPrint('🎯 Checking if user has jobs...');
+
+    if (_jobs.isEmpty) {
+      // No jobs - show modal to guide user to create one
+      debugPrint('🎯 No jobs found - showing job creation modal');
+      if (!mounted) return;
+
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          backgroundColor: AppTheme.cardBackground,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(
+              color: AppTheme.primaryGreen.withValues(alpha: 0.3),
+              width: 2,
+            ),
+          ),
+          title: Row(
+            children: [
+              Icon(
+                Icons.work_outline,
+                color: AppTheme.primaryGreen,
+                size: 28,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Let\'s Create Your First Job!',
+                  style: TextStyle(
+                    color: AppTheme.primaryGreen,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: Text(
+            'Before we begin, you\'ll need to create at least one job.\n\nTap the Settings button (⋮) at the top, then go to Jobs & Data → Add Job.',
+            style: TextStyle(
+              color: AppTheme.textPrimary,
+              fontSize: 16,
+              height: 1.5,
+            ),
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                // TODO: Pulse settings button and guide user
+                debugPrint('🎯 User acknowledged job creation requirement');
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryGreen,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 16,
+                ),
+              ),
+              child: const Text(
+                'Got It!',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    } else {
+      // Has jobs - proceed to Step 0
+      debugPrint('🎯 Jobs found - proceeding to Step 0');
+      tourService.nextStep(); // Move from -1 to 0
+      if (mounted) {
+        await Future.delayed(const Duration(milliseconds: 300));
+        _showDashboardTour();
+      }
+    }
+  }
+
+  void _showDashboardTour() {
+    final tourService = Provider.of<TourService>(context, listen: false);
+
+    debugPrint(
+        '🎯 _showDashboardTour called, currentStep: ${tourService.currentStep}');
+
+    List<TargetFocus> targets = [];
+
+    debugPrint('🎯 Checking steps...');
+
+    // Step 0: Add Shift Button (+ icon top-left)
+    if (tourService.currentStep == 0) {
+      debugPrint('🎯 Adding Add Shift FAB target');
+      targets.add(TourTargets.createTarget(
+        identify: 'addShiftButton',
+        keyTarget: _addShiftButtonKey,
+        title: 'Add Your Shifts',
+        description:
+            'This is the most important button! Tap this + icon anytime to add your shifts, tips, and income.',
+        align: ContentAlign.bottom,
+      ));
+    }
+
+    // Step 1: Recent Shifts Section
+    if (tourService.currentStep == 1) {
+      debugPrint('🎯 Adding Recent Shifts section target');
+      targets.add(TourTargets.createTarget(
+        identify: 'recentShifts',
+        keyTarget: _recentShiftsKey,
+        title: 'Recent Shifts',
+        description:
+            'Your most recent shifts appear here. Tap any shift to view or edit its details.',
+        align: ContentAlign.bottom,
+      ));
+    }
+
+    // Step 2: See All Button
+    if (tourService.currentStep == 2) {
+      debugPrint('🎯 Adding See All button target');
+      targets.add(TourTargets.createTarget(
+        identify: 'seeAllButton',
+        keyTarget: _seeAllButtonKey,
+        title: 'View All Shifts',
+        description: 'View all your shifts in a searchable, filterable list.',
+        align: ContentAlign.bottom,
+      ));
+    }
+
+    // Step 3: Goals Button (flag icon)
+    if (tourService.currentStep == 3) {
+      debugPrint('🎯 Adding Goals button target');
+      targets.add(TourTargets.createTarget(
+        identify: 'goalsButton',
+        keyTarget: _goalsButtonKey,
+        title: 'Income Goals',
+        description:
+            'Set daily, weekly, monthly, or yearly income goals and track your progress in real-time.',
+        align: ContentAlign.bottom,
+      ));
+    }
+
+    // Step 4: Refresh Button
+    if (tourService.currentStep == 4) {
+      debugPrint('🎯 Adding Refresh button target');
+      targets.add(TourTargets.createTarget(
+        identify: 'refreshButton',
+        keyTarget: _refreshButtonKey,
+        title: 'Refresh Data',
+        description:
+            'If you think your data needs updating, tap here to refresh everything.',
+        align: ContentAlign.bottom,
+      ));
+    }
+
+    // Step 5: Settings Menu (3 dots)
+    if (tourService.currentStep == 5) {
+      debugPrint('🎯 Adding Settings menu target');
+      targets.add(TourTargets.createTarget(
+        identify: 'settingsButton',
+        keyTarget: _settingsButtonKey,
+        title: 'Settings Menu',
+        description:
+            '⚙️ Settings - App preferences\n\n💼 Jobs & Data - Manage jobs, calendar sync, imports\n\n📄 Docs & Contacts - All your attachments and contacts\n\n💰 Taxes - Estimate what you owe',
+        align: ContentAlign.bottom,
+      ));
+    }
+
+    // Step 6: Home Nav Button
+    if (tourService.currentStep == 6) {
+      debugPrint('🎯 Step 6 - Adding Home nav button target');
+      debugPrint('🎯 widget.homeNavKey = ${widget.homeNavKey}');
+      targets.add(TourTargets.createTarget(
+        identify: 'homeNavButton',
+        keyTarget: widget.homeNavKey,
+        title: '🏠 Home',
+        description: 'Dashboard overview - Your earnings at a glance',
+        align: ContentAlign.top,
+      ));
+    } else {
+      debugPrint(
+          '🎯 Step 6 skipped (currentStep = ${tourService.currentStep})');
+    }
+
+    // Step 7: Calendar Nav Button
+    if (tourService.currentStep == 7) {
+      debugPrint('🎯 Adding Calendar nav button target');
+      targets.add(TourTargets.createTarget(
+        identify: 'calendarNavButton',
+        keyTarget: widget.calendarNavKey,
+        title: '📅 Calendar',
+        description:
+            'View all your shifts organized by date. Tap to continue the tour!',
+        align: ContentAlign.top,
+      ));
+    }
+
+    // Step 8: Chat Nav Button
+    if (tourService.currentStep == 8) {
+      debugPrint('🎯 Adding Chat nav button target');
+      targets.add(TourTargets.createTarget(
+        identify: 'chatNavButton',
+        keyTarget: widget.chatNavKey,
+        title: '✨ Chat',
+        description: 'AI assistant to help you with questions and tasks',
+        align: ContentAlign.top,
+      ));
+    }
+
+    // Step 9: Stats Nav Button
+    if (tourService.currentStep == 9) {
+      debugPrint('🎯 Adding Stats nav button target');
+      targets.add(TourTargets.createTarget(
+        identify: 'statsNavButton',
+        keyTarget: widget.statsNavKey,
+        title: '📊 Stats',
+        description: 'Detailed earnings analytics and insights',
+        align: ContentAlign.top,
+      ));
+    }
+
+    debugPrint('🎯 Total targets: ${targets.length}');
+
+    if (targets.isEmpty) {
+      debugPrint('🎯 No targets to show');
+      return;
+    }
+
+    _tutorialCoachMark = TutorialCoachMark(
+      targets: targets,
+      colorShadow: AppTheme.primaryGreen,
+      paddingFocus: 10,
+      opacityShadow: 0.8,
+      onFinish: () {
+        debugPrint('🎯 Tour step finished, moving to next');
+        tourService.nextStep();
+        _tutorialCoachMark = null;
+      },
+      onSkip: () {
+        debugPrint('🎯 Tour skipped');
+        tourService.skipAll();
+        _tutorialCoachMark = null;
+        return true;
+      },
+    );
+
+    debugPrint('🎯 Showing tutorial...');
+    _tutorialCoachMark?.show(context: context);
   }
 
   @override
@@ -426,6 +815,7 @@ class _HomeScreenState extends State<_HomeScreen> {
                         child: Row(
                           children: [
                             GestureDetector(
+                              key: _addShiftButtonKey,
                               onTap: () {
                                 Navigator.push(
                                   context,
@@ -442,6 +832,7 @@ class _HomeScreenState extends State<_HomeScreen> {
                             ),
                             const SizedBox(width: 12),
                             GestureDetector(
+                              key: _goalsButtonKey,
                               onTap: () {
                                 Navigator.push(
                                   context,
@@ -512,6 +903,7 @@ class _HomeScreenState extends State<_HomeScreen> {
                         child: Row(
                           children: [
                             GestureDetector(
+                              key: _refreshButtonKey,
                               onTap: _isRefreshing
                                   ? null
                                   : () async {
@@ -560,6 +952,7 @@ class _HomeScreenState extends State<_HomeScreen> {
                             ),
                             const SizedBox(width: 12),
                             GestureDetector(
+                              key: _settingsButtonKey,
                               onTap: () {
                                 final RenderBox button =
                                     context.findRenderObject() as RenderBox;
@@ -1047,6 +1440,7 @@ class _HomeScreenState extends State<_HomeScreen> {
         // Recent Shifts Header
         SliverToBoxAdapter(
           child: Padding(
+            key: _recentShiftsKey,
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1058,6 +1452,7 @@ class _HomeScreenState extends State<_HomeScreen> {
                   ),
                 ),
                 TextButton(
+                  key: _seeAllButtonKey,
                   onPressed: () {
                     // Get the selected job title for the header
                     String? jobTitle;

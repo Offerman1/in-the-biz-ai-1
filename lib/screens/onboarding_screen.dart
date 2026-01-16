@@ -5,16 +5,17 @@ import 'package:device_calendar/device_calendar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
 import '../services/database_service.dart';
 import '../services/auth_service.dart';
+import '../services/tour_service.dart';
 import '../models/industry_template.dart';
 import '../models/industry_data.dart';
 import '../models/job.dart';
 import '../models/job_template.dart';
 import '../models/shift.dart';
 import 'dashboard_screen.dart';
-import 'onboarding_import_welcome_screen.dart';
 import 'calendar_sync_screen.dart';
 import 'job_grouping_screen.dart';
 
@@ -176,6 +177,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
       if (!mounted) return;
 
+      // Start the tour
+      final tourService = Provider.of<TourService>(context, listen: false);
+      await tourService.startTour();
+
       // Navigate to dashboard
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => const DashboardScreen()),
@@ -242,30 +247,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
       if (!mounted) return;
 
-      if (widget.isFirstTime) {
-        // First time: go to dashboard (skip import welcome if we already imported)
-        if (_importedJobs.isNotEmpty) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => const DashboardScreen()),
-          );
-        } else {
-          // No import: go to import welcome screen
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(
-                builder: (_) => const OnboardingImportWelcomeScreen()),
-          );
-        }
-      } else {
-        // Adding new job from settings: go to dashboard if importing, otherwise back to settings
-        if (_importedJobs.isNotEmpty) {
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (_) => const DashboardScreen()),
-            (route) => false,
-          );
-        } else {
-          Navigator.of(context).pop(true);
-        }
-      }
+      // ALWAYS start the tour after completing onboarding/guided setup
+      final tourService = Provider.of<TourService>(context, listen: false);
+      await tourService.startTour();
+
+      // ALWAYS go to dashboard after onboarding
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const DashboardScreen()),
+        (route) => false,
+      );
     } catch (e) {
       setState(() => _isCompletingSetup = false);
       if (mounted) {
@@ -390,8 +380,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ),
                   const Spacer(),
 
-                  // Skip button on welcome page (first time only)
-                  if (_currentPage == 0 && widget.isFirstTime)
+                  // Skip button on welcome page
+                  if (_currentPage == 0)
                     TextButton(
                       onPressed: _skipOnboarding,
                       child: Text('Skip',
@@ -399,7 +389,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ),
                   // Skip button (for optional pages)
                   if (_currentPage == 4 ||
-                      _currentPage == 5) // Template & Goals (shifted by +1)
+                      _currentPage == 5) // Template & Goals
                     TextButton(
                       onPressed: _nextPage,
                       child: Text('Skip',

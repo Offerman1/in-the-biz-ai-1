@@ -16,6 +16,7 @@ import 'package:in_the_biz_ai/services/database_service.dart';
 import 'package:in_the_biz_ai/services/notification_service.dart';
 import 'package:in_the_biz_ai/services/ad_service.dart';
 import 'package:in_the_biz_ai/services/subscription_service.dart';
+import 'package:in_the_biz_ai/services/tour_service.dart';
 import 'package:in_the_biz_ai/utils/run_migrations.dart';
 import 'dart:developer' as developer;
 
@@ -71,6 +72,10 @@ void main() async {
   // Run database migrations
   await runMigrations();
 
+  // Initialize tour service and load button visibility
+  final tourService = TourService();
+  await tourService.loadTourButtonVisibility();
+
   runApp(
     MultiProvider(
       providers: [
@@ -78,6 +83,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => FieldOrderProvider()),
         ChangeNotifierProvider(create: (_) => BeoEventProvider()),
+        ChangeNotifierProvider.value(value: tourService),
         // Only provide SubscriptionService on mobile
         if (!kIsWeb)
           ChangeNotifierProvider(create: (_) => SubscriptionService()),

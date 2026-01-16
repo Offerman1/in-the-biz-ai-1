@@ -26,6 +26,7 @@ BEGIN
         'id', NEW.id,
         'full_name', NEW.full_name,
         'avatar_url', NEW.avatar_url,
+        'email', NEW.email,
         'created_at', COALESCE(NEW.created_at, now())
       ),
       'old_record', null
