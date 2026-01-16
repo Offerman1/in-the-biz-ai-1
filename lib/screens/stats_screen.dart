@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:share_plus/share_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 import '../providers/shift_provider.dart';
-import '../services/export_service.dart';
 import '../services/database_service.dart';
 import '../theme/app_theme.dart';
 
@@ -15,16 +15,46 @@ class StatsScreen extends StatefulWidget {
   State<StatsScreen> createState() => _StatsScreenState();
 }
 
-class _StatsScreenState extends State<StatsScreen> {
+class _StatsScreenState extends State<StatsScreen>
+    with SingleTickerProviderStateMixin {
   final _db = DatabaseService();
   List<Map<String, dynamic>> _jobs = [];
   String? _selectedJobId;
   String _selectedPeriod = 'Month'; // Day, Week, Month, Year, All
+  late TabController _tabController;
+
+  // Section order for each tab (saved to preferences)
+  List<String> _overallSectionOrder = [
+    'filter',
+    'quickStats',
+    'periodTotal',
+    'weeklyBreakdown'
+  ];
+  List<String> _incomeSectionOrder = [
+    'tipsAnalysis',
+    'incomeSources',
+    'jobTypePie',
+    'bestDays'
+  ];
+  List<String> _performanceSectionOrder = [
+    'hourlyRate',
+    'efficiency',
+    'forecast'
+  ];
+  List<String> _historySectionOrder = ['monthlyTrend', 'allTime'];
 
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 4, vsync: this);
     _loadJobs();
+    _loadSectionOrder();
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadJobs() async {
@@ -34,43 +64,32 @@ class _StatsScreenState extends State<StatsScreen> {
     });
   }
 
-  Future<void> _handleExport(
-      BuildContext context, String type, List<dynamic> shifts) async {
-    try {
-      final now = DateTime.now();
-      final startOfMonth = DateTime(now.year, now.month, 1);
-      final endOfMonth = DateTime(now.year, now.month + 1, 0);
-
-      String? filePath;
-
-      if (type == 'csv') {
-        filePath = await ExportService.exportToCSV(
-          shifts: shifts,
-          startDate: startOfMonth,
-          endDate: endOfMonth,
-        );
-      } else if (type == 'pdf') {
-        filePath = await ExportService.exportToPDF(
-          shifts: shifts,
-          startDate: startOfMonth,
-          endDate: endOfMonth,
-          title: 'Income Report - ${DateFormat('MMMM yyyy').format(now)}',
-        );
+  Future<void> _loadSectionOrder() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      final overallOrder = prefs.getString('stats_overall_order');
+      if (overallOrder != null) {
+        _overallSectionOrder = List<String>.from(jsonDecode(overallOrder));
       }
+      final incomeOrder = prefs.getString('stats_income_order');
+      if (incomeOrder != null) {
+        _incomeSectionOrder = List<String>.from(jsonDecode(incomeOrder));
+      }
+      final performanceOrder = prefs.getString('stats_performance_order');
+      if (performanceOrder != null) {
+        _performanceSectionOrder =
+            List<String>.from(jsonDecode(performanceOrder));
+      }
+      final historyOrder = prefs.getString('stats_history_order');
+      if (historyOrder != null) {
+        _historySectionOrder = List<String>.from(jsonDecode(historyOrder));
+      }
+    });
+  }
 
-      if (filePath != null && context.mounted) {
-        await Share.shareXFiles(
-          [XFile(filePath)],
-          subject: 'In The Biz AI - ${type.toUpperCase()} Report',
-        );
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Export failed: $e')),
-        );
-      }
-    }
+  Future<void> _saveSectionOrder(String tabName, List<String> order) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('stats_${tabName}_order', jsonEncode(order));
   }
 
   @override
@@ -92,15 +111,6 @@ class _StatsScreenState extends State<StatsScreen> {
     final periodHours =
         filteredShifts.fold(0.0, (sum, s) => sum + s.hoursWorked);
 
-    // Calculate previous period for comparison
-    final previousPeriodShifts = _getPreviousPeriodShifts(shifts);
-    final previousPeriodTotal =
-        previousPeriodShifts.fold(0.0, (sum, s) => sum + s.totalIncome);
-
-    final percentChange = previousPeriodTotal > 0
-        ? ((periodTotal - previousPeriodTotal) / previousPeriodTotal * 100)
-        : 0.0;
-
     // Calculate weekly totals for chart
     final weeklyTotals = <int, double>{};
     for (final shift in filteredShifts) {
@@ -116,433 +126,64 @@ class _StatsScreenState extends State<StatsScreen> {
       dayTotals.putIfAbsent(weekday, () => []).add(shift.totalIncome);
     }
 
-    final dayAverages = dayTotals.map((key, value) =>
-        MapEntry(key, value.fold(0.0, (a, b) => a + b) / value.length));
-
-    final sortedDays = dayAverages.entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
-
     return SafeArea(
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          title: Text('Statistics',
-              style: AppTheme.titleLarge
-                  .copyWith(color: AppTheme.adaptiveTextColor)),
-          centerTitle: false,
-          actions: [
-            PopupMenuButton<String>(
-              icon: Icon(Icons.ios_share, color: AppTheme.primaryGreen),
-              color: AppTheme.cardBackground,
-              onSelected: (value) => _handleExport(context, value, shifts),
-              itemBuilder: (context) => [
-                PopupMenuItem(
-                  value: 'csv',
-                  child: Row(
-                    children: [
-                      Icon(Icons.table_chart,
-                          size: 20, color: AppTheme.adaptiveTextColor),
-                      const SizedBox(width: 12),
-                      Text('Export CSV',
-                          style: TextStyle(color: AppTheme.adaptiveTextColor)),
-                    ],
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'pdf',
-                  child: Row(
-                    children: [
-                      Icon(Icons.picture_as_pdf,
-                          size: 20, color: AppTheme.adaptiveTextColor),
-                      const SizedBox(width: 12),
-                      Text('Export PDF',
-                          style: TextStyle(color: AppTheme.adaptiveTextColor)),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-        body: ListView(
-          padding: const EdgeInsets.all(16),
+        body: Column(
           children: [
-            // Filtering UI
-            _buildFilterSection(),
-            const SizedBox(height: 16),
+            // Gap between main tabs and sub-tabs
+            const SizedBox(height: 12),
 
-            // Quick Stats Cards
-            _buildQuickStatsCards(
-                filteredShifts, periodTotal, periodHours, currencyFormat),
-            const SizedBox(height: 16),
-
-            // Monthly Total Card
+            // Sub-tabs - DIFFERENT STYLE from main tabs (smaller, underline indicator)
             Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: AppTheme.cardBackground,
-                borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        _getPeriodLabel().toUpperCase(),
-                        style: AppTheme.labelSmall.copyWith(letterSpacing: 1),
-                      ),
-                      if (previousPeriodTotal > 0)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: percentChange >= 0
-                                ? AppTheme.primaryGreen.withValues(alpha: 0.15)
-                                : AppTheme.accentRed.withValues(alpha: 0.15),
-                            borderRadius:
-                                BorderRadius.circular(AppTheme.radiusSmall),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                percentChange >= 0
-                                    ? Icons.trending_up
-                                    : Icons.trending_down,
-                                size: 14,
-                                color: percentChange >= 0
-                                    ? AppTheme.primaryGreen
-                                    : AppTheme.accentRed,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                '${percentChange >= 0 ? '+' : ''}${percentChange.toStringAsFixed(0)}%',
-                                style: TextStyle(
-                                  color: percentChange >= 0
-                                      ? AppTheme.primaryGreen
-                                      : AppTheme.accentRed,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                    ],
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              child: TabBar(
+                controller: _tabController,
+                indicator: UnderlineTabIndicator(
+                  borderSide: BorderSide(
+                    color: AppTheme.primaryGreen,
+                    width: 3,
                   ),
-                  const SizedBox(height: 12),
-                  Text(
-                    currencyFormat.format(periodTotal),
-                    style: AppTheme.moneyLarge,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${filteredShifts.length} shifts • ${periodHours.toStringAsFixed(0)} hours',
-                    style: AppTheme.bodyMedium,
-                  ),
+                  borderRadius: BorderRadius.circular(2),
+                  insets: const EdgeInsets.symmetric(horizontal: 16),
+                ),
+                indicatorSize: TabBarIndicatorSize.tab,
+                dividerColor: AppTheme.cardBackgroundLight,
+                labelColor: AppTheme.primaryGreen,
+                unselectedLabelColor: AppTheme.textSecondary,
+                labelStyle: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                ),
+                unselectedLabelStyle: const TextStyle(
+                  fontWeight: FontWeight.normal,
+                  fontSize: 13,
+                ),
+                tabs: const [
+                  Tab(text: 'Overall'),
+                  Tab(text: 'Income'),
+                  Tab(text: 'Stats'),
+                  Tab(text: 'History'),
                 ],
               ),
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 8),
 
-            // Weekly Breakdown with fl_chart
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: AppTheme.cardBackground,
-                borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            // Tab content
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
                 children: [
-                  Text(
-                    'WEEKLY BREAKDOWN',
-                    style: AppTheme.labelSmall.copyWith(letterSpacing: 1),
-                  ),
-                  const SizedBox(height: 20),
-                  SizedBox(
-                    height: 200,
-                    child: BarChart(
-                      BarChartData(
-                        alignment: BarChartAlignment.spaceAround,
-                        maxY: weeklyTotals.values.isEmpty
-                            ? 100
-                            : weeklyTotals.values
-                                    .reduce((a, b) => a > b ? a : b) *
-                                1.2,
-                        barTouchData: BarTouchData(
-                          enabled: true,
-                          touchTooltipData: BarTouchTooltipData(
-                            getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                              return BarTooltipItem(
-                                '\$${rod.toY.toInt()}',
-                                const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                        titlesData: FlTitlesData(
-                          show: true,
-                          bottomTitles: AxisTitles(
-                            sideTitles: SideTitles(
-                              showTitles: true,
-                              getTitlesWidget: (value, meta) {
-                                return Padding(
-                                  padding: const EdgeInsets.only(top: 8),
-                                  child: Text(
-                                    'W${value.toInt() + 1}',
-                                    style: AppTheme.labelSmall,
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                          leftTitles: const AxisTitles(
-                            sideTitles: SideTitles(showTitles: false),
-                          ),
-                          topTitles: const AxisTitles(
-                            sideTitles: SideTitles(showTitles: false),
-                          ),
-                          rightTitles: const AxisTitles(
-                            sideTitles: SideTitles(showTitles: false),
-                          ),
-                        ),
-                        gridData: const FlGridData(show: false),
-                        borderData: FlBorderData(show: false),
-                        barGroups: List.generate(4, (index) {
-                          final week = index + 1;
-                          final total = weeklyTotals[week] ?? 0;
-                          return BarChartGroupData(
-                            x: index,
-                            barRods: [
-                              BarChartRodData(
-                                toY: total,
-                                gradient: LinearGradient(
-                                  colors: [
-                                    AppTheme.primaryGreen,
-                                    AppTheme.primaryGreen.withValues(alpha: 0.7),
-                                  ],
-                                  begin: Alignment.bottomCenter,
-                                  end: Alignment.topCenter,
-                                ),
-                                width: 40,
-                                borderRadius: const BorderRadius.vertical(
-                                  top: Radius.circular(4),
-                                ),
-                              ),
-                            ],
-                          );
-                        }),
-                      ),
-                    ),
-                  ),
+                  _buildOverviewTab(filteredShifts, periodTotal, periodHours,
+                      currencyFormat, weeklyTotals),
+                  _buildIncomeTab(
+                      filteredShifts, shifts, currencyFormat, dayTotals),
+                  _buildPerformanceTab(filteredShifts, shifts, currencyFormat),
+                  _buildHistoryTab(shifts, currencyFormat),
                 ],
               ),
             ),
-
-            const SizedBox(height: 16),
-
-            // Monthly Trend Line Chart
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: AppTheme.cardBackground,
-                borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '6-MONTH TREND',
-                    style: AppTheme.labelSmall.copyWith(letterSpacing: 1),
-                  ),
-                  const SizedBox(height: 20),
-                  SizedBox(
-                    height: 200,
-                    child: _buildMonthlyTrendChart(shifts),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // Income Breakdown Pie Chart
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: AppTheme.cardBackground,
-                borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'INCOME BY JOB TYPE',
-                    style: AppTheme.labelSmall.copyWith(letterSpacing: 1),
-                  ),
-                  const SizedBox(height: 20),
-                  SizedBox(
-                    height: 200,
-                    child: _buildJobTypePieChart(shifts, currencyFormat),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // Best Days
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: AppTheme.cardBackground,
-                borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'BEST DAYS',
-                    style: AppTheme.labelSmall.copyWith(letterSpacing: 1),
-                  ),
-                  const SizedBox(height: 16),
-                  if (sortedDays.isEmpty)
-                    Text('Not enough data yet', style: AppTheme.bodyMedium)
-                  else
-                    ...sortedDays.take(3).map((entry) {
-                      final dayName = _getDayName(entry.key);
-                      final isTop = entry == sortedDays.first;
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: isTop
-                                    ? AppTheme.primaryGreen.withValues(alpha: 0.15)
-                                    : AppTheme.cardBackgroundLight,
-                                borderRadius:
-                                    BorderRadius.circular(AppTheme.radiusSmall),
-                              ),
-                              child: Center(
-                                child: Text(
-                                  dayName.substring(0, 2),
-                                  style: TextStyle(
-                                    color: isTop
-                                        ? AppTheme.primaryGreen
-                                        : AppTheme.textSecondary,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(dayName, style: AppTheme.bodyLarge),
-                                  Text(
-                                    '${dayTotals[entry.key]?.length ?? 0} shifts logged',
-                                    style: AppTheme.labelSmall,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(
-                                  currencyFormat.format(entry.value),
-                                  style: isTop
-                                      ? AppTheme.moneySmall
-                                      : AppTheme.titleMedium,
-                                ),
-                                Text('avg', style: AppTheme.labelSmall),
-                              ],
-                            ),
-                          ],
-                        ),
-                      );
-                    }),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // Tips Analysis
-            _buildTipsAnalysis(filteredShifts, currencyFormat),
-            const SizedBox(height: 16),
-
-            // Hourly Rate Analysis
-            _buildHourlyRateAnalysis(filteredShifts, currencyFormat),
-            const SizedBox(height: 16),
-
-            // Efficiency Metrics
-            _buildEfficiencyMetrics(filteredShifts, currencyFormat),
-            const SizedBox(height: 16),
-
-            // Goal Progress (if goals exist)
-            _buildGoalProgress(filteredShifts, currencyFormat),
-            const SizedBox(height: 16),
-
-            // Income Forecast
-            _buildIncomeForecast(shifts, filteredShifts, currencyFormat),
-            const SizedBox(height: 16),
-
-            // Income Sources Breakdown
-            _buildIncomeSourcesBreakdown(filteredShifts, currencyFormat),
-            const SizedBox(height: 16),
-
-            // All-time Stats
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: AppTheme.cardBackground,
-                borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'ALL TIME',
-                    style: AppTheme.labelSmall.copyWith(letterSpacing: 1),
-                  ),
-                  const SizedBox(height: 16),
-                  _buildAllTimeStat(
-                    'Total Earned',
-                    currencyFormat.format(
-                        shifts.fold(0.0, (sum, s) => sum + s.totalIncome)),
-                    Icons.attach_money,
-                  ),
-                  Divider(color: AppTheme.cardBackgroundLight, height: 24),
-                  _buildAllTimeStat(
-                    'Total Shifts',
-                    '${shifts.length}',
-                    Icons.work_outline,
-                  ),
-                  Divider(color: AppTheme.cardBackgroundLight, height: 24),
-                  _buildAllTimeStat(
-                    'Total Hours',
-                    shifts.fold(0.0, (sum, s) => sum + s.hoursWorked).toStringAsFixed(0),
-                    Icons.schedule_outlined,
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 100),
           ],
         ),
       ),
@@ -559,6 +200,645 @@ class _StatsScreenState extends State<StatsScreen> {
       ],
     );
   }
+
+  // ==================== TAB BUILDERS ====================
+
+  // Helper to wrap each section with a drag handle
+  Widget _buildDraggableSection({
+    required String key,
+    required Widget child,
+  }) {
+    return Container(
+      key: ValueKey(key),
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Stack(
+        children: [
+          child,
+          // Drag handle indicator
+          Positioned(
+            top: 8,
+            right: 8,
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: AppTheme.cardBackgroundLight.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Icon(
+                Icons.drag_indicator,
+                size: 16,
+                color: AppTheme.textMuted,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOverviewTab(
+      List filteredShifts,
+      double periodTotal,
+      double periodHours,
+      NumberFormat currencyFormat,
+      Map<int, double> weeklyTotals) {
+    // Calculate previous period for comparison
+    final shiftProvider = Provider.of<ShiftProvider>(context, listen: false);
+    var shifts = _selectedJobId == null
+        ? shiftProvider.shifts
+        : shiftProvider.shifts.where((s) => s.jobId == _selectedJobId).toList();
+    final previousPeriodShifts = _getPreviousPeriodShifts(shifts);
+    final previousPeriodTotal =
+        previousPeriodShifts.fold(0.0, (sum, s) => sum + s.totalIncome);
+    final percentChange = previousPeriodTotal > 0
+        ? ((periodTotal - previousPeriodTotal) / previousPeriodTotal * 100)
+        : 0.0;
+
+    // Build sections map
+    final sections = <String, Widget>{
+      'filter': _buildFilterSection(),
+      'quickStats': _buildQuickStatsCards(
+          filteredShifts, periodTotal, periodHours, currencyFormat),
+      'periodTotal': _buildPeriodTotalCard(filteredShifts, periodTotal,
+          periodHours, currencyFormat, previousPeriodTotal, percentChange),
+      'weeklyBreakdown': _buildWeeklyBreakdownCard(weeklyTotals),
+    };
+
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppTheme.darkBackground,
+            AppTheme.primaryGreen.withValues(alpha: 0.05),
+          ],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+      ),
+      child: ReorderableListView(
+        padding: const EdgeInsets.all(16),
+        proxyDecorator: (child, index, animation) {
+          return Material(
+            color: Colors.transparent,
+            elevation: 8,
+            shadowColor: AppTheme.primaryGreen.withValues(alpha: 0.3),
+            borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+            child: child,
+          );
+        },
+        onReorder: (oldIndex, newIndex) {
+          setState(() {
+            if (newIndex > oldIndex) newIndex--;
+            final item = _overallSectionOrder.removeAt(oldIndex);
+            _overallSectionOrder.insert(newIndex, item);
+          });
+          _saveSectionOrder('overall', _overallSectionOrder);
+        },
+        children: _overallSectionOrder.map((key) {
+          return _buildDraggableSection(
+            key: key,
+            child: sections[key] ?? const SizedBox.shrink(),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildIncomeTab(List filteredShifts, List shifts,
+      NumberFormat currencyFormat, Map<int, List<double>> dayTotals) {
+    final dayAverages = dayTotals.map((key, value) =>
+        MapEntry(key, value.fold(0.0, (a, b) => a + b) / value.length));
+    final sortedDays = dayAverages.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+
+    // Build sections map
+    final sections = <String, Widget>{
+      'tipsAnalysis': _buildTipsAnalysis(filteredShifts, currencyFormat),
+      'incomeSources':
+          _buildIncomeSourcesBreakdown(filteredShifts, currencyFormat),
+      'jobTypePie': _buildJobTypePieCard(shifts, currencyFormat),
+      'bestDays': _buildBestDaysCard(sortedDays, dayTotals, currencyFormat),
+    };
+
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppTheme.darkBackground,
+            AppTheme.accentBlue.withValues(alpha: 0.05),
+          ],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+      ),
+      child: ReorderableListView(
+        padding: const EdgeInsets.all(16),
+        proxyDecorator: (child, index, animation) {
+          return Material(
+            color: Colors.transparent,
+            elevation: 8,
+            shadowColor: AppTheme.accentBlue.withValues(alpha: 0.3),
+            borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+            child: child,
+          );
+        },
+        onReorder: (oldIndex, newIndex) {
+          setState(() {
+            if (newIndex > oldIndex) newIndex--;
+            final item = _incomeSectionOrder.removeAt(oldIndex);
+            _incomeSectionOrder.insert(newIndex, item);
+          });
+          _saveSectionOrder('income', _incomeSectionOrder);
+        },
+        children: _incomeSectionOrder.map((key) {
+          return _buildDraggableSection(
+            key: key,
+            child: sections[key] ?? const SizedBox.shrink(),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildPerformanceTab(
+      List filteredShifts, List shifts, NumberFormat currencyFormat) {
+    // Build sections map
+    final sections = <String, Widget>{
+      'hourlyRate': _buildHourlyRateAnalysis(filteredShifts, currencyFormat),
+      'efficiency': _buildEfficiencyMetrics(filteredShifts, currencyFormat),
+      'forecast': _buildIncomeForecast(shifts, filteredShifts, currencyFormat),
+    };
+
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppTheme.darkBackground,
+            AppTheme.accentOrange.withValues(alpha: 0.05),
+          ],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+      ),
+      child: ReorderableListView(
+        padding: const EdgeInsets.all(16),
+        proxyDecorator: (child, index, animation) {
+          return Material(
+            color: Colors.transparent,
+            elevation: 8,
+            shadowColor: AppTheme.accentOrange.withValues(alpha: 0.3),
+            borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+            child: child,
+          );
+        },
+        onReorder: (oldIndex, newIndex) {
+          setState(() {
+            if (newIndex > oldIndex) newIndex--;
+            final item = _performanceSectionOrder.removeAt(oldIndex);
+            _performanceSectionOrder.insert(newIndex, item);
+          });
+          _saveSectionOrder('performance', _performanceSectionOrder);
+        },
+        children: _performanceSectionOrder.map((key) {
+          return _buildDraggableSection(
+            key: key,
+            child: sections[key] ?? const SizedBox.shrink(),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildHistoryTab(List shifts, NumberFormat currencyFormat) {
+    // Build sections map
+    final sections = <String, Widget>{
+      'monthlyTrend': _buildMonthlyTrendCard(shifts),
+      'allTime': _buildAllTimeCard(shifts, currencyFormat),
+    };
+
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppTheme.darkBackground,
+            AppTheme.accentPurple.withValues(alpha: 0.05),
+          ],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+      ),
+      child: ReorderableListView(
+        padding: const EdgeInsets.all(16),
+        proxyDecorator: (child, index, animation) {
+          return Material(
+            color: Colors.transparent,
+            elevation: 8,
+            shadowColor: AppTheme.accentPurple.withValues(alpha: 0.3),
+            borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+            child: child,
+          );
+        },
+        onReorder: (oldIndex, newIndex) {
+          setState(() {
+            if (newIndex > oldIndex) newIndex--;
+            final item = _historySectionOrder.removeAt(oldIndex);
+            _historySectionOrder.insert(newIndex, item);
+          });
+          _saveSectionOrder('history', _historySectionOrder);
+        },
+        children: _historySectionOrder.map((key) {
+          return _buildDraggableSection(
+            key: key,
+            child: sections[key] ?? const SizedBox.shrink(),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  // ==================== SECTION CARD BUILDERS ====================
+
+  Widget _buildPeriodTotalCard(
+      List filteredShifts,
+      double periodTotal,
+      double periodHours,
+      NumberFormat currencyFormat,
+      double previousPeriodTotal,
+      double percentChange) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackground,
+        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.primaryGreen.withValues(alpha: 0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.calendar_month,
+                  color: AppTheme.primaryGreen, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                _getPeriodLabel().toUpperCase(),
+                style: AppTheme.labelSmall.copyWith(letterSpacing: 1),
+              ),
+              const Spacer(),
+              if (previousPeriodTotal > 0)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: percentChange >= 0
+                        ? AppTheme.primaryGreen.withValues(alpha: 0.15)
+                        : AppTheme.accentRed.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        percentChange >= 0
+                            ? Icons.trending_up
+                            : Icons.trending_down,
+                        size: 14,
+                        color: percentChange >= 0
+                            ? AppTheme.primaryGreen
+                            : AppTheme.accentRed,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${percentChange >= 0 ? '+' : ''}${percentChange.toStringAsFixed(0)}%',
+                        style: TextStyle(
+                          color: percentChange >= 0
+                              ? AppTheme.primaryGreen
+                              : AppTheme.accentRed,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            currencyFormat.format(periodTotal),
+            style: AppTheme.moneyLarge,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '${filteredShifts.length} shifts • ${periodHours.toStringAsFixed(0)} hours',
+            style: AppTheme.bodyMedium,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWeeklyBreakdownCard(Map<int, double> weeklyTotals) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackground,
+        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.bar_chart, color: AppTheme.primaryGreen, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                'WEEKLY BREAKDOWN',
+                style: AppTheme.labelSmall.copyWith(letterSpacing: 1),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            height: 200,
+            child: BarChart(
+              BarChartData(
+                alignment: BarChartAlignment.spaceAround,
+                maxY: weeklyTotals.values.isEmpty
+                    ? 100
+                    : weeklyTotals.values.reduce((a, b) => a > b ? a : b) * 1.2,
+                barTouchData: BarTouchData(
+                  enabled: true,
+                  touchTooltipData: BarTouchTooltipData(
+                    getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                      return BarTooltipItem(
+                        '\$${rod.toY.toInt()}',
+                        const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                titlesData: FlTitlesData(
+                  show: true,
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      getTitlesWidget: (value, meta) {
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Text(
+                            'W${value.toInt() + 1}',
+                            style: AppTheme.labelSmall,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  leftTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false)),
+                  topTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false)),
+                ),
+                gridData: const FlGridData(show: false),
+                borderData: FlBorderData(show: false),
+                barGroups: List.generate(4, (index) {
+                  final week = index + 1;
+                  final total = weeklyTotals[week] ?? 0;
+                  return BarChartGroupData(
+                    x: index,
+                    barRods: [
+                      BarChartRodData(
+                        toY: total,
+                        gradient: LinearGradient(
+                          colors: [
+                            AppTheme.primaryGreen,
+                            AppTheme.primaryGreen.withValues(alpha: 0.7),
+                          ],
+                          begin: Alignment.bottomCenter,
+                          end: Alignment.topCenter,
+                        ),
+                        width: 40,
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(4),
+                        ),
+                      ),
+                    ],
+                  );
+                }),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildJobTypePieCard(List shifts, NumberFormat currencyFormat) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackground,
+        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.pie_chart, color: AppTheme.primaryGreen, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                'INCOME BY JOB TYPE',
+                style: AppTheme.labelSmall.copyWith(letterSpacing: 1),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            height: 200,
+            child: _buildJobTypePieChart(shifts, currencyFormat),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBestDaysCard(List<MapEntry<int, double>> sortedDays,
+      Map<int, List<double>> dayTotals, NumberFormat currencyFormat) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackground,
+        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.star, color: AppTheme.accentOrange, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                'BEST DAYS',
+                style: AppTheme.labelSmall.copyWith(letterSpacing: 1),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          if (sortedDays.isEmpty)
+            Text('Not enough data yet', style: AppTheme.bodyMedium)
+          else
+            ...sortedDays.take(3).map((entry) {
+              final dayName = _getDayName(entry.key);
+              final isTop = entry == sortedDays.first;
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: isTop
+                            ? AppTheme.primaryGreen.withValues(alpha: 0.15)
+                            : AppTheme.cardBackgroundLight,
+                        borderRadius:
+                            BorderRadius.circular(AppTheme.radiusSmall),
+                      ),
+                      child: Center(
+                        child: Text(
+                          dayName.substring(0, 2),
+                          style: TextStyle(
+                            color: isTop
+                                ? AppTheme.primaryGreen
+                                : AppTheme.textSecondary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(dayName, style: AppTheme.bodyLarge),
+                          Text(
+                            '${dayTotals[entry.key]?.length ?? 0} shifts logged',
+                            style: AppTheme.labelSmall,
+                          ),
+                        ],
+                      ),
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          currencyFormat.format(entry.value),
+                          style: isTop
+                              ? AppTheme.moneySmall
+                              : AppTheme.titleMedium,
+                        ),
+                        Text('avg', style: AppTheme.labelSmall),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMonthlyTrendCard(List shifts) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackground,
+        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.show_chart, color: AppTheme.primaryGreen, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                '6-MONTH TREND',
+                style: AppTheme.labelSmall.copyWith(letterSpacing: 1),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            height: 200,
+            child: _buildMonthlyTrendChart(shifts),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAllTimeCard(List shifts, NumberFormat currencyFormat) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackground,
+        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.history, color: AppTheme.primaryGreen, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                'ALL TIME',
+                style: AppTheme.labelSmall.copyWith(letterSpacing: 1),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _buildAllTimeStat(
+            'Total Earned',
+            currencyFormat
+                .format(shifts.fold(0.0, (sum, s) => sum + s.totalIncome)),
+            Icons.attach_money,
+          ),
+          Divider(color: AppTheme.cardBackgroundLight, height: 24),
+          _buildAllTimeStat(
+            'Total Shifts',
+            '${shifts.length}',
+            Icons.work_outline,
+          ),
+          Divider(color: AppTheme.cardBackgroundLight, height: 24),
+          _buildAllTimeStat(
+            'Total Hours',
+            shifts
+                .fold(0.0, (sum, s) => sum + s.hoursWorked)
+                .toStringAsFixed(0),
+            Icons.schedule_outlined,
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ==================== HELPER METHODS ====================
 
   Widget _buildMonthlyTrendChart(List shifts) {
     final now = DateTime.now();
@@ -631,9 +911,12 @@ class _StatsScreenState extends State<StatsScreen> {
               },
             ),
           ),
-          leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          leftTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
         ),
         borderData: FlBorderData(show: false),
         lineBarsData: [
@@ -1126,8 +1409,14 @@ class _StatsScreenState extends State<StatsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('TIPS ANALYSIS',
-              style: AppTheme.labelSmall.copyWith(letterSpacing: 1)),
+          Row(
+            children: [
+              Icon(Icons.payments, color: AppTheme.accentBlue, size: 20),
+              const SizedBox(width: 8),
+              Text('TIPS ANALYSIS',
+                  style: AppTheme.labelSmall.copyWith(letterSpacing: 1)),
+            ],
+          ),
           const SizedBox(height: 16),
           Row(
             children: [
@@ -1234,8 +1523,14 @@ class _StatsScreenState extends State<StatsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('HOURLY RATE ANALYSIS',
-              style: AppTheme.labelSmall.copyWith(letterSpacing: 1)),
+          Row(
+            children: [
+              Icon(Icons.speed, color: AppTheme.accentOrange, size: 20),
+              const SizedBox(width: 8),
+              Text('HOURLY RATE ANALYSIS',
+                  style: AppTheme.labelSmall.copyWith(letterSpacing: 1)),
+            ],
+          ),
           const SizedBox(height: 16),
           Row(
             children: [
@@ -1318,8 +1613,14 @@ class _StatsScreenState extends State<StatsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('EFFICIENCY METRICS',
-              style: AppTheme.labelSmall.copyWith(letterSpacing: 1)),
+          Row(
+            children: [
+              Icon(Icons.analytics, color: AppTheme.primaryGreen, size: 20),
+              const SizedBox(width: 8),
+              Text('EFFICIENCY METRICS',
+                  style: AppTheme.labelSmall.copyWith(letterSpacing: 1)),
+            ],
+          ),
           const SizedBox(height: 16),
           _buildEfficiencyRow('Avg Income/Shift',
               currencyFormat.format(avgPerShift), Icons.trending_up),
@@ -1343,43 +1644,6 @@ class _StatsScreenState extends State<StatsScreen> {
         Text(value,
             style: AppTheme.titleMedium.copyWith(fontWeight: FontWeight.w600)),
       ],
-    );
-  }
-
-  // Goal Progress
-  Widget _buildGoalProgress(List shifts, NumberFormat currencyFormat) {
-    // This would integrate with your goals system
-    // For now, showing a placeholder
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppTheme.cardBackground,
-        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('GOAL PROGRESS',
-                  style: AppTheme.labelSmall.copyWith(letterSpacing: 1)),
-              Icon(Icons.flag, color: AppTheme.accentOrange, size: 20),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Text('Connect your goals to see progress tracking here',
-              style:
-                  AppTheme.bodyMedium.copyWith(color: AppTheme.textSecondary)),
-          const SizedBox(height: 12),
-          TextButton.icon(
-            onPressed: () {},
-            icon: const Icon(Icons.add, size: 16),
-            label: const Text('Set Goals'),
-            style: TextButton.styleFrom(foregroundColor: AppTheme.primaryGreen),
-          ),
-        ],
-      ),
     );
   }
 
@@ -1496,8 +1760,15 @@ class _StatsScreenState extends State<StatsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('INCOME SOURCES',
-              style: AppTheme.labelSmall.copyWith(letterSpacing: 1)),
+          Row(
+            children: [
+              Icon(Icons.account_balance_wallet,
+                  color: AppTheme.primaryGreen, size: 20),
+              const SizedBox(width: 8),
+              Text('INCOME SOURCES',
+                  style: AppTheme.labelSmall.copyWith(letterSpacing: 1)),
+            ],
+          ),
           const SizedBox(height: 16),
           _buildIncomeSourceRow('Hourly Wages', totalHourlyWages, totalIncome,
               currencyFormat, AppTheme.primaryGreen),

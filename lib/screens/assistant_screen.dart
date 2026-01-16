@@ -13,6 +13,14 @@ import '../widgets/scan_type_menu.dart';
 import '../models/vision_scan.dart';
 import 'document_scanner_screen.dart';
 import 'scan_verification_screen.dart';
+import 'dashboard_screen.dart';
+import 'event_contacts_screen.dart';
+import 'event_portfolio_screen.dart';
+import 'goals_screen.dart';
+import 'server_checkouts_screen.dart';
+import 'paychecks_screen.dart';
+import 'invoices_receipts_screen.dart';
+import 'add_job_screen.dart';
 import 'package:intl/intl.dart';
 
 class AssistantScreen extends StatefulWidget {
@@ -208,12 +216,22 @@ class _AssistantScreenState extends State<AssistantScreen> {
         }
 
         debugPrint('[AI Agent] Reply: $replyText');
+        debugPrint(
+            '[AI Agent] Navigation Badges: ${response['navigationBadges']}');
+        debugPrint(
+            '[AI Agent] Badges null?: ${response['navigationBadges'] == null}');
 
         setState(() {
+          final badges = response['navigationBadges'] != null
+              ? List<Map<String, dynamic>>.from(response['navigationBadges'])
+              : null;
+          debugPrint('[AI Agent] Parsed badges: $badges');
+
           _messages.add(ChatMessage(
             text: replyText,
             isUser: false,
             timestamp: DateTime.now(),
+            navigationBadges: badges,
           ));
           _isLoading = false;
           _loadingMessage = '';
@@ -764,9 +782,160 @@ class _AssistantScreenState extends State<AssistantScreen> {
               style: AppTheme.labelSmall.copyWith(fontSize: 10),
             ),
           ),
+          // Navigation badges (only for AI messages)
+          if (!message.isUser &&
+              message.navigationBadges != null &&
+              message.navigationBadges!.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: message.navigationBadges!.map((badge) {
+                  return InkWell(
+                    onTap: () => _handleNavigationBadgeTap(badge),
+                    borderRadius: BorderRadius.circular(20),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryGreen.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: AppTheme.primaryGreen.withOpacity(0.5),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            _getIconForBadge(badge['icon']),
+                            size: 16,
+                            color: AppTheme.primaryGreen,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            badge['label'] ?? 'View',
+                            style: TextStyle(
+                              color: AppTheme.primaryGreen,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
         ],
       ),
     );
+  }
+
+  IconData _getIconForBadge(String? iconName) {
+    switch (iconName) {
+      case 'calendar':
+        return Icons.calendar_today;
+      case 'contacts':
+        return Icons.contacts;
+      case 'event':
+        return Icons.event;
+      case 'details':
+        return Icons.info_outline;
+      case 'receipt':
+        return Icons.receipt;
+      case 'invoice':
+        return Icons.description;
+      case 'paycheck':
+        return Icons.account_balance_wallet;
+      case 'checkout':
+        return Icons.point_of_sale;
+      case 'goals':
+        return Icons.flag;
+      case 'jobs':
+        return Icons.work;
+      default:
+        return Icons.arrow_forward;
+    }
+  }
+
+  void _handleNavigationBadgeTap(Map<String, dynamic> badge) {
+    final route = badge['route'] as String?;
+
+    if (route == null) return;
+
+    // Navigate based on route
+    switch (route) {
+      case '/calendar':
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => const DashboardScreen(initialIndex: 1),
+          ),
+        );
+        break;
+      case '/contacts':
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => const EventContactsScreen(),
+          ),
+        );
+        break;
+      case '/beo':
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => const EventPortfolioScreen(),
+          ),
+        );
+        break;
+      case '/goals':
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => const GoalsScreen(),
+          ),
+        );
+        break;
+      case '/checkouts':
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => const ServerCheckoutsScreen(),
+          ),
+        );
+        break;
+      case '/paychecks':
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => const PaychecksScreen(),
+          ),
+        );
+        break;
+      case '/receipts':
+      case '/invoices':
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => const InvoicesReceiptsScreen(),
+          ),
+        );
+        break;
+      case '/stats':
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => const DashboardScreen(initialIndex: 3),
+          ),
+        );
+        break;
+      case '/jobs':
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => const AddJobScreen(),
+          ),
+        );
+        break;
+      default:
+        debugPrint('Unknown route: $route');
+    }
   }
 }
 
@@ -775,11 +944,13 @@ class ChatMessage {
   final bool isUser;
   final DateTime timestamp;
   final String? imagePath;
+  final List<Map<String, dynamic>>? navigationBadges;
 
   ChatMessage({
     required this.text,
     required this.isUser,
     required this.timestamp,
     this.imagePath,
+    this.navigationBadges,
   });
 }

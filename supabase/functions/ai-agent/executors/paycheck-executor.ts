@@ -289,6 +289,13 @@ export class PaycheckExecutor {
         success: true,
         message: "Paycheck updated successfully",
         paycheck: data,
+        navigationBadges: [
+          {
+            label: "View Paychecks",
+            route: "/paychecks",
+            icon: "paycheck"
+          }
+        ]
       };
     } catch (error: any) {
       return {
@@ -334,6 +341,13 @@ export class PaycheckExecutor {
       return {
         success: true,
         message: "Paycheck deleted successfully",
+        navigationBadges: [
+          {
+            label: "View Paychecks",
+            route: "/paychecks",
+            icon: "paycheck"
+          }
+        ]
       };
     } catch (error: any) {
       return {
@@ -568,6 +582,13 @@ export class PaycheckExecutor {
         success: true,
         count: paychecks.length,
         message: `✅ Deleted ${paychecks.length} paycheck(s)`,
+        navigationBadges: [
+          {
+            label: "View Paychecks",
+            route: "/paychecks",
+            icon: "paycheck"
+          }
+        ]
       };
     } catch (error: any) {
       return {

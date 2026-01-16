@@ -88,6 +88,13 @@ export class ContactExecutor {
       success: true,
       contact: data,
       message: `✅ Added ${name}${company ? ` from ${company}` : ""} as ${role === "custom" ? customRole || "contact" : role.replace(/_/g, " ")}`,
+      navigationBadges: [
+        {
+          label: "View Contacts",
+          route: "/contacts",
+          icon: "contacts"
+        }
+      ]
     };
   }
 
@@ -147,10 +154,29 @@ export class ContactExecutor {
 
     if (error) throw error;
 
+    // Build navigation badges - always include Contacts, add Calendar if linked to shifts
+    const navigationBadges: any[] = [
+      {
+        label: "View Contacts",
+        route: "/contacts",
+        icon: "contacts"
+      }
+    ];
+    
+    // Check if contact is linked to any shifts
+    if (data.shift_ids && data.shift_ids.length > 0) {
+      navigationBadges.push({
+        label: "View on Calendar",
+        route: "/calendar",
+        icon: "calendar"
+      });
+    }
+
     return {
       success: true,
       contact: data,
       message: `✅ Updated ${contact.name}'s info`,
+      navigationBadges
     };
   }
 
@@ -188,6 +214,9 @@ export class ContactExecutor {
       throw new Error(`Contact not found: ${name || contactId}`);
     }
 
+    // Check if contact was linked to shifts before deleting
+    const wasLinkedToShifts = contact.shift_ids && contact.shift_ids.length > 0;
+
     const { error } = await this.supabase
       .from("event_contacts")
       .delete()
@@ -195,9 +224,27 @@ export class ContactExecutor {
 
     if (error) throw error;
 
+    // Build navigation badges - always include Contacts, add Calendar if was linked to shifts
+    const navigationBadges: any[] = [
+      {
+        label: "View Contacts",
+        route: "/contacts",
+        icon: "contacts"
+      }
+    ];
+    
+    if (wasLinkedToShifts) {
+      navigationBadges.push({
+        label: "View on Calendar",
+        route: "/calendar",
+        icon: "calendar"
+      });
+    }
+
     return {
       success: true,
       message: `✅ Deleted ${contact.name}`,
+      navigationBadges
     };
   }
 
@@ -314,6 +361,13 @@ export class ContactExecutor {
       message: isFavorite
         ? `✅ Added ${contact.name} to favorites`
         : `Removed ${contact.name} from favorites`,
+      navigationBadges: [
+        {
+          label: "View Contacts",
+          route: "/contacts",
+          icon: "contacts"
+        }
+      ]
     };
   }
 
@@ -370,6 +424,18 @@ export class ContactExecutor {
       success: true,
       message: `✅ Linked ${contact.name} to shift`,
       contact: data,
+      navigationBadges: [
+        {
+          label: "View Contacts",
+          route: "/contacts",
+          icon: "contacts"
+        },
+        {
+          label: "View on Calendar",
+          route: "/calendar",
+          icon: "calendar"
+        }
+      ]
     };
   }
 
@@ -447,6 +513,18 @@ export class ContactExecutor {
       message: `✅ Linked ${linkedContacts.length} contact(s) to BEO shift`,
       linkedContacts,
       errors: errors.length > 0 ? errors : undefined,
+      navigationBadges: [
+        {
+          label: "View Contacts",
+          route: "/contacts",
+          icon: "contacts"
+        },
+        {
+          label: "View BEO Portfolio",
+          route: "/beo",
+          icon: "event"
+        }
+      ]
     };
   }
 }

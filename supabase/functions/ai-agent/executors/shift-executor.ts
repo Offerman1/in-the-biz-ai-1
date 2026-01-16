@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Shift Executor - Handles all shift-related function calls
 import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
@@ -349,6 +350,14 @@ export class ShiftExecutor {
         jobName: jobName,
       },
       missingFields: missingFields.length > 0 ? missingFields : null,
+      navigationBadges: [
+        {
+          label: "View on Calendar",
+          route: "/calendar",
+          params: { date: date },
+          icon: "calendar"
+        }
+      ],
     };
   }
 
@@ -516,11 +525,30 @@ export class ShiftExecutor {
     const totalTips = cashTips + creditTips;
     const totalIncome = (hourlyRate * hoursWorked) + totalTips;
 
+    // Build navigation badges - always include Calendar, add BEO if linked
+    const navigationBadges: any[] = [
+      {
+        label: "View on Calendar",
+        route: "/calendar",
+        params: { date: data.date },
+        icon: "calendar"
+      }
+    ];
+    
+    if (data.beo_event_id) {
+      navigationBadges.push({
+        label: "View BEO Portfolio",
+        route: "/beo",
+        icon: "event"
+      });
+    }
+
     return {
       success: true,
       shift: data,
       before: existingShift,
       after: { ...data, total_income: totalIncome },
+      navigationBadges
     };
   }
 
@@ -545,6 +573,16 @@ export class ShiftExecutor {
       };
     }
 
+    // Get shift info before deleting to check for BEO link
+    const { data: shiftToDelete } = await this.supabase
+      .from("shifts")
+      .select("beo_event_id")
+      .eq("user_id", this.userId)
+      .eq("date", date)
+      .single();
+
+    const hadBeoLink = shiftToDelete?.beo_event_id;
+
     // Delete the shift
     const { error } = await this.supabase
       .from("shifts")
@@ -554,9 +592,28 @@ export class ShiftExecutor {
 
     if (error) throw error;
 
+    // Build navigation badges - always include Calendar, add BEO if was linked
+    const navigationBadges: any[] = [
+      {
+        label: "View Calendar",
+        route: "/calendar",
+        params: { date: date },
+        icon: "calendar"
+      }
+    ];
+    
+    if (hadBeoLink) {
+      navigationBadges.push({
+        label: "View BEO Portfolio",
+        route: "/beo",
+        icon: "event"
+      });
+    }
+
     return {
       success: true,
       message: `Shift from ${date} deleted successfully.`,
+      navigationBadges,
     };
   }
 
@@ -882,6 +939,13 @@ export class ShiftExecutor {
       count: shifts.length,
       totalIncomeLost: totalIncomeLost,
       message: `Deleted ${shifts.length} shifts (total income: $${totalIncomeLost.toFixed(2)}).`,
+      navigationBadges: [
+        {
+          label: "View Calendar",
+          route: "/calendar",
+          icon: "calendar"
+        }
+      ]
     };
   }
 

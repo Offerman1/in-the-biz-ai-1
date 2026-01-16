@@ -76,6 +76,7 @@ class AIAgentService {
           'success': true,
           'reply': data['reply'],
           'functionsExecuted': data['functionsExecuted'] ?? 0,
+          'navigationBadges': data['navigationBadges'],
           'debugInfo': data['debugInfo'],
         };
       } else {

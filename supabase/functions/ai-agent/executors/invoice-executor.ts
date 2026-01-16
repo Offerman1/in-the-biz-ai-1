@@ -323,6 +323,18 @@ export class InvoiceExecutor {
         success: true,
         message: "Invoice linked to shift successfully",
         invoice: data,
+        navigationBadges: [
+          {
+            label: "View Invoices",
+            route: "/invoices",
+            icon: "invoice"
+          },
+          {
+            label: "View on Calendar",
+            route: "/calendar",
+            icon: "calendar"
+          }
+        ]
       };
     } catch (error: any) {
       return {
@@ -336,7 +348,7 @@ export class InvoiceExecutor {
     try {
       const { data: invoice } = await this.supabase
         .from("invoices")
-        .select("id")
+        .select("id, shift_id")
         .eq("id", invoiceId)
         .eq("user_id", this.userId)
         .single();
@@ -358,10 +370,28 @@ export class InvoiceExecutor {
 
       if (error) throw error;
 
+      // Build navigation badges - always include Invoices, add Calendar if linked to shift
+      const navigationBadges: any[] = [
+        {
+          label: "View Invoices",
+          route: "/invoices",
+          icon: "invoice"
+        }
+      ];
+      
+      if (data.shift_id) {
+        navigationBadges.push({
+          label: "View on Calendar",
+          route: "/calendar",
+          icon: "calendar"
+        });
+      }
+
       return {
         success: true,
         message: "Invoice updated successfully",
         invoice: data,
+        navigationBadges
       };
     } catch (error: any) {
       return {
@@ -396,6 +426,16 @@ export class InvoiceExecutor {
     }
 
     try {
+      // Get invoice to check if linked to shift before deleting
+      const { data: invoice } = await this.supabase
+        .from("invoices")
+        .select("shift_id")
+        .eq("id", invoiceId)
+        .eq("user_id", this.userId)
+        .single();
+
+      const wasLinkedToShift = invoice?.shift_id;
+
       const { error } = await this.supabase
         .from("invoices")
         .delete()
@@ -404,9 +444,27 @@ export class InvoiceExecutor {
 
       if (error) throw error;
 
+      // Build navigation badges - always include Invoices, add Calendar if was linked to shift
+      const navigationBadges: any[] = [
+        {
+          label: "View Invoices",
+          route: "/invoices",
+          icon: "invoice"
+        }
+      ];
+      
+      if (wasLinkedToShift) {
+        navigationBadges.push({
+          label: "View on Calendar",
+          route: "/calendar",
+          icon: "calendar"
+        });
+      }
+
       return {
         success: true,
         message: "Invoice deleted successfully",
+        navigationBadges
       };
     } catch (error: any) {
       return {
@@ -452,6 +510,13 @@ export class InvoiceExecutor {
         success: true,
         count: invoices.length,
         message: `✅ Deleted ${invoices.length} invoice(s)`,
+        navigationBadges: [
+          {
+            label: "View Invoices",
+            route: "/invoices",
+            icon: "invoice"
+          }
+        ]
       };
     } catch (error: any) {
       return {

@@ -573,11 +573,19 @@ YOUR RESPONSE:`
         }
       }
 
+      // Collect navigation badges from function responses
+      const navigationBadges = functionResponses
+        .flatMap(r => r.response.navigationBadges || [])
+        .filter((badge, index, self) => 
+          index === self.findIndex(b => b.route === badge.route)
+        ); // Remove duplicates
+
       return new Response(
         JSON.stringify({
           success: true,
           reply: replyText,
           functionsExecuted: functionResponses.length,
+          navigationBadges: navigationBadges.length > 0 ? navigationBadges : undefined,
           debugInfo: {
             functions: functionResponses.map(r => r.name),
           },

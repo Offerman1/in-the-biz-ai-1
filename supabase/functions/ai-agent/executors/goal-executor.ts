@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Goal Executor - Handles all goal-related function calls
 import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
@@ -64,6 +65,13 @@ export class GoalExecutor {
         goal: data,
         updated: true,
         message: `Updated ${type} goal to $${amount}`,
+        navigationBadges: [
+          {
+            label: "View Goals",
+            route: "/goals",
+            icon: "goals"
+          }
+        ]
       };
     } else {
       // Create new
@@ -86,6 +94,13 @@ export class GoalExecutor {
         goal: data,
         created: true,
         message: `Created ${type} goal of $${amount}`,
+        navigationBadges: [
+          {
+            label: "View Goals",
+            route: "/goals",
+            icon: "goals"
+          }
+        ]
       };
     }
   }
@@ -114,6 +129,13 @@ export class GoalExecutor {
       success: true,
       goal: data,
       message: "Goal updated",
+      navigationBadges: [
+        {
+          label: "View Goals",
+          route: "/goals",
+          icon: "goals"
+        }
+      ]
     };
   }
 
@@ -131,6 +153,13 @@ export class GoalExecutor {
     return {
       success: true,
       message: "Goal deleted",
+      navigationBadges: [
+        {
+          label: "View Goals",
+          route: "/goals",
+          icon: "goals"
+        }
+      ]
     };
   }
 
@@ -147,7 +176,7 @@ export class GoalExecutor {
 
     // Calculate progress for each goal
     const goalsWithProgress = await Promise.all(
-      goals.map(async (goal) => {
+      goals.map(async (goal: any) => {
         const progress = await this.calculateGoalProgress(goal);
         return { ...goal, ...progress };
       })
@@ -221,8 +250,8 @@ export class GoalExecutor {
 
     if (error) throw error;
 
-    const currentAmount = shifts.reduce((sum, s) => sum + s.total_income, 0);
-    const currentHours = shifts.reduce((sum, s) => sum + s.hours_worked, 0);
+    const currentAmount = shifts.reduce((sum: number, s: any) => sum + s.total_income, 0);
+    const currentHours = shifts.reduce((sum: number, s: any) => sum + s.hours_worked, 0);
 
     const progressPercent = (currentAmount / goal.target_amount) * 100;
     const remaining = goal.target_amount - currentAmount;

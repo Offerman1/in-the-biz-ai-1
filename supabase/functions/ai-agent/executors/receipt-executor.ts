@@ -305,6 +305,18 @@ export class ReceiptExecutor {
         success: true,
         message: "Receipt linked to shift successfully",
         receipt: data,
+        navigationBadges: [
+          {
+            label: "View Receipts",
+            route: "/receipts",
+            icon: "receipt"
+          },
+          {
+            label: "View on Calendar",
+            route: "/calendar",
+            icon: "calendar"
+          }
+        ]
       };
     } catch (error: any) {
       return {
@@ -318,7 +330,7 @@ export class ReceiptExecutor {
     try {
       const { data: receipt } = await this.supabase
         .from("receipts")
-        .select("id")
+        .select("id, shift_id")
         .eq("id", receiptId)
         .eq("user_id", this.userId)
         .single();
@@ -340,10 +352,28 @@ export class ReceiptExecutor {
 
       if (error) throw error;
 
+      // Build navigation badges - always include Receipts, add Calendar if linked to shift
+      const navigationBadges: any[] = [
+        {
+          label: "View Receipts",
+          route: "/receipts",
+          icon: "receipt"
+        }
+      ];
+      
+      if (data.shift_id) {
+        navigationBadges.push({
+          label: "View on Calendar",
+          route: "/calendar",
+          icon: "calendar"
+        });
+      }
+
       return {
         success: true,
         message: "Receipt updated successfully",
         receipt: data,
+        navigationBadges
       };
     } catch (error: any) {
       return {
@@ -378,6 +408,16 @@ export class ReceiptExecutor {
     }
 
     try {
+      // Get receipt to check if linked to shift before deleting
+      const { data: receipt } = await this.supabase
+        .from("receipts")
+        .select("shift_id")
+        .eq("id", receiptId)
+        .eq("user_id", this.userId)
+        .single();
+
+      const wasLinkedToShift = receipt?.shift_id;
+
       const { error } = await this.supabase
         .from("receipts")
         .delete()
@@ -386,9 +426,27 @@ export class ReceiptExecutor {
 
       if (error) throw error;
 
+      // Build navigation badges - always include Receipts, add Calendar if was linked to shift
+      const navigationBadges: any[] = [
+        {
+          label: "View Receipts",
+          route: "/receipts",
+          icon: "receipt"
+        }
+      ];
+      
+      if (wasLinkedToShift) {
+        navigationBadges.push({
+          label: "View on Calendar",
+          route: "/calendar",
+          icon: "calendar"
+        });
+      }
+
       return {
         success: true,
         message: "Receipt deleted successfully",
+        navigationBadges
       };
     } catch (error: any) {
       return {
@@ -434,6 +492,13 @@ export class ReceiptExecutor {
         success: true,
         count: receipts.length,
         message: `✅ Deleted ${receipts.length} receipt(s)`,
+        navigationBadges: [
+          {
+            label: "View Receipts",
+            route: "/receipts",
+            icon: "receipt"
+          }
+        ]
       };
     } catch (error: any) {
       return {

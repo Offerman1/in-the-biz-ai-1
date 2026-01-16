@@ -182,6 +182,18 @@ export class CheckoutExecutor {
       return {
         success: true,
         message: "Checkout linked to shift successfully",
+        navigationBadges: [
+          {
+            label: "View Checkouts",
+            route: "/checkouts",
+            icon: "checkout"
+          },
+          {
+            label: "View on Calendar",
+            route: "/calendar",
+            icon: "calendar"
+          }
+        ]
       };
     } catch (error: any) {
       return {
@@ -204,6 +216,18 @@ export class CheckoutExecutor {
       return {
         success: true,
         message: "Checkout unlinked from shift successfully",
+        navigationBadges: [
+          {
+            label: "View Checkouts",
+            route: "/checkouts",
+            icon: "checkout"
+          },
+          {
+            label: "View on Calendar",
+            route: "/calendar",
+            icon: "calendar"
+          }
+        ]
       };
     } catch (error: any) {
       return {
@@ -244,6 +268,13 @@ export class CheckoutExecutor {
         success: true,
         message: "Checkout updated successfully",
         checkout: data,
+        navigationBadges: [
+          {
+            label: "View Checkouts",
+            route: "/checkouts",
+            icon: "checkout"
+          }
+        ]
       };
     } catch (error: any) {
       return {
@@ -298,6 +329,13 @@ export class CheckoutExecutor {
       return {
         success: true,
         message: "Checkout deleted successfully",
+        navigationBadges: [
+          {
+            label: "View Checkouts",
+            route: "/checkouts",
+            icon: "checkout"
+          }
+        ]
       };
     } catch (error: any) {
       return {
@@ -350,6 +388,13 @@ export class CheckoutExecutor {
         success: true,
         count: checkouts.length,
         message: `✅ Deleted ${checkouts.length} checkout(s)`,
+        navigationBadges: [
+          {
+            label: "View Checkouts",
+            route: "/checkouts",
+            icon: "checkout"
+          }
+        ]
       };
     } catch (error: any) {
       return {

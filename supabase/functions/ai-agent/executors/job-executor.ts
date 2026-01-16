@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Job Executor - Handles all job-related function calls
 import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
@@ -125,6 +126,13 @@ export class JobExecutor {
       job: data,
       inferredIndustry: !industry,
       message: `Created ${name} job${!industry ? ` (detected as ${finalIndustry})` : ""}`,
+      navigationBadges: [
+        {
+          label: "View Jobs",
+          route: "/settings",
+          icon: "jobs"
+        }
+      ]
     };
   }
 
@@ -163,6 +171,13 @@ export class JobExecutor {
       success: true,
       job: data,
       message: "Job updated successfully",
+      navigationBadges: [
+        {
+          label: "View Jobs",
+          route: "/settings",
+          icon: "jobs"
+        }
+      ]
     };
   }
 
@@ -190,7 +205,7 @@ export class JobExecutor {
     if (shiftsError) throw shiftsError;
 
     const shiftCount = shifts.length;
-    const totalIncome = shifts.reduce((sum, s) => sum + s.total_income, 0);
+    const totalIncome = shifts.reduce((sum: number, s: any) => sum + s.total_income, 0);
 
     if (!confirmed && shiftCount > 0) {
       return {
@@ -227,6 +242,13 @@ export class JobExecutor {
     return {
       success: true,
       message: `Deleted ${job.name}${deleteShifts ? " and all shifts" : " (shifts preserved)"}`,
+      navigationBadges: [
+        {
+          label: "View Jobs",
+          route: "/settings",
+          icon: "jobs"
+        }
+      ]
     };
   }
 
@@ -251,6 +273,13 @@ export class JobExecutor {
       success: true,
       job: data,
       message: `${data.name} is now your default job`,
+      navigationBadges: [
+        {
+          label: "View Jobs",
+          route: "/settings",
+          icon: "jobs"
+        }
+      ]
     };
   }
 
@@ -321,7 +350,7 @@ export class JobExecutor {
 
     // Get shift counts for each job
     const jobsWithStats = await Promise.all(
-      jobs.map(async (job) => {
+      jobs.map(async (job: any) => {
         const { data: shifts } = await this.supabase
           .from("shifts")
           .select("total_income")
@@ -329,7 +358,7 @@ export class JobExecutor {
           .eq("user_id", this.userId);
 
         const shiftCount = shifts?.length || 0;
-        const totalIncome = shifts?.reduce((sum, s) => sum + s.total_income, 0) || 0;
+        const totalIncome = shifts?.reduce((sum: number, s: any) => sum + s.total_income, 0) || 0;
 
         return {
           ...job,
@@ -382,13 +411,13 @@ export class JobExecutor {
 
     if (error) throw error;
 
-    const totalIncome = shifts.reduce((sum, s) => sum + s.total_income, 0);
-    const totalHours = shifts.reduce((sum, s) => sum + s.hours_worked, 0);
+    const totalIncome = shifts.reduce((sum: number, s: any) => sum + s.total_income, 0);
+    const totalHours = shifts.reduce((sum: number, s: any) => sum + s.hours_worked, 0);
     const avgPerHour = totalHours > 0 ? totalIncome / totalHours : 0;
 
     // Get best days
     const dayTotals: Record<number, number[]> = {};
-    shifts.forEach((shift) => {
+    shifts.forEach((shift: any) => {
       const day = new Date(shift.date).getDay();
       if (!dayTotals[day]) dayTotals[day] = [];
       dayTotals[day].push(shift.total_income);
@@ -460,7 +489,7 @@ export class JobExecutor {
 
       // Recalculate each shift
       await Promise.all(
-        shifts.map(async (shift) => {
+        shifts.map(async (shift: any) => {
           const newWages = newRate * shift.hours_worked;
           const newTotal = newWages + shift.net_tips;
 

@@ -281,6 +281,18 @@ export class BEOExecutor {
       return {
         success: true,
         message: "BEO unlinked from shift successfully",
+        navigationBadges: [
+          {
+            label: "View BEO Portfolio",
+            route: "/beo",
+            icon: "event"
+          },
+          {
+            label: "View on Calendar",
+            route: "/calendar",
+            icon: "calendar"
+          }
+        ]
       };
     } catch (error: any) {
       return {
@@ -295,7 +307,7 @@ export class BEOExecutor {
       // Verify the BEO exists and belongs to user
       const { data: event } = await this.supabase
         .from("beo_events")
-        .select("id")
+        .select("id, event_date")
         .eq("id", eventId)
         .eq("user_id", this.userId)
         .single();
@@ -307,6 +319,14 @@ export class BEOExecutor {
         };
       }
 
+      // Check if BEO is linked to a shift
+      const { data: linkedShift } = await this.supabase
+        .from("shifts")
+        .select("id, date")
+        .eq("beo_event_id", eventId)
+        .eq("user_id", this.userId)
+        .single();
+
       const { data, error } = await this.supabase
         .from("beo_events")
         .update(updates)
@@ -317,10 +337,29 @@ export class BEOExecutor {
 
       if (error) throw error;
 
+      // Build navigation badges - always include BEO, add Calendar if linked to shift
+      const navigationBadges: any[] = [
+        {
+          label: "View BEO Portfolio",
+          route: "/beo",
+          icon: "event"
+        }
+      ];
+      
+      if (linkedShift) {
+        navigationBadges.push({
+          label: "View on Calendar",
+          route: "/calendar",
+          params: { date: linkedShift.date || event.event_date },
+          icon: "calendar"
+        });
+      }
+
       return {
         success: true,
         message: "BEO event updated successfully",
         event: data,
+        navigationBadges
       };
     } catch (error: any) {
       return {
@@ -356,6 +395,14 @@ export class BEOExecutor {
     }
 
     try {
+      // Check if BEO was linked to a shift before deleting
+      const { data: linkedShift } = await this.supabase
+        .from("shifts")
+        .select("id, date")
+        .eq("beo_event_id", eventId)
+        .eq("user_id", this.userId)
+        .single();
+
       // First, unlink any shifts associated with this BEO
       await this.supabase
         .from("shifts")
@@ -372,9 +419,28 @@ export class BEOExecutor {
 
       if (error) throw error;
 
+      // Build navigation badges - always include BEO, add Calendar if was linked to shift
+      const navigationBadges: any[] = [
+        {
+          label: "View BEO Portfolio",
+          route: "/beo",
+          icon: "event"
+        }
+      ];
+      
+      if (linkedShift) {
+        navigationBadges.push({
+          label: "View on Calendar",
+          route: "/calendar",
+          params: { date: linkedShift.date },
+          icon: "calendar"
+        });
+      }
+
       return {
         success: true,
         message: "BEO event deleted successfully",
+        navigationBadges
       };
     } catch (error: any) {
       return {
@@ -422,6 +488,13 @@ export class BEOExecutor {
         success: true,
         count: events.length,
         message: `✅ Deleted ${events.length} BEO event(s)`,
+        navigationBadges: [
+          {
+            label: "View BEO Portfolio",
+            route: "/beo",
+            icon: "event"
+          }
+        ]
       };
     } catch (error: any) {
       return {
