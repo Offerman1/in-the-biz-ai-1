@@ -12,6 +12,7 @@ import '../theme/app_theme.dart';
 import '../services/database_service.dart';
 import '../services/calendar_title_service.dart';
 import '../services/google_calendar_service.dart';
+import '../services/notification_service.dart';
 import '../services/auth_service.dart';
 import '../providers/shift_provider.dart';
 import '../models/shift.dart';
@@ -1121,6 +1122,14 @@ class _CalendarSyncScreenState extends State<CalendarSyncScreen> {
         final shiftProvider =
             Provider.of<ShiftProvider>(context, listen: false);
         await shiftProvider.loadShifts();
+
+        // Send schedule change notification
+        if (!kIsWeb && imported > 0) {
+          await NotificationService().sendScheduleChangeAlert(
+            message:
+                'Imported $imported new shift${imported > 1 ? 's' : ''} from your calendar',
+          );
+        }
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

@@ -9,6 +9,10 @@ class TourService extends ChangeNotifier {
   String _expectedScreen = 'dashboard';
   String? _expectedSettingsTab;
   bool _isTourButtonHidden = false;
+  String?
+      _pulsingTarget; // Which button should be pulsing (e.g., 'addShift', 'calendar', etc.)
+  bool _isSkippingToScreen =
+      false; // Flag to prevent callbacks from interfering during skip
 
   // Getters
   bool get isActive => _isActive;
@@ -17,9 +21,28 @@ class TourService extends ChangeNotifier {
   String? get expectedSettingsTab => _expectedSettingsTab;
   int get totalSteps => 43; // Total tour steps (updated to match roadmap)
   bool get isTourButtonHidden => _isTourButtonHidden;
+  String? get pulsingTarget => _pulsingTarget;
+  bool get isSkippingToScreen => _isSkippingToScreen;
 
   /// Check if we're on the job prerequisite step
   bool get isJobPrerequisiteStep => _currentStep == -1;
+
+  /// Set which target should be pulsing
+  void setPulsingTarget(String? target) {
+    _pulsingTarget = target;
+    notifyListeners();
+  }
+
+  /// Clear pulsing target
+  void clearPulsingTarget() {
+    _pulsingTarget = null;
+    notifyListeners();
+  }
+
+  /// Clear the skipping flag (call after handling skip)
+  void clearSkippingFlag() {
+    _isSkippingToScreen = false;
+  }
 
   // SharedPreferences keys
   static const String _keyTourComplete = 'tour_complete';
@@ -61,6 +84,43 @@ class TourService extends ChangeNotifier {
   /// Skip current step
   void skipStep() {
     nextStep();
+  }
+
+  /// Skip to a specific screen's tour
+  /// This allows users to skip ahead without ending the entire tour
+  void skipToScreen(String screenName) {
+    _isSkippingToScreen =
+        true; // Set flag to prevent onFinish/onSkip interference
+    switch (screenName) {
+      case 'addShift':
+        _currentStep = 10; // First step of Add Shift tour
+        _expectedScreen = 'addShift';
+        break;
+      case 'calendar':
+        _currentStep =
+            12; // First step of Calendar tour (after simplified Add Shift)
+        _expectedScreen = 'calendar';
+        break;
+      case 'chat':
+        _currentStep = 18; // First step of Chat tour
+        _expectedScreen = 'chat';
+        break;
+      case 'stats':
+        _currentStep = 24; // First step of Stats tour
+        _expectedScreen = 'stats';
+        break;
+      case 'settings':
+        _currentStep = 28; // First step of Settings tour
+        _expectedScreen = 'settings';
+        break;
+      default:
+        debugPrint('⚠️ Unknown screen: $screenName');
+        _isSkippingToScreen = false;
+        return;
+    }
+    saveTourProgress();
+    notifyListeners();
+    debugPrint('🎯 Skipped to $screenName tour (step $_currentStep)');
   }
 
   /// Skip all remaining steps and end tour
@@ -133,26 +193,19 @@ class TourService extends ChangeNotifier {
           'dashboard'; // Job prerequisite check happens on dashboard
     } else if (_currentStep >= 0 && _currentStep <= 9) {
       _expectedScreen = 'dashboard';
-    } else if (_currentStep >= 10 && _currentStep <= 17) {
+    } else if (_currentStep >= 10 && _currentStep <= 11) {
       _expectedScreen = 'addShift';
-    } else if (_currentStep >= 18 && _currentStep <= 24) {
+    } else if (_currentStep >= 12 && _currentStep <= 17) {
       _expectedScreen = 'calendar';
-    } else if (_currentStep >= 25 && _currentStep <= 30) {
+    } else if (_currentStep >= 18 && _currentStep <= 23) {
       _expectedScreen = 'chat';
-    } else if (_currentStep >= 31 && _currentStep <= 33) {
+    } else if (_currentStep >= 24 && _currentStep <= 27) {
       _expectedScreen = 'stats';
-    } else if (_currentStep >= 34 && _currentStep <= 43) {
+    } else if (_currentStep >= 28 && _currentStep <= 32) {
       _expectedScreen = 'settings';
-      // Set expected settings tab
-      if (_currentStep == 35) {
-        _expectedSettingsTab = 'jobsData';
-      } else if (_currentStep == 38) {
-        _expectedSettingsTab = 'docsContacts';
-      } else if (_currentStep == 40) {
-        _expectedSettingsTab = 'taxes';
-      } else {
-        _expectedSettingsTab = 'general';
-      }
+    } else {
+      // Tour complete or beyond
+      _expectedScreen = 'complete';
     }
   }
 

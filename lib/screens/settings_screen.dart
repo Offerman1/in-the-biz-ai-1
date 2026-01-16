@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import '../main.dart' show appVersion;
 import '../providers/shift_provider.dart';
 import '../services/database_service.dart';
@@ -18,6 +19,7 @@ import '../models/job.dart';
 import '../models/end_job_reason.dart';
 import '../widgets/hero_card.dart';
 import '../widgets/navigation_wrapper.dart';
+import '../utils/tour_targets.dart';
 import '../constants/currencies.dart';
 import 'goals_screen.dart';
 import 'login_screen.dart';
@@ -52,7 +54,8 @@ class SettingsScreen extends StatefulWidget {
   State<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
+class _SettingsScreenState extends State<SettingsScreen>
+    with SingleTickerProviderStateMixin {
   final DatabaseService _db = DatabaseService();
   final currencyFormat = NumberFormat.simpleCurrency();
 
@@ -65,6 +68,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _isJobsSectionExpanded = false; // MY JOBS collapsed by default
   bool _isAutoSyncEnabled = false; // Calendar auto-sync toggle
   String _selectedCurrency = 'USD'; // Selected currency code
+
+  // Tour state
+  bool _isTourShowing = false;
+  TutorialCoachMark? _tutorialCoachMark;
+  late TabController _tabController;
+
+  // GlobalKeys for tour targets
+  final GlobalKey _generalTabKey = GlobalKey();
+  final GlobalKey _jobsDataTabKey = GlobalKey();
+  final GlobalKey _docsContactsTabKey = GlobalKey();
+  final GlobalKey _taxesTabKey = GlobalKey();
+  final GlobalKey _calendarImportKey = GlobalKey();
 
   final List<String> _states = [
     'AL',
@@ -122,9 +137,273 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   void initState() {
     super.initState();
+    _tabController =
+        TabController(length: 4, vsync: this, initialIndex: widget.initialTab);
     _loadData();
     _loadAutoSyncPreference();
     _loadCurrencyPreference();
+
+    // Check if tour should start
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkAndStartTour();
+    });
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _checkAndStartTour() async {
+    if (!mounted) return;
+
+    final tourService = Provider.of<TourService>(context, listen: false);
+
+    debugPrint(
+        '🎯 Settings Tour Check: isActive=${tourService.isActive}, currentStep=${tourService.currentStep}, expectedScreen=${tourService.expectedScreen}');
+
+    if (tourService.isActive &&
+        tourService.expectedScreen == 'settings' &&
+        tourService.currentStep >= 28 &&
+        tourService.currentStep <= 32 &&
+        !_isTourShowing) {
+      await Future.delayed(const Duration(milliseconds: 500));
+      if (mounted) {
+        _showSettingsTour();
+      }
+    }
+  }
+
+  void _showSettingsTour() {
+    final tourService = Provider.of<TourService>(context, listen: false);
+
+    debugPrint(
+        '🎯 _showSettingsTour called, currentStep: ${tourService.currentStep}');
+
+    if (_isTourShowing) {
+      debugPrint('🎯 Settings tour already showing, ignoring');
+      return;
+    }
+
+    if (tourService.currentStep < 28 || tourService.currentStep > 32) {
+      debugPrint('🎯 Not on a settings step, ignoring');
+      return;
+    }
+
+    _tutorialCoachMark = null;
+
+    List<TargetFocus> targets = [];
+
+    void onEndTour() {
+      tourService.skipAll();
+    }
+
+    // Step 28: General tab
+    if (tourService.currentStep == 28) {
+      targets.add(TourTargets.createTarget(
+        identify: 'generalTab',
+        keyTarget: _generalTabKey,
+        title: '⚙️ General Settings',
+        description:
+            'Customize themes, backgrounds, currency, notifications, and manage your account.',
+        currentScreen: 'settings',
+        onSkipToNext: onEndTour,
+        onEndTour: onEndTour,
+        align: ContentAlign.bottom,
+      ));
+    }
+
+    // Step 29: Jobs & Data tab
+    if (tourService.currentStep == 29) {
+      targets.add(TourTargets.createTarget(
+        identify: 'jobsDataTab',
+        keyTarget: _jobsDataTabKey,
+        title: '💼 Jobs & Data',
+        description:
+            'Add jobs, connect QuickBooks, and access the MOST IMPORTANT feature...',
+        currentScreen: 'settings',
+        onSkipToNext: onEndTour,
+        onEndTour: onEndTour,
+        align: ContentAlign.bottom,
+      ));
+    }
+
+    // Step 30: Calendar Import (inside Jobs & Data)
+    if (tourService.currentStep == 30) {
+      targets.add(TourTargets.createTarget(
+        identify: 'calendarImport',
+        keyTarget: _calendarImportKey,
+        title: '📅 Calendar Import - THE GAME CHANGER!',
+        description:
+            'Import ALL your shifts from Hot Schedules, 7shifts, or ANY scheduling app that syncs to Google/iOS Calendar. Past AND future shifts!',
+        currentScreen: 'settings',
+        onSkipToNext: onEndTour,
+        onEndTour: onEndTour,
+        align: ContentAlign.bottom,
+      ));
+    }
+
+    // Step 31: Docs & Contacts tab
+    if (tourService.currentStep == 31) {
+      targets.add(TourTargets.createTarget(
+        identify: 'docsContactsTab',
+        keyTarget: _docsContactsTabKey,
+        title: '📁 Docs & Contacts',
+        description:
+            'All your scanned documents, checkouts, paychecks, invoices, and event contacts in one place.',
+        currentScreen: 'settings',
+        onSkipToNext: onEndTour,
+        onEndTour: onEndTour,
+        align: ContentAlign.bottom,
+      ));
+    }
+
+    // Step 32: Taxes tab
+    if (tourService.currentStep == 32) {
+      targets.add(TourTargets.createTarget(
+        identify: 'taxesTab',
+        keyTarget: _taxesTabKey,
+        title: '🧾 Taxes',
+        description:
+            'Track estimated taxes, deductible expenses, and export tax reports. Stay prepared all year!',
+        currentScreen: 'settings',
+        onSkipToNext: onEndTour,
+        onEndTour: onEndTour,
+        align: ContentAlign.bottom,
+      ));
+    }
+
+    if (targets.isEmpty) return;
+
+    _isTourShowing = true;
+
+    _tutorialCoachMark = TutorialCoachMark(
+      targets: targets,
+      colorShadow: AppTheme.primaryGreen,
+      paddingFocus: 10,
+      opacityShadow: 0.8,
+      hideSkip: true,
+      onFinish: () {
+        debugPrint('🎯 Settings: Tour step finished');
+        _isTourShowing = false;
+        _tutorialCoachMark = null;
+
+        final currentStep = tourService.currentStep;
+        tourService.nextStep();
+
+        // Handle tab switching based on step
+        if (currentStep == 28) {
+          // Just finished General, switch to Jobs & Data
+          _tabController.animateTo(1);
+          Future.delayed(const Duration(milliseconds: 400), () {
+            if (mounted) _showSettingsTour();
+          });
+        } else if (currentStep == 29) {
+          // Just finished Jobs & Data tab, now scroll to and show Calendar Import
+          Future.delayed(const Duration(milliseconds: 300), () {
+            if (mounted) {
+              // Scroll to make Calendar Import visible
+              final keyContext = _calendarImportKey.currentContext;
+              if (keyContext != null) {
+                Scrollable.ensureVisible(
+                  keyContext,
+                  duration: const Duration(milliseconds: 400),
+                  curve: Curves.easeInOut,
+                  alignment: 0.3, // Position it 30% from top
+                ).then((_) {
+                  Future.delayed(const Duration(milliseconds: 200), () {
+                    if (mounted) _showSettingsTour();
+                  });
+                });
+              } else {
+                _showSettingsTour();
+              }
+            }
+          });
+        } else if (currentStep == 30) {
+          // Just finished Calendar Import, switch to Docs & Contacts
+          _tabController.animateTo(2);
+          Future.delayed(const Duration(milliseconds: 400), () {
+            if (mounted) _showSettingsTour();
+          });
+        } else if (currentStep == 31) {
+          // Just finished Docs & Contacts, switch to Taxes
+          _tabController.animateTo(3);
+          Future.delayed(const Duration(milliseconds: 400), () {
+            if (mounted) _showSettingsTour();
+          });
+        } else if (currentStep == 32) {
+          // Tour complete!
+          tourService.skipAll();
+          _showTourCompleteDialog();
+        }
+      },
+      onSkip: () {
+        _isTourShowing = false;
+        tourService.skipAll();
+        _tutorialCoachMark = null;
+        return true;
+      },
+    );
+
+    _tutorialCoachMark!.show(context: context);
+  }
+
+  void _showTourCompleteDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.cardBackground,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(
+              color: AppTheme.primaryGreen.withValues(alpha: 0.3), width: 2),
+        ),
+        title: Text(
+          '🎉 Tour Complete!',
+          style: TextStyle(color: AppTheme.primaryGreen, fontSize: 24),
+          textAlign: TextAlign.center,
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'You\'re ready to start tracking your income like a pro!',
+              style: TextStyle(color: AppTheme.textPrimary, fontSize: 16),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'You can restart this tour anytime from Settings → Help & Support.',
+              style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+        actions: [
+          Center(
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context); // Close dialog
+                Navigator.pop(context); // Go back from Settings
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryGreen,
+                foregroundColor: Colors.white,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+              ),
+              child:
+                  const Text('Let\'s Go! 🚀', style: TextStyle(fontSize: 16)),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _loadCurrencyPreference() async {
@@ -437,81 +716,88 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     return NavigationWrapper(
       currentTabIndex: null,
-      child: DefaultTabController(
-        length: 4,
-        initialIndex: widget.initialTab,
-        child: Scaffold(
+      child: Scaffold(
+        backgroundColor: AppTheme.darkBackground,
+        appBar: AppBar(
           backgroundColor: AppTheme.darkBackground,
-          appBar: AppBar(
-            backgroundColor: AppTheme.darkBackground,
-            title: Text('Settings  v$appVersion',
-                style: AppTheme.titleLarge
-                    .copyWith(color: AppTheme.adaptiveTextColor)),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.refresh),
-                tooltip: 'Refresh Data',
-                onPressed: () async {
-                  setState(() => _isLoading = true);
+          title: Text('Settings  v$appVersion',
+              style: AppTheme.titleLarge
+                  .copyWith(color: AppTheme.adaptiveTextColor)),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              tooltip: 'Refresh Data',
+              onPressed: () async {
+                setState(() => _isLoading = true);
 
-                  // Refresh shift provider data
-                  final shiftProvider =
-                      Provider.of<ShiftProvider>(context, listen: false);
-                  await shiftProvider.loadShifts();
+                // Refresh shift provider data
+                final shiftProvider =
+                    Provider.of<ShiftProvider>(context, listen: false);
+                await shiftProvider.loadShifts();
 
-                  // Reload local data
-                  await _loadData();
+                // Reload local data
+                await _loadData();
 
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: const Text('Data refreshed'),
-                        backgroundColor: AppTheme.primaryGreen,
-                        duration: const Duration(seconds: 2),
-                      ),
-                    );
-                  }
-                },
-              ),
-            ],
-            bottom: TabBar(
-              isScrollable: false,
-              indicatorColor: AppTheme.primaryGreen,
-              labelColor: AppTheme.primaryGreen,
-              unselectedLabelColor: AppTheme.textMuted,
-              indicatorSize: TabBarIndicatorSize.label,
-              labelPadding: EdgeInsets.zero,
-              labelStyle: AppTheme.labelSmall.copyWith(
-                fontWeight: FontWeight.bold,
-                fontSize: 11,
-              ),
-              unselectedLabelStyle: AppTheme.labelSmall.copyWith(
-                fontSize: 11,
-              ),
-              tabs: const [
-                Tab(icon: Icon(Icons.settings, size: 16), text: 'General'),
-                Tab(icon: Icon(Icons.work, size: 16), text: 'Jobs & Data'),
-                Tab(
-                    icon: Icon(Icons.folder, size: 16),
-                    text: 'Docs & Contacts'),
-                Tab(icon: Icon(Icons.account_balance, size: 16), text: 'Taxes'),
-              ],
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: const Text('Data refreshed'),
+                      backgroundColor: AppTheme.primaryGreen,
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                }
+              },
             ),
+          ],
+          bottom: TabBar(
+            controller: _tabController,
+            isScrollable: false,
+            indicatorColor: AppTheme.primaryGreen,
+            labelColor: AppTheme.primaryGreen,
+            unselectedLabelColor: AppTheme.textMuted,
+            indicatorSize: TabBarIndicatorSize.label,
+            labelPadding: EdgeInsets.zero,
+            labelStyle: AppTheme.labelSmall.copyWith(
+              fontWeight: FontWeight.bold,
+              fontSize: 11,
+            ),
+            unselectedLabelStyle: AppTheme.labelSmall.copyWith(
+              fontSize: 11,
+            ),
+            tabs: [
+              Tab(
+                  key: _generalTabKey,
+                  icon: const Icon(Icons.settings, size: 16),
+                  text: 'General'),
+              Tab(
+                  key: _jobsDataTabKey,
+                  icon: const Icon(Icons.work, size: 16),
+                  text: 'Jobs & Data'),
+              Tab(
+                  key: _docsContactsTabKey,
+                  icon: const Icon(Icons.folder, size: 16),
+                  text: 'Docs & Contacts'),
+              Tab(
+                  key: _taxesTabKey,
+                  icon: const Icon(Icons.account_balance, size: 16),
+                  text: 'Taxes'),
+            ],
           ),
-          body: _isLoading
-              ? Center(
-                  child:
-                      CircularProgressIndicator(color: AppTheme.primaryGreen))
-              : TabBarView(
-                  children: [
-                    _buildGeneralTab(),
-                    _buildJobsAndDataTab(),
-                    _buildDocsAndContactsTab(),
-                    _buildTaxesTab(),
-                  ],
-                ),
         ),
-      ), // Close DefaultTabController
+        body: _isLoading
+            ? Center(
+                child: CircularProgressIndicator(color: AppTheme.primaryGreen))
+            : TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildGeneralTab(),
+                  _buildJobsAndDataTab(),
+                  _buildDocsAndContactsTab(),
+                  _buildTaxesTab(),
+                ],
+              ),
+      ),
     ); // Close NavigationWrapper
   }
 
@@ -1249,6 +1535,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Widget _buildScheduleSyncTile() {
     return Container(
+      key: _calendarImportKey,
       decoration: BoxDecoration(
         color: AppTheme.cardBackground,
         borderRadius: BorderRadius.circular(AppTheme.radiusMedium),

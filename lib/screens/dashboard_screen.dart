@@ -25,6 +25,8 @@ import '../widgets/particle_background.dart';
 import '../widgets/shimmer_card.dart';
 import '../widgets/animated_logo.dart';
 import '../widgets/floating_tour_button.dart';
+import '../widgets/tour_transition_modal.dart';
+import '../widgets/pulsing_button.dart';
 
 class DashboardScreen extends StatefulWidget {
   final int initialIndex;
@@ -44,6 +46,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final GlobalKey _chatNavKey = GlobalKey();
   final GlobalKey _statsNavKey = GlobalKey();
 
+  // Store the tour trigger callback from _HomeScreen
+  VoidCallback? _startHomeTour;
+
   @override
   void initState() {
     super.initState();
@@ -60,10 +65,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
           calendarNavKey: _calendarNavKey,
           chatNavKey: _chatNavKey,
           statsNavKey: _statsNavKey,
+          onTourReady: (callback) {
+            _startHomeTour = callback; // Store the callback
+          },
         ),
-        const BetterCalendarScreen(),
-        const AssistantScreen(),
-        const StatsWithCheckoutTab(),
+        BetterCalendarScreen(isVisible: _selectedIndex == 1),
+        AssistantScreen(isVisible: _selectedIndex == 2),
+        StatsWithCheckoutTab(isVisible: _selectedIndex == 3),
       ];
 
   @override
@@ -118,10 +126,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 // Start tour for current screen
                 switch (_selectedIndex) {
                   case 0: // Home/Dashboard
-                    // Tour already starts automatically, just restart it
-                    final tourService =
-                        Provider.of<TourService>(context, listen: false);
-                    tourService.startTour();
+                    _startHomeTour
+                        ?.call(); // Call the tour trigger from _HomeScreen
                     break;
                   case 1: // Calendar
                     // TODO: Implement calendar tour
@@ -174,9 +180,77 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildNavItem(int index, IconData icon, IconData activeIcon,
       String label, GlobalKey key) {
     final isSelected = _selectedIndex == index;
-    return GestureDetector(
+
+    // Determine if this nav item should pulse
+    String? pulsingTarget;
+    if (label == 'Home') pulsingTarget = 'home';
+    if (label == 'Calendar') pulsingTarget = 'calendar';
+    if (label == 'Chat') pulsingTarget = 'chat';
+    if (label == 'Stats') pulsingTarget = 'stats';
+
+    Widget navItem = GestureDetector(
       key: key,
-      onTap: () => setState(() => _selectedIndex = index),
+      onTap: () {
+        // Clear pulsing when tapped
+        final tourService = Provider.of<TourService>(context, listen: false);
+        if (tourService.pulsingTarget == pulsingTarget) {
+          tourService.clearPulsingTarget();
+
+          // If coming from Stats to Home for Settings tour, pulse the menu button
+          if (pulsingTarget == 'home' &&
+              tourService.expectedScreen == 'settings') {
+            Future.delayed(const Duration(milliseconds: 500), () {
+              if (mounted) {
+                tourService.setPulsingTarget('menuButton');
+                // Show modal for menu
+                showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  barrierColor: Colors.black.withValues(alpha: 0.7),
+                  builder: (ctx) => AlertDialog(
+                    backgroundColor: AppTheme.cardBackground,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(
+                          color: AppTheme.primaryGreen.withValues(alpha: 0.3),
+                          width: 2),
+                    ),
+                    title: Text(
+                      '⚙️ Open Settings',
+                      style:
+                          TextStyle(color: AppTheme.primaryGreen, fontSize: 20),
+                      textAlign: TextAlign.center,
+                    ),
+                    content: Text(
+                      'Tap the menu button (⋮) in the top right corner.',
+                      style:
+                          TextStyle(color: AppTheme.textPrimary, fontSize: 15),
+                      textAlign: TextAlign.center,
+                    ),
+                    actions: [
+                      Center(
+                        child: ElevatedButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.primaryGreen,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 24, vertical: 12),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                          ),
+                          child: const Text('Got It'),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+            });
+          }
+        }
+        setState(() => _selectedIndex = index);
+      },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -210,6 +284,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
       ),
     );
+
+    // Wrap with PulsingButton if this item can pulse
+    if (pulsingTarget != null) {
+      return Consumer<TourService>(
+        builder: (context, tourService, child) {
+          return PulsingButton(
+            isPulsing: tourService.pulsingTarget == pulsingTarget,
+            child: navItem,
+          );
+        },
+      );
+    }
+
+    return navItem;
   }
 }
 
@@ -222,12 +310,15 @@ class _HomeScreen extends StatefulWidget {
   final GlobalKey calendarNavKey;
   final GlobalKey chatNavKey;
   final GlobalKey statsNavKey;
+  final Function(VoidCallback)
+      onTourReady; // NEW: Callback to pass tour trigger up
 
   const _HomeScreen({
     required this.homeNavKey,
     required this.calendarNavKey,
     required this.chatNavKey,
     required this.statsNavKey,
+    required this.onTourReady, // NEW
   });
 
   @override
@@ -242,6 +333,7 @@ class _HomeScreenState extends State<_HomeScreen> {
   List<Map<String, dynamic>> _jobs = [];
   bool _isRefreshing = false;
   TourService? _tourService;
+  bool _isTourShowing = false; // Guard to prevent multiple simultaneous tours
 
   // Tour GlobalKeys
   final GlobalKey _addShiftButtonKey = GlobalKey();
@@ -259,8 +351,13 @@ class _HomeScreenState extends State<_HomeScreen> {
     _loadJobs();
     _loadGoal();
 
-    // Check if tour should start after build
+    // Pass the tour trigger function up to parent
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      widget.onTourReady(() {
+        final tourService = Provider.of<TourService>(context, listen: false);
+        tourService.startTour(checkJobs: true);
+      });
+
       _checkAndStartTour();
 
       // Listen to tour service changes
@@ -284,13 +381,15 @@ class _HomeScreenState extends State<_HomeScreen> {
     debugPrint(
         '🎯 Tour service changed: isActive=${tourService.isActive}, expectedScreen=${tourService.expectedScreen}, currentStep=${tourService.currentStep}');
 
-    // Show tour for dashboard steps (0-9)
-    if (tourService.isActive && tourService.currentStep <= 9) {
-      debugPrint('🎯 Tour service changed - showing dashboard tour');
-      // Small delay to ensure widgets are ready
+    // ONLY trigger on initial activation (step -1), NOT on every step change
+    // The onFinish callback handles step progression, not this listener
+    if (tourService.isActive &&
+        tourService.expectedScreen == 'dashboard' &&
+        tourService.currentStep == -1 &&
+        !_isTourShowing) {
       Future.delayed(const Duration(milliseconds: 300), () {
         if (mounted) {
-          _showDashboardTour();
+          _checkJobPrerequisite();
         }
       });
     }
@@ -384,10 +483,18 @@ class _HomeScreenState extends State<_HomeScreen> {
           ),
           actions: [
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
                 Navigator.pop(context);
-                // TODO: Pulse settings button and guide user
                 debugPrint('🎯 User acknowledged job creation requirement');
+
+                // Reload jobs to see if they created one
+                await _loadJobs();
+
+                // Re-check the prerequisite
+                if (mounted) {
+                  await Future.delayed(const Duration(milliseconds: 500));
+                  _checkJobPrerequisite();
+                }
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.primaryGreen,
@@ -425,9 +532,39 @@ class _HomeScreenState extends State<_HomeScreen> {
     debugPrint(
         '🎯 _showDashboardTour called, currentStep: ${tourService.currentStep}');
 
+    // Guard: prevent multiple simultaneous tours
+    if (_isTourShowing) {
+      debugPrint('🎯 Tour already showing, skipping duplicate call');
+      return;
+    }
+
+    // Don't call finish() - it triggers onFinish callback and causes recursion
+    // Just set to null, the previous overlay will be garbage collected
+    _tutorialCoachMark = null;
+
+    // Handle prerequisite check (Step -1)
+    if (tourService.currentStep == -1) {
+      debugPrint('🎯 Running prerequisite check...');
+      _checkJobPrerequisite();
+      return;
+    }
+
     List<TargetFocus> targets = [];
 
     debugPrint('🎯 Checking steps...');
+
+    // Helper callbacks for skip functionality
+    void onSkipToNext() {
+      // Just set up state - no modal here (modal causes stacking issues)
+      // The coach mark will close via controller.next()
+      // Then user sees the pulsing + button
+      tourService.setPulsingTarget('addShift');
+      tourService.skipToScreen('addShift');
+    }
+
+    void onEndTour() {
+      tourService.skipAll();
+    }
 
     // Step 0: Add Shift Button (+ icon top-left)
     if (tourService.currentStep == 0) {
@@ -438,6 +575,9 @@ class _HomeScreenState extends State<_HomeScreen> {
         title: 'Add Your Shifts',
         description:
             'This is the most important button! Tap this + icon anytime to add your shifts, tips, and income.',
+        currentScreen: 'dashboard',
+        onSkipToNext: onSkipToNext,
+        onEndTour: onEndTour,
         align: ContentAlign.bottom,
       ));
     }
@@ -451,6 +591,9 @@ class _HomeScreenState extends State<_HomeScreen> {
         title: 'Recent Shifts',
         description:
             'Your most recent shifts appear here. Tap any shift to view or edit its details.',
+        currentScreen: 'dashboard',
+        onSkipToNext: onSkipToNext,
+        onEndTour: onEndTour,
         align: ContentAlign.bottom,
       ));
     }
@@ -463,6 +606,9 @@ class _HomeScreenState extends State<_HomeScreen> {
         keyTarget: _seeAllButtonKey,
         title: 'View All Shifts',
         description: 'View all your shifts in a searchable, filterable list.',
+        currentScreen: 'dashboard',
+        onSkipToNext: onSkipToNext,
+        onEndTour: onEndTour,
         align: ContentAlign.bottom,
       ));
     }
@@ -476,6 +622,9 @@ class _HomeScreenState extends State<_HomeScreen> {
         title: 'Income Goals',
         description:
             'Set daily, weekly, monthly, or yearly income goals and track your progress in real-time.',
+        currentScreen: 'dashboard',
+        onSkipToNext: onSkipToNext,
+        onEndTour: onEndTour,
         align: ContentAlign.bottom,
       ));
     }
@@ -489,6 +638,9 @@ class _HomeScreenState extends State<_HomeScreen> {
         title: 'Refresh Data',
         description:
             'If you think your data needs updating, tap here to refresh everything.',
+        currentScreen: 'dashboard',
+        onSkipToNext: onSkipToNext,
+        onEndTour: onEndTour,
         align: ContentAlign.bottom,
       ));
     }
@@ -502,6 +654,9 @@ class _HomeScreenState extends State<_HomeScreen> {
         title: 'Settings Menu',
         description:
             '⚙️ Settings - App preferences\n\n💼 Jobs & Data - Manage jobs, calendar sync, imports\n\n📄 Docs & Contacts - All your attachments and contacts\n\n💰 Taxes - Estimate what you owe',
+        currentScreen: 'dashboard',
+        onSkipToNext: onSkipToNext,
+        onEndTour: onEndTour,
         align: ContentAlign.bottom,
       ));
     }
@@ -515,6 +670,9 @@ class _HomeScreenState extends State<_HomeScreen> {
         keyTarget: widget.homeNavKey,
         title: '🏠 Home',
         description: 'Dashboard overview - Your earnings at a glance',
+        currentScreen: 'dashboard',
+        onSkipToNext: onSkipToNext,
+        onEndTour: onEndTour,
         align: ContentAlign.top,
       ));
     } else {
@@ -531,6 +689,9 @@ class _HomeScreenState extends State<_HomeScreen> {
         title: '📅 Calendar',
         description:
             'View all your shifts organized by date. Tap to continue the tour!',
+        currentScreen: 'dashboard',
+        onSkipToNext: onSkipToNext,
+        onEndTour: onEndTour,
         align: ContentAlign.top,
       ));
     }
@@ -543,6 +704,9 @@ class _HomeScreenState extends State<_HomeScreen> {
         keyTarget: widget.chatNavKey,
         title: '✨ Chat',
         description: 'AI assistant to help you with questions and tasks',
+        currentScreen: 'dashboard',
+        onSkipToNext: onSkipToNext,
+        onEndTour: onEndTour,
         align: ContentAlign.top,
       ));
     }
@@ -555,6 +719,9 @@ class _HomeScreenState extends State<_HomeScreen> {
         keyTarget: widget.statsNavKey,
         title: '📊 Stats',
         description: 'Detailed earnings analytics and insights',
+        currentScreen: 'dashboard',
+        onSkipToNext: onSkipToNext,
+        onEndTour: onEndTour,
         align: ContentAlign.top,
       ));
     }
@@ -566,18 +733,60 @@ class _HomeScreenState extends State<_HomeScreen> {
       return;
     }
 
+    _isTourShowing = true; // Set guard BEFORE creating tour
+
     _tutorialCoachMark = TutorialCoachMark(
       targets: targets,
       colorShadow: AppTheme.primaryGreen,
       paddingFocus: 10,
       opacityShadow: 0.8,
+      hideSkip: true, // Hide default top-right skip button (we have our own)
       onFinish: () {
         debugPrint('🎯 Tour step finished, moving to next');
-        tourService.nextStep();
+        _isTourShowing = false; // Clear guard
         _tutorialCoachMark = null;
+
+        // If we're skipping to another screen, don't do anything here
+        // The skipToScreen already set up the next step
+        if (tourService.isSkippingToScreen) {
+          debugPrint('🎯 Skipping to another screen, ignoring onFinish');
+          tourService.clearSkippingFlag();
+          return;
+        }
+
+        // Special handling for step 9 - show transition modal and pulse + button
+        if (tourService.currentStep == 9) {
+          tourService.nextStep(); // Move to step 10
+          tourService.setPulsingTarget('addShift'); // Make + button pulse
+          TourTransitionModal.showAddShiftPrompt(context, () {
+            // User acknowledged - they'll tap the pulsing + button
+          });
+        } else {
+          // Advance to next step
+          tourService.nextStep();
+
+          // Show next tour step if still in dashboard range
+          if (tourService.currentStep >= 0 && tourService.currentStep <= 9) {
+            Future.delayed(const Duration(milliseconds: 300), () {
+              if (mounted) {
+                _showDashboardTour();
+              }
+            });
+          }
+        }
       },
       onSkip: () {
         debugPrint('🎯 Tour skipped');
+        _isTourShowing = false; // Clear guard
+
+        // If we're skipping to another screen, don't end the tour
+        if (tourService.isSkippingToScreen) {
+          debugPrint('🎯 Skipping to another screen, ignoring onSkip');
+          tourService.clearSkippingFlag();
+          _tutorialCoachMark = null;
+          return true;
+        }
+
         tourService.skipAll();
         _tutorialCoachMark = null;
         return true;
@@ -814,21 +1023,35 @@ class _HomeScreenState extends State<_HomeScreen> {
                         bottom: 0,
                         child: Row(
                           children: [
-                            GestureDetector(
-                              key: _addShiftButtonKey,
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) =>
-                                          const AddShiftScreen()),
-                                ).then((_) {
-                                  // Reload data when returning from Add Shift
-                                  setState(() {});
-                                });
+                            Consumer<TourService>(
+                              builder: (context, tourService, child) {
+                                return PulsingButton(
+                                  isPulsing:
+                                      tourService.pulsingTarget == 'addShift',
+                                  child: GestureDetector(
+                                    key: _addShiftButtonKey,
+                                    onTap: () {
+                                      // Clear pulsing when tapped
+                                      if (tourService.pulsingTarget ==
+                                          'addShift') {
+                                        tourService.clearPulsingTarget();
+                                      }
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) =>
+                                                const AddShiftScreen()),
+                                      ).then((_) {
+                                        // Reload data when returning from Add Shift
+                                        setState(() {});
+                                      });
+                                    },
+                                    child: Icon(Icons.add,
+                                        color: AppTheme.navBarIconColor,
+                                        size: 28),
+                                  ),
+                                );
                               },
-                              child: Icon(Icons.add,
-                                  color: AppTheme.navBarIconColor, size: 28),
                             ),
                             const SizedBox(width: 12),
                             GestureDetector(
@@ -951,114 +1174,147 @@ class _HomeScreenState extends State<_HomeScreen> {
                                       size: 28),
                             ),
                             const SizedBox(width: 12),
-                            GestureDetector(
-                              key: _settingsButtonKey,
-                              onTap: () {
-                                final RenderBox button =
-                                    context.findRenderObject() as RenderBox;
-                                final RenderBox overlay = Navigator.of(context)
-                                    .overlay!
-                                    .context
-                                    .findRenderObject() as RenderBox;
-                                final RelativeRect position =
-                                    RelativeRect.fromRect(
-                                  Rect.fromPoints(
-                                    button.localToGlobal(
-                                        Offset(button.size.width - 48, 40),
-                                        ancestor: overlay),
-                                    button.localToGlobal(
-                                        button.size.bottomRight(Offset.zero),
-                                        ancestor: overlay),
-                                  ),
-                                  Offset.zero & overlay.size,
-                                );
-                                showMenu<int>(
-                                  context: context,
-                                  position: position,
-                                  color: AppTheme.cardBackground,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  items: [
-                                    PopupMenuItem<int>(
-                                      value: 0,
-                                      child: Row(
-                                        children: [
-                                          Icon(Icons.settings,
-                                              color: AppTheme.textSecondary,
-                                              size: 20),
-                                          const SizedBox(width: 12),
-                                          Text('Settings',
-                                              style: AppTheme.bodyMedium
-                                                  .copyWith(
-                                                      color: AppTheme
-                                                          .textPrimary)),
-                                        ],
+                            Consumer<TourService>(
+                              builder: (context, tourService, child) {
+                                final shouldPulse =
+                                    tourService.pulsingTarget == 'menuButton';
+
+                                Widget menuButton = GestureDetector(
+                                  key: _settingsButtonKey,
+                                  onTap: () {
+                                    // If in tour mode and menu button is pulsing, go directly to Settings
+                                    if (shouldPulse &&
+                                        tourService.expectedScreen ==
+                                            'settings') {
+                                      tourService.clearPulsingTarget();
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => const SettingsScreen(
+                                              initialTab: 0),
+                                        ),
+                                      );
+                                      return;
+                                    }
+
+                                    final RenderBox button =
+                                        context.findRenderObject() as RenderBox;
+                                    final RenderBox overlay =
+                                        Navigator.of(context)
+                                            .overlay!
+                                            .context
+                                            .findRenderObject() as RenderBox;
+                                    final RelativeRect position =
+                                        RelativeRect.fromRect(
+                                      Rect.fromPoints(
+                                        button.localToGlobal(
+                                            Offset(button.size.width - 48, 40),
+                                            ancestor: overlay),
+                                        button.localToGlobal(
+                                            button.size
+                                                .bottomRight(Offset.zero),
+                                            ancestor: overlay),
                                       ),
-                                    ),
-                                    PopupMenuItem<int>(
-                                      value: 1,
-                                      child: Row(
-                                        children: [
-                                          Icon(Icons.work,
-                                              color: AppTheme.textSecondary,
-                                              size: 20),
-                                          const SizedBox(width: 12),
-                                          Text('Jobs & Data',
-                                              style: AppTheme.bodyMedium
-                                                  .copyWith(
-                                                      color: AppTheme
-                                                          .textPrimary)),
-                                        ],
-                                      ),
-                                    ),
-                                    PopupMenuItem<int>(
-                                      value: 2,
-                                      child: Row(
-                                        children: [
-                                          Icon(Icons.folder_outlined,
-                                              color: AppTheme.textSecondary,
-                                              size: 20),
-                                          const SizedBox(width: 12),
-                                          Text('Docs & Contacts',
-                                              style: AppTheme.bodyMedium
-                                                  .copyWith(
-                                                      color: AppTheme
-                                                          .textPrimary)),
-                                        ],
-                                      ),
-                                    ),
-                                    PopupMenuItem<int>(
-                                      value: 3,
-                                      child: Row(
-                                        children: [
-                                          Icon(Icons.account_balance,
-                                              color: AppTheme.textSecondary,
-                                              size: 20),
-                                          const SizedBox(width: 12),
-                                          Text('Taxes',
-                                              style: AppTheme.bodyMedium
-                                                  .copyWith(
-                                                      color: AppTheme
-                                                          .textPrimary)),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ).then((value) {
-                                  if (value != null) {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) =>
-                                            SettingsScreen(initialTab: value),
-                                      ),
+                                      Offset.zero & overlay.size,
                                     );
-                                  }
-                                });
+                                    showMenu<int>(
+                                      context: context,
+                                      position: position,
+                                      color: AppTheme.cardBackground,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      items: [
+                                        PopupMenuItem<int>(
+                                          value: 0,
+                                          child: Row(
+                                            children: [
+                                              Icon(Icons.settings,
+                                                  color: AppTheme.textSecondary,
+                                                  size: 20),
+                                              const SizedBox(width: 12),
+                                              Text('Settings',
+                                                  style: AppTheme.bodyMedium
+                                                      .copyWith(
+                                                          color: AppTheme
+                                                              .textPrimary)),
+                                            ],
+                                          ),
+                                        ),
+                                        PopupMenuItem<int>(
+                                          value: 1,
+                                          child: Row(
+                                            children: [
+                                              Icon(Icons.work,
+                                                  color: AppTheme.textSecondary,
+                                                  size: 20),
+                                              const SizedBox(width: 12),
+                                              Text('Jobs & Data',
+                                                  style: AppTheme.bodyMedium
+                                                      .copyWith(
+                                                          color: AppTheme
+                                                              .textPrimary)),
+                                            ],
+                                          ),
+                                        ),
+                                        PopupMenuItem<int>(
+                                          value: 2,
+                                          child: Row(
+                                            children: [
+                                              Icon(Icons.folder_outlined,
+                                                  color: AppTheme.textSecondary,
+                                                  size: 20),
+                                              const SizedBox(width: 12),
+                                              Text('Docs & Contacts',
+                                                  style: AppTheme.bodyMedium
+                                                      .copyWith(
+                                                          color: AppTheme
+                                                              .textPrimary)),
+                                            ],
+                                          ),
+                                        ),
+                                        PopupMenuItem<int>(
+                                          value: 3,
+                                          child: Row(
+                                            children: [
+                                              Icon(Icons.account_balance,
+                                                  color: AppTheme.textSecondary,
+                                                  size: 20),
+                                              const SizedBox(width: 12),
+                                              Text('Taxes',
+                                                  style: AppTheme.bodyMedium
+                                                      .copyWith(
+                                                          color: AppTheme
+                                                              .textPrimary)),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ).then((value) {
+                                      if (value != null) {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => SettingsScreen(
+                                                initialTab: value),
+                                          ),
+                                        );
+                                      }
+                                    });
+                                  },
+                                  child: Icon(Icons.more_vert,
+                                      color: AppTheme.navBarIconColor,
+                                      size: 28),
+                                );
+
+                                if (shouldPulse) {
+                                  return PulsingButton(
+                                    isPulsing: true,
+                                    child: menuButton,
+                                  );
+                                }
+                                return menuButton;
                               },
-                              child: Icon(Icons.more_vert,
-                                  color: AppTheme.navBarIconColor, size: 28),
                             ),
                           ],
                         ),

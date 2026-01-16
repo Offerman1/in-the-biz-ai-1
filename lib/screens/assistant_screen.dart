@@ -6,10 +6,12 @@ import '../services/ai_agent_service.dart';
 import '../services/ai_actions_service.dart';
 import '../services/database_service.dart';
 import '../services/vision_scanner_service.dart';
+import '../services/tour_service.dart';
 import '../theme/app_theme.dart';
 import '../providers/shift_provider.dart';
 import '../widgets/animated_logo.dart';
 import '../widgets/scan_type_menu.dart';
+import '../widgets/tour_transition_modal.dart';
 import '../models/vision_scan.dart';
 import 'document_scanner_screen.dart';
 import 'scan_verification_screen.dart';
@@ -27,7 +29,11 @@ class AssistantScreen extends StatefulWidget {
   /// Optional initial message to send automatically when screen opens
   final String? initialMessage;
 
-  const AssistantScreen({super.key, this.initialMessage});
+  /// Whether this screen is currently visible (for tour triggering)
+  final bool isVisible;
+
+  const AssistantScreen(
+      {super.key, this.initialMessage, this.isVisible = false});
 
   @override
   State<AssistantScreen> createState() => _AssistantScreenState();
@@ -43,6 +49,10 @@ class _AssistantScreenState extends State<AssistantScreen> {
   final DatabaseService _db = DatabaseService();
   final VisionScannerService _visionScanner = VisionScannerService();
   String _userContext = '';
+
+  // Tour state
+  bool _isTourShowing = false;
+  int _currentTourSlide = 0;
 
   @override
   void initState() {
@@ -60,7 +70,45 @@ class _AssistantScreenState extends State<AssistantScreen> {
           }
         });
       }
+
+      // Check if tour should start (only if visible from start)
+      if (widget.isVisible) {
+        _checkAndStartTour();
+      }
     });
+  }
+
+  @override
+  void didUpdateWidget(AssistantScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // When this screen becomes visible, check if tour should start
+    if (widget.isVisible && !oldWidget.isVisible) {
+      debugPrint('🎯 Chat: Became visible, checking tour');
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (mounted) {
+          _checkAndStartTour();
+        }
+      });
+    }
+  }
+
+  Future<void> _checkAndStartTour() async {
+    if (!mounted) return;
+
+    final tourService = Provider.of<TourService>(context, listen: false);
+
+    debugPrint(
+        '🎯 Chat Tour Check: isActive=${tourService.isActive}, currentStep=${tourService.currentStep}, expectedScreen=${tourService.expectedScreen}');
+
+    if (tourService.isActive &&
+        tourService.expectedScreen == 'chat' &&
+        tourService.currentStep >= 18 &&
+        tourService.currentStep <= 23) {
+      await Future.delayed(const Duration(milliseconds: 500));
+      if (mounted && !_isTourShowing) {
+        _showChatTour();
+      }
+    }
   }
 
   Future<void> _loadUserContext() async {
@@ -70,6 +118,268 @@ class _AssistantScreenState extends State<AssistantScreen> {
       // Context loading failed, will work without it
       _userContext = '';
     }
+  }
+
+  /// Chat tour sample conversations
+  static const List<Map<String, dynamic>> _tourSlides = [
+    {
+      'title': '💬 Add Shifts Naturally',
+      'userMessage':
+          'Add a shift where I made \$50 cash and \$75 credit tips. I worked 2 PM to 10 PM with Sarah and Billy.',
+      'aiMessage':
+          'Got it! I\'ve added your shift:\n• Date: Today\n• Hours: 2:00 PM - 10:00 PM (8 hrs)\n• Cash tips: \$50\n• Credit tips: \$75\n• Coworkers: Sarah, Billy\n\nTotal: \$125 in tips! 🎉',
+    },
+    {
+      'title': '✏️ Edit & Update Instantly',
+      'userMessage': 'Change the tips I made on the 14th from \$350 to \$250',
+      'aiMessage':
+          'Updated! Your tips for January 14th are now \$250.\n\nPrevious: \$350\nNew: \$250\nDifference: -\$100',
+    },
+    {
+      'title': '📊 Ask Anything',
+      'userMessage': 'How much did I make last Tuesday?',
+      'aiMessage':
+          'Last Tuesday (Jan 7th) you worked at The Grand Hotel:\n\n• Hours: 4:00 PM - 11:00 PM\n• Cash tips: \$85\n• Credit tips: \$142\n• Hourly: \$52.50\n\nTotal: \$279.50 💰',
+    },
+    {
+      'title': '📈 Analyze Your Earnings',
+      'userMessage': 'Compare this month to last month',
+      'aiMessage':
+          'January vs December:\n\n📈 Tips: \$2,145 vs \$1,890 (+13%)\n📈 Hours: 142 vs 128 (+11%)\n📈 Avg/hour: \$15.10 vs \$14.76\n\nYou\'re on track for your best month yet! 🚀',
+    },
+    {
+      'title': '🔧 Manage Everything',
+      'userMessage':
+          'Delete my shift from yesterday and show me all shifts with Billy',
+      'aiMessage':
+          'Done! I\'ve deleted yesterday\'s shift.\n\nShifts with Billy (last 30 days):\n• Jan 12 - The Grand Hotel - \$187\n• Jan 8 - Private Event - \$245\n• Jan 3 - The Grand Hotel - \$156\n\nTotal with Billy: \$588 across 3 shifts',
+    },
+    {
+      'title': '🌟 The Power is Yours!',
+      'userMessage': null,
+      'aiMessage':
+          'I can do SO much more:\n\n• "What\'s my best paying job?"\n• "Export last month to PDF"\n• "Set a goal for \$500/week"\n• "Who did I work with most?"\n• "Scan this receipt" 📷\n• "How many hours this year?"\n\nJust ask - I\'m here 24/7! 🤖💚',
+    },
+  ];
+
+  void _showChatTour() {
+    if (_isTourShowing) return;
+
+    setState(() {
+      _isTourShowing = true;
+      _currentTourSlide = 0;
+    });
+
+    _showTourSlideDialog();
+  }
+
+  void _showTourSlideDialog() {
+    final tourService = Provider.of<TourService>(context, listen: false);
+    final slide = _tourSlides[_currentTourSlide];
+    final isLastSlide = _currentTourSlide == _tourSlides.length - 1;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      barrierColor: Colors.black.withValues(alpha: 0.85),
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 420),
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: AppTheme.cardBackground,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: AppTheme.primaryGreen.withValues(alpha: 0.3),
+              width: 2,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: AppTheme.primaryGreen.withValues(alpha: 0.2),
+                blurRadius: 30,
+                spreadRadius: 5,
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Title
+              Text(
+                slide['title'] as String,
+                style: TextStyle(
+                  color: AppTheme.primaryGreen,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+
+              // User message bubble (if exists)
+              if (slide['userMessage'] != null) ...[
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Container(
+                    constraints: const BoxConstraints(maxWidth: 280),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryGreen,
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(16),
+                        topRight: Radius.circular(16),
+                        bottomLeft: Radius.circular(16),
+                        bottomRight: Radius.circular(4),
+                      ),
+                    ),
+                    child: Text(
+                      slide['userMessage'] as String,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
+
+              // AI response bubble
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Container(
+                  constraints: const BoxConstraints(maxWidth: 300),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: AppTheme.cardBackgroundLight,
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(16),
+                      topRight: Radius.circular(16),
+                      bottomLeft: Radius.circular(4),
+                      bottomRight: Radius.circular(16),
+                    ),
+                    border: Border.all(
+                      color: AppTheme.primaryGreen.withValues(alpha: 0.2),
+                    ),
+                  ),
+                  child: Text(
+                    slide['aiMessage'] as String,
+                    style: TextStyle(
+                      color: AppTheme.textPrimary,
+                      fontSize: 13,
+                      height: 1.4,
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Progress dots
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(_tourSlides.length, (index) {
+                  return Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    width: index == _currentTourSlide ? 24 : 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: index == _currentTourSlide
+                          ? AppTheme.primaryGreen
+                          : AppTheme.textMuted.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  );
+                }),
+              ),
+
+              const SizedBox(height: 20),
+
+              // Buttons row
+              Row(
+                children: [
+                  // End Tour button
+                  TextButton(
+                    style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 8)),
+                    onPressed: () {
+                      Navigator.pop(context);
+                      setState(() => _isTourShowing = false);
+                      tourService.skipAll();
+                    },
+                    child: Text(
+                      'End',
+                      style: TextStyle(
+                        color: AppTheme.accentRed,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                  // Skip to Stats (only if not last slide)
+                  if (!isLastSlide)
+                    TextButton(
+                      style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 8)),
+                      onPressed: () {
+                        Navigator.pop(context);
+                        setState(() => _isTourShowing = false);
+                        tourService.setPulsingTarget('stats');
+                        tourService.skipToScreen('stats');
+                      },
+                      child: Text(
+                        'Skip →',
+                        style: TextStyle(
+                          color: AppTheme.textSecondary,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                  const Spacer(),
+                  // Next / Continue button
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      if (isLastSlide) {
+                        // Move to Stats
+                        setState(() => _isTourShowing = false);
+                        tourService.nextStep(); // Step 24 (Stats)
+                        tourService.setPulsingTarget('stats');
+                        TourTransitionModal.show(
+                          context: context,
+                          title: 'Check Your Stats!',
+                          message:
+                              'Tap the Stats button to see your earnings analytics and export options.',
+                          onDismiss: () {},
+                        );
+                      } else {
+                        // Next slide
+                        setState(() => _currentTourSlide++);
+                        tourService.nextStep();
+                        _showTourSlideDialog();
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primaryGreen,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 24, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text(isLastSlide ? 'Continue →' : 'Next'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   /// Load chat history from Supabase

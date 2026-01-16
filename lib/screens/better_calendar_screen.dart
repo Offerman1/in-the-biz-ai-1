@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import '../models/shift.dart';
 import '../models/job.dart';
 import '../models/beo_event.dart';
@@ -12,18 +13,23 @@ import '../providers/theme_provider.dart';
 import '../providers/beo_event_provider.dart';
 import '../services/database_service.dart';
 import '../services/calendar_sync_service.dart';
+import '../services/tour_service.dart';
 import '../screens/add_shift_screen.dart';
 import '../screens/shift_detail_screen.dart';
 import '../screens/single_shift_detail_screen.dart';
 import '../screens/beo_detail_screen.dart';
 import '../widgets/job_filter_bottom_sheet.dart';
 import '../widgets/money_mode_bottom_sheet.dart';
+import '../widgets/tour_transition_modal.dart';
+import '../utils/tour_targets.dart';
 import '../theme/app_theme.dart';
 
 enum CalendarViewMode { month, week, year }
 
 class BetterCalendarScreen extends StatefulWidget {
-  const BetterCalendarScreen({super.key});
+  final bool isVisible;
+
+  const BetterCalendarScreen({super.key, this.isVisible = false});
 
   @override
   State<BetterCalendarScreen> createState() => _BetterCalendarScreenState();
@@ -61,6 +67,18 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
 
   final currencyFormat = NumberFormat.currency(symbol: '\$', decimalDigits: 0);
 
+  // Tour-related state
+  TutorialCoachMark? _tutorialCoachMark;
+  bool _isTourShowing = false;
+
+  // Tour GlobalKeys
+  final GlobalKey _periodSelectorKey = GlobalKey();
+  final GlobalKey _viewToggleKey = GlobalKey();
+  final GlobalKey _jobFilterKey = GlobalKey();
+  final GlobalKey _moneyModeKey = GlobalKey();
+  final GlobalKey _todayButtonKey = GlobalKey();
+  final GlobalKey _calendarGridKey = GlobalKey();
+
   /// Reset zoom to default (1x) and focal point to center
   void _resetZoom() {
     setState(() {
@@ -77,6 +95,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _monthListScrollController.dispose();
+    // No tour listener to remove - we don't use one anymore
     super.dispose();
   }
 
@@ -88,6 +107,262 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
     _loadJobs();
     _loadBeoEvents(); // Load BEO events
     _autoSyncCalendar(); // Auto-sync future shifts when screen opens
+
+    // Check if tour should start after build (only if visible from start)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (widget.isVisible) {
+        _checkAndStartTour();
+      }
+    });
+  }
+
+  @override
+  void didUpdateWidget(BetterCalendarScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // When this screen becomes visible, check if tour should start
+    if (widget.isVisible && !oldWidget.isVisible) {
+      debugPrint('🎯 Calendar: Became visible, checking tour');
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (mounted) {
+          _checkAndStartTour();
+        }
+      });
+    }
+  }
+
+  // Removed _onTourServiceChanged - it was triggering even when Calendar
+  // wasn't the active/visible screen, causing tour overlay stacking issues.
+
+  Future<void> _checkAndStartTour() async {
+    if (!mounted) return;
+
+    try {
+      final tourService = Provider.of<TourService>(context, listen: false);
+
+      debugPrint(
+          '🎯 Calendar Tour Check: isActive=${tourService.isActive}, currentStep=${tourService.currentStep}, expectedScreen=${tourService.expectedScreen}');
+
+      // Check if tour is active and we're on the expected screen
+      if (tourService.isActive && tourService.expectedScreen == 'calendar') {
+        await Future.delayed(const Duration(milliseconds: 500));
+        if (mounted) {
+          debugPrint('🎯 Starting Calendar tour...');
+          _showCalendarTour();
+        }
+      } else {
+        debugPrint('🎯 Calendar: Tour not active or wrong screen');
+      }
+    } catch (e) {
+      debugPrint('❌ Error checking calendar tour: $e');
+    }
+  }
+
+  void _showCalendarTour() {
+    final tourService = Provider.of<TourService>(context, listen: false);
+
+    debugPrint(
+        '🎯 _showCalendarTour called, currentStep: ${tourService.currentStep}');
+
+    // Prevent multiple simultaneous tours
+    if (_isTourShowing) {
+      debugPrint('🎯 Calendar tour already showing, ignoring');
+      return;
+    }
+
+    // Check if we're on a calendar step
+    if (tourService.currentStep < 12 || tourService.currentStep > 17) {
+      debugPrint('🎯 Not on a calendar step, ignoring');
+      return;
+    }
+
+    // Clean up previous tour
+    _tutorialCoachMark = null;
+
+    List<TargetFocus> targets = [];
+
+    // Helper callbacks for skip functionality
+    void onSkipToNext() {
+      // Just set up state - no modal (modal causes stacking issues)
+      tourService.setPulsingTarget('chat');
+      tourService.skipToScreen('chat');
+    }
+
+    void onEndTour() {
+      tourService.skipAll();
+    }
+
+    // Step 12: Period selector (Month/Week/Year)
+    if (tourService.currentStep == 12) {
+      debugPrint('🎯 Adding period selector target');
+      targets.add(TourTargets.createTarget(
+        identify: 'periodSelector',
+        keyTarget: _periodSelectorKey,
+        title: '🗓️ View Period',
+        description:
+            'View your shifts by month, week, or year. Swipe left or right on the calendar to navigate between periods.',
+        currentScreen: 'calendar',
+        onSkipToNext: onSkipToNext,
+        onEndTour: onEndTour,
+        align: ContentAlign.bottom,
+      ));
+    }
+
+    // Step 13: View toggle (grid/list)
+    if (tourService.currentStep == 13) {
+      debugPrint('🎯 Adding view toggle target');
+      targets.add(TourTargets.createTarget(
+        identify: 'viewToggle',
+        keyTarget: _viewToggleKey,
+        title: '📋 Switch Views',
+        description: 'Switch between calendar grid and list view.',
+        currentScreen: 'calendar',
+        onSkipToNext: onSkipToNext,
+        onEndTour: onEndTour,
+        align: ContentAlign.bottom,
+      ));
+    }
+
+    // Step 14: Job filter
+    if (tourService.currentStep == 14) {
+      debugPrint('🎯 Adding job filter target');
+      targets.add(TourTargets.createTarget(
+        identify: 'jobFilter',
+        keyTarget: _jobFilterKey,
+        title: '💼 Filter by Job',
+        description: 'Filter to see shifts from one job or all jobs.',
+        currentScreen: 'calendar',
+        onSkipToNext: onSkipToNext,
+        onEndTour: onEndTour,
+        align: ContentAlign.bottom,
+      ));
+    }
+
+    // Step 15: Money display mode
+    if (tourService.currentStep == 15) {
+      debugPrint('🎯 Adding money mode target');
+      targets.add(TourTargets.createTarget(
+        identify: 'moneyMode',
+        keyTarget: _moneyModeKey,
+        title: '💰 Earnings View',
+        description:
+            'Choose how earnings display: Total Pay, Tips Only, Hourly, or Take Home.',
+        currentScreen: 'calendar',
+        onSkipToNext: onSkipToNext,
+        onEndTour: onEndTour,
+        align: ContentAlign.bottom,
+      ));
+    }
+
+    // Step 16: Today button
+    if (tourService.currentStep == 16) {
+      debugPrint('🎯 Adding today button target');
+      targets.add(TourTargets.createTarget(
+        identify: 'todayButton',
+        keyTarget: _todayButtonKey,
+        title: '📅 Jump to Today',
+        description: 'Jump back to today\'s date instantly.',
+        currentScreen: 'calendar',
+        onSkipToNext: onSkipToNext,
+        onEndTour: onEndTour,
+        align: ContentAlign.bottom,
+      ));
+    }
+
+    // Step 17: Calendar grid area
+    if (tourService.currentStep == 17) {
+      debugPrint('🎯 Adding calendar grid target');
+      targets.add(TourTargets.createTarget(
+        identify: 'calendarGrid',
+        keyTarget: _calendarGridKey,
+        title: '📆 Your Shifts',
+        description:
+            'Your shifts appear here showing earnings and times. Tap any shift to see details.',
+        currentScreen: 'calendar',
+        onSkipToNext: onSkipToNext,
+        onEndTour: onEndTour,
+        align: ContentAlign.custom,
+        customPosition: CustomTargetContentPosition(
+            top: MediaQuery.of(context).size.height * 0.35),
+      ));
+    }
+
+    // Step 18: Transition step - move to Chat
+    // This is handled in onFinish when step 17 completes
+
+    debugPrint('🎯 Calendar: Total targets: ${targets.length}');
+
+    if (targets.isEmpty) {
+      debugPrint('🎯 Calendar: No targets to show');
+      return;
+    }
+
+    _isTourShowing = true;
+
+    _tutorialCoachMark = TutorialCoachMark(
+      targets: targets,
+      colorShadow: AppTheme.primaryGreen,
+      paddingFocus: 10,
+      opacityShadow: 0.8,
+      hideSkip: true,
+      onFinish: () {
+        debugPrint('🎯 Calendar: Tour step finished');
+        _isTourShowing = false;
+        _tutorialCoachMark = null;
+
+        // If we're skipping to another screen, don't do anything here
+        if (tourService.isSkippingToScreen) {
+          debugPrint(
+              '🎯 Calendar: Skipping to another screen, ignoring onFinish');
+          tourService.clearSkippingFlag();
+          return;
+        }
+
+        // Advance to next step
+        tourService.nextStep();
+
+        // Show next tour step if still in calendar range (12-17)
+        if (tourService.currentStep >= 12 && tourService.currentStep <= 17) {
+          Future.delayed(const Duration(milliseconds: 300), () {
+            if (mounted) {
+              _showCalendarTour();
+            }
+          });
+        }
+        // After step 17, transition to Chat (step 18)
+        else if (tourService.currentStep == 18) {
+          // Set up for Chat tour
+          tourService.setPulsingTarget('chat');
+          TourTransitionModal.show(
+            context: context,
+            title: 'Meet Your AI Assistant!',
+            message:
+                'Now tap the Chat button to see how AI can help you track your income effortlessly.',
+            onDismiss: () {
+              // User will tap Chat button
+            },
+          );
+        }
+      },
+      onSkip: () {
+        debugPrint('🎯 Calendar: Tour skipped');
+        _isTourShowing = false;
+
+        if (tourService.isSkippingToScreen) {
+          debugPrint(
+              '🎯 Calendar: Skipping to another screen, ignoring onSkip');
+          tourService.clearSkippingFlag();
+          _tutorialCoachMark = null;
+          return true;
+        }
+
+        tourService.skipAll();
+        _tutorialCoachMark = null;
+        return true;
+      },
+    );
+
+    debugPrint('🎯 Calendar: Showing tutorial...');
+    _tutorialCoachMark?.show(context: context);
   }
 
   /// Load BEO events from provider
@@ -267,6 +542,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
               top: 0,
               bottom: 0,
               child: IconButton(
+                key: _viewToggleKey,
                 icon: Icon(
                   _isMonthListView
                       ? Icons.calendar_view_month
@@ -291,6 +567,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
             top: 0,
             bottom: 0,
             child: IconButton(
+              key: _jobFilterKey,
               icon: Icon(
                 Icons.work_outline,
                 color: AppTheme.navBarIconColor,
@@ -452,6 +729,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
             top: 0,
             bottom: 0,
             child: IconButton(
+              key: _moneyModeKey,
               icon: Icon(
                 Icons.attach_money,
                 color: AppTheme.navBarIconColor,
@@ -562,6 +840,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
             top: 0,
             bottom: 0,
             child: IconButton(
+              key: _todayButtonKey,
               icon: Icon(Icons.today, color: AppTheme.navBarIconColor),
               iconSize: 24,
               padding: EdgeInsets.zero,
@@ -581,6 +860,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
 
   Widget _buildViewToggle() {
     return Container(
+      key: _periodSelectorKey,
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
@@ -755,6 +1035,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                     // 1 finger horizontal swipe = change month
                     // 2 fingers pinch = zoom to focal point
                     return GestureDetector(
+                      key: _calendarGridKey,
                       onScaleStart: (details) {
                         _baseScale = _calendarScale;
                         _baseOffset = _offset;

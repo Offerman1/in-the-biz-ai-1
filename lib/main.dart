@@ -26,6 +26,11 @@ const String appVersion = '1.2.1+20';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Lock app to portrait mode only (works on phones and tablets)
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+  ]);
+
   // Log app version to console (web only)
   if (kIsWeb) {
     developer.log('🚀 In The Biz AI - Version: $appVersion', name: 'App');
@@ -52,6 +57,15 @@ void main() async {
   // Initialize notifications
   await NotificationService().initialize();
 
+  // Request notification permissions (Android 13+)
+  if (!kIsWeb) {
+    await NotificationService().requestPermissions();
+    // Schedule quarterly tax reminders
+    await NotificationService().scheduleQuarterlyTaxReminders();
+    // Schedule monthly summary
+    await NotificationService().scheduleMonthlySummary();
+  }
+
   // Initialize AdMob (mobile only)
   if (!kIsWeb) {
     await AdService().initialize();
@@ -71,6 +85,16 @@ void main() async {
 
   // Run database migrations
   await runMigrations();
+
+  // Check for inactivity reminders (mobile only)
+  if (!kIsWeb) {
+    final db = DatabaseService();
+    final shifts = await db.getShifts();
+    if (shifts.isNotEmpty) {
+      final lastShift = shifts.reduce((a, b) => a.date.isAfter(b.date) ? a : b);
+      await NotificationService().checkInactivityReminder(lastShift.date);
+    }
+  }
 
   // Initialize tour service and load button visibility
   final tourService = TourService();

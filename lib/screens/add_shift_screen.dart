@@ -49,6 +49,10 @@ import '../models/vision_scan.dart';
 import '../services/vision_scanner_service.dart';
 import '../services/scan_image_service.dart';
 import '../services/beo_event_service.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
+import '../services/tour_service.dart';
+import '../utils/tour_targets.dart';
+import '../widgets/tour_transition_modal.dart';
 
 class AddShiftScreen extends StatefulWidget {
   final Shift? existingShift;
@@ -263,6 +267,22 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
   final Map<String, String> _signedUrlCache = {};
   bool _isLoadingSignedUrls = false;
 
+  // Tour GlobalKeys
+  final GlobalKey _scanButtonKey = GlobalKey();
+  final GlobalKey _attachButtonKey =
+      GlobalKey(); // Consolidated attachment button
+  final GlobalKey _jobDropdownKey = GlobalKey();
+  final GlobalKey _datePickerKey = GlobalKey();
+  final GlobalKey _tipsFieldsKey = GlobalKey();
+  final GlobalKey _photoButtonKey = GlobalKey();
+  final GlobalKey _documentButtonKey = GlobalKey();
+  final GlobalKey _contactButtonKey = GlobalKey();
+
+  // Tour service
+  TourService? _tourService;
+  TutorialCoachMark? _tutorialCoachMark;
+  bool _isTourShowing = false; // Guard to prevent multiple simultaneous tours
+
   @override
   void initState() {
     super.initState();
@@ -290,6 +310,15 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
         _handleScanTypeSelected(ScanType.beo);
       });
     }
+
+    // Check if tour should start after build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkAndStartTour();
+
+      // Listen to tour service changes
+      _tourService = Provider.of<TourService>(context, listen: false);
+      _tourService?.addListener(_onTourServiceChanged);
+    });
   }
 
   /// Apply checkout data to pre-fill form fields
@@ -826,6 +855,8 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
 
   @override
   void dispose() {
+    _tourService?.removeListener(_onTourServiceChanged);
+    _tutorialCoachMark = null;
     _cashTipsController.dispose();
     _creditTipsController.dispose();
     _salesAmountController.dispose();
@@ -933,6 +964,204 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
     }
     _customFieldControllers.clear();
     super.dispose();
+  }
+
+  void _onTourServiceChanged() {
+    if (!mounted) return;
+
+    final tourService = Provider.of<TourService>(context, listen: false);
+
+    debugPrint(
+        '🎯 Tour service changed: isActive=${tourService.isActive}, expectedScreen=${tourService.expectedScreen}, currentStep=${tourService.currentStep}');
+
+    // Trigger tour when entering Add Shift screen (steps 10-11)
+    // Only trigger if not already showing
+    if (tourService.isActive &&
+        tourService.expectedScreen == 'addShift' &&
+        tourService.currentStep >= 10 &&
+        tourService.currentStep <= 11 &&
+        !_isTourShowing) {
+      debugPrint('🎯 Tour service changed - showing Add Shift tour');
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (mounted) {
+          _showAddShiftTour();
+        }
+      });
+    }
+  }
+
+  Future<void> _checkAndStartTour() async {
+    if (!mounted) return;
+
+    try {
+      final tourService = Provider.of<TourService>(context, listen: false);
+
+      debugPrint(
+          '🎯 Tour Check: isActive=${tourService.isActive}, currentStep=${tourService.currentStep}, expectedScreen=${tourService.expectedScreen}');
+
+      // Check if tour is active and we're on the expected screen
+      if (tourService.isActive && tourService.expectedScreen == 'addShift') {
+        await Future.delayed(const Duration(milliseconds: 500));
+        if (mounted) {
+          debugPrint('🎯 Starting Add Shift tour...');
+          _showAddShiftTour();
+        }
+      } else {
+        debugPrint('🎯 Tour not active or wrong screen');
+      }
+    } catch (e) {
+      debugPrint('❌ Error checking tour: $e');
+    }
+  }
+
+  void _showAddShiftTour() {
+    final tourService = Provider.of<TourService>(context, listen: false);
+
+    debugPrint(
+        '🎯 _showAddShiftTour called, currentStep: ${tourService.currentStep}');
+
+    // Guard: prevent multiple simultaneous tours
+    if (_isTourShowing) {
+      debugPrint('🎯 Tour already showing, skipping duplicate call');
+      return;
+    }
+
+    // Don't call finish() - just set to null to avoid callback recursion
+    _tutorialCoachMark = null;
+
+    List<TargetFocus> targets = [];
+
+    // Helper callbacks for skip functionality
+    void onSkipToNext() {
+      // Just set up state - no modal here (modal causes stacking issues)
+      // The coach mark will close via controller.next()
+      // Then user sees the pulsing Calendar button on dashboard
+      tourService.setPulsingTarget('calendar');
+      tourService.skipToScreen('calendar');
+      // Pop back to dashboard after a short delay
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (context.mounted) {
+          Navigator.pop(context);
+        }
+      });
+    }
+
+    void onEndTour() {
+      tourService.skipAll();
+    }
+
+    // Step 10: Scan Button
+    if (tourService.currentStep == 10) {
+      debugPrint('🎯 Adding Scan button target');
+      targets.add(TourTargets.createTarget(
+        identify: 'scanButton',
+        keyTarget: _scanButtonKey,
+        title: '✨ AI-Powered Scanning',
+        description:
+            'Scan server checkouts, receipts, BEOs, business cards, paychecks, or invoices - AI extracts the data automatically!',
+        currentScreen: 'addShift',
+        onSkipToNext: onSkipToNext,
+        onEndTour: onEndTour,
+        align: ContentAlign.bottom,
+      ));
+    }
+
+    // Step 11: Attachment Button (simplified - skip to this after scan)
+    if (tourService.currentStep == 11) {
+      debugPrint('🎯 Adding Attachment button target');
+      targets.add(TourTargets.createTarget(
+        identify: 'attachButton',
+        keyTarget: _attachButtonKey,
+        title: '📎 Attach Files',
+        description:
+            'Add photos, videos, or documents to any shift. Great for floor plans, receipts, or event photos!',
+        currentScreen: 'addShift',
+        onSkipToNext: onSkipToNext,
+        onEndTour: onEndTour,
+        align: ContentAlign.bottom,
+      ));
+    }
+
+    // Steps 12-17: SKIPPED - these are industry-specific or covered by scan/attach
+    // The tour ends after step 11 for Add Shift screen
+
+    debugPrint('🎯 Total targets: ${targets.length}');
+
+    if (targets.isEmpty) {
+      debugPrint('🎯 No targets to show');
+      return;
+    }
+
+    _isTourShowing = true; // Set guard BEFORE creating tour
+
+    _tutorialCoachMark = TutorialCoachMark(
+      targets: targets,
+      colorShadow: AppTheme.primaryGreen,
+      paddingFocus: 10,
+      opacityShadow: 0.8,
+      hideSkip: true, // Hide default top-right skip button (we have our own)
+      onFinish: () {
+        debugPrint('🎯 Tour step finished, moving to next');
+        _isTourShowing = false; // Clear guard
+        _tutorialCoachMark = null;
+
+        // If we're skipping to another screen, don't do anything here
+        if (tourService.isSkippingToScreen) {
+          debugPrint('🎯 Skipping to another screen, ignoring onFinish');
+          tourService.clearSkippingFlag();
+          return;
+        }
+
+        // Advance to next step
+        tourService.nextStep();
+
+        // Add Shift tour is now simplified: 10 (scan) → 11 (attach) → 12 (calendar)
+        // Show step 11 if we just finished step 10
+        if (tourService.currentStep == 11) {
+          Future.delayed(const Duration(milliseconds: 300), () {
+            if (mounted) {
+              _showAddShiftTour();
+            }
+          });
+        }
+        // After step 11, show transition to Calendar
+        else if (tourService.currentStep == 12) {
+          // Set Calendar as the pulsing target
+          tourService.setPulsingTarget('calendar');
+          // Show transition modal
+          TourTransitionModal.show(
+            context: context,
+            title: 'Explore the Calendar!',
+            message:
+                'Great! Now tap the back arrow and then tap the Calendar button to see your shifts organized by date.',
+            onDismiss: () {
+              // User will navigate back and tap Calendar
+              // Pop this screen to go back to dashboard
+              Navigator.pop(context);
+            },
+          );
+        }
+      },
+      onSkip: () {
+        debugPrint('🎯 Tour skipped');
+        _isTourShowing = false; // Clear guard
+
+        // If we're skipping to another screen, don't end the tour
+        if (tourService.isSkippingToScreen) {
+          debugPrint('🎯 Skipping to another screen, ignoring onSkip');
+          tourService.clearSkippingFlag();
+          _tutorialCoachMark = null;
+          return true;
+        }
+
+        tourService.skipAll();
+        _tutorialCoachMark = null;
+        return true;
+      },
+    );
+
+    debugPrint('🎯 Showing tutorial...');
+    _tutorialCoachMark?.show(context: context);
   }
 
   Future<void> _showRateOverrideDialog() async {
@@ -1259,6 +1488,15 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
         await _db.updateShift(shift);
         // Upload any new photos for existing shift
         await _uploadCapturedPhotosToShiftPhotosTable(shift.id);
+
+        // Send schedule change notification for edited shift
+        if (!kIsWeb) {
+          final jobName = _selectedJob?.name ?? 'Shift';
+          await NotificationService().sendScheduleChangeAlert(
+            message: 'Your $jobName shift has been updated',
+            jobName: jobName,
+          );
+        }
       } else {
         // Handle recurring shifts
         if (_isRecurring && _selectedWeekdays.isNotEmpty) {
@@ -1274,6 +1512,31 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
         final shiftProvider =
             Provider.of<ShiftProvider>(context, listen: false);
         await shiftProvider.loadShifts();
+
+        // Check milestone celebrations after saving shift with earnings
+        if (!kIsWeb) {
+          final totalEarnings = shift.cashTips +
+              shift.creditTips +
+              (shift.commission ?? 0) +
+              (shift.flatRate ?? 0) +
+              (shift.hoursWorked * shift.hourlyRate);
+          if (totalEarnings > 0) {
+            // Get all shifts to calculate total earnings
+            final allShifts = await _db.getShifts();
+            final grandTotal = allShifts.fold<double>(
+                0,
+                (sum, s) =>
+                    sum +
+                    s.cashTips +
+                    s.creditTips +
+                    (s.commission ?? 0) +
+                    (s.flatRate ?? 0) +
+                    (s.hoursWorked * s.hourlyRate));
+            await NotificationService().sendMilestoneCelebration(
+              totalEarnings: grandTotal,
+            );
+          }
+        }
 
         // Navigate to Calendar page (index 1) after saving shift
         Navigator.of(context).pushAndRemoveUntil(
@@ -2623,6 +2886,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
       ),
       items: [
         PopupMenuItem(
+          key: _photoButtonKey,
           padding: const EdgeInsets.symmetric(horizontal: 8),
           child: ListTile(
             contentPadding: const EdgeInsets.symmetric(horizontal: 8),
@@ -2659,6 +2923,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
           ),
         ),
         PopupMenuItem(
+          key: _documentButtonKey,
           padding: const EdgeInsets.symmetric(horizontal: 8),
           child: ListTile(
             contentPadding: const EdgeInsets.symmetric(horizontal: 8),
@@ -2808,6 +3073,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
           actions: [
             // ✨ Scan button - Opens AI Vision Scanner menu
             IconButton(
+              key: _scanButtonKey,
               icon: const Text('✨', style: TextStyle(fontSize: 24)),
               onPressed: () =>
                   showScanTypeMenu(context, _handleScanTypeSelected),
@@ -2815,6 +3081,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
             ),
             // 📎 Attach button - Consolidated media menu
             IconButton(
+              key: _attachButtonKey,
               icon: Icon(Icons.attach_file, color: AppTheme.primaryGreen),
               onPressed: _showConsolidatedAttachmentMenu,
               tooltip: 'Attach Media',
@@ -3556,116 +3823,122 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
   Widget _buildJobSelector() {
     final selectedJobName = _selectedJob?.name ?? 'Select a job';
     final selectedEmployer = _selectedJob?.employer;
-    return CollapsibleSection(
-      title: 'My Job: $selectedJobName',
-      icon: Icons.work,
-      initiallyExpanded: false,
-      children: [
-        // Employer badge (if available)
-        if (selectedEmployer?.isNotEmpty == true) ...[
-          Center(
-            child: Container(
-              margin: const EdgeInsets.only(bottom: 12),
-              padding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 6,
-              ),
-              decoration: BoxDecoration(
-                color: AppTheme.accentBlue.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(4),
-                border: Border.all(
-                  color: AppTheme.accentBlue.withValues(alpha: 0.3),
-                  width: 0.5,
+    return Container(
+      key: _jobDropdownKey,
+      child: CollapsibleSection(
+        title: 'My Job: $selectedJobName',
+        icon: Icons.work,
+        initiallyExpanded: false,
+        children: [
+          // Employer badge (if available)
+          if (selectedEmployer?.isNotEmpty == true) ...[
+            Center(
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: AppTheme.accentBlue.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(
+                    color: AppTheme.accentBlue.withValues(alpha: 0.3),
+                    width: 0.5,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.business,
+                      size: 14,
+                      color: AppTheme.accentBlue,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      selectedEmployer!,
+                      style: AppTheme.labelSmall.copyWith(
+                        color: AppTheme.accentBlue,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.business,
-                    size: 14,
-                    color: AppTheme.accentBlue,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    selectedEmployer!,
-                    style: AppTheme.labelSmall.copyWith(
-                      color: AppTheme.accentBlue,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
             ),
+          ],
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: _userJobs.map((job) {
+              final isSelected = _selectedJob?.id == job.id;
+              return ChoiceChip(
+                label: Text(job.name),
+                selected: isSelected,
+                onSelected: (selected) {
+                  if (selected) {
+                    setState(() {
+                      _selectedJob = job;
+                      _template = job.template;
+                    });
+                  }
+                },
+                selectedColor: AppTheme.primaryGreen,
+                backgroundColor: AppTheme.cardBackgroundLight,
+                labelStyle: TextStyle(
+                  color: isSelected ? Colors.black : AppTheme.textPrimary,
+                ),
+              );
+            }).toList(),
           ),
         ],
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: _userJobs.map((job) {
-            final isSelected = _selectedJob?.id == job.id;
-            return ChoiceChip(
-              label: Text(job.name),
-              selected: isSelected,
-              onSelected: (selected) {
-                if (selected) {
-                  setState(() {
-                    _selectedJob = job;
-                    _template = job.template;
-                  });
-                }
-              },
-              selectedColor: AppTheme.primaryGreen,
-              backgroundColor: AppTheme.cardBackgroundLight,
-              labelStyle: TextStyle(
-                color: isSelected ? Colors.black : AppTheme.textPrimary,
-              ),
-            );
-          }).toList(),
-        ),
-      ],
+      ),
     );
   }
 
   Widget _buildDateSelector() {
-    return GestureDetector(
-      onTap: () async {
-        final date = await showDatePicker(
-          context: context,
-          initialDate: _selectedDate,
-          firstDate: DateTime(2020),
-          lastDate: DateTime.now().add(const Duration(days: 365)),
-        );
-        if (date != null) {
-          setState(() => _selectedDate = date);
-        }
-      },
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppTheme.cardBackground,
-          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-        ),
-        child: Row(
-          children: [
-            Icon(Icons.calendar_today, color: AppTheme.primaryGreen),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Shift Date', style: AppTheme.labelSmall),
-                  const SizedBox(height: 4),
-                  Text(
-                    DateFormat('EEEE, MMMM d, y').format(_selectedDate),
-                    style: AppTheme.bodyLarge,
-                  ),
-                ],
+    return Container(
+      key: _datePickerKey,
+      child: GestureDetector(
+        onTap: () async {
+          final date = await showDatePicker(
+            context: context,
+            initialDate: _selectedDate,
+            firstDate: DateTime(2020),
+            lastDate: DateTime.now().add(const Duration(days: 365)),
+          );
+          if (date != null) {
+            setState(() => _selectedDate = date);
+          }
+        },
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppTheme.cardBackground,
+            borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.calendar_today, color: AppTheme.primaryGreen),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Shift Date', style: AppTheme.labelSmall),
+                    const SizedBox(height: 4),
+                    Text(
+                      DateFormat('EEEE, MMMM d, y').format(_selectedDate),
+                      style: AppTheme.bodyLarge,
+                    ),
+                  ],
+                ),
               ),
-            ),
-            Icon(Icons.chevron_right, color: AppTheme.textMuted),
-          ],
+              Icon(Icons.chevron_right, color: AppTheme.textMuted),
+            ],
+          ),
         ),
       ),
     );
@@ -4039,333 +4312,365 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
     final earningsText =
         totalEarnings > 0 ? ': ${_formatCurrency(totalEarnings)}' : '';
 
-    return CollapsibleSection(
-      title: 'Earnings$earningsText',
-      icon: Icons.attach_money,
-      accentColor: AppTheme.primaryGreen,
-      trailing: SectionOptionsMenu(
-        sectionKey: 'income_breakdown',
-        onOptionSelected: (option) =>
-            _handleRemoveSection('income_breakdown', option),
-      ),
-      children: [
-        const SizedBox(height: 8), // Top padding to prevent label overlap
-        if (_template!.showTips) ...[
-          Row(
-            children: [
-              Expanded(
-                child: TextFormField(
-                  controller: _cashTipsController,
-                  keyboardType: TextInputType.number,
-                  style: AppTheme.bodyMedium,
-                  decoration: InputDecoration(
-                    hintText: 'Cash tips (e.g., 50.00)',
-                    prefixText: '\$ ',
-                    filled: true,
-                    fillColor: AppTheme.cardBackgroundLight,
-                    border: OutlineInputBorder(
-                      borderRadius:
-                          BorderRadius.circular(AppTheme.radiusMedium),
-                      borderSide: BorderSide.none,
+    return Container(
+      key: _tipsFieldsKey,
+      child: CollapsibleSection(
+        title: 'Earnings$earningsText',
+        icon: Icons.attach_money,
+        accentColor: AppTheme.primaryGreen,
+        trailing: SectionOptionsMenu(
+          sectionKey: 'income_breakdown',
+          onOptionSelected: (option) =>
+              _handleRemoveSection('income_breakdown', option),
+        ),
+        children: [
+          const SizedBox(height: 8), // Top padding to prevent label overlap
+          if (_template!.showTips) ...[
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: _cashTipsController,
+                    keyboardType: TextInputType.number,
+                    style: AppTheme.bodyMedium,
+                    decoration: InputDecoration(
+                      hintText: 'Cash tips (e.g., 50.00)',
+                      prefixText: '\$ ',
+                      filled: true,
+                      fillColor: AppTheme.cardBackgroundLight,
+                      border: OutlineInputBorder(
+                        borderRadius:
+                            BorderRadius.circular(AppTheme.radiusMedium),
+                        borderSide: BorderSide.none,
+                      ),
                     ),
+                    onChanged: (_) => setState(() {}), // Refresh hero card
                   ),
-                  onChanged: (_) => setState(() {}), // Refresh hero card
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: TextFormField(
+                    controller: _creditTipsController,
+                    keyboardType: TextInputType.number,
+                    style: AppTheme.bodyMedium,
+                    decoration: InputDecoration(
+                      hintText: 'Credit card tips (e.g., 125.00)',
+                      prefixText: '\$ ',
+                      filled: true,
+                      fillColor: AppTheme.cardBackgroundLight,
+                      border: OutlineInputBorder(
+                        borderRadius:
+                            BorderRadius.circular(AppTheme.radiusMedium),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                    onChanged: (_) => setState(() {}),
+                  ),
+                ),
+              ],
+            ),
+          ],
+
+          // Sales Amount (NEW)
+          if (_template!.showSales) ...[
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _salesAmountController,
+              keyboardType: TextInputType.number,
+              style: AppTheme.bodyMedium,
+              decoration: InputDecoration(
+                hintText: 'Total sales (e.g., 1200.00)',
+                prefixText: '\$ ',
+                suffixText: _salesAmountController.text.isNotEmpty &&
+                        (cashTips + creditTips) > 0
+                    ? '${((cashTips + creditTips) / (double.tryParse(_salesAmountController.text) ?? 1) * 100).toStringAsFixed(1)}%'
+                    : null,
+                suffixStyle: TextStyle(
+                    color: AppTheme.primaryGreen, fontWeight: FontWeight.bold),
+                filled: true,
+                fillColor: AppTheme.cardBackgroundLight,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                  borderSide: BorderSide.none,
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: TextFormField(
-                  controller: _creditTipsController,
-                  keyboardType: TextInputType.number,
-                  style: AppTheme.bodyMedium,
-                  decoration: InputDecoration(
-                    hintText: 'Credit card tips (e.g., 125.00)',
-                    prefixText: '\$ ',
-                    filled: true,
-                    fillColor: AppTheme.cardBackgroundLight,
-                    border: OutlineInputBorder(
-                      borderRadius:
-                          BorderRadius.circular(AppTheme.radiusMedium),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                  onChanged: (_) => setState(() {}),
-                ),
-              ),
-            ],
-          ),
-        ],
+              onChanged: (_) => setState(() {}),
+            ),
+          ],
 
-        // Sales Amount (NEW)
-        if (_template!.showSales) ...[
-          const SizedBox(height: 12),
-          TextFormField(
-            controller: _salesAmountController,
-            keyboardType: TextInputType.number,
-            style: AppTheme.bodyMedium,
-            decoration: InputDecoration(
-              hintText: 'Total sales (e.g., 1200.00)',
-              prefixText: '\$ ',
-              suffixText: _salesAmountController.text.isNotEmpty &&
-                      (cashTips + creditTips) > 0
-                  ? '${((cashTips + creditTips) / (double.tryParse(_salesAmountController.text) ?? 1) * 100).toStringAsFixed(1)}%'
-                  : null,
-              suffixStyle: TextStyle(
-                  color: AppTheme.primaryGreen, fontWeight: FontWeight.bold),
-              filled: true,
-              fillColor: AppTheme.cardBackgroundLight,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-                borderSide: BorderSide.none,
+          // Tip Out Section (REDESIGNED) - Calculate from sales
+          if (_template!.showTips && _template!.showSales) ...[
+            const SizedBox(height: 16),
+            Text(
+              '🤝 Tip Out',
+              style: AppTheme.labelMedium.copyWith(
+                color: AppTheme.textSecondary,
+                fontWeight: FontWeight.w600,
               ),
             ),
-            onChanged: (_) => setState(() {}),
-          ),
-        ],
+            const SizedBox(height: 8),
+            Builder(
+              builder: (context) {
+                final salesAmount =
+                    double.tryParse(_salesAmountController.text) ?? 0;
+                final tipoutPercent =
+                    double.tryParse(_tipoutPercentController.text) ??
+                        _selectedJob?.defaultTipoutPercent ??
+                        0;
+                final additionalTipout =
+                    double.tryParse(_additionalTipoutController.text) ?? 0;
+                final calculatedTipout = (salesAmount * tipoutPercent / 100);
+                final totalTipout = calculatedTipout + additionalTipout;
+                final totalTips = cashTips + creditTips;
+                final netTips = totalTips - totalTipout;
 
-        // Tip Out Section (REDESIGNED) - Calculate from sales
-        if (_template!.showTips && _template!.showSales) ...[
-          const SizedBox(height: 16),
-          Text(
-            '🤝 Tip Out',
-            style: AppTheme.labelMedium.copyWith(
-              color: AppTheme.textSecondary,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Builder(
-            builder: (context) {
-              final salesAmount =
-                  double.tryParse(_salesAmountController.text) ?? 0;
-              final tipoutPercent =
-                  double.tryParse(_tipoutPercentController.text) ??
-                      _selectedJob?.defaultTipoutPercent ??
-                      0;
-              final additionalTipout =
-                  double.tryParse(_additionalTipoutController.text) ?? 0;
-              final calculatedTipout = (salesAmount * tipoutPercent / 100);
-              final totalTipout = calculatedTipout + additionalTipout;
-              final totalTips = cashTips + creditTips;
-              final netTips = totalTips - totalTipout;
+                // Pre-fill tipout % from job default if empty
+                if (_tipoutPercentController.text.isEmpty &&
+                    _selectedJob?.defaultTipoutPercent != null &&
+                    _selectedJob!.defaultTipoutPercent! > 0) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (mounted) {
+                      _tipoutPercentController.text = _selectedJob!
+                          .defaultTipoutPercent!
+                          .toStringAsFixed(1);
+                    }
+                  });
+                }
 
-              // Pre-fill tipout % from job default if empty
-              if (_tipoutPercentController.text.isEmpty &&
-                  _selectedJob?.defaultTipoutPercent != null &&
-                  _selectedJob!.defaultTipoutPercent! > 0) {
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (mounted) {
-                    _tipoutPercentController.text =
-                        _selectedJob!.defaultTipoutPercent!.toStringAsFixed(1);
-                  }
-                });
-              }
-
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextFormField(
-                          controller: _tipoutPercentController,
-                          keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true),
-                          style: AppTheme.bodyMedium,
-                          decoration: InputDecoration(
-                            hintText: 'Tip out % (e.g., 2.5)',
-                            suffixText: '% of sales',
-                            suffixStyle: TextStyle(
-                                color: Colors.grey[500], fontSize: 11),
-                            filled: true,
-                            fillColor: AppTheme.cardBackgroundLight,
-                            border: OutlineInputBorder(
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            controller: _tipoutPercentController,
+                            keyboardType: const TextInputType.numberWithOptions(
+                                decimal: true),
+                            style: AppTheme.bodyMedium,
+                            decoration: InputDecoration(
+                              hintText: 'Tip out % (e.g., 2.5)',
+                              suffixText: '% of sales',
+                              suffixStyle: TextStyle(
+                                  color: Colors.grey[500], fontSize: 11),
+                              filled: true,
+                              fillColor: AppTheme.cardBackgroundLight,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(
+                                    AppTheme.radiusMedium),
+                                borderSide: BorderSide.none,
+                              ),
+                            ),
+                            onChanged: (_) => setState(() {}),
+                          ),
+                        ),
+                        if (calculatedTipout > 0) ...[
+                          const SizedBox(width: 12),
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color:
+                                  AppTheme.accentYellow.withValues(alpha: 0.1),
                               borderRadius:
                                   BorderRadius.circular(AppTheme.radiusMedium),
-                              borderSide: BorderSide.none,
+                            ),
+                            child: Text(
+                              '= ${_formatCurrency(calculatedTipout)}',
+                              style: AppTheme.bodyMedium.copyWith(
+                                color: AppTheme.accentYellow,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
-                          onChanged: (_) => setState(() {}),
+                        ],
+                      ],
+                    ),
+                    if (tipoutPercent > 0 &&
+                        _selectedJob?.tipoutDescription != null) ...[
+                      const SizedBox(height: 4),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Text(
+                          '💡 ${tipoutPercent.toStringAsFixed(1)}% to ${_selectedJob!.tipoutDescription}',
+                          style: AppTheme.labelSmall.copyWith(
+                            color: AppTheme.textSecondary,
+                            fontStyle: FontStyle.italic,
+                          ),
                         ),
                       ),
-                      if (calculatedTipout > 0) ...[
-                        const SizedBox(width: 12),
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: AppTheme.accentYellow.withValues(alpha: 0.1),
-                            borderRadius:
-                                BorderRadius.circular(AppTheme.radiusMedium),
+                    ],
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          flex: 2,
+                          child: TextFormField(
+                            controller: _additionalTipoutController,
+                            keyboardType: TextInputType.number,
+                            style: AppTheme.bodyMedium,
+                            decoration: InputDecoration(
+                              hintText: 'Extra tipout (e.g., 15.00)',
+                              prefixText: '\$ ',
+                              helperText: 'Extra cash (e.g., dishwasher)',
+                              helperStyle: TextStyle(
+                                  color: Colors.grey[500], fontSize: 10),
+                              filled: true,
+                              fillColor: AppTheme.cardBackgroundLight,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(
+                                    AppTheme.radiusMedium),
+                                borderSide: BorderSide.none,
+                              ),
+                            ),
+                            onChanged: (_) => setState(() {}),
                           ),
-                          child: Text(
-                            '= ${_formatCurrency(calculatedTipout)}',
-                            style: AppTheme.bodyMedium.copyWith(
-                              color: AppTheme.accentYellow,
-                              fontWeight: FontWeight.bold,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          flex: 3,
+                          child: TextFormField(
+                            controller: _additionalTipoutNoteController,
+                            style: AppTheme.bodyMedium,
+                            decoration: InputDecoration(
+                              hintText: 'Who? (e.g., Dishwasher)',
+                              helperText: 'e.g., "Dishwasher", "Holiday bonus"',
+                              helperStyle: TextStyle(
+                                  color: Colors.grey[500], fontSize: 10),
+                              filled: true,
+                              fillColor: AppTheme.cardBackgroundLight,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(
+                                    AppTheme.radiusMedium),
+                                borderSide: BorderSide.none,
+                              ),
                             ),
                           ),
                         ),
                       ],
-                    ],
-                  ),
-                  if (tipoutPercent > 0 &&
-                      _selectedJob?.tipoutDescription != null) ...[
-                    const SizedBox(height: 4),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: Text(
-                        '💡 ${tipoutPercent.toStringAsFixed(1)}% to ${_selectedJob!.tipoutDescription}',
-                        style: AppTheme.labelSmall.copyWith(
-                          color: AppTheme.textSecondary,
-                          fontStyle: FontStyle.italic,
-                        ),
-                      ),
                     ),
-                  ],
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        flex: 2,
-                        child: TextFormField(
-                          controller: _additionalTipoutController,
-                          keyboardType: TextInputType.number,
-                          style: AppTheme.bodyMedium,
-                          decoration: InputDecoration(
-                            hintText: 'Extra tipout (e.g., 15.00)',
-                            prefixText: '\$ ',
-                            helperText: 'Extra cash (e.g., dishwasher)',
-                            helperStyle: TextStyle(
-                                color: Colors.grey[500], fontSize: 10),
-                            filled: true,
-                            fillColor: AppTheme.cardBackgroundLight,
-                            border: OutlineInputBorder(
-                              borderRadius:
-                                  BorderRadius.circular(AppTheme.radiusMedium),
-                              borderSide: BorderSide.none,
-                            ),
-                          ),
-                          onChanged: (_) => setState(() {}),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        flex: 3,
-                        child: TextFormField(
-                          controller: _additionalTipoutNoteController,
-                          style: AppTheme.bodyMedium,
-                          decoration: InputDecoration(
-                            hintText: 'Who? (e.g., Dishwasher)',
-                            helperText: 'e.g., "Dishwasher", "Holiday bonus"',
-                            helperStyle: TextStyle(
-                                color: Colors.grey[500], fontSize: 10),
-                            filled: true,
-                            fillColor: AppTheme.cardBackgroundLight,
-                            border: OutlineInputBorder(
-                              borderRadius:
-                                  BorderRadius.circular(AppTheme.radiusMedium),
-                              borderSide: BorderSide.none,
-                            ),
+                    if (totalTipout > 0) ...[
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppTheme.primaryGreen.withValues(alpha: 0.1),
+                          borderRadius:
+                              BorderRadius.circular(AppTheme.radiusSmall),
+                          border: Border.all(
+                            color: AppTheme.primaryGreen.withValues(alpha: 0.3),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                  if (totalTipout > 0) ...[
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: AppTheme.primaryGreen.withValues(alpha: 0.1),
-                        borderRadius:
-                            BorderRadius.circular(AppTheme.radiusSmall),
-                        border: Border.all(
-                          color: AppTheme.primaryGreen.withValues(alpha: 0.3),
-                        ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Tip Breakdown',
-                            style: AppTheme.labelSmall.copyWith(
-                              color: AppTheme.textSecondary,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Gross Tips: ${_formatCurrency(totalTips)}',
-                            style: AppTheme.labelSmall.copyWith(
-                              color: AppTheme.textSecondary,
-                            ),
-                          ),
-                          Text(
-                            'Total Tipout: ${_formatCurrency(totalTipout)}',
-                            style: AppTheme.labelSmall.copyWith(
-                              color: AppTheme.accentRed,
-                            ),
-                          ),
-                          if (calculatedTipout > 0)
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
                             Text(
-                              '  • From Sales: ${_formatCurrency(calculatedTipout)}',
+                              'Tip Breakdown',
                               style: AppTheme.labelSmall.copyWith(
                                 color: AppTheme.textSecondary,
-                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
-                          if (additionalTipout > 0)
+                            const SizedBox(height: 4),
                             Text(
-                              '  • Additional: ${_formatCurrency(additionalTipout)}',
+                              'Gross Tips: ${_formatCurrency(totalTips)}',
                               style: AppTheme.labelSmall.copyWith(
                                 color: AppTheme.textSecondary,
-                                fontSize: 10,
                               ),
                             ),
-                          const Divider(height: 8),
-                          Text(
-                            'Net Tips: ${_formatCurrency(netTips)}',
-                            style: AppTheme.labelSmall.copyWith(
-                              color: AppTheme.primaryGreen,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 14,
+                            Text(
+                              'Total Tipout: ${_formatCurrency(totalTipout)}',
+                              style: AppTheme.labelSmall.copyWith(
+                                color: AppTheme.accentRed,
+                              ),
                             ),
-                          ),
-                        ],
+                            if (calculatedTipout > 0)
+                              Text(
+                                '  • From Sales: ${_formatCurrency(calculatedTipout)}',
+                                style: AppTheme.labelSmall.copyWith(
+                                  color: AppTheme.textSecondary,
+                                  fontSize: 10,
+                                ),
+                              ),
+                            if (additionalTipout > 0)
+                              Text(
+                                '  • Additional: ${_formatCurrency(additionalTipout)}',
+                                style: AppTheme.labelSmall.copyWith(
+                                  color: AppTheme.textSecondary,
+                                  fontSize: 10,
+                                ),
+                              ),
+                            const Divider(height: 8),
+                            Text(
+                              'Net Tips: ${_formatCurrency(netTips)}',
+                              style: AppTheme.labelSmall.copyWith(
+                                color: AppTheme.primaryGreen,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
+                    ],
                   ],
-                ],
-              );
-            },
-          ),
-        ],
+                );
+              },
+            ),
+          ],
 
-        if (_template!.showCommission) ...[
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: TextFormField(
-                  controller: _commissionController,
-                  keyboardType: TextInputType.number,
-                  style: AppTheme.bodyMedium,
-                  decoration: InputDecoration(
-                    hintText: 'Sales commission (e.g., 200.00)',
-                    prefixText: '\$ ',
-                    filled: true,
-                    fillColor: AppTheme.cardBackgroundLight,
-                    border: OutlineInputBorder(
-                      borderRadius:
-                          BorderRadius.circular(AppTheme.radiusMedium),
-                      borderSide: BorderSide.none,
+          if (_template!.showCommission) ...[
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: _commissionController,
+                    keyboardType: TextInputType.number,
+                    style: AppTheme.bodyMedium,
+                    decoration: InputDecoration(
+                      hintText: 'Sales commission (e.g., 200.00)',
+                      prefixText: '\$ ',
+                      filled: true,
+                      fillColor: AppTheme.cardBackgroundLight,
+                      border: OutlineInputBorder(
+                        borderRadius:
+                            BorderRadius.circular(AppTheme.radiusMedium),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                    onChanged: (_) => setState(() {}),
+                  ),
+                ),
+                if (_template!.payStructure == PayStructure.flatRate) ...[
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _flatRateController,
+                      keyboardType: TextInputType.number,
+                      style: AppTheme.bodyMedium,
+                      decoration: InputDecoration(
+                        hintText: 'Fixed payment (e.g., 300.00)',
+                        prefixText: '\$ ',
+                        filled: true,
+                        fillColor: AppTheme.cardBackgroundLight,
+                        border: OutlineInputBorder(
+                          borderRadius:
+                              BorderRadius.circular(AppTheme.radiusMedium),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                      onChanged: (_) => setState(() {}),
                     ),
                   ),
-                  onChanged: (_) => setState(() {}),
-                ),
-              ),
-              if (_template!.payStructure == PayStructure.flatRate) ...[
-                const SizedBox(width: 12),
+                ] else
+                  const Expanded(
+                      child: SizedBox()), // Empty space if no flat rate
+              ],
+            ),
+          ] else if (_template!.payStructure == PayStructure.flatRate) ...[
+            const SizedBox(height: 12),
+            Row(
+              children: [
                 Expanded(
                   child: TextFormField(
                     controller: _flatRateController,
@@ -4385,39 +4690,12 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
                     onChanged: (_) => setState(() {}),
                   ),
                 ),
-              ] else
-                const Expanded(
-                    child: SizedBox()), // Empty space if no flat rate
-            ],
-          ),
-        ] else if (_template!.payStructure == PayStructure.flatRate) ...[
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: TextFormField(
-                  controller: _flatRateController,
-                  keyboardType: TextInputType.number,
-                  style: AppTheme.bodyMedium,
-                  decoration: InputDecoration(
-                    hintText: 'Fixed payment (e.g., 300.00)',
-                    prefixText: '\$ ',
-                    filled: true,
-                    fillColor: AppTheme.cardBackgroundLight,
-                    border: OutlineInputBorder(
-                      borderRadius:
-                          BorderRadius.circular(AppTheme.radiusMedium),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                  onChanged: (_) => setState(() {}),
-                ),
-              ),
-              const Expanded(child: SizedBox()), // Empty space
-            ],
-          ),
+                const Expanded(child: SizedBox()), // Empty space
+              ],
+            ),
+          ],
         ],
-      ],
+      ),
     );
   }
 
@@ -6701,6 +6979,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
                   children: [
                     // Add contact button
                     IconButton(
+                      key: _contactButtonKey,
                       icon:
                           Icon(Icons.person_add, color: AppTheme.primaryGreen),
                       onPressed: _addEventContact,

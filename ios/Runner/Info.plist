@@ -31,15 +31,10 @@
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>UISupportedInterfaceOrientations~ipad</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationPortraitUpsideDown</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
@@ -51,6 +46,9 @@
 	<!-- Calendar Access Permission -->
 	<key>NSCalendarsUsageDescription</key>
 	<string>We need calendar access to import your work schedule from Hot Schedules, 7shifts, and other scheduling apps.</string>
+	<!-- Notification Permission -->
+	<key>NSUserNotificationsUsageDescription</key>
+	<string>We need notification access to remind you before shifts start and prompt you to log earnings after shifts end.</string>
 	<!-- Photo Library Access Permissions -->
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>We need access to save shift photos and videos to your photo library.</string>

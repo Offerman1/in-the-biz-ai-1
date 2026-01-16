@@ -8,11 +8,16 @@ import '../widgets/paychecks_tab.dart';
 import '../providers/shift_provider.dart';
 import '../services/export_service.dart';
 import '../services/database_service.dart';
+import '../services/tour_service.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
+import '../utils/tour_targets.dart';
 import 'stats_screen.dart';
 
 /// Wrapper for Stats Screen that adds Checkout Analytics and Paychecks as tabs
 class StatsWithCheckoutTab extends StatefulWidget {
-  const StatsWithCheckoutTab({super.key});
+  final bool isVisible;
+
+  const StatsWithCheckoutTab({super.key, this.isVisible = false});
 
   @override
   State<StatsWithCheckoutTab> createState() => _StatsWithCheckoutTabState();
@@ -22,10 +27,284 @@ class _StatsWithCheckoutTabState extends State<StatsWithCheckoutTab>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
+  // Tour state
+  bool _isTourShowing = false;
+  TutorialCoachMark? _tutorialCoachMark;
+
+  // GlobalKeys for tour targets
+  final GlobalKey _exportButtonKey = GlobalKey();
+  final GlobalKey _overviewTabKey = GlobalKey();
+  final GlobalKey _checkoutsTabKey = GlobalKey();
+  final GlobalKey _paychecksTabKey = GlobalKey();
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+
+    // Check if tour should start (only if visible from start)
+    if (widget.isVisible) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _checkAndStartTour();
+      });
+    }
+  }
+
+  @override
+  void didUpdateWidget(StatsWithCheckoutTab oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // When this screen becomes visible, check if tour should start
+    if (widget.isVisible && !oldWidget.isVisible) {
+      debugPrint('🎯 Stats: Became visible, checking tour');
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (mounted) {
+          _checkAndStartTour();
+        }
+      });
+    }
+  }
+
+  Future<void> _checkAndStartTour() async {
+    if (!mounted) return;
+
+    final tourService = Provider.of<TourService>(context, listen: false);
+
+    debugPrint(
+        '🎯 Stats Tour Check: isActive=${tourService.isActive}, currentStep=${tourService.currentStep}, expectedScreen=${tourService.expectedScreen}');
+
+    if (tourService.isActive &&
+        tourService.expectedScreen == 'stats' &&
+        tourService.currentStep >= 24 &&
+        tourService.currentStep <= 27 &&
+        !_isTourShowing) {
+      await Future.delayed(const Duration(milliseconds: 500));
+      if (mounted) {
+        _showStatsTour();
+      }
+    }
+  }
+
+  void _showStatsTour() {
+    final tourService = Provider.of<TourService>(context, listen: false);
+
+    debugPrint(
+        '🎯 _showStatsTour called, currentStep: ${tourService.currentStep}');
+
+    if (_isTourShowing) {
+      debugPrint('🎯 Stats tour already showing, ignoring');
+      return;
+    }
+
+    if (tourService.currentStep < 24 || tourService.currentStep > 27) {
+      debugPrint('🎯 Not on a stats step, ignoring');
+      return;
+    }
+
+    _tutorialCoachMark = null;
+
+    List<TargetFocus> targets = [];
+
+    void onSkipToNext() {
+      // Set Home to pulse so user knows to go there first
+      tourService.setPulsingTarget('home');
+      tourService.skipToScreen('settings');
+      // Show modal explaining next step
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        barrierColor: Colors.black.withValues(alpha: 0.7),
+        builder: (ctx) => AlertDialog(
+          backgroundColor: AppTheme.cardBackground,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(
+                color: AppTheme.primaryGreen.withValues(alpha: 0.3), width: 2),
+          ),
+          title: Text(
+            '⚙️ Head to Settings!',
+            style: TextStyle(color: AppTheme.primaryGreen, fontSize: 20),
+            textAlign: TextAlign.center,
+          ),
+          content: Text(
+            'Tap the Home button below to continue.',
+            style: TextStyle(color: AppTheme.textPrimary, fontSize: 15),
+            textAlign: TextAlign.center,
+          ),
+          actions: [
+            Center(
+              child: ElevatedButton(
+                onPressed: () => Navigator.pop(ctx),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primaryGreen,
+                  foregroundColor: Colors.white,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                ),
+                child: const Text('Got It'),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    void onEndTour() {
+      tourService.skipAll();
+    }
+
+    // Step 24: Export button
+    if (tourService.currentStep == 24) {
+      targets.add(TourTargets.createTarget(
+        identify: 'exportButton',
+        keyTarget: _exportButtonKey,
+        title: '📤 Export Your Data',
+        description:
+            'Export your stats and shifts as a CSV spreadsheet or a beautiful printable PDF report.',
+        currentScreen: 'stats',
+        onSkipToNext: onSkipToNext,
+        onEndTour: onEndTour,
+        align: ContentAlign.bottom,
+      ));
+    }
+
+    // Step 25: Overview tab
+    if (tourService.currentStep == 25) {
+      targets.add(TourTargets.createTarget(
+        identify: 'overviewTab',
+        keyTarget: _overviewTabKey,
+        title: '📊 Overview',
+        description:
+            'See all your earnings statistics at a glance - totals, averages, trends, and breakdowns by job.',
+        currentScreen: 'stats',
+        onSkipToNext: onSkipToNext,
+        onEndTour: onEndTour,
+        align: ContentAlign.bottom,
+      ));
+    }
+
+    // Step 26: Checkouts tab
+    if (tourService.currentStep == 26) {
+      targets.add(TourTargets.createTarget(
+        identify: 'checkoutsTab',
+        keyTarget: _checkoutsTabKey,
+        title: '🧾 Server Checkouts',
+        description:
+            'View all your scanned server checkouts in one place. Every checkout you\'ve photographed is saved here.',
+        currentScreen: 'stats',
+        onSkipToNext: onSkipToNext,
+        onEndTour: onEndTour,
+        align: ContentAlign.bottom,
+      ));
+    }
+
+    // Step 27: Paychecks tab
+    if (tourService.currentStep == 27) {
+      targets.add(TourTargets.createTarget(
+        identify: 'paychecksTab',
+        keyTarget: _paychecksTabKey,
+        title: '💵 Paychecks',
+        description:
+            'All your scanned paychecks are stored here. Great for tracking hourly pay and verifying your earnings.',
+        currentScreen: 'stats',
+        onSkipToNext: onSkipToNext,
+        onEndTour: onEndTour,
+        align: ContentAlign.bottom,
+      ));
+    }
+
+    if (targets.isEmpty) return;
+
+    _isTourShowing = true;
+
+    _tutorialCoachMark = TutorialCoachMark(
+      targets: targets,
+      colorShadow: AppTheme.primaryGreen,
+      paddingFocus: 10,
+      opacityShadow: 0.8,
+      hideSkip: true,
+      onFinish: () {
+        debugPrint('🎯 Stats: Tour step finished');
+        _isTourShowing = false;
+        _tutorialCoachMark = null;
+
+        if (tourService.isSkippingToScreen) {
+          tourService.clearSkippingFlag();
+          return;
+        }
+
+        tourService.nextStep();
+
+        // Show next step if still in stats range
+        if (tourService.currentStep >= 24 && tourService.currentStep <= 27) {
+          Future.delayed(const Duration(milliseconds: 300), () {
+            if (mounted) {
+              _showStatsTour();
+            }
+          });
+        }
+        // After step 27, guide user to Settings via Home → Menu → Settings
+        else if (tourService.currentStep == 28) {
+          // Set Home nav button to pulse
+          tourService.setPulsingTarget('home');
+          // Show modal explaining next step
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            barrierColor: Colors.black.withValues(alpha: 0.7),
+            builder: (ctx) => AlertDialog(
+              backgroundColor: AppTheme.cardBackground,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(
+                    color: AppTheme.primaryGreen.withValues(alpha: 0.3),
+                    width: 2),
+              ),
+              title: Text(
+                '⚙️ One More Thing!',
+                style: TextStyle(color: AppTheme.primaryGreen, fontSize: 20),
+                textAlign: TextAlign.center,
+              ),
+              content: Text(
+                'Let\'s check out Settings - where you can import shifts from your calendar and customize your app.\n\nTap the Home button below.',
+                style: TextStyle(color: AppTheme.textPrimary, fontSize: 15),
+                textAlign: TextAlign.center,
+              ),
+              actions: [
+                Center(
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primaryGreen,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 24, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: const Text('Got It'),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+      },
+      onSkip: () {
+        _isTourShowing = false;
+        if (tourService.isSkippingToScreen) {
+          tourService.clearSkippingFlag();
+          _tutorialCoachMark = null;
+          return true;
+        }
+        tourService.skipAll();
+        _tutorialCoachMark = null;
+        return true;
+      },
+    );
+
+    _tutorialCoachMark!.show(context: context);
   }
 
   @override
@@ -92,6 +371,7 @@ class _StatsWithCheckoutTabState extends State<StatsWithCheckoutTab>
         title: const SizedBox.shrink(), // No title
         actions: [
           PopupMenuButton<String>(
+            key: _exportButtonKey,
             icon: Icon(Icons.ios_share, color: AppTheme.primaryGreen),
             color: AppTheme.cardBackground,
             onSelected: (value) => _handleExport(context, value),
@@ -144,10 +424,10 @@ class _StatsWithCheckoutTabState extends State<StatsWithCheckoutTab>
               unselectedLabelColor: AppTheme.textSecondary,
               labelStyle:
                   const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
-              tabs: const [
-                Tab(text: 'Overview'),
-                Tab(text: 'Checkouts'),
-                Tab(text: 'Paychecks'),
+              tabs: [
+                Tab(key: _overviewTabKey, text: 'Overview'),
+                Tab(key: _checkoutsTabKey, text: 'Checkouts'),
+                Tab(key: _paychecksTabKey, text: 'Paychecks'),
               ],
             ),
           ),

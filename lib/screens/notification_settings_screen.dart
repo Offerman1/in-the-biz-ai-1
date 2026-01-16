@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../theme/app_theme.dart';
+import '../services/notification_service.dart';
 
 class NotificationSettingsScreen extends StatefulWidget {
   const NotificationSettingsScreen({super.key});
@@ -14,14 +15,54 @@ class _NotificationSettingsScreenState
     extends State<NotificationSettingsScreen> {
   bool _shiftReminders = true;
   bool _endOfShiftPrompts = true;
-  bool _conflictAlerts = true;
   bool _weeklySummaries = true;
+  bool _monthlySummaries = true;
+  bool _scheduleChanges = true;
+  bool _taxReminders = true;
+  bool _inactivityReminders = true;
+  bool _milestones = true;
   bool _goalProgress = true;
+  bool _permissionGranted = true;
 
   @override
   void initState() {
     super.initState();
     _loadSettings();
+    _checkPermissions();
+  }
+
+  Future<void> _checkPermissions() async {
+    // On Android 13+, check if permission is granted
+    // This is a simple check - in production you'd want more robust checking
+    setState(() {
+      _permissionGranted = true; // Assume granted for now
+    });
+  }
+
+  Future<void> _requestPermissions() async {
+    final granted = await NotificationService().requestPermissions();
+    setState(() {
+      _permissionGranted = granted;
+    });
+
+    if (mounted) {
+      if (granted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Notification permissions granted!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content:
+                Text('Please enable notifications in your device settings'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _loadSettings() async {
@@ -29,8 +70,12 @@ class _NotificationSettingsScreenState
     setState(() {
       _shiftReminders = prefs.getBool('notif_shift_reminders') ?? true;
       _endOfShiftPrompts = prefs.getBool('notif_end_of_shift') ?? true;
-      _conflictAlerts = prefs.getBool('notif_conflicts') ?? true;
       _weeklySummaries = prefs.getBool('notif_weekly_summary') ?? true;
+      _monthlySummaries = prefs.getBool('notif_monthly_summary') ?? true;
+      _scheduleChanges = prefs.getBool('notif_schedule_changes') ?? true;
+      _taxReminders = prefs.getBool('notif_tax_reminders') ?? true;
+      _inactivityReminders = prefs.getBool('notif_inactivity') ?? true;
+      _milestones = prefs.getBool('notif_milestones') ?? true;
       _goalProgress = prefs.getBool('notif_goal_progress') ?? true;
     });
   }
@@ -65,6 +110,63 @@ class _NotificationSettingsScreenState
             ),
           ),
 
+          // Permission request banner (if needed)
+          if (!_permissionGranted)
+            Container(
+              margin: const EdgeInsets.only(bottom: 16),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppTheme.accentOrange.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: AppTheme.accentOrange.withValues(alpha: 0.3),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.notifications_off,
+                        color: AppTheme.accentOrange,
+                        size: 24,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'Notifications Disabled',
+                          style: AppTheme.bodyLarge.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.accentOrange,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Enable notifications to receive shift reminders and updates',
+                    style: AppTheme.bodyMedium.copyWith(
+                      color: AppTheme.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _requestPermissions,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.accentOrange,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      child: const Text('Enable Notifications'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
           // Shift Reminders
           _buildNotificationTile(
             title: 'Shift Reminders',
@@ -93,29 +195,93 @@ class _NotificationSettingsScreenState
 
           const SizedBox(height: 16),
 
-          // Conflict Alerts
-          _buildNotificationTile(
-            title: 'Schedule Conflict Alerts',
-            subtitle: 'Warn me about overlapping shifts or events',
-            icon: Icons.warning_amber_rounded,
-            value: _conflictAlerts,
-            onChanged: (value) {
-              setState(() => _conflictAlerts = value);
-              _saveSetting('notif_conflicts', value);
-            },
-          ),
-
-          const SizedBox(height: 16),
-
           // Weekly Summaries
           _buildNotificationTile(
             title: 'Weekly Summaries',
-            subtitle: 'Get a summary of your week every Monday',
+            subtitle: 'Get a summary of your week every Monday at noon',
             icon: Icons.analytics_outlined,
             value: _weeklySummaries,
             onChanged: (value) {
               setState(() => _weeklySummaries = value);
               _saveSetting('notif_weekly_summary', value);
+            },
+          ),
+
+          const SizedBox(height: 16),
+
+          // Monthly Summaries
+          _buildNotificationTile(
+            title: 'Monthly Summaries',
+            subtitle: 'Get a summary on the 1st of each month at 1 PM',
+            icon: Icons.calendar_today,
+            value: _monthlySummaries,
+            onChanged: (value) async {
+              setState(() => _monthlySummaries = value);
+              _saveSetting('notif_monthly_summary', value);
+              if (value) {
+                // Schedule monthly summary when enabled
+                await NotificationService().scheduleMonthlySummary();
+              }
+            },
+          ),
+
+          const SizedBox(height: 16),
+
+          // Schedule Change Alerts
+          _buildNotificationTile(
+            title: 'Schedule Changes',
+            subtitle: 'Alert when shifts are updated or synced',
+            icon: Icons.sync_alt,
+            value: _scheduleChanges,
+            onChanged: (value) {
+              setState(() => _scheduleChanges = value);
+              _saveSetting('notif_schedule_changes', value);
+            },
+          ),
+
+          const SizedBox(height: 16),
+
+          // Tax Reminders
+          _buildNotificationTile(
+            title: 'Tax Reminders',
+            subtitle: 'Quarterly reminders for tax deadlines',
+            icon: Icons.account_balance,
+            value: _taxReminders,
+            onChanged: (value) async {
+              setState(() => _taxReminders = value);
+              _saveSetting('notif_tax_reminders', value);
+              if (value) {
+                // Schedule tax reminders when enabled
+                await NotificationService().scheduleQuarterlyTaxReminders();
+              }
+            },
+          ),
+
+          const SizedBox(height: 16),
+
+          // Inactivity Reminders
+          _buildNotificationTile(
+            title: 'Inactivity Reminders',
+            subtitle: 'Remind me if I haven\'t logged shifts in 5+ days',
+            icon: Icons.notifications_paused,
+            value: _inactivityReminders,
+            onChanged: (value) {
+              setState(() => _inactivityReminders = value);
+              _saveSetting('notif_inactivity', value);
+            },
+          ),
+
+          const SizedBox(height: 16),
+
+          // Milestone Celebrations
+          _buildNotificationTile(
+            title: 'Milestone Celebrations',
+            subtitle: 'Celebrate when you hit earning goals',
+            icon: Icons.emoji_events,
+            value: _milestones,
+            onChanged: (value) {
+              setState(() => _milestones = value);
+              _saveSetting('notif_milestones', value);
             },
           ),
 
