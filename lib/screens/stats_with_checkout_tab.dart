@@ -5,7 +5,6 @@ import 'package:share_plus/share_plus.dart';
 import '../theme/app_theme.dart';
 import '../widgets/checkout_analytics_tab.dart';
 import '../widgets/paychecks_tab.dart';
-import '../widgets/tour_transition_modal.dart';
 import '../providers/shift_provider.dart';
 import '../services/export_service.dart';
 import '../services/database_service.dart';
@@ -109,8 +108,46 @@ class _StatsWithCheckoutTabState extends State<StatsWithCheckoutTab>
       // Set Home to pulse so user knows to go there first
       tourService.setPulsingTarget('home');
       tourService.skipToScreen('settings');
-      // Show non-blocking floating hint
-      TourTransitionModal.showSettingsPrompt(context, () {});
+      // Show modal explaining next step
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        barrierColor: Colors.black.withValues(alpha: 0.7),
+        builder: (ctx) => AlertDialog(
+          backgroundColor: AppTheme.cardBackground,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(
+                color: AppTheme.primaryGreen.withValues(alpha: 0.3), width: 2),
+          ),
+          title: Text(
+            '⚙️ Head to Settings!',
+            style: TextStyle(color: AppTheme.primaryGreen, fontSize: 20),
+            textAlign: TextAlign.center,
+          ),
+          content: Text(
+            'Tap the Home button below to continue.',
+            style: TextStyle(color: AppTheme.textPrimary, fontSize: 15),
+            textAlign: TextAlign.center,
+          ),
+          actions: [
+            Center(
+              child: ElevatedButton(
+                onPressed: () => Navigator.pop(ctx),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primaryGreen,
+                  foregroundColor: Colors.white,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                ),
+                child: const Text('Got It'),
+              ),
+            ),
+          ],
+        ),
+      );
     }
 
     void onEndTour() {
@@ -211,8 +248,47 @@ class _StatsWithCheckoutTabState extends State<StatsWithCheckoutTab>
         else if (tourService.currentStep == 28) {
           // Set Home nav button to pulse
           tourService.setPulsingTarget('home');
-          // Show non-blocking floating hint
-          TourTransitionModal.showSettingsPrompt(context, () {});
+          // Show modal explaining next step
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            barrierColor: Colors.black.withValues(alpha: 0.7),
+            builder: (ctx) => AlertDialog(
+              backgroundColor: AppTheme.cardBackground,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(
+                    color: AppTheme.primaryGreen.withValues(alpha: 0.3),
+                    width: 2),
+              ),
+              title: Text(
+                '⚙️ One More Thing!',
+                style: TextStyle(color: AppTheme.primaryGreen, fontSize: 20),
+                textAlign: TextAlign.center,
+              ),
+              content: Text(
+                'Let\'s check out Settings - where you can import shifts from your calendar and customize your app.\n\nTap the Home button below.',
+                style: TextStyle(color: AppTheme.textPrimary, fontSize: 15),
+                textAlign: TextAlign.center,
+              ),
+              actions: [
+                Center(
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primaryGreen,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 24, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: const Text('Got It'),
+                  ),
+                ),
+              ],
+            ),
+          );
         }
       },
       onSkip: () {

@@ -1,327 +1,314 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 
-enum HintArrowDirection { up, down, none }
-
-/// Non-blocking floating hint for tour transitions.
-/// Shows a message with an animated arrow pointing at the target.
-/// User can tap the target button directly without dismissing the hint first.
+/// Reusable modal: "Tap X to continue!"
+/// Configurable title, message, target button
+/// Auto-triggers pulse on target button via callback
 class TourTransitionModal {
-  static OverlayEntry? _currentEntry;
-  static VoidCallback? _onTargetTapped;
+  static OverlayEntry? _overlayEntry;
 
-  /// Show a non-blocking floating hint
+  /// Hide the non-blocking modal (call when target button is tapped)
+  static void hide() {
+    _overlayEntry?.remove();
+    _overlayEntry = null;
+  }
+
+  /// Show a non-blocking modal with green overlay and cutout around target
+  static void showNonBlocking({
+    required BuildContext context,
+    required String title,
+    required String message,
+    required GlobalKey targetKey,
+  }) {
+    hide(); // Remove any existing overlay first
+
+    // Wait for the next frame to ensure target widget is rendered
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Get target button position and size
+      final RenderBox? targetBox =
+          targetKey.currentContext?.findRenderObject() as RenderBox?;
+      Rect? targetRect;
+      if (targetBox != null) {
+        final position = targetBox.localToGlobal(Offset.zero);
+        final size = targetBox.size;
+        // Create larger circle centered on the button for pulsing visibility
+        final centerX = position.dx + size.width / 2;
+        final centerY = position.dy + size.height / 2;
+        const radius = 40.0; // Larger radius to show pulsing
+        targetRect = Rect.fromCenter(
+          center: Offset(centerX, centerY),
+          width: radius * 2,
+          height: radius * 2,
+        );
+      }
+
+      _overlayEntry = OverlayEntry(
+        builder: (_) {
+          return IgnorePointer(
+            // Let ALL taps pass through - overlay is visual only
+            ignoring: true,
+            child: Stack(
+              children: [
+                // Green overlay with cutout - purely visual
+                Positioned.fill(
+                  child: CustomPaint(
+                    painter: _SpotlightPainter(
+                      targetRect: targetRect,
+                      overlayColor: AppTheme.primaryGreen.withOpacity(0.85),
+                    ),
+                  ),
+                ),
+                // The modal message
+                Positioned(
+                  top: 180,
+                  left: 20,
+                  right: 20,
+                  child: Material(
+                    color: Colors.transparent,
+                    child: Center(
+                      child: Container(
+                        constraints: const BoxConstraints(maxWidth: 340),
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: AppTheme.cardBackground,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: AppTheme.primaryGreen.withOpacity(0.3),
+                            width: 2,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.5),
+                              blurRadius: 20,
+                              spreadRadius: 5,
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.touch_app,
+                                  color: AppTheme.primaryGreen,
+                                  size: 28,
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    title,
+                                    style: TextStyle(
+                                      color: AppTheme.primaryGreen,
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              message,
+                              style: TextStyle(
+                                color: AppTheme.textPrimary,
+                                fontSize: 16,
+                                height: 1.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      );
+
+      Overlay.of(context).insert(_overlayEntry!);
+    });
+  }
+
+  /// Show transition modal with custom message (BLOCKING - requires Got It)
   static void show({
     required BuildContext context,
     required String title,
     required String message,
+    String buttonText = 'Got It!',
     VoidCallback? onDismiss,
-    HintArrowDirection arrowDirection = HintArrowDirection.down,
-    String buttonText =
-        'Got It!', // Kept for backward compatibility but not shown
   }) {
-    hide(); // Remove any existing hint
-    _onTargetTapped = onDismiss;
-
-    _currentEntry = OverlayEntry(
-      builder: (context) => _FloatingHintWidget(
-        title: title,
-        message: message,
-        arrowDirection: arrowDirection,
-        onClose: () {
-          hide();
-          onDismiss?.call();
-        },
-      ),
-    );
-
-    Overlay.of(context).insert(_currentEntry!);
-  }
-
-  /// Hide the current floating hint
-  static void hide() {
-    _currentEntry?.remove();
-    _currentEntry = null;
-  }
-
-  /// Called when the target button is tapped - hides the overlay
-  static void notifyTargetTapped() {
-    hide();
-    _onTargetTapped?.call();
-    _onTargetTapped = null;
-  }
-
-  /// Check if a hint is currently showing
-  static bool get isShowing => _currentEntry != null;
-
-  // Legacy methods for backward compatibility
-  static void showAddShiftPrompt(BuildContext context, VoidCallback onDismiss) {
-    show(
-      context: context,
-      title: '➕ Add Your First Shift!',
-      message: 'Tap the + button at the top!',
-      arrowDirection: HintArrowDirection.up, // Point UP toward + button
-      onDismiss: onDismiss,
-    );
-  }
-
-  static void showCalendarPrompt(BuildContext context, VoidCallback onDismiss) {
-    show(
-      context: context,
-      title: '📅 Explore the Calendar!',
-      message: 'Tap the Calendar button below!',
-      onDismiss: onDismiss,
-    );
-  }
-
-  static void showChatPrompt(BuildContext context, VoidCallback onDismiss) {
-    show(
-      context: context,
-      title: '✨ Meet Your AI Assistant!',
-      message: 'Tap the Chat button below!',
-      onDismiss: onDismiss,
-    );
-  }
-
-  static void showStatsPrompt(BuildContext context, VoidCallback onDismiss) {
-    show(
-      context: context,
-      title: '📊 Check Your Stats!',
-      message: 'Tap the Stats button below!',
-      onDismiss: onDismiss,
-    );
-  }
-
-  static void showSettingsPrompt(BuildContext context, VoidCallback onDismiss) {
-    show(
-      context: context,
-      title: '⚙️ Head to Settings!',
-      message: 'Tap the Home button below!',
-      onDismiss: onDismiss,
-    );
-  }
-
-  static void showCompletionModal(
-      BuildContext context, VoidCallback onDismiss) {
-    // This one uses a blocking dialog since it's the final completion
     showDialog(
       context: context,
-      barrierDismissible: false,
+      barrierDismissible: false, // Force user to tap button
       builder: (context) => AlertDialog(
         backgroundColor: AppTheme.cardBackground,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(16),
           side: BorderSide(
-            color: AppTheme.primaryGreen.withOpacity(0.3),
+            color: AppTheme.primaryGreen.withValues(alpha: 0.3),
             width: 2,
           ),
         ),
-        title: Text(
-          '🎉 Tour Complete!',
-          style: TextStyle(color: AppTheme.primaryGreen, fontSize: 24),
-          textAlign: TextAlign.center,
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
+        title: Row(
           children: [
-            Text(
-              'You\'re ready to start tracking your income like a pro!',
-              style: TextStyle(color: AppTheme.textPrimary, fontSize: 16),
-              textAlign: TextAlign.center,
+            Icon(
+              Icons.arrow_forward,
+              color: AppTheme.primaryGreen,
+              size: 28,
             ),
-            const SizedBox(height: 16),
-            Text(
-              'You can restart this tour anytime from Settings → Help & Support.',
-              style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
-              textAlign: TextAlign.center,
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                title,
+                style: TextStyle(
+                  color: AppTheme.primaryGreen,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ],
         ),
+        content: Text(
+          message,
+          style: TextStyle(
+            color: AppTheme.textPrimary,
+            fontSize: 16,
+            height: 1.5,
+          ),
+        ),
         actions: [
-          Center(
-            child: ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                onDismiss();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primaryGreen,
-                foregroundColor: Colors.white,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              onDismiss?.call();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primaryGreen,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(
+                horizontal: 32,
+                vertical: 16,
               ),
-              child:
-                  const Text('Let\'s Go! 🚀', style: TextStyle(fontSize: 16)),
+            ),
+            child: Text(
+              buttonText,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
       ),
     );
   }
+
+  /// Show transition modal for "Tap + to add a shift" (after Step 9)
+  static void showAddShiftPrompt(BuildContext context, VoidCallback onDismiss) {
+    show(
+      context: context,
+      title: 'Add Your First Shift!',
+      message:
+          'Now tap the + button at the top to add a shift and see how easy it is!',
+      onDismiss: onDismiss,
+    );
+  }
+
+  /// Show transition modal for Calendar navigation (after Step 17)
+  static void showCalendarPrompt(BuildContext context, VoidCallback onDismiss) {
+    show(
+      context: context,
+      title: 'Explore the Calendar!',
+      message:
+          'Tap the Calendar button at the bottom to see your shifts organized by date.',
+      onDismiss: onDismiss,
+    );
+  }
+
+  /// Show transition modal for Chat navigation (after Step 24)
+  static void showChatPrompt(BuildContext context, VoidCallback onDismiss) {
+    show(
+      context: context,
+      title: 'Meet Your AI Assistant!',
+      message:
+          'Tap the Chat button to explore AI-powered features that make tracking income effortless.',
+      onDismiss: onDismiss,
+    );
+  }
+
+  /// Show transition modal for Stats navigation (after Step 30)
+  static void showStatsPrompt(BuildContext context, VoidCallback onDismiss) {
+    show(
+      context: context,
+      title: 'Check Your Stats!',
+      message:
+          'Tap the Stats button to view detailed analytics about your earnings.',
+      onDismiss: onDismiss,
+    );
+  }
+
+  /// Show transition modal for Settings navigation (after Step 33)
+  static void showSettingsPrompt(BuildContext context, VoidCallback onDismiss) {
+    show(
+      context: context,
+      title: 'Explore Settings!',
+      message:
+          'Tap the 3 dots (⋮) at the top, then tap Settings to configure your app.',
+      onDismiss: onDismiss,
+    );
+  }
+
+  /// Show final completion modal (after Step 43)
+  static void showCompletionModal(
+      BuildContext context, VoidCallback onDismiss) {
+    show(
+      context: context,
+      title: '🎉 Tour Complete!',
+      message:
+          'You\'re ready to start tracking your income like a pro!\n\nYou can restart this tour anytime from Settings → Help & Support.',
+      buttonText: 'Start Earning!',
+      onDismiss: onDismiss,
+    );
+  }
 }
 
-class _FloatingHintWidget extends StatefulWidget {
-  final String title;
-  final String message;
-  final HintArrowDirection arrowDirection;
-  final VoidCallback onClose;
+/// Custom painter that draws overlay with a circular cutout for the target
+class _SpotlightPainter extends CustomPainter {
+  final Rect? targetRect;
+  final Color overlayColor;
 
-  const _FloatingHintWidget({
-    required this.title,
-    required this.message,
-    required this.onClose,
-    this.arrowDirection = HintArrowDirection.down,
+  _SpotlightPainter({
+    required this.targetRect,
+    required this.overlayColor,
   });
 
   @override
-  State<_FloatingHintWidget> createState() => _FloatingHintWidgetState();
-}
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..color = overlayColor;
 
-class _FloatingHintWidgetState extends State<_FloatingHintWidget>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _bounceController;
-  late Animation<double> _bounceAnimation;
+    // Draw full screen overlay
+    final fullScreen = Rect.fromLTWH(0, 0, size.width, size.height);
 
-  @override
-  void initState() {
-    super.initState();
-    _bounceController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 800),
-    )..repeat(reverse: true);
-
-    _bounceAnimation = Tween<double>(begin: 0, end: 15).animate(
-      CurvedAnimation(parent: _bounceController, curve: Curves.easeInOut),
-    );
+    if (targetRect != null) {
+      // Create path with hole cut out
+      final path = Path()
+        ..addRect(fullScreen)
+        ..addOval(targetRect!)
+        ..fillType = PathFillType.evenOdd;
+      canvas.drawPath(path, paint);
+    } else {
+      // No target, just draw full overlay
+      canvas.drawRect(fullScreen, paint);
+    }
   }
 
   @override
-  void dispose() {
-    _bounceController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    // Determine if arrow points up or down
-    final bool arrowUp = widget.arrowDirection == HintArrowDirection.up;
-    final bool showArrow = widget.arrowDirection != HintArrowDirection.none;
-
-    // Use IgnorePointer on the full-screen container so touches pass through
-    // Only the hint box itself is tappable
-    return IgnorePointer(
-      ignoring: true, // Let touches pass through to elements below
-      child: Material(
-        color: Colors.transparent,
-        child: Stack(
-          children: [
-            // The floating hint card - positioned based on arrow direction
-            Positioned(
-              top: arrowUp ? 180 : 120, // Lower when arrow points up
-              left: 20,
-              right: 20,
-              child: Center(
-                child: Container(
-                  constraints: const BoxConstraints(maxWidth: 360),
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: AppTheme.cardBackground,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: AppTheme.primaryGreen.withOpacity(0.5),
-                      width: 2,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.5),
-                        blurRadius: 25,
-                        spreadRadius: 5,
-                      ),
-                      BoxShadow(
-                        color: AppTheme.primaryGreen.withOpacity(0.3),
-                        blurRadius: 20,
-                        spreadRadius: 2,
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Title
-                      Text(
-                        widget.title,
-                        style: TextStyle(
-                          color: AppTheme.primaryGreen,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 12),
-                      // Message
-                      Text(
-                        widget.message,
-                        style: TextStyle(
-                          color: AppTheme.textPrimary,
-                          fontSize: 16,
-                          height: 1.4,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-
-            // Animated arrow - pointing up or down based on direction
-            if (showArrow)
-              Positioned(
-                top: arrowUp ? 100 : null, // Position at top when pointing up
-                bottom: arrowUp
-                    ? null
-                    : 100, // Position at bottom when pointing down
-                left: 0,
-                right: 0,
-                child: AnimatedBuilder(
-                  animation: _bounceAnimation,
-                  builder: (context, child) {
-                    // Bounce in the direction of the arrow
-                    final double offset = arrowUp
-                        ? -_bounceAnimation.value // Bounce up
-                        : _bounceAnimation.value; // Bounce down
-                    return Transform.translate(
-                      offset: Offset(0, offset),
-                      child: Center(
-                        child: Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: AppTheme.primaryGreen,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppTheme.primaryGreen.withOpacity(0.6),
-                                blurRadius: 15,
-                                spreadRadius: 3,
-                              ),
-                            ],
-                          ),
-                          child: Icon(
-                            arrowUp ? Icons.arrow_upward : Icons.arrow_downward,
-                            color: Colors.white,
-                            size: 28,
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
+  bool shouldRepaint(covariant _SpotlightPainter oldDelegate) {
+    return oldDelegate.targetRect != targetRect ||
+        oldDelegate.overlayColor != overlayColor;
   }
 }

@@ -1128,11 +1128,12 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
         else if (tourService.currentStep == 12) {
           // Set Calendar as the pulsing target
           tourService.setPulsingTarget('calendar');
-          // Show non-blocking floating hint
+          // Show transition modal
           TourTransitionModal.show(
             context: context,
-            title: '📅 Explore the Calendar!',
-            message: 'Tap the Calendar button below to continue.',
+            title: 'Explore the Calendar!',
+            message:
+                'Great! Now tap the back arrow and then tap the Calendar button to see your shifts organized by date.',
             onDismiss: () {
               // User will navigate back and tap Calendar
               // Pop this screen to go back to dashboard

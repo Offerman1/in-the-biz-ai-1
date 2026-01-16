@@ -191,9 +191,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     Widget navItem = GestureDetector(
       key: key,
       onTap: () {
-        // Hide any floating hint overlay when nav button is tapped
-        TourTransitionModal.hide();
-
         // Clear pulsing when tapped
         final tourService = Provider.of<TourService>(context, listen: false);
         if (tourService.pulsingTarget == pulsingTarget) {
@@ -205,13 +202,48 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Future.delayed(const Duration(milliseconds: 500), () {
               if (mounted) {
                 tourService.setPulsingTarget('menuButton');
-                // Show non-blocking floating hint for menu (arrow points UP to menu)
-                TourTransitionModal.show(
+                // Show modal for menu
+                showDialog(
                   context: context,
-                  title: '⚙️ Open Settings',
-                  message: 'Tap the menu button (⋮) at the top!',
-                  arrowDirection: HintArrowDirection.up,
-                  onDismiss: () {},
+                  barrierDismissible: false,
+                  barrierColor: Colors.black.withValues(alpha: 0.7),
+                  builder: (ctx) => AlertDialog(
+                    backgroundColor: AppTheme.cardBackground,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(
+                          color: AppTheme.primaryGreen.withValues(alpha: 0.3),
+                          width: 2),
+                    ),
+                    title: Text(
+                      '⚙️ Open Settings',
+                      style:
+                          TextStyle(color: AppTheme.primaryGreen, fontSize: 20),
+                      textAlign: TextAlign.center,
+                    ),
+                    content: Text(
+                      'Tap the menu button (⋮) in the top right corner.',
+                      style:
+                          TextStyle(color: AppTheme.textPrimary, fontSize: 15),
+                      textAlign: TextAlign.center,
+                    ),
+                    actions: [
+                      Center(
+                        child: ElevatedButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.primaryGreen,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 24, vertical: 12),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                          ),
+                          child: const Text('Got It'),
+                        ),
+                      ),
+                    ],
+                  ),
                 );
               }
             });
@@ -523,11 +555,17 @@ class _HomeScreenState extends State<_HomeScreen> {
 
     // Helper callbacks for skip functionality
     void onSkipToNext() {
-      // Just set up state - no modal here (modal causes stacking issues)
-      // The coach mark will close via controller.next()
-      // Then user sees the pulsing + button
+      // Set up state for Add Shift transition
       tourService.setPulsingTarget('addShift');
       tourService.skipToScreen('addShift');
+      // Show the same non-blocking modal as Step 9
+      TourTransitionModal.showNonBlocking(
+        context: context,
+        title: 'Add Your First Shift!',
+        message:
+            'Now tap the + button at the top to add a shift and see how easy it is!',
+        targetKey: _addShiftButtonKey,
+      );
     }
 
     void onEndTour() {
@@ -670,7 +708,7 @@ class _HomeScreenState extends State<_HomeScreen> {
       targets.add(TourTargets.createTarget(
         identify: 'chatNavButton',
         keyTarget: widget.chatNavKey,
-        title: '✨ AI Chat',
+        title: '✨ Chat',
         description:
             'AI assistant to help you with questions and tasks. The AI can quickly do anything a user can do and give deep analytics. Just ask and feel the power!',
         currentScreen: 'dashboard',
@@ -727,9 +765,13 @@ class _HomeScreenState extends State<_HomeScreen> {
         if (tourService.currentStep == 9) {
           tourService.nextStep(); // Move to step 10
           tourService.setPulsingTarget('addShift'); // Make + button pulse
-          TourTransitionModal.showAddShiftPrompt(context, () {
-            // User acknowledged - they'll tap the pulsing + button
-          });
+          TourTransitionModal.showNonBlocking(
+            context: context,
+            title: 'Add Your First Shift!',
+            message:
+                'Now tap the + button at the top to add a shift and see how easy it is!',
+            targetKey: _addShiftButtonKey,
+          );
         } else {
           // Advance to next step
           tourService.nextStep();
@@ -1000,9 +1042,8 @@ class _HomeScreenState extends State<_HomeScreen> {
                                   child: GestureDetector(
                                     key: _addShiftButtonKey,
                                     onTap: () {
-                                      // Hide any floating hint overlay
+                                      // Hide the non-blocking modal if showing
                                       TourTransitionModal.hide();
-
                                       // Clear pulsing when tapped
                                       if (tourService.pulsingTarget ==
                                           'addShift') {
@@ -1154,9 +1195,6 @@ class _HomeScreenState extends State<_HomeScreen> {
                                 Widget menuButton = GestureDetector(
                                   key: _settingsButtonKey,
                                   onTap: () {
-                                    // Hide any floating hint overlay
-                                    TourTransitionModal.hide();
-
                                     // If in tour mode and menu button is pulsing, go directly to Settings
                                     if (shouldPulse &&
                                         tourService.expectedScreen ==

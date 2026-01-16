@@ -334,8 +334,9 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
           tourService.setPulsingTarget('chat');
           TourTransitionModal.show(
             context: context,
-            title: '✨ Meet Your AI Assistant!',
-            message: 'Tap the Chat button below to continue.',
+            title: 'Meet Your AI Assistant!',
+            message:
+                'Now tap the Chat button to see how AI can help you track your income effortlessly.',
             onDismiss: () {
               // User will tap Chat button
             },
