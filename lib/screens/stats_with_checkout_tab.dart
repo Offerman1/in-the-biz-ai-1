@@ -7,6 +7,7 @@ import '../widgets/checkout_analytics_tab.dart';
 import '../widgets/paychecks_tab.dart';
 import '../providers/shift_provider.dart';
 import '../services/export_service.dart';
+import '../services/database_service.dart';
 import 'stats_screen.dart';
 
 /// Wrapper for Stats Screen that adds Checkout Analytics and Paychecks as tabs
@@ -37,6 +38,10 @@ class _StatsWithCheckoutTabState extends State<StatsWithCheckoutTab>
     final shiftProvider = Provider.of<ShiftProvider>(context, listen: false);
     final shifts = shiftProvider.shifts;
 
+    // Load jobs to get job names for export
+    final db = DatabaseService();
+    final jobs = await db.getJobs();
+
     try {
       final now = DateTime.now();
       final startOfMonth = DateTime(now.year, now.month, 1);
@@ -49,6 +54,7 @@ class _StatsWithCheckoutTabState extends State<StatsWithCheckoutTab>
           shifts: shifts,
           startDate: startOfMonth,
           endDate: endOfMonth,
+          jobs: jobs,
         );
       } else if (type == 'pdf') {
         filePath = await ExportService.exportToPDF(
@@ -56,6 +62,7 @@ class _StatsWithCheckoutTabState extends State<StatsWithCheckoutTab>
           startDate: startOfMonth,
           endDate: endOfMonth,
           title: 'Income Report - ${DateFormat('MMMM yyyy').format(now)}',
+          jobs: jobs,
         );
       }
 
