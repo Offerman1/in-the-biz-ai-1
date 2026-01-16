@@ -123,7 +123,7 @@ class _AssistantScreenState extends State<AssistantScreen> {
   /// Chat tour sample conversations
   static const List<Map<String, dynamic>> _tourSlides = [
     {
-      'title': '💬 Add Shifts Naturally',
+      'title': '💬 Add Shifts with the Help of AI',
       'userMessage':
           'Add a shift where I made \$50 cash and \$75 credit tips. I worked 2 PM to 10 PM with Sarah and Billy.',
       'aiMessage':
@@ -331,7 +331,7 @@ class _AssistantScreenState extends State<AssistantScreen> {
                         tourService.skipToScreen('stats');
                       },
                       child: Text(
-                        'Skip →',
+                        'Skip to Stats →',
                         style: TextStyle(
                           color: AppTheme.textSecondary,
                           fontSize: 13,

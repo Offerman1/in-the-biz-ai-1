@@ -221,7 +221,7 @@ class _SettingsScreenState extends State<SettingsScreen>
         keyTarget: _jobsDataTabKey,
         title: '💼 Jobs & Data',
         description:
-            'Add jobs, connect QuickBooks, and access the MOST IMPORTANT feature...',
+            'Add or edit jobs, connect QuickBooks, and access other important features!',
         currentScreen: 'settings',
         onSkipToNext: onEndTour,
         onEndTour: onEndTour,
@@ -236,7 +236,7 @@ class _SettingsScreenState extends State<SettingsScreen>
         keyTarget: _calendarImportKey,
         title: '📅 Calendar Import - THE GAME CHANGER!',
         description:
-            'Import ALL your shifts from Hot Schedules, 7shifts, or ANY scheduling app that syncs to Google/iOS Calendar. Past AND future shifts!',
+            'Import ALL your shifts from Hot Schedules, 7shifts, or ANY scheduling app that you sync with your Google/iOS Calendar. Past AND future shifts!',
         currentScreen: 'settings',
         onSkipToNext: onEndTour,
         onEndTour: onEndTour,

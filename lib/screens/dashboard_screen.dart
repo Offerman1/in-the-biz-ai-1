@@ -191,6 +191,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     Widget navItem = GestureDetector(
       key: key,
       onTap: () {
+        // Hide any floating hint overlay when nav button is tapped
+        TourTransitionModal.hide();
+
         // Clear pulsing when tapped
         final tourService = Provider.of<TourService>(context, listen: false);
         if (tourService.pulsingTarget == pulsingTarget) {
@@ -202,48 +205,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Future.delayed(const Duration(milliseconds: 500), () {
               if (mounted) {
                 tourService.setPulsingTarget('menuButton');
-                // Show modal for menu
-                showDialog(
+                // Show non-blocking floating hint for menu (arrow points UP to menu)
+                TourTransitionModal.show(
                   context: context,
-                  barrierDismissible: false,
-                  barrierColor: Colors.black.withValues(alpha: 0.7),
-                  builder: (ctx) => AlertDialog(
-                    backgroundColor: AppTheme.cardBackground,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      side: BorderSide(
-                          color: AppTheme.primaryGreen.withValues(alpha: 0.3),
-                          width: 2),
-                    ),
-                    title: Text(
-                      '⚙️ Open Settings',
-                      style:
-                          TextStyle(color: AppTheme.primaryGreen, fontSize: 20),
-                      textAlign: TextAlign.center,
-                    ),
-                    content: Text(
-                      'Tap the menu button (⋮) in the top right corner.',
-                      style:
-                          TextStyle(color: AppTheme.textPrimary, fontSize: 15),
-                      textAlign: TextAlign.center,
-                    ),
-                    actions: [
-                      Center(
-                        child: ElevatedButton(
-                          onPressed: () => Navigator.pop(ctx),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppTheme.primaryGreen,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 24, vertical: 12),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12)),
-                          ),
-                          child: const Text('Got It'),
-                        ),
-                      ),
-                    ],
-                  ),
+                  title: '⚙️ Open Settings',
+                  message: 'Tap the menu button (⋮) at the top!',
+                  arrowDirection: HintArrowDirection.up,
+                  onDismiss: () {},
                 );
               }
             });
@@ -688,7 +656,7 @@ class _HomeScreenState extends State<_HomeScreen> {
         keyTarget: widget.calendarNavKey,
         title: '📅 Calendar',
         description:
-            'View all your shifts organized by date. Tap to continue the tour!',
+            'View all your previously worked shifts or future scheduled shifts! Easily view or edit your income, hours worked and so much more!',
         currentScreen: 'dashboard',
         onSkipToNext: onSkipToNext,
         onEndTour: onEndTour,
@@ -702,8 +670,9 @@ class _HomeScreenState extends State<_HomeScreen> {
       targets.add(TourTargets.createTarget(
         identify: 'chatNavButton',
         keyTarget: widget.chatNavKey,
-        title: '✨ Chat',
-        description: 'AI assistant to help you with questions and tasks',
+        title: '✨ AI Chat',
+        description:
+            'AI assistant to help you with questions and tasks. The AI can quickly do anything a user can do and give deep analytics. Just ask and feel the power!',
         currentScreen: 'dashboard',
         onSkipToNext: onSkipToNext,
         onEndTour: onEndTour,
@@ -1031,6 +1000,9 @@ class _HomeScreenState extends State<_HomeScreen> {
                                   child: GestureDetector(
                                     key: _addShiftButtonKey,
                                     onTap: () {
+                                      // Hide any floating hint overlay
+                                      TourTransitionModal.hide();
+
                                       // Clear pulsing when tapped
                                       if (tourService.pulsingTarget ==
                                           'addShift') {
@@ -1182,6 +1154,9 @@ class _HomeScreenState extends State<_HomeScreen> {
                                 Widget menuButton = GestureDetector(
                                   key: _settingsButtonKey,
                                   onTap: () {
+                                    // Hide any floating hint overlay
+                                    TourTransitionModal.hide();
+
                                     // If in tour mode and menu button is pulsing, go directly to Settings
                                     if (shouldPulse &&
                                         tourService.expectedScreen ==

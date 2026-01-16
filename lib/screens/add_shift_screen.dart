@@ -1058,7 +1058,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
         keyTarget: _scanButtonKey,
         title: '✨ AI-Powered Scanning',
         description:
-            'Scan server checkouts, receipts, BEOs, business cards, paychecks, or invoices - AI extracts the data automatically!',
+            'Scan server checkouts, receipts, BEOs, business cards, paychecks, or invoices - AI extracts the data automatically! Create shifts from Server checkouts or BEO/Event Contracts!',
         currentScreen: 'addShift',
         onSkipToNext: onSkipToNext,
         onEndTour: onEndTour,
@@ -1128,12 +1128,11 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
         else if (tourService.currentStep == 12) {
           // Set Calendar as the pulsing target
           tourService.setPulsingTarget('calendar');
-          // Show transition modal
+          // Show non-blocking floating hint
           TourTransitionModal.show(
             context: context,
-            title: 'Explore the Calendar!',
-            message:
-                'Great! Now tap the back arrow and then tap the Calendar button to see your shifts organized by date.',
+            title: '📅 Explore the Calendar!',
+            message: 'Tap the Calendar button below to continue.',
             onDismiss: () {
               // User will navigate back and tap Calendar
               // Pop this screen to go back to dashboard
