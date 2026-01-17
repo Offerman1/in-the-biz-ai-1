@@ -32,8 +32,14 @@ class AssistantScreen extends StatefulWidget {
   /// Whether this screen is currently visible (for tour triggering)
   final bool isVisible;
 
+  /// Stats nav key for tour transition
+  final GlobalKey? statsNavKey;
+
   const AssistantScreen(
-      {super.key, this.initialMessage, this.isVisible = false});
+      {super.key,
+      this.initialMessage,
+      this.isVisible = false,
+      this.statsNavKey});
 
   @override
   State<AssistantScreen> createState() => _AssistantScreenState();
@@ -348,13 +354,18 @@ class _AssistantScreenState extends State<AssistantScreen> {
                         setState(() => _isTourShowing = false);
                         tourService.nextStep(); // Step 24 (Stats)
                         tourService.setPulsingTarget('stats');
-                        TourTransitionModal.show(
-                          context: context,
-                          title: 'Check Your Stats!',
-                          message:
-                              'Tap the Stats button to see your earnings analytics and export options.',
-                          onDismiss: () {},
-                        );
+                        // Show non-blocking modal after delay
+                        Future.delayed(const Duration(milliseconds: 300), () {
+                          if (mounted && widget.statsNavKey != null) {
+                            TourTransitionModal.showNonBlocking(
+                              context: context,
+                              title: 'Check Your Stats!',
+                              message:
+                                  'Tap the Stats button to see your earnings analytics and export options.',
+                              targetKey: widget.statsNavKey!,
+                            );
+                          }
+                        });
                       } else {
                         // Next slide
                         setState(() => _currentTourSlide++);
@@ -757,13 +768,25 @@ class _AssistantScreenState extends State<AssistantScreen> {
         backgroundColor: Colors.transparent,
         appBar: AppBar(
           backgroundColor:
-              AppTheme.cardBackground, // Solid color to match input area
-          elevation: 0, // Remove shadow for cleaner look
+              AppTheme.cardBackground, // Match bottom container background
+          elevation: 0, // Remove default elevation
           scrolledUnderElevation:
               0, // Prevent color change on scroll (Material 3)
           shadowColor: Colors.transparent,
           surfaceTintColor: Colors.transparent, // Prevent Material 3 tint
           toolbarHeight: 70, // Slightly taller for stacked text
+          flexibleSpace: Container(
+            decoration: BoxDecoration(
+              color: AppTheme.cardBackground,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+          ),
           // Only show back button if we can actually pop (not when shown as a tab)
           leading: canPop
               ? IconButton(
@@ -1063,7 +1086,10 @@ class _AssistantScreenState extends State<AssistantScreen> {
               decoration: BoxDecoration(
                 color: message.isUser
                     ? AppTheme.primaryGreen
-                    : AppTheme.cardBackground,
+                    : (AppTheme.darkBackground.computeLuminance() > 0.5
+                        ? AppTheme.primaryGreen.withValues(
+                            alpha: 0.08) // Light mode: subtle theme tint
+                        : AppTheme.cardBackground), // Dark mode: keep as is
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(20),
                   topRight: const Radius.circular(20),

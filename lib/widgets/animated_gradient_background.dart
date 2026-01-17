@@ -8,6 +8,7 @@ class AnimatedGradientBackground extends StatefulWidget {
   final Color? gradientColor1;
   final Color? gradientColor2;
   final bool isGradient;
+  final Color? accentColor; // For light theme gradients
 
   const AnimatedGradientBackground({
     super.key,
@@ -17,6 +18,7 @@ class AnimatedGradientBackground extends StatefulWidget {
     this.gradientColor2,
     this.isGradient = false,
     this.enabled = true,
+    this.accentColor,
   });
 
   @override
@@ -86,8 +88,23 @@ class _AnimatedGradientBackgroundState extends State<AnimatedGradientBackground>
       );
     }
 
-    // Solid color (no animation)
+    // Solid color (no animation) - but use gradient for light themes with accent
     if (!widget.enabled) {
+      if (widget.accentColor != null) {
+        // Use static gradient when accent color is provided
+        return Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [widget.baseColor, widget.accentColor!],
+            ),
+          ),
+          child: widget.child,
+        );
+      }
+
+      // Default solid color
       return Container(
         color: widget.baseColor,
         child: widget.child,
@@ -100,10 +117,21 @@ class _AnimatedGradientBackgroundState extends State<AnimatedGradientBackground>
       builder: (context, child) {
         final value = _controller.value;
 
-        // Create more noticeable color variations
+        // Check if we're in a light theme by checking background luminance
+        final isLightTheme = widget.baseColor.computeLuminance() > 0.5;
+
+        // Create color variations based on theme type
         final color1 = widget.baseColor;
-        final color2 = _adjustColor(widget.baseColor, 0.75); // Was 0.85
-        final color3 = _adjustColor(widget.baseColor, 0.55); // Was 0.7
+        final color2 = isLightTheme
+            ? (widget.accentColor != null
+                ? Color.lerp(widget.baseColor, widget.accentColor!, 0.5)!
+                : Color.lerp(widget.baseColor, Colors.white, 0.5)!)
+            : _adjustColor(widget.baseColor, 0.75);
+        final color3 = isLightTheme
+            ? (widget.accentColor != null
+                ? Color.lerp(widget.baseColor, widget.accentColor!, 0.8)!
+                : Color.lerp(widget.baseColor, Colors.white, 0.7)!)
+            : _adjustColor(widget.baseColor, 0.55);
 
         // Interpolate between colors
         final t = math.sin(value * 2 * math.pi) * 0.5 + 0.5;
@@ -111,8 +139,8 @@ class _AnimatedGradientBackgroundState extends State<AnimatedGradientBackground>
         return Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+              begin: Alignment.bottomLeft,
+              end: Alignment.topRight,
               colors: [
                 Color.lerp(color1, color2, t)!,
                 widget.baseColor,

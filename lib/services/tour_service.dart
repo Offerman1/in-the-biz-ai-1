@@ -273,6 +273,12 @@ class TourService extends ChangeNotifier {
     }
   }
 
+  /// Hide the floating tour button temporarily (current session only)
+  void hideTourButtonTemporarily() {
+    _isTourButtonHidden = true;
+    notifyListeners();
+  }
+
   /// Hide the floating tour button permanently
   Future<void> hideTourButton() async {
     try {

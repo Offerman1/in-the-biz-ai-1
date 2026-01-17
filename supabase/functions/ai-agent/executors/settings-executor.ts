@@ -113,7 +113,7 @@ export class SettingsExecutor {
     const themes = [
       {
         id: "cash_app",
-        name: "Finance Green (Default)",
+        name: "Finance Green",
         type: "dark",
         description: "Emerald green finance theme",
       },
@@ -137,7 +137,7 @@ export class SettingsExecutor {
       },
       {
         id: "sunset_glow",
-        name: "Sunset Glow",
+        name: "In the Biz",
         type: "dark",
         description: "Warm orange tones",
       },
@@ -149,9 +149,9 @@ export class SettingsExecutor {
       },
       {
         id: "paypal_blue",
-        name: "PayPal Blue",
+        name: "Azure Blue",
         type: "dark",
-        description: "PayPal-inspired theme",
+        description: "Professional azure theme",
       },
       {
         id: "coinbase_pro",

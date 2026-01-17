@@ -52,7 +52,6 @@ import '../services/beo_event_service.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import '../services/tour_service.dart';
 import '../utils/tour_targets.dart';
-import '../widgets/tour_transition_modal.dart';
 
 class AddShiftScreen extends StatefulWidget {
   final Shift? existingShift;
@@ -1128,18 +1127,8 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
         else if (tourService.currentStep == 12) {
           // Set Calendar as the pulsing target
           tourService.setPulsingTarget('calendar');
-          // Show transition modal
-          TourTransitionModal.show(
-            context: context,
-            title: 'Explore the Calendar!',
-            message:
-                'Great! Now tap the back arrow and then tap the Calendar button to see your shifts organized by date.',
-            onDismiss: () {
-              // User will navigate back and tap Calendar
-              // Pop this screen to go back to dashboard
-              Navigator.pop(context);
-            },
-          );
+          // Pop back to dashboard - modal will show there
+          Navigator.pop(context);
         }
       },
       onSkip: () {
@@ -3037,7 +3026,7 @@ class _AddShiftScreenState extends State<AddShiftScreen> {
                   label: const Text('Go Back'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.primaryGreen,
-                    foregroundColor: Colors.black,
+                    foregroundColor: Colors.white,
                   ),
                 ),
                 const SizedBox(height: 12),

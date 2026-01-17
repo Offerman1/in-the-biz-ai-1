@@ -28,8 +28,10 @@ enum CalendarViewMode { month, week, year }
 
 class BetterCalendarScreen extends StatefulWidget {
   final bool isVisible;
+  final GlobalKey? chatNavKey;
 
-  const BetterCalendarScreen({super.key, this.isVisible = false});
+  const BetterCalendarScreen(
+      {super.key, this.isVisible = false, this.chatNavKey});
 
   @override
   State<BetterCalendarScreen> createState() => _BetterCalendarScreenState();
@@ -332,15 +334,18 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
         else if (tourService.currentStep == 18) {
           // Set up for Chat tour
           tourService.setPulsingTarget('chat');
-          TourTransitionModal.show(
-            context: context,
-            title: 'Meet Your AI Assistant!',
-            message:
-                'Now tap the Chat button to see how AI can help you track your income effortlessly.',
-            onDismiss: () {
-              // User will tap Chat button
-            },
-          );
+          // Show non-blocking modal after delay
+          Future.delayed(const Duration(milliseconds: 300), () {
+            if (mounted && widget.chatNavKey != null) {
+              TourTransitionModal.showNonBlocking(
+                context: context,
+                title: 'Meet Your AI Assistant!',
+                message:
+                    'Now tap the Chat button to see how AI can help you track your income effortlessly.',
+                targetKey: widget.chatNavKey!,
+              );
+            }
+          });
         }
       },
       onSkip: () {

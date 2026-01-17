@@ -62,13 +62,13 @@ class _AppearanceSettingsScreenState extends State<AppearanceSettingsScreen> {
     final currentTheme = themeProvider.currentTheme;
 
     final themeNames = {
-      'cash_app': 'Finance Green (Default)',
+      'sunset_glow': 'In the Biz (Default)',
+      'cash_app': 'Finance Green',
       'midnight_blue': 'Midnight Blue',
       'purple_reign': 'Purple Reign',
       'ocean_breeze': 'Ocean Breeze',
-      'sunset_glow': 'Sunset Glow',
       'neon_cash': 'Neon Cash',
-      'paypal_blue': 'PayPal Blue',
+      'paypal_blue': 'Azure Blue',
       'coinbase_pro': 'Finance Pro',
       'cash_light': 'Cash Light',
       'light_blue': 'Finance Light',
@@ -83,11 +83,11 @@ class _AppearanceSettingsScreenState extends State<AppearanceSettingsScreen> {
     };
 
     final themeIcons = {
+      'sunset_glow': Icons.wb_twilight,
       'cash_app': Icons.attach_money,
       'midnight_blue': Icons.nightlight_round,
       'purple_reign': Icons.auto_awesome,
       'ocean_breeze': Icons.waves,
-      'sunset_glow': Icons.wb_twilight,
       'neon_cash': Icons.flash_on,
       'paypal_blue': Icons.account_balance_wallet,
       'coinbase_pro': Icons.currency_bitcoin,

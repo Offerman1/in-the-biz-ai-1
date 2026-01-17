@@ -541,6 +541,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
                         vertical: 16, horizontal: 48),
+                    foregroundColor: Colors.white,
                   ),
                   child: _isLoading
                       ? const SizedBox(
@@ -548,7 +549,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           height: 24,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: Colors.black,
+                            color: Colors.white,
                           ),
                         )
                       : Text(_isSignUp ? 'Create Account' : 'Sign In'),

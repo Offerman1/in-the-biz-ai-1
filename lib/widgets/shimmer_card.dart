@@ -86,10 +86,13 @@ class _ShimmerCardState extends State<ShimmerCard>
             children: [
               widget.child,
               Positioned.fill(
-                child: CustomPaint(
-                  painter: ShimmerPainter(
-                    animation: _controller,
-                    color: Colors.white.withValues(alpha: 0.03), // Much more subtle
+                child: IgnorePointer(
+                  child: CustomPaint(
+                    painter: ShimmerPainter(
+                      animation: _controller,
+                      color: Colors.white
+                          .withValues(alpha: 0.03), // Much more subtle
+                    ),
                   ),
                 ),
               ),

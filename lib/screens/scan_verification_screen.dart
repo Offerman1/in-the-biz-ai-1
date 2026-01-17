@@ -53,6 +53,16 @@ class _ScanVerificationScreenState extends State<ScanVerificationScreen> {
   void initState() {
     super.initState();
     _editableData = Map<String, dynamic>.from(widget.extractedData);
+
+    // Normalize table_count_type to match dropdown options (capitalize first letter)
+    if (_editableData.containsKey('table_count_type')) {
+      final type = _editableData['table_count_type'] as String?;
+      if (type != null && type.isNotEmpty) {
+        // Capitalize first letter to match dropdown options: 'checks' -> 'Checks', 'tables' -> 'Tables'
+        _editableData['table_count_type'] =
+            type[0].toUpperCase() + type.substring(1).toLowerCase();
+      }
+    }
   }
 
   /// Upload scan images and return the public URLs
@@ -342,7 +352,27 @@ class _ScanVerificationScreenState extends State<ScanVerificationScreen> {
   }) {
     final value = _editableData[fieldKey];
     final hasValue = value != null && value.toString().isNotEmpty;
-    final currentType = _editableData[typeKey] ?? typeOptions.first;
+
+    // Safety: Ensure currentType exists in typeOptions, fallback to first option if not
+    String? rawType = _editableData[typeKey];
+    String currentType;
+    if (rawType != null && typeOptions.contains(rawType)) {
+      currentType = rawType;
+    } else if (rawType != null) {
+      // Try to normalize the value (capitalize first letter)
+      final normalized =
+          rawType[0].toUpperCase() + rawType.substring(1).toLowerCase();
+      if (typeOptions.contains(normalized)) {
+        currentType = normalized;
+        // Update the stored value
+        _editableData[typeKey] = normalized;
+      } else {
+        currentType = typeOptions.first;
+        _editableData[typeKey] = typeOptions.first;
+      }
+    } else {
+      currentType = typeOptions.first;
+    }
     final confidenceBadge = _getConfidenceBadge(fieldKey);
     final confidenceColor = _getConfidenceColor(fieldKey);
 

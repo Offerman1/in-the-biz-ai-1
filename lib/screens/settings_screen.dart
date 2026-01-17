@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show kIsWeb, kDebugMode;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -841,8 +841,8 @@ class _SettingsScreenState extends State<SettingsScreen>
 
         const SizedBox(height: 24),
 
-        // Admin / Debug Section
-        if (kDebugMode) ...[
+        // Admin / Debug Section (only for altcoinkid2@gmail.com)
+        if (AuthService.currentUser?.email == 'altcoinkid2@gmail.com') ...[
           _buildSectionHeader('ADMIN / DEBUG'),
           const SizedBox(height: 12),
           _buildAdminPanelTile(),

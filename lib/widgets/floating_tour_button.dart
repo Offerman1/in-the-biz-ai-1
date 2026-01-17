@@ -82,30 +82,57 @@ class _FloatingTourButtonState extends State<FloatingTourButton>
             fontSize: 15,
           ),
         ),
+        actionsAlignment: MainAxisAlignment.spaceEvenly,
+        actionsPadding: const EdgeInsets.all(16),
         actions: [
           // Close for Now button
-          OutlinedButton(
-            onPressed: () => Navigator.pop(context),
-            style: OutlinedButton.styleFrom(
-              side: BorderSide(color: AppTheme.textMuted),
-              foregroundColor: AppTheme.textMuted,
+          Expanded(
+            child: OutlinedButton(
+              onPressed: () {
+                final tourService =
+                    Provider.of<TourService>(context, listen: false);
+                tourService.hideTourButtonTemporarily();
+                Navigator.pop(context);
+              },
+              style: OutlinedButton.styleFrom(
+                side: BorderSide(color: AppTheme.textMuted),
+                foregroundColor: AppTheme.textMuted,
+                padding: const EdgeInsets.symmetric(
+                  vertical: 12,
+                  horizontal: 8,
+                ),
+              ),
+              child: const Text(
+                'Close for Now',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 13),
+              ),
             ),
-            child: const Text('Close for Now'),
           ),
           const SizedBox(width: 8),
           // Never Show Again button
-          ElevatedButton(
-            onPressed: () {
-              final tourService =
-                  Provider.of<TourService>(context, listen: false);
-              tourService.hideTourButton();
-              Navigator.pop(context);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.primaryGreen,
-              foregroundColor: Colors.white,
+          Expanded(
+            child: ElevatedButton(
+              onPressed: () {
+                final tourService =
+                    Provider.of<TourService>(context, listen: false);
+                tourService.hideTourButton();
+                Navigator.pop(context);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryGreen,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  vertical: 12,
+                  horizontal: 8,
+                ),
+              ),
+              child: const Text(
+                'Never Show Again',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 13),
+              ),
             ),
-            child: const Text('Never Show Again'),
           ),
         ],
       ),

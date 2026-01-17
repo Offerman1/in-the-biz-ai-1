@@ -69,8 +69,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
             _startHomeTour = callback; // Store the callback
           },
         ),
-        BetterCalendarScreen(isVisible: _selectedIndex == 1),
-        AssistantScreen(isVisible: _selectedIndex == 2),
+        BetterCalendarScreen(
+            isVisible: _selectedIndex == 1, chatNavKey: _chatNavKey),
+        AssistantScreen(
+            isVisible: _selectedIndex == 2, statsNavKey: _statsNavKey),
         StatsWithCheckoutTab(isVisible: _selectedIndex == 3),
       ];
 
@@ -102,7 +104,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   particleColor: AppTheme.primaryGreen,
                   child: AnimatedGradientBackground(
                     enabled: themeProvider.animatedGradients,
-                    baseColor: AppTheme.darkBackground,
+                    baseColor:
+                        _getLightThemeBaseColor(themeProvider.currentTheme),
+                    accentColor: isLightBg
+                        ? _getLightThemeAccentColor(themeProvider.currentTheme)
+                        : null,
                     isGradient: isGradient,
                     gradientColor1: themeProvider.gradientColor1,
                     gradientColor2: themeProvider.gradientColor2,
@@ -191,6 +197,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     Widget navItem = GestureDetector(
       key: key,
       onTap: () {
+        // Hide any non-blocking tour modal
+        TourTransitionModal.hide();
+
         // Clear pulsing when tapped
         final tourService = Provider.of<TourService>(context, listen: false);
         if (tourService.pulsingTarget == pulsingTarget) {
@@ -299,6 +308,61 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     return navItem;
   }
+
+  // Helper methods for light theme gradients
+  Color _getLightThemeBaseColor(String theme) {
+    switch (theme) {
+      case 'sunset_light':
+        return const Color(0xFFFFEEDD); // Peach
+      case 'cash_light':
+        return const Color(0xFFF4FDF9); // Very light mint
+      case 'light_blue':
+        return const Color(0xFFF6FAFF); // Very light blue
+      case 'purple_light':
+        return const Color(0xFFFAF6FF); // Very light lavender
+      case 'ocean_light':
+        return const Color(0xFFF4FCFE); // Very light cyan
+      case 'pink_light':
+        return const Color(0xFFFFF7FC); // Very light pink
+      case 'slate_light':
+        return const Color(0xFFF9FAFC); // Very light slate
+      case 'mint_light':
+        return const Color(0xFFF4FDF9); // Very light mint
+      case 'lavender_light':
+        return const Color(0xFFFAF6FF); // Very light lavender
+      case 'gold_light':
+        return const Color(0xFFFFFCF4); // Very light gold
+      default:
+        return AppTheme.darkBackground;
+    }
+  }
+
+  Color? _getLightThemeAccentColor(String theme) {
+    switch (theme) {
+      case 'sunset_light':
+        return const Color(0xFFDAEEFF); // Light blue
+      case 'cash_light':
+        return const Color(0xFFEEFAF3); // Lighter mint
+      case 'light_blue':
+        return const Color(0xFFEEF6FF); // Lighter blue
+      case 'purple_light':
+        return const Color(0xFFF4EEFF); // Lighter lavender
+      case 'ocean_light':
+        return const Color(0xFFEDF9FC); // Lighter cyan
+      case 'pink_light':
+        return const Color(0xFFFFF1F8); // Lighter pink
+      case 'slate_light':
+        return const Color(0xFFF4F7FA); // Lighter slate
+      case 'mint_light':
+        return const Color(0xFFEEFAF3); // Lighter mint
+      case 'lavender_light':
+        return const Color(0xFFF4EEFF); // Lighter lavender
+      case 'gold_light':
+        return const Color(0xFFFDF4D4); // Lighter gold
+      default:
+        return null;
+    }
+  }
 }
 
 // ============================================================
@@ -353,6 +417,9 @@ class _HomeScreenState extends State<_HomeScreen> {
 
     // Pass the tour trigger function up to parent
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Clear any stuck tour overlays from previous sessions
+      TourTransitionModal.forceHide();
+
       widget.onTourReady(() {
         final tourService = Provider.of<TourService>(context, listen: false);
         tourService.startTour(checkJobs: true);
@@ -1057,6 +1124,30 @@ class _HomeScreenState extends State<_HomeScreen> {
                                       ).then((_) {
                                         // Reload data when returning from Add Shift
                                         setState(() {});
+                                        // If returning during Calendar transition, show modal
+                                        final ts = Provider.of<TourService>(
+                                            context,
+                                            listen: false);
+                                        if (ts.isActive &&
+                                            ts.currentStep == 12 &&
+                                            ts.pulsingTarget == 'calendar') {
+                                          // Wait for nav bar to fully render
+                                          Future.delayed(
+                                              const Duration(milliseconds: 300),
+                                              () {
+                                            if (mounted) {
+                                              TourTransitionModal
+                                                  .showNonBlocking(
+                                                context: context,
+                                                title: 'Explore the Calendar!',
+                                                message:
+                                                    'Now tap the Calendar button to see your shifts organized by date.',
+                                                targetKey:
+                                                    widget.calendarNavKey,
+                                              );
+                                            }
+                                          });
+                                        }
                                       });
                                     },
                                     child: Icon(Icons.add,
@@ -1878,7 +1969,6 @@ class _HomeScreenState extends State<_HomeScreen> {
 
   Widget _buildPeriodChip(String label, String period) {
     final isSelected = _selectedPeriod == period;
-    final isLightMode = AppTheme.darkBackground.computeLuminance() > 0.5;
     return GestureDetector(
       onTap: () {
         setState(() {
@@ -1889,20 +1979,13 @@ class _HomeScreenState extends State<_HomeScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
         decoration: BoxDecoration(
-          color: isSelected
-              ? (isLightMode
-                  ? const Color(
-                      0xFFD1D5DB) // Darker gray for light mode selected
-                  : AppTheme.cardBackgroundLight)
-              : AppTheme.cardBackground,
+          color: isSelected ? AppTheme.primaryGreen : AppTheme.cardBackground,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: isSelected
-                ? AppTheme.textPrimary
-                : AppTheme.textSecondary, // White/gray text, not colored
+            color: isSelected ? Colors.white : AppTheme.textSecondary,
             fontSize: 10,
             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
           ),
@@ -1913,7 +1996,6 @@ class _HomeScreenState extends State<_HomeScreen> {
 
   Widget _buildJobTab(String label, String? jobId) {
     final isSelected = _selectedJobId == jobId;
-    final isLightMode = AppTheme.darkBackground.computeLuminance() > 0.5;
     return Expanded(
       child: GestureDetector(
         onTap: () {
@@ -1926,12 +2008,7 @@ class _HomeScreenState extends State<_HomeScreen> {
           margin: const EdgeInsets.symmetric(horizontal: 2),
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
           decoration: BoxDecoration(
-            color: isSelected
-                ? (isLightMode
-                    ? const Color(
-                        0xFFD1D5DB) // Darker gray for light mode selected
-                    : AppTheme.cardBackgroundLight)
-                : AppTheme.cardBackground,
+            color: isSelected ? AppTheme.primaryGreen : AppTheme.cardBackground,
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
               color: AppTheme.textMuted.withValues(alpha: 0.3),
@@ -1944,9 +2021,7 @@ class _HomeScreenState extends State<_HomeScreen> {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              color: isSelected
-                  ? AppTheme.adaptiveTextColor
-                  : AppTheme.textSecondary,
+              color: isSelected ? Colors.white : AppTheme.textSecondary,
               fontSize: 11,
               fontWeight: FontWeight.w700,
             ),

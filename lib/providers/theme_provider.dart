@@ -4,7 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../theme/app_theme.dart';
 
 class ThemeProvider extends ChangeNotifier {
-  String _currentTheme = 'cash_app';
+  String _currentTheme = 'sunset_glow';
   String _backgroundMode =
       'default'; // 'default', 'dark', 'slate', 'white', 'custom', 'gradient'
   Color? _customBackgroundColor;
@@ -116,7 +116,23 @@ class ThemeProvider extends ChangeNotifier {
   }
 
   static final Map<String, Map<String, Color>> _themePresets = {
-    // ====== DEFAULT THEME (Forest Night colors with Finance Green name) ======
+    // ====== DEFAULT THEME ======
+    'sunset_glow': {
+      'primary': const Color(0xFFFF6B35), // Keep orange accent
+      'background': const Color(0xFF0D0D0D), // Very dark/black background
+      'card': const Color(0xFF1A1A1A), // Dark neutral card
+      'cardLight': const Color(0xFF2A2A2A), // Slightly lighter
+      'textPrimary': const Color(0xFFFFFFFF),
+      'textSecondary':
+          const Color(0xFFB3B3B3), // Neutral gray instead of orange tint
+      'textMuted': const Color(0xFF666666), // Neutral muted
+      'accentRed': const Color(0xFFFF3366),
+      'accentBlue': const Color(0xFF6B8CFF),
+      'accentYellow': const Color(0xFFFFCC33),
+      'accentOrange': const Color(0xFFFF8C42),
+      'accentPurple': const Color(0xFFAF52DE),
+    },
+    // ====== DARK THEMES ======
     'cash_app': {
       'primary': const Color.fromARGB(
           167, 16, 185, 38), // Forest Night green (YOUR FAVORITE!)
@@ -132,7 +148,6 @@ class ThemeProvider extends ChangeNotifier {
       'accentOrange': const Color(0xFFF97316),
       'accentPurple': const Color(0xFFA855F7),
     },
-    // ====== DARK THEMES ======
     'midnight_blue': {
       'primary': const Color(0xFF3B82F6), // Blue accent
       'background': const Color(0xFF0D0D0D),
@@ -175,21 +190,6 @@ class ThemeProvider extends ChangeNotifier {
       'accentOrange': const Color(0xFFF97316),
       'accentPurple': const Color(0xFFA855F7),
     },
-    'sunset_glow': {
-      'primary': const Color(0xFFFF6B35), // Keep orange accent
-      'background': const Color(0xFF0D0D0D), // Very dark/black background
-      'card': const Color(0xFF1A1A1A), // Dark neutral card
-      'cardLight': const Color(0xFF2A2A2A), // Slightly lighter
-      'textPrimary': const Color(0xFFFFFFFF),
-      'textSecondary':
-          const Color(0xFFB3B3B3), // Neutral gray instead of orange tint
-      'textMuted': const Color(0xFF666666), // Neutral muted
-      'accentRed': const Color(0xFFFF3366),
-      'accentBlue': const Color(0xFF6B8CFF),
-      'accentYellow': const Color(0xFFFFCC33),
-      'accentOrange': const Color(0xFFFF8C42),
-      'accentPurple': const Color(0xFFAF52DE),
-    },
     'neon_cash': {
       'primary': const Color(0xFF00D632), // Original bright neon green
       'background': const Color(0xFF121212),
@@ -205,7 +205,7 @@ class ThemeProvider extends ChangeNotifier {
       'accentPurple': const Color(0xFFAF52DE),
     },
     'paypal_blue': {
-      'primary': const Color(0xFF0070BA), // PayPal blue
+      'primary': const Color(0xFF0070BA), // Azure blue
       'background': const Color(0xFF0D0D0D),
       'card': const Color(0xFF1A1A1A),
       'cardLight': const Color(0xFF2C2C2C),
@@ -235,9 +235,9 @@ class ThemeProvider extends ChangeNotifier {
     // ====== LIGHT THEMES ======
     'cash_light': {
       'primary': const Color(0xFF059669), // Emerald green accent ONLY
-      'background': const Color(0xFFFFFFFF), // Pure white
-      'card': const Color(0xFFF5F5F5), // Just slightly darker than white
-      'cardLight': const Color(0xFFEEEEEE), // Just slightly darker
+      'background': const Color(0xFFF0FDF4), // Soft mint green tint
+      'card': const Color(0xFFFFFFFF), // Pure white cards pop on tinted bg
+      'cardLight': const Color(0xFFBBF7D0), // VIBRANT mint green
       'textPrimary': const Color(0xFF111827), // Almost black
       'textSecondary': const Color(0xFF4B5563), // Dark gray
       'textMuted': const Color(0xFF9CA3AF), // Medium gray
@@ -249,9 +249,9 @@ class ThemeProvider extends ChangeNotifier {
     },
     'light_blue': {
       'primary': const Color(0xFF0070BA), // Blue accent ONLY
-      'background': const Color(0xFFFFFFFF),
-      'card': const Color(0xFFF9FAFB),
-      'cardLight': const Color(0xFFF3F4F6),
+      'background': const Color(0xFFEFF6FF), // Soft blue tint
+      'card': const Color(0xFFFFFFFF), // Pure white cards
+      'cardLight': const Color(0xFFBFDBFE), // VIBRANT blue
       'textPrimary': const Color(0xFF111827),
       'textSecondary': const Color(0xFF4B5563),
       'textMuted': const Color(0xFF9CA3AF),
@@ -263,9 +263,9 @@ class ThemeProvider extends ChangeNotifier {
     },
     'purple_light': {
       'primary': const Color(0xFF7C3AED), // Purple accent ONLY
-      'background': const Color(0xFFFFFFFF),
-      'card': const Color(0xFFF9FAFB),
-      'cardLight': const Color(0xFFF3F4F6),
+      'background': const Color(0xFFFAF5FF), // Soft lavender tint
+      'card': const Color(0xFFFFFFFF), // Pure white cards
+      'cardLight': const Color(0xFFE9D5FF), // VIBRANT purple (visible!)
       'textPrimary': const Color(0xFF111827),
       'textSecondary': const Color(0xFF4B5563),
       'textMuted': const Color(0xFF9CA3AF),
@@ -277,9 +277,10 @@ class ThemeProvider extends ChangeNotifier {
     },
     'sunset_light': {
       'primary': const Color(0xFFEA580C), // Orange accent ONLY
-      'background': const Color(0xFFFFFFFF),
-      'card': const Color(0xFFF9FAFB),
-      'cardLight': const Color(0xFFF3F4F6),
+      'background':
+          const Color(0xFFFFF0E5), // Light peachy-orange (start of gradient)
+      'card': const Color(0xFFFFFFFF), // Pure white cards
+      'cardLight': const Color(0xFFE5F2FF), // Light blue (end of gradient)
       'textPrimary': const Color(0xFF111827),
       'textSecondary': const Color(0xFF4B5563),
       'textMuted': const Color(0xFF9CA3AF),
@@ -291,9 +292,9 @@ class ThemeProvider extends ChangeNotifier {
     },
     'ocean_light': {
       'primary': const Color(0xFF0891B2), // Cyan accent ONLY
-      'background': const Color(0xFFFFFFFF),
-      'card': const Color(0xFFF9FAFB),
-      'cardLight': const Color(0xFFF3F4F6),
+      'background': const Color(0xFFECFEFF), // Soft cyan tint
+      'card': const Color(0xFFFFFFFF), // Pure white cards
+      'cardLight': const Color(0xFFA5F3FC), // VIBRANT cyan
       'textPrimary': const Color(0xFF111827),
       'textSecondary': const Color(0xFF4B5563),
       'textMuted': const Color(0xFF9CA3AF),
@@ -305,9 +306,9 @@ class ThemeProvider extends ChangeNotifier {
     },
     'pink_light': {
       'primary': const Color(0xFFDB2777), // Pink accent ONLY
-      'background': const Color(0xFFFFFFFF),
-      'card': const Color(0xFFF9FAFB),
-      'cardLight': const Color(0xFFF3F4F6),
+      'background': const Color(0xFFFDF2F8), // Soft rose tint
+      'card': const Color(0xFFFFFFFF), // Pure white cards
+      'cardLight': const Color(0xFFFBCFE8), // VIBRANT pink
       'textPrimary': const Color(0xFF111827),
       'textSecondary': const Color(0xFF4B5563),
       'textMuted': const Color(0xFF9CA3AF),
@@ -319,9 +320,9 @@ class ThemeProvider extends ChangeNotifier {
     },
     'slate_light': {
       'primary': const Color(0xFF475569), // Slate gray accent ONLY
-      'background': const Color(0xFFFFFFFF),
-      'card': const Color(0xFFF9FAFB),
-      'cardLight': const Color(0xFFF3F4F6),
+      'background': const Color(0xFFF8FAFC), // Soft slate tint
+      'card': const Color(0xFFFFFFFF), // Pure white cards
+      'cardLight': const Color(0xFFFCFDFE), // Lighter slate (closer to white)
       'textPrimary': const Color(0xFF111827),
       'textSecondary': const Color(0xFF4B5563),
       'textMuted': const Color(0xFF9CA3AF),
@@ -333,9 +334,9 @@ class ThemeProvider extends ChangeNotifier {
     },
     'mint_light': {
       'primary': const Color(0xFF10B981), // Mint green accent ONLY
-      'background': const Color(0xFFFFFFFF),
-      'card': const Color(0xFFF9FAFB),
-      'cardLight': const Color(0xFFF3F4F6),
+      'background': const Color(0xFFF0FDF4), // Fresh mint tint
+      'card': const Color(0xFFFFFFFF), // Pure white cards
+      'cardLight': const Color(0xFFBBF7D0), // VIBRANT mint
       'textPrimary': const Color(0xFF111827),
       'textSecondary': const Color(0xFF4B5563),
       'textMuted': const Color(0xFF9CA3AF),
@@ -347,9 +348,9 @@ class ThemeProvider extends ChangeNotifier {
     },
     'lavender_light': {
       'primary': const Color(0xFF8B5CF6), // Lavender accent ONLY
-      'background': const Color(0xFFFFFFFF),
-      'card': const Color(0xFFF9FAFB),
-      'cardLight': const Color(0xFFF3F4F6),
+      'background': const Color(0xFFFAF5FF), // Soft lavender tint
+      'card': const Color(0xFFFFFFFF), // Pure white cards
+      'cardLight': const Color(0xFFE9D5FF), // VIBRANT lavender
       'textPrimary': const Color(0xFF111827),
       'textSecondary': const Color(0xFF4B5563),
       'textMuted': const Color(0xFF9CA3AF),
@@ -361,9 +362,9 @@ class ThemeProvider extends ChangeNotifier {
     },
     'gold_light': {
       'primary': const Color(0xFFCA8A04), // Gold accent ONLY
-      'background': const Color(0xFFFFFFFF),
-      'card': const Color(0xFFF9FAFB),
-      'cardLight': const Color(0xFFF3F4F6),
+      'background': const Color(0xFFFEFCE8), // Warm golden tint
+      'card': const Color(0xFFFFFFFF), // Pure white cards
+      'cardLight': const Color(0xFFFDE68A), // VIBRANT gold
       'textPrimary': const Color(0xFF111827),
       'textSecondary': const Color(0xFF4B5563),
       'textMuted': const Color(0xFF9CA3AF),
@@ -546,7 +547,7 @@ class ThemeProvider extends ChangeNotifier {
       'midnight_blue': 'Midnight Blue',
       'purple_reign': 'Purple Reign',
       'ocean_breeze': 'Ocean Breeze',
-      'sunset_glow': 'Sunset Glow',
+      'sunset_glow': 'In the Biz',
       'neon_cash': 'Neon Cash',
       'paypal_blue': 'PayPal Blue',
       'coinbase_pro': 'Finance Pro',

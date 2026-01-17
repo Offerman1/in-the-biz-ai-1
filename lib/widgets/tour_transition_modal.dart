@@ -7,10 +7,22 @@ import '../theme/app_theme.dart';
 class TourTransitionModal {
   static OverlayEntry? _overlayEntry;
 
+  /// Check if modal is currently visible
+  static bool get isVisible => _overlayEntry != null;
+
+  /// Force remove any stuck overlays (call if interactions are blocked)
+  static void forceHide() {
+    try {
+      _overlayEntry?.remove();
+    } catch (e) {
+      // Ignore errors if overlay was already removed
+    }
+    _overlayEntry = null;
+  }
+
   /// Hide the non-blocking modal (call when target button is tapped)
   static void hide() {
-    _overlayEntry?.remove();
-    _overlayEntry = null;
+    forceHide();
   }
 
   /// Show a non-blocking modal with green overlay and cutout around target

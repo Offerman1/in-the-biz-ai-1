@@ -3,6 +3,8 @@ import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../theme/app_theme.dart';
 import '../services/database_service.dart';
+import '../models/vision_scan.dart';
+import '../screens/document_scanner_screen.dart';
 
 /// Analytics dashboard for Server Checkout Scanner
 /// Shows trends in Sales vs Tips, POS system usage, and validation rates
@@ -210,10 +212,22 @@ class _CheckoutAnalyticsTabState extends State<CheckoutAnalyticsTab> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Scan your first checkout receipt using the ✨ Scan button',
+              'Scan your first checkout receipt\nusing the ✨ Scan button',
               style:
                   AppTheme.bodyMedium.copyWith(color: AppTheme.textSecondary),
               textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: () => _navigateToCheckoutScanner(),
+              icon: const Icon(Icons.document_scanner),
+              label: const Text('Scan Checkout'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryGreen,
+                foregroundColor: Colors.white,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
             ),
           ],
         ),
@@ -505,6 +519,35 @@ class _CheckoutAnalyticsTabState extends State<CheckoutAnalyticsTab> {
             );
           }),
         ],
+      ),
+    );
+  }
+
+  Future<void> _navigateToCheckoutScanner() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DocumentScannerScreen(
+          scanType: ScanType.checkout,
+          onScanComplete: (session) async {
+            // Close scanner
+            Navigator.pop(context);
+
+            // Process the scanned checkout
+            if (session.hasImages) {
+              // Show success message
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: const Text('Checkout scanned! Processing...'),
+                    backgroundColor: AppTheme.successColor,
+                  ),
+                );
+                _loadCheckouts(); // Refresh the list
+              }
+            }
+          },
+        ),
       ),
     );
   }
