@@ -21,7 +21,7 @@ import 'package:in_the_biz_ai/utils/run_migrations.dart';
 import 'dart:developer' as developer;
 
 // App version - update this when deploying (matches pubspec.yaml)
-const String appVersion = '1.2.1+21';
+const String appVersion = '1.2.1+22';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

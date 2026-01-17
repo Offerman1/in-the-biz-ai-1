@@ -150,7 +150,7 @@ class _FloatingTourButtonState extends State<FloatingTourButton>
 
     return Positioned(
       right: 16,
-      bottom: 80, // Above nav bar (nav bar is ~60px)
+      bottom: 38, // Above nav bar (nav bar is ~60px)
       child: Stack(
         alignment: Alignment.center,
         children: [
