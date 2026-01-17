@@ -213,10 +213,6 @@ class _FloatingTourButtonState extends State<FloatingTourButton>
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: AppTheme.dangerColor,
-                  border: Border.all(
-                    color: Colors.white,
-                    width: 2,
-                  ),
                 ),
                 child: const Icon(
                   Icons.close,
