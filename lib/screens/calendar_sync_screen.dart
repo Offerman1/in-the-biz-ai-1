@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:device_calendar/device_calendar.dart';
@@ -14,6 +15,7 @@ import '../services/calendar_title_service.dart';
 import '../services/google_calendar_service.dart';
 import '../services/notification_service.dart';
 import '../services/auth_service.dart';
+import '../services/native_calendar_permission_service.dart';
 import '../providers/shift_provider.dart';
 import '../models/shift.dart';
 import '../models/job.dart';
@@ -207,19 +209,99 @@ class _CalendarSyncScreenState extends State<CalendarSyncScreen> {
       return;
     }
 
-    // For mobile platforms, use permission_handler for better UX
-    var status = await Permission.calendarFullAccess.request();
+    // For iOS, use native calendar permission API (iOS 17+ compatible)
+    if (Platform.isIOS) {
+      print('[CalendarSync] Requesting iOS calendar permission using native API...');
+      
+      try {
+        final granted = await NativeCalendarPermissionService.requestCalendarPermission();
+        print('[CalendarSync] Native iOS permission granted: $granted');
 
-    if (status.isGranted) {
+        if (granted) {
+          setState(() {
+            _hasPermission = true;
+            _showSetupGuide = false;
+          });
+          await _loadCalendars();
+          
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Text('Calendar access granted!'),
+                backgroundColor: AppTheme.primaryGreen,
+              ),
+            );
+          }
+        } else {
+          // Permission denied - check if permanently denied
+          final status = await NativeCalendarPermissionService.checkCalendarPermission();
+          print('[CalendarSync] Permission status: $status');
+          
+          if (status == 'denied' && mounted) {
+            // Show dialog to open app settings
+            showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                backgroundColor: AppTheme.cardBackground,
+                title: Text('Permission Required', 
+                    style: TextStyle(color: AppTheme.textPrimary)),
+                content: Text(
+                  'Calendar permission is required to sync your schedule. Please enable it in Settings → ITB → Calendars.',
+                  style: TextStyle(color: AppTheme.textSecondary),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: Text('Cancel', 
+                        style: TextStyle(color: AppTheme.textMuted)),
+                  ),
+                  ElevatedButton(
+                    onPressed: () async {
+                      Navigator.pop(context);
+                      await openAppSettings();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primaryGreen,
+                      foregroundColor: Colors.black,
+                    ),
+                    child: const Text('Open Settings'),
+                  ),
+                ],
+              ),
+            );
+          }
+        }
+      } catch (e) {
+        print('[CalendarSync] Error requesting iOS permission: $e');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error requesting permission: $e'),
+              backgroundColor: AppTheme.accentRed,
+            ),
+          );
+        }
+      }
+      return;
+    }
+
+    // For Android and other platforms, use permission_handler
+    print('[CalendarSync] Requesting calendar permission...');
+    
+    var readStatus = await Permission.calendar.request();
+    print('[CalendarSync] Calendar permission: $readStatus');
+
+    if (readStatus.isGranted) {
       // Also request through device_calendar plugin
-      await _deviceCalendarPlugin.requestPermissions();
+      final devicePermission = await _deviceCalendarPlugin.requestPermissions();
+      print('[CalendarSync] Device calendar permission: $devicePermission');
 
       setState(() {
         _hasPermission = true;
         _showSetupGuide = false;
       });
       await _loadCalendars();
-    } else if (status.isDenied) {
+    } else if (readStatus.isDenied) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -229,7 +311,7 @@ class _CalendarSyncScreenState extends State<CalendarSyncScreen> {
           ),
         );
       }
-    } else if (status.isPermanentlyDenied) {
+    } else if (readStatus.isPermanentlyDenied) {
       if (mounted) {
         // Show dialog to open app settings
         showDialog(

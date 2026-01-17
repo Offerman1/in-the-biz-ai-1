@@ -427,6 +427,18 @@ class ThemeProvider extends ChangeNotifier {
           _applyBackgroundMode();
         }
         notifyListeners();
+      } else {
+        // New user or no theme set - use default 'sunset_glow' and save it
+        _currentTheme = 'sunset_glow';
+        _applyTheme(_currentTheme);
+        notifyListeners();
+        
+        // Save default theme to database
+        await _supabase.from('user_preferences').upsert({
+          'user_id': user.id,
+          'theme': 'sunset_glow',
+          'updated_at': DateTime.now().toIso8601String(),
+        });
       }
     } catch (e) {
       debugPrint('Error loading theme: $e');

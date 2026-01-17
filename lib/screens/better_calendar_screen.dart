@@ -1010,12 +1010,12 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
         Expanded(
           child: Stack(
             children: [
-              // Calendar
+              // Calendar - full height, drawer overlays on top
               Positioned(
                 top: 0,
                 left: 0,
                 right: 0,
-                bottom: drawerHeight + 10,
+                bottom: 0,
                 child: LayoutBuilder(
                   builder: (context, constraints) {
                     // Calculate number of weeks in current month
@@ -1111,19 +1111,19 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                         _baseOffset = _offset;
                         _isZooming = false;
                       },
-                      child: Transform(
-                        transform: Matrix4.identity()
-                          ..translate(_offset.dx, _offset.dy, 0)
-                          ..scale(_calendarScale, _calendarScale, 1.0),
-                        child: Container(
-                          width: constraints.maxWidth,
-                          height: constraints.maxHeight,
-                          color: AppTheme.darkBackground,
-                          child: OverflowBox(
+                      child: Container(
+                        width: constraints.maxWidth,
+                        height: constraints.maxHeight,
+                        color: AppTheme.darkBackground,
+                        child: OverflowBox(
                             alignment: Alignment.topCenter,
                             maxHeight: double.infinity,
-                            child: ClipRect(
-                              child: TableCalendar(
+                            child: Transform.translate(
+                              offset: _offset,
+                              child: Transform.scale(
+                                scale: _calendarScale,
+                                child: ClipRect(
+                                  child: TableCalendar(
                                 // Disable swipe gestures to allow pinch-zoom
                                 // Month navigation is handled by header arrows
                                 availableGestures: AvailableGestures.none,
@@ -1256,89 +1256,91 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                                 },
                               ), // Closing for TableCalendar
                             ), // Closing for ClipRect
-                          ), // Closing for OverflowBox
-                        ), // Closing for Container
-                      ), // Closing for Transform.scale
+                          ), // Closing for Transform.scale
+                        ), // Closing for Transform.translate
+                      ), // Closing for OverflowBox
+                    ), // Closing for Container
                     ); // Closing for GestureDetector
                   },
                 ),
               ),
 
-              // Bottom Drawer
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onVerticalDragStart: (details) {
-                    // Close immediately on any drag start
-                    setState(() {
-                      _isDrawerExpanded = false;
-                    });
-                  },
-                  onTap: () {
-                    if (_selectedDay != null) {
-                      final normalizedDay = DateTime(_selectedDay!.year,
-                          _selectedDay!.month, _selectedDay!.day);
-                      final hasShifts = shiftsByDate.containsKey(normalizedDay);
-                      if (hasShifts) {
-                        setState(() {
-                          _isDrawerExpanded = !_isDrawerExpanded;
-                        });
+              // Bottom Drawer - only render when expanded to avoid blocking touches
+              if (_isDrawerExpanded)
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onVerticalDragStart: (details) {
+                      // Close immediately on any drag start
+                      setState(() {
+                        _isDrawerExpanded = false;
+                      });
+                    },
+                    onTap: () {
+                      if (_selectedDay != null) {
+                        final normalizedDay = DateTime(_selectedDay!.year,
+                            _selectedDay!.month, _selectedDay!.day);
+                        final hasShifts = shiftsByDate.containsKey(normalizedDay);
+                        if (hasShifts) {
+                          setState(() {
+                            _isDrawerExpanded = !_isDrawerExpanded;
+                          });
+                        }
                       }
-                    }
-                  },
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    height: drawerHeight,
-                    decoration: BoxDecoration(
-                      color: AppTheme.cardBackground,
-                      borderRadius:
-                          const BorderRadius.vertical(top: Radius.circular(20)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.3),
-                          blurRadius: 10,
-                          offset: const Offset(0, -5),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      children: [
-                        // Down arrow handle - tap/drag to dismiss
-                        GestureDetector(
-                          behavior: HitTestBehavior.opaque,
-                          onTap: () {
-                            setState(() {
-                              _isDrawerExpanded = false;
-                            });
-                          },
-                          onVerticalDragUpdate: (details) {
-                            if (details.delta.dy > 3) {
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      height: drawerHeight,
+                      decoration: BoxDecoration(
+                        color: AppTheme.cardBackground,
+                        borderRadius:
+                            const BorderRadius.vertical(top: Radius.circular(20)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.3),
+                            blurRadius: 10,
+                            offset: const Offset(0, -5),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          // Down arrow handle - tap/drag to dismiss
+                          GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onTap: () {
                               setState(() {
                                 _isDrawerExpanded = false;
                               });
-                            }
-                          },
-                          child: Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            child: Icon(
-                              Icons.keyboard_arrow_down,
-                              color: AppTheme.textMuted,
-                              size: 28,
+                            },
+                            onVerticalDragUpdate: (details) {
+                              if (details.delta.dy > 3) {
+                                setState(() {
+                                  _isDrawerExpanded = false;
+                                });
+                              }
+                            },
+                            child: Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              child: Icon(
+                                Icons.keyboard_arrow_down,
+                                color: AppTheme.textMuted,
+                                size: 28,
+                              ),
                             ),
                           ),
-                        ),
-                        Expanded(
-                          child: _buildDrawerContent(shiftsByDate, beosByDate),
-                        ),
-                      ],
+                          Expanded(
+                            child: _buildDrawerContent(shiftsByDate, beosByDate),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
             ],
           ),
         ),
@@ -1424,9 +1426,10 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
     final dayFontSize = isTablet
         ? 18.0
         : (isExtremelySqueezed ? 10.0 : (isSqueezed ? 9.0 : 10.0));
+    // Dollar amount ALWAYS smaller than day number to guarantee it fits
     final totalFontSize = isTablet
-        ? (totalIncome >= 1000 ? 14.0 : 16.0)
-        : (isSqueezed ? 8.0 : (totalIncome >= 1000 ? 8.0 : 10.0));
+        ? (totalIncome >= 1000 ? 11.0 : 13.0)
+        : (isSqueezed ? 7.0 : (totalIncome >= 1000 ? 7.0 : 8.0));
 
     return Container(
       // CRITICAL FIX: Use Container with constraints instead of SizedBox.expand
@@ -1509,6 +1512,7 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
               children: [
                 // Top row: Day number + Total (if has shifts) + Warning icon
                 Row(
+                  mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -1522,9 +1526,15 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                       ),
                     ),
 
+                    // Spacer pushes dollar to the right, but allows shrinking
+                    if (sortedShifts.isNotEmpty && showDollarAmount)
+                      const SizedBox(width: 2),
+
                     // Daily total (right side) - RED if any incomplete shifts
+                    // Constrained to available space
                     if (sortedShifts.isNotEmpty && showDollarAmount)
                       Flexible(
+                        fit: FlexFit.loose,
                         child: Text(
                           currencyFormat.format(totalIncome),
                           style: TextStyle(
@@ -1535,7 +1545,9 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
                             fontSize: totalFontSize,
                             fontWeight: FontWeight.w900,
                           ),
+                          maxLines: 1,
                           overflow: TextOverflow.ellipsis,
+                          softWrap: false,
                         ),
                       ),
                   ],
@@ -1601,17 +1613,18 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
 
     final hasTime = shift.startTime != null && shift.endTime != null;
 
-    // Use stacked layout for 1-2 shifts (more readable), compact for 3+
+    // SAME layout on ALL devices - use FittedBox to scale it to fit
+    // Stacked layout for 1-2 shifts, compact for 3+
     final useStackedTime = totalShiftsForDay <= 2 && hasTime;
 
     // ALWAYS show time on calendar badges - money is shown in the modal
     final showTime = hasTime; // Always show time if available
 
-    // Responsive badge sizing for tablet
+    // Fixed sizing - FittedBox will scale it down if needed
     final screenWidth = MediaQuery.of(context).size.width;
     final isTablet = screenWidth > 600;
     final badgeHeight = isTablet ? 22.0 : 14.0;
-    final badgeFontSize = isTablet ? 12.0 : 8.0;
+    final badgeFontSize = 10.0; // Fixed base size, scales with FittedBox
 
     // Stacked layout for 1-2 shifts: time on two lines for better readability
     if (useStackedTime && showTime) {
@@ -1634,27 +1647,30 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
               color: AppTheme.cardBackground,
               borderRadius: BorderRadius.circular(2),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  '${_formatTimeShort(shift.startTime!)} -',
-                  style: TextStyle(
-                    color: AppTheme.primaryGreen,
-                    fontSize: badgeFontSize,
-                    fontWeight: FontWeight.w600,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '${_formatTimeShort(shift.startTime!)} -',
+                    style: TextStyle(
+                      color: AppTheme.primaryGreen,
+                      fontSize: badgeFontSize,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
-                Text(
-                  _formatTimeShort(shift.endTime!),
-                  style: TextStyle(
-                    color: AppTheme.primaryGreen,
-                    fontSize: badgeFontSize,
-                    fontWeight: FontWeight.w600,
+                  Text(
+                    _formatTimeShort(shift.endTime!),
+                    style: TextStyle(
+                      color: AppTheme.primaryGreen,
+                      fontSize: badgeFontSize,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         );
@@ -1672,27 +1688,30 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
             width: 1.5,
           ),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              '${_formatTimeShort(shift.startTime!)} -',
-              style: TextStyle(
-                color: badgeColor,
-                fontSize: badgeFontSize,
-                fontWeight: FontWeight.w600,
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '${_formatTimeShort(shift.startTime!)} -',
+                style: TextStyle(
+                  color: badgeColor,
+                  fontSize: badgeFontSize,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-            ),
-            Text(
-              _formatTimeShort(shift.endTime!),
-              style: TextStyle(
-                color: badgeColor,
-                fontSize: badgeFontSize,
-                fontWeight: FontWeight.w600,
+              Text(
+                _formatTimeShort(shift.endTime!),
+                style: TextStyle(
+                  color: badgeColor,
+                  fontSize: badgeFontSize,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       );
     }
@@ -1719,20 +1738,19 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
             borderRadius: BorderRadius.circular(2),
           ),
           child: Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
               if (showTime)
                 Expanded(
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      '${_formatTimeShort(shift.startTime!)}-${_formatTimeShort(shift.endTime!)}',
-                      style: TextStyle(
-                        color: AppTheme.primaryGreen,
-                        fontSize: badgeFontSize,
-                        fontWeight: FontWeight.w600,
-                      ),
+                  child: Text(
+                    '${_formatTimeShort(shift.startTime!)}-${_formatTimeShort(shift.endTime!)}',
+                    style: TextStyle(
+                      color: AppTheme.primaryGreen,
+                      fontSize: badgeFontSize,
+                      fontWeight: FontWeight.w600,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.visible,
                   ),
                 ),
             ],
@@ -1755,21 +1773,20 @@ class _BetterCalendarScreenState extends State<BetterCalendarScreen>
         ),
       ),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // Time range (compact single line for 3+ shifts)
+          // Time range (compact single line)
           if (showTime)
             Expanded(
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  '${_formatTimeShort(shift.startTime!)}-${_formatTimeShort(shift.endTime!)}',
-                  style: TextStyle(
-                    color: badgeColor,
-                    fontSize: badgeFontSize,
-                    fontWeight: FontWeight.w600,
-                  ),
+              child: Text(
+                '${_formatTimeShort(shift.startTime!)}-${_formatTimeShort(shift.endTime!)}',
+                style: TextStyle(
+                  color: badgeColor,
+                  fontSize: badgeFontSize,
+                  fontWeight: FontWeight.w600,
                 ),
+                maxLines: 1,
+                overflow: TextOverflow.visible,
               ),
             ),
         ],

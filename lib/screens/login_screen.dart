@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -123,6 +124,48 @@ class _LoginScreenState extends State<LoginScreen> {
         });
       }
     } catch (e) {
+      setState(() {
+        _errorMessage = e.toString().replaceAll('Exception: ', '');
+      });
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _signInWithApple() async {
+    print('🍎 Apple Sign-In button pressed');
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      print('🍎 Calling AuthService.signInWithApple()...');
+      final response = await AuthService.signInWithApple();
+      print('🍎 Apple Sign-In response: $response');
+      if (response != null && mounted) {
+        print('🍎 Navigating to dashboard...');
+        // Manually navigate to dashboard after successful sign-in
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const DashboardScreen()),
+        );
+        // Show success message after navigation
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Text('Signed in successfully!'),
+                backgroundColor: AppTheme.primaryGreen,
+                duration: const Duration(seconds: 2),
+              ),
+            );
+          }
+        });
+      }
+    } catch (e) {
+      print('🍎 Apple Sign-In error: $e');
       setState(() {
         _errorMessage = e.toString().replaceAll('Exception: ', '');
       });
@@ -376,6 +419,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
               const SizedBox(height: 32),
 
+              // Social Sign In Buttons
+              if (!kIsWeb && (Platform.isIOS || Platform.isMacOS)) ...[
+                // Apple Sign-In (only on iOS/macOS)
+                Center(child: _buildAppleButton()),
+                const SizedBox(height: 12),
+              ],
               // Google Sign In Button
               Center(child: _buildGoogleButton()),
 
@@ -612,7 +661,9 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     // Mobile: Custom button that calls authenticate()
-    return Container(
+    return SizedBox(
+      width: 280,
+      child: Container(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
@@ -655,6 +706,58 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
         ),
+      ),
+      ),
+    );
+  }
+
+  Widget _buildAppleButton() {
+    return SizedBox(
+      width: 280,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.black,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.white, width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: _isLoading ? null : _signInWithApple,
+          borderRadius: BorderRadius.circular(8),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.apple,
+                  color: Colors.white,
+                  size: 20,
+                ),
+                const SizedBox(width: 16),
+                const Text(
+                  'Continue with Apple',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 0.25,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
       ),
     );
   }

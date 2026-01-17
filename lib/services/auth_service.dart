@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 class AuthService {
   static SupabaseClient get _supabase => Supabase.instance.client;
@@ -119,13 +120,37 @@ class AuthService {
   /// Works on Android, iOS, and Web
   static Future<AuthResponse?> signInWithApple() async {
     try {
-      // Use Supabase's built-in OAuth flow instead of sign_in_with_apple package
-      // This handles redirects properly on all platforms
+      // iOS/macOS: Use native Sign in with Apple
+      if (!kIsWeb && (Platform.isIOS || Platform.isMacOS)) {
+        final credential = await SignInWithApple.getAppleIDCredential(
+          scopes: [
+            AppleIDAuthorizationScopes.email,
+            AppleIDAuthorizationScopes.fullName,
+          ],
+          webAuthenticationOptions: WebAuthenticationOptions(
+            clientId: 'com.inthebiz.app.auth',
+            redirectUri: Uri.parse('https://bokdjidrybwxbomemmrg.supabase.co/auth/v1/callback'),
+          ),
+        );
+
+        final idToken = credential.identityToken;
+        if (idToken == null) {
+          throw Exception('Failed to get Apple ID token');
+        }
+
+        // Sign in to Supabase with Apple ID token
+        final response = await _supabase.auth.signInWithIdToken(
+          provider: OAuthProvider.apple,
+          idToken: idToken,
+        );
+
+        return response;
+      }
+
+      // Web/Android: Use OAuth flow
       final result = await _supabase.auth.signInWithOAuth(
         OAuthProvider.apple,
-        redirectTo: kIsWeb
-            ? 'https://inthebiz.app'
-            : 'io.supabase.inthebizai://login-callback',
+        redirectTo: 'https://inthebiz.app/auth/callback',
       );
 
       if (!result) {

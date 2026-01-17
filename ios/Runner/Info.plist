@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<true/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
@@ -20,43 +22,24 @@
 	<string>$(FLUTTER_BUILD_NAME)</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.30441285456-9ea4rfqkepbjigq8jku8qkamr8abap3r</string>
+				<string>io.supabase.inthebizai</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
-	<key>LSRequiresIPhoneOS</key>
-	<true/>
-	<key>UILaunchStoryboardName</key>
-	<string>LaunchScreen</string>
-	<key>UIMainStoryboardFile</key>
-	<string>Main</string>
-	<key>UISupportedInterfaceOrientations</key>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-	</array>
-	<key>UISupportedInterfaceOrientations~ipad</key>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-	</array>
-	<key>CADisableMinimumFrameDurationOnPhone</key>
-	<true/>
-	<key>UIApplicationSupportsIndirectInputEvents</key>
-	<true/>
-	<!-- AdMob App ID (Real Production ID) -->
 	<key>GADApplicationIdentifier</key>
 	<string>ca-app-pub-1150666051629225~3569436612</string>
-	<!-- Calendar Access Permission -->
-	<key>NSCalendarsUsageDescription</key>
-	<string>We need calendar access to import your work schedule from Hot Schedules, 7shifts, and other scheduling apps.</string>
-	<!-- Notification Permission -->
-	<key>NSUserNotificationsUsageDescription</key>
-	<string>We need notification access to remind you before shifts start and prompt you to log earnings after shifts end.</string>
-	<!-- Photo Library Access Permissions -->
-	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>We need access to save shift photos and videos to your photo library.</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>We need access to save shift photos and videos to your photo library.</string>
-	<key>NSCameraUsageDescription</key>
-	<string>We need camera access to take photos of receipts, BEOs, and shift documents.</string>
-	<!-- URL Launcher: Declare schemes the app can open -->
+	<key>GIDClientID</key>
+	<string>30441285456-9ea4rfqkepbjigq8jku8qkamr8abap3r.apps.googleusercontent.com</string>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>https</string>
@@ -73,20 +56,33 @@
 		<string>snapchat</string>
 		<string>pinterest</string>
 	</array>
-	<!-- Google Sign-In Configuration -->
-	<key>CFBundleURLTypes</key>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>NSCalendarsUsageDescription</key>
+	<string>We need calendar access to import your work schedule from Hot Schedules, 7shifts, and other scheduling apps.</string>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>We need full calendar access to import and export your work schedule from Hot Schedules, 7shifts, and other scheduling apps.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>We need camera access to take photos of receipts, BEOs, and shift documents.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>We need access to save shift photos and videos to your photo library.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>We need access to save shift photos and videos to your photo library.</string>
+	<key>NSUserNotificationsUsageDescription</key>
+	<string>We need notification access to remind you before shifts start and prompt you to log earnings after shifts end.</string>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
+	<key>UIMainStoryboardFile</key>
+	<string>Main</string>
+	<key>UISupportedInterfaceOrientations</key>
 	<array>
-		<dict>
-			<key>CFBundleTypeRole</key>
-			<string>Editor</string>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<!-- Reversed iOS Client ID for Google Sign-In -->
-				<string>com.googleusercontent.apps.30441285456-9ea4rfqkepbjigq8jku8qkamr8abap3r</string>
-			</array>
-		</dict>
+		<string>UIInterfaceOrientationPortrait</string>
 	</array>
-	<key>GIDClientID</key>
-	<string>30441285456-9ea4rfqkepbjigq8jku8qkamr8abap3r.apps.googleusercontent.com</string>
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+	</array>
 </dict>
 </plist>
