@@ -606,11 +606,8 @@ class _AddJobScreenState extends State<AddJobScreen> {
                     }
                     return null;
                   },
-                  onChanged: (text) {
-                    setState(() {
-                      _selectedJobTitle = text.trim();
-                    });
-                  },
+                  // Don't sync job name with job title selection
+                  // Job name is custom, job title is for template only
                 );
               },
             ),
@@ -681,45 +678,58 @@ class _AddJobScreenState extends State<AddJobScreen> {
 
             const SizedBox(height: 16),
 
-            // Job Title (SECOND) - Chips layout when industry is selected (like onboarding)
+            // Job Title (SECOND) - Dropdown when industry is selected
             if (_selectedIndustry != null &&
                 _selectedIndustry != '+ Add Custom Industry') ...[
-              Text(
-                'Job Title',
-                style: AppTheme.labelMedium.copyWith(
-                  color: AppTheme.textSecondary,
+              DropdownButtonFormField<String>(
+                value: _selectedJobTitle,
+                decoration: InputDecoration(
+                  hintText: _selectedJobTitle == null
+                      ? 'Select a job title (optional)'
+                      : null,
+                  prefixIcon: Icon(Icons.badge, color: AppTheme.primaryGreen),
+                  filled: true,
+                  fillColor: AppTheme.cardBackground,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                    borderSide: BorderSide.none,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: _getJobTitlesForIndustry(_selectedIndustry)
-                    .where((title) =>
-                        title !=
-                        '+ Add Custom Job Title') // Filter out the add button
+                dropdownColor: AppTheme.cardBackground,
+                iconEnabledColor: AppTheme.textPrimary,
+                style: AppTheme.bodyLarge.copyWith(
+                  color: _selectedJobTitle == null
+                      ? AppTheme.textMuted
+                      : AppTheme.textPrimary,
+                ),
+                hint: Text(
+                  'Select a job title (optional)',
+                  style: AppTheme.bodyLarge.copyWith(
+                    color: AppTheme.textMuted,
+                  ),
+                ),
+                items: _getJobTitlesForIndustry(_selectedIndustry)
+                    .where((title) => title != '+ Add Custom Job Title')
                     .map((jobTitle) {
-                  final isSelected = _selectedJobTitle == jobTitle;
-                  return FilterChip(
-                    label: Text(jobTitle),
-                    selected: isSelected,
-                    onSelected: (selected) {
-                      setState(() {
-                        _selectedJobTitle = jobTitle;
-                        _jobTitleController.text = jobTitle;
-                        _applyIndustryTemplate(_selectedIndustry);
-                      });
-                    },
-                    selectedColor: AppTheme.primaryGreen.withValues(alpha: 0.3),
-                    backgroundColor: AppTheme.cardBackground,
-                    checkmarkColor: AppTheme.primaryGreen,
-                    labelStyle: TextStyle(
-                      color: isSelected
-                          ? AppTheme.primaryGreen
-                          : AppTheme.textPrimary,
+                  return DropdownMenuItem(
+                    value: jobTitle,
+                    child: Text(
+                      jobTitle,
+                      style: AppTheme.bodyLarge.copyWith(
+                        color: AppTheme.textPrimary,
+                      ),
                     ),
                   );
                 }).toList(),
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() {
+                      _selectedJobTitle = value;
+                      // Don't overwrite the user's custom job name
+                      _applyIndustryTemplate(_selectedIndustry);
+                    });
+                  }
+                },
               ),
               const SizedBox(height: 12),
               OutlinedButton.icon(
@@ -794,7 +804,8 @@ class _AddJobScreenState extends State<AddJobScreen> {
                             borderRadius:
                                 BorderRadius.circular(AppTheme.radiusMedium),
                             border: Border.all(
-                              color: AppTheme.primaryGreen.withValues(alpha: 0.3),
+                              color:
+                                  AppTheme.primaryGreen.withValues(alpha: 0.3),
                             ),
                           ),
                           child: Row(
@@ -949,8 +960,8 @@ class _AddJobScreenState extends State<AddJobScreen> {
                       const SizedBox(height: 8),
                       TextField(
                         controller: _tipoutPercentController,
-                        keyboardType:
-                            const TextInputType.numberWithOptions(decimal: true),
+                        keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true),
                         style: AppTheme.bodyMedium,
                         decoration: InputDecoration(
                           hintText: '0',
@@ -1363,11 +1374,22 @@ class _AddJobScreenState extends State<AddJobScreen> {
     final industrySection = _getIndustrySpecificSection(_selectedIndustry);
 
     // Build ordered list of sections
-    final sectionOrder = <String>['pay', 'earnings'];
-    if (industrySection != null) {
+    // Order: pay -> earnings -> general sections -> industry-specific sections
+    final sectionOrder = <String>[
+      'pay',
+      'earnings',
+      'event',
+      'work',
+      'media',
+      'finance',
+    ];
+
+    // Add industry-specific sections last
+    if (industrySection != null && !sectionOrder.contains(industrySection)) {
       sectionOrder.add(industrySection);
     }
-    // Add remaining sections (excluding pay, earnings, and industry-specific)
+
+    // Add any remaining sections not in the explicit order
     sectionOrder.addAll(
       allSections.keys.where((k) => !sectionOrder.contains(k)).toList(),
     );

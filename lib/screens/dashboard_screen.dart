@@ -440,6 +440,65 @@ class _HomeScreenState extends State<_HomeScreen> {
     super.dispose();
   }
 
+  /// Check if a shift has already started (for filtering recent shifts)
+  bool _hasShiftStarted(Shift shift) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final shiftDate =
+        DateTime(shift.date.year, shift.date.month, shift.date.day);
+
+    // Exclude future dates
+    if (shiftDate.isAfter(today)) return false;
+
+    // For today's shifts, check if they've started
+    if (shiftDate.isAtSameMomentAs(today)) {
+      if (shift.startTime != null && shift.startTime!.isNotEmpty) {
+        try {
+          // Parse start time (e.g., "4:30 PM")
+          final timeParts = shift.startTime!.trim().split(' ');
+          if (timeParts.length == 2) {
+            final hourMin = timeParts[0].split(':');
+            if (hourMin.length == 2) {
+              int hour = int.parse(hourMin[0]);
+              final minute = int.parse(hourMin[1]);
+              final isPM = timeParts[1].toUpperCase() == 'PM';
+
+              if (isPM && hour != 12) hour += 12;
+              if (!isPM && hour == 12) hour = 0;
+
+              final shiftStartTime = DateTime(
+                shift.date.year,
+                shift.date.month,
+                shift.date.day,
+                hour,
+                minute,
+              );
+
+              // Only include if shift has started
+              final hasStarted = now.isAfter(shiftStartTime) ||
+                  now.isAtSameMomentAs(shiftStartTime);
+
+              debugPrint(
+                  '🕒 Shift time check: ${shift.startTime} -> Start: $shiftStartTime, Now: $now, HasStarted: $hasStarted');
+              return hasStarted;
+            }
+          }
+        } catch (e) {
+          debugPrint('⚠️ Error parsing shift time "${shift.startTime}": $e');
+          // If parsing fails, exclude today's shifts to be safe
+          return false;
+        }
+      }
+      // If no start time for today's shift, exclude it from recent shifts
+      debugPrint(
+          '⚠️ Today\'s shift has no start time, excluding from recent shifts');
+      return false;
+    }
+
+    // Include all past shifts
+    return true;
+  }
+
   void _onTourServiceChanged() {
     if (!mounted) return;
 
@@ -1920,21 +1979,14 @@ class _HomeScreenState extends State<_HomeScreen> {
           SliverList(
             delegate: SliverChildBuilderDelegate(
               (context, index) {
-                // Filter shifts by selected job, include today's shifts and past shifts
-                final now = DateTime.now();
-                final today = DateTime(now.year, now.month, now.day);
-
+                // Filter shifts by selected job, only include shifts that have started
                 final filteredShifts = (_selectedJobId == null
                         ? shiftProvider.shifts
                         : shiftProvider.shifts
                             .where((shift) => shift.jobId == _selectedJobId)
                             .toList())
-                    .where((shift) {
-                  final shiftDate = DateTime(
-                      shift.date.year, shift.date.month, shift.date.day);
-                  // Include today and past shifts (not future shifts)
-                  return !shiftDate.isAfter(today);
-                }).toList();
+                    .where((shift) => _hasShiftStarted(shift))
+                    .toList();
 
                 final recentShifts = filteredShifts.take(5).toList();
                 if (index >= recentShifts.length) return null;
@@ -1943,20 +1995,14 @@ class _HomeScreenState extends State<_HomeScreen> {
                 return _buildShiftCard(context, shift, currencyFormat);
               },
               childCount: () {
-                final now = DateTime.now();
-                final today = DateTime(now.year, now.month, now.day);
-
+                // Filter shifts by selected job, only include shifts that have started
                 final filteredShifts = (_selectedJobId == null
                         ? shiftProvider.shifts
                         : shiftProvider.shifts
                             .where((shift) => shift.jobId == _selectedJobId)
                             .toList())
-                    .where((shift) {
-                  final shiftDate = DateTime(
-                      shift.date.year, shift.date.month, shift.date.day);
-                  // Include today and past shifts (not future shifts)
-                  return !shiftDate.isAfter(today);
-                }).toList();
+                    .where((shift) => _hasShiftStarted(shift))
+                    .toList();
                 return filteredShifts.length > 5 ? 5 : filteredShifts.length;
               }(),
             ),
