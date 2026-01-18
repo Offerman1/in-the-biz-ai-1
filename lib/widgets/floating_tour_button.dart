@@ -43,14 +43,15 @@ class _FloatingTourButtonState extends State<FloatingTourButton>
   }
 
   void _showDismissDialog() {
+    final widgetContext = context; // Capture widget context before dialog
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         backgroundColor: AppTheme.cardBackground,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
           side: BorderSide(
-            color: AppTheme.primaryGreen.withValues(alpha: 0.3),
+            color: AppTheme.primaryGreen.withOpacity(0.3),
             width: 1,
           ),
         ),
@@ -69,7 +70,7 @@ class _FloatingTourButtonState extends State<FloatingTourButton>
             // X button to close
             IconButton(
               icon: Icon(Icons.close, color: AppTheme.textMuted),
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.pop(dialogContext),
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(),
             ),
@@ -86,52 +87,48 @@ class _FloatingTourButtonState extends State<FloatingTourButton>
         actionsPadding: const EdgeInsets.all(16),
         actions: [
           // Close for Now button
-          Expanded(
-            child: OutlinedButton(
-              onPressed: () {
-                final tourService =
-                    Provider.of<TourService>(context, listen: false);
-                tourService.hideTourButtonTemporarily();
-                Navigator.pop(context);
-              },
-              style: OutlinedButton.styleFrom(
-                side: BorderSide(color: AppTheme.textMuted),
-                foregroundColor: AppTheme.textMuted,
-                padding: const EdgeInsets.symmetric(
-                  vertical: 12,
-                  horizontal: 8,
-                ),
+          OutlinedButton(
+            onPressed: () {
+              final tourService =
+                  Provider.of<TourService>(widgetContext, listen: false);
+              tourService.hideTourButtonTemporarily();
+              Navigator.pop(dialogContext);
+            },
+            style: OutlinedButton.styleFrom(
+              side: BorderSide(color: AppTheme.textMuted),
+              foregroundColor: AppTheme.textMuted,
+              padding: const EdgeInsets.symmetric(
+                vertical: 12,
+                horizontal: 16,
               ),
-              child: const Text(
-                'Close for Now',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 13),
-              ),
+            ),
+            child: const Text(
+              'Close for Now',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 13),
             ),
           ),
           const SizedBox(width: 8),
           // Never Show Again button
-          Expanded(
-            child: ElevatedButton(
-              onPressed: () {
-                final tourService =
-                    Provider.of<TourService>(context, listen: false);
-                tourService.hideTourButton();
-                Navigator.pop(context);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primaryGreen,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  vertical: 12,
-                  horizontal: 8,
-                ),
+          ElevatedButton(
+            onPressed: () {
+              final tourService =
+                  Provider.of<TourService>(widgetContext, listen: false);
+              tourService.hideTourButton();
+              Navigator.pop(dialogContext);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primaryGreen,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(
+                vertical: 12,
+                horizontal: 16,
               ),
-              child: const Text(
-                'Never Show Again',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 13),
-              ),
+            ),
+            child: const Text(
+              'Never Show Again',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 13),
             ),
           ),
         ],
@@ -162,7 +159,7 @@ class _FloatingTourButtonState extends State<FloatingTourButton>
               height: 60,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppTheme.primaryGreen.withValues(alpha: 0.2),
+                color: AppTheme.primaryGreen.withOpacity(0.2),
               ),
             ),
           ),
@@ -187,7 +184,7 @@ class _FloatingTourButtonState extends State<FloatingTourButton>
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: AppTheme.primaryGreen.withValues(alpha: 0.5),
+                      color: AppTheme.primaryGreen.withOpacity(0.5),
                       blurRadius: 12,
                       spreadRadius: 2,
                     ),

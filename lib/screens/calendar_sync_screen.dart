@@ -211,10 +211,12 @@ class _CalendarSyncScreenState extends State<CalendarSyncScreen> {
 
     // For iOS, use native calendar permission API (iOS 17+ compatible)
     if (Platform.isIOS) {
-      print('[CalendarSync] Requesting iOS calendar permission using native API...');
-      
+      print(
+          '[CalendarSync] Requesting iOS calendar permission using native API...');
+
       try {
-        final granted = await NativeCalendarPermissionService.requestCalendarPermission();
+        final granted =
+            await NativeCalendarPermissionService.requestCalendarPermission();
         print('[CalendarSync] Native iOS permission granted: $granted');
 
         if (granted) {
@@ -223,7 +225,7 @@ class _CalendarSyncScreenState extends State<CalendarSyncScreen> {
             _showSetupGuide = false;
           });
           await _loadCalendars();
-          
+
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -234,16 +236,17 @@ class _CalendarSyncScreenState extends State<CalendarSyncScreen> {
           }
         } else {
           // Permission denied - check if permanently denied
-          final status = await NativeCalendarPermissionService.checkCalendarPermission();
+          final status =
+              await NativeCalendarPermissionService.checkCalendarPermission();
           print('[CalendarSync] Permission status: $status');
-          
+
           if (status == 'denied' && mounted) {
             // Show dialog to open app settings
             showDialog(
               context: context,
               builder: (context) => AlertDialog(
                 backgroundColor: AppTheme.cardBackground,
-                title: Text('Permission Required', 
+                title: Text('Permission Required',
                     style: TextStyle(color: AppTheme.textPrimary)),
                 content: Text(
                   'Calendar permission is required to sync your schedule. Please enable it in Settings → ITB → Calendars.',
@@ -252,7 +255,7 @@ class _CalendarSyncScreenState extends State<CalendarSyncScreen> {
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.pop(context),
-                    child: Text('Cancel', 
+                    child: Text('Cancel',
                         style: TextStyle(color: AppTheme.textMuted)),
                   ),
                   ElevatedButton(
@@ -287,7 +290,7 @@ class _CalendarSyncScreenState extends State<CalendarSyncScreen> {
 
     // For Android and other platforms, use permission_handler
     print('[CalendarSync] Requesting calendar permission...');
-    
+
     var readStatus = await Permission.calendar.request();
     print('[CalendarSync] Calendar permission: $readStatus');
 
@@ -1197,6 +1200,30 @@ class _CalendarSyncScreenState extends State<CalendarSyncScreen> {
 
         await _db.saveShift(shift);
         imported++;
+
+        // Schedule notifications for future shifts (mobile only)
+        if (!kIsWeb && isFuture && endTime != null) {
+          // Get jobs from database to find job name
+          final jobs = await _db.getJobs();
+          final job = jobs.firstWhere(
+            (j) => j['id'] == jobId,
+            orElse: () => {'id': jobId, 'name': 'Shift'},
+          );
+
+          // Schedule shift start reminder
+          await NotificationService().scheduleShiftReminder(
+            shiftId: shift.id,
+            shiftStartTime: startTime,
+            jobName: job['name'] ?? 'Shift',
+          );
+
+          // Schedule end-of-shift reminder
+          await NotificationService().scheduleEndOfShiftReminder(
+            shiftId: shift.id,
+            shiftEndTime: endTime,
+            jobName: job['name'] ?? 'Shift',
+          );
+        }
       }
 
       // Refresh the shift provider

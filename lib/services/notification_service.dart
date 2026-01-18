@@ -2,6 +2,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
+import 'database_service.dart';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
@@ -399,6 +400,78 @@ class NotificationService {
         await prefs.setDouble('last_milestone', milestone.toDouble());
         break; // Only celebrate one milestone at a time
       }
+    }
+  }
+
+  /// Check for shifts that recently ended and schedule notifications
+  /// Should be called when app starts or resumes
+  Future<void> checkRecentlyEndedShifts() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final enabled = prefs.getBool('notif_end_of_shift') ?? true;
+
+      if (!enabled) return;
+
+      // Import database service to get shifts
+      final db = DatabaseService();
+      final shifts = await db.getShifts();
+
+      final now = DateTime.now();
+
+      for (final shift in shifts) {
+        // Only check shifts with end times
+        if (shift.endTime == null || shift.endTime!.isEmpty) continue;
+
+        // Parse end time
+        final endTimeParts = shift.endTime!.split(':');
+        if (endTimeParts.length < 2) continue;
+
+        final endHour = int.tryParse(endTimeParts[0]);
+        final endMinute = int.tryParse(endTimeParts[1]);
+        if (endHour == null || endMinute == null) continue;
+
+        final shiftEndDateTime = DateTime(
+          shift.date.year,
+          shift.date.month,
+          shift.date.day,
+          endHour,
+          endMinute,
+        );
+
+        // Calculate when notification should fire (15 min after shift ends)
+        final notificationTime =
+            shiftEndDateTime.add(const Duration(minutes: 15));
+
+        // Check if shift ended recently (within last 24 hours) but notification time is in the future
+        final timeSinceShiftEnded = now.difference(shiftEndDateTime);
+        final timeUntilNotification = notificationTime.difference(now);
+
+        // If shift ended within last 24 hours and notification is still in the future
+        // AND shift has no earnings logged (to avoid duplicate notifications)
+        if (timeSinceShiftEnded.inHours <= 24 &&
+            timeUntilNotification.inSeconds > 0 &&
+            shift.totalIncome == 0) {
+          // Get job name
+          final jobs = await db.getJobs();
+          final job = jobs.firstWhere(
+            (j) => j['id'] == shift.jobId,
+            orElse: () => {'id': shift.jobId ?? '', 'name': 'Shift'},
+          );
+          final jobName = job['name'] ?? 'Shift';
+
+          // Schedule the notification
+          await scheduleEndOfShiftReminder(
+            shiftId: shift.id,
+            shiftEndTime: shiftEndDateTime,
+            jobName: jobName,
+          );
+
+          print(
+              '📲 Scheduled notification for shift ${shift.id} ending at $shiftEndDateTime');
+        }
+      }
+    } catch (e) {
+      print('Error checking recently ended shifts: $e');
     }
   }
 

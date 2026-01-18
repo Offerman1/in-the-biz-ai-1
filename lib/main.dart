@@ -21,7 +21,7 @@ import 'package:in_the_biz_ai/utils/run_migrations.dart';
 import 'dart:developer' as developer;
 
 // App version - update this when deploying (matches pubspec.yaml)
-const String appVersion = '1.2.1+22';
+const String appVersion = '1.2.1+31';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -94,6 +94,9 @@ void main() async {
       final lastShift = shifts.reduce((a, b) => a.date.isAfter(b.date) ? a : b);
       await NotificationService().checkInactivityReminder(lastShift.date);
     }
+
+    // Check for recently ended shifts that need notifications
+    await NotificationService().checkRecentlyEndedShifts();
   }
 
   // Initialize tour service and load button visibility

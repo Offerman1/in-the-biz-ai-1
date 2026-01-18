@@ -5,6 +5,20 @@ Future<void> runMigrations() async {
   final supabase = Supabase.instance.client;
 
   try {
+    // Wrap the entire migration in a timeout to prevent hanging
+    await Future.any([
+      _runMigrationsInternal(supabase),
+      Future.delayed(const Duration(seconds: 5), () {
+        print('⚠️ Migration timeout - skipping (app will continue)');
+      }),
+    ]);
+  } catch (e) {
+    print('❌ Migration error (app will continue): $e');
+  }
+}
+
+Future<void> _runMigrationsInternal(SupabaseClient supabase) async {
+  try {
     // Check if columns already exist by trying to query them
     try {
       await supabase.from('shifts').select('job_type').limit(1);
